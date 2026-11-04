@@ -8,28 +8,37 @@
 # replace: Node strips types at run time, it never checks them. The
 # CI is where the strict compiler actually reads the whole tree —
 # src (app config) and server, tests, vite config (node config).
+#
+# This workflow enforces the quality gates from ADR-0008.
 name: ci
 
 on:
   push:
+    branches: [main, daily]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  verify:
+  check:
+    name: quality gate
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          fetch-depth: 0
 
-      # No lockfile in the repository: the atelier keeps zero
-      # friction for a zip handover. The CI resolves the pinned
-      # versions of package.json.
-      - run: npm install
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
 
-      - name: Types (strict, no emit — both configs)
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Types (strict, no emit - both configs)
         run: npm run typecheck
 
       - name: Presentation structure
@@ -40,3 +49,35 @@ jobs:
 
       - name: Build
         run: npm run build
+
+  security:
+    name: security gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  verify:
+    name: full verify
+    runs-on: ubuntu-latest
+    needs: [check, security]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run full verify
+        run: npm run verify

@@ -1,0 +1,19 @@
+# CODEOWNERS - the human owner guards the constitutional files (ADR-0011).
+# Replace saucisson with the actual GitHub username.
+
+# By default, the human owner reviews everything.
+* @saucisson
+
+# Constitutional files are never changed by agents.
+/docs/decisions/ @saucisson
+/docs/agents/ @saucisson
+/docs/architecture.md @saucisson
+/docs/branching.md @saucisson
+/docs/review-checklist.md @saucisson
+/docs/coding-guidelines.md @saucisson
+/AGENTS.md @saucisson
+/package.json @saucisson
+/tsconfig.json @saucisson
+/tsconfig.node.json @saucisson
+/.github/workflows/ @saucisson
+/.github/CODEOWNERS @saucisson

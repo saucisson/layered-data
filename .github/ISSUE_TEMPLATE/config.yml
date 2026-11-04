@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: GitHub Discussion
+    url: https://github.com/saucisson/layered-data/discussions
+    about: Please ask and answer questions here.
+  - name: Security Issue
+    url: https://github.com/saucisson/layered-data/security
+    about: Please report security issues here.
