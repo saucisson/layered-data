@@ -1,13 +1,17 @@
 // The staging protocol checks: the composer never dies of a typo,
 // the living space never absorbs a refused draft.
 //
-// Four scenarios over the assembled trunk corpus: a sound draft is
+// Seven scenarios over the assembled trunk corpus: a sound draft is
 // accepted and applied (its layers enter the living space, its
 // refinement targets are reported), a broken syntax is refused at
 // the syntax step, an unknown refinement target is refused as
-// "cible-inconnue", and a betrayed expectation is refused as
-// "attendu-trahi". The verdict kinds are part of the observable
-// contract — they are frozen exactly as the kernel statuses are.
+// "cible-inconnue", a betrayed expectation is refused as
+// "attendu-trahi", an unsigned order conflict is accepted
+// permissively but refused as "conflit-d'ordre" in strict mode
+// (ADR-0017), an assume signs it (both modes accept), and an empty
+// signature is refused as "assume-fantôme". The verdict kinds are
+// part of the observable contract — they are frozen exactly as the
+// kernel statuses are.
 //
 //     node tests/staging-checks.mts   (exit 1 on any failure)
 
@@ -17,6 +21,8 @@ import { join } from "node:path";
 import { assembleLayeredDataKernel, KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
 import { asLayerName, asLayerPath } from "../src/domain/identifiers.ts";
 import { stageLayerAddition, applyStagedAddition } from "../src/application/staging.ts";
+import { runAllLints } from "../src/application/linting.ts";
+import { Space } from "../src/domain/space.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -144,6 +150,151 @@ check(
 check(
   '(d) the betrayed expectation carries exactly the "attendu-trahi" verdict',
   refusedBetrayed.verdicts.length === 1 && refusedBetrayed.verdicts[0].kind === "attendu-trahi",
+);
+
+// =====================================================================
+// (e) an unsigned order conflict: permissive staging accepts, the
+// strict mode refuses as conflit-d'ordre — and inheritance alone
+// never conflicts: the sound draft stays accepted in strict mode
+// =====================================================================
+
+// two incomparable providers of the same leaf key: the draft layer
+// refines both branches, the refines ORDER alone decides who wins
+const conflictDraft = [
+  "layer demo-left refines @record",
+  "  charge = 1",
+  "layer demo-right refines @record",
+  "  charge = 2",
+  "layer demo-conflict refines @demo-left then @demo-right",
+].join("\n");
+
+const permissiveConflict = stage({ draftSource: conflictDraft });
+check(
+  "(e) the unsigned conflict is accepted by the permissive staging — the order stays the semantics",
+  permissiveConflict.ok === true && permissiveConflict.verdicts.length === 0,
+);
+check(
+  "(e) the permissive winner is measured: first-wins walked the branches as written",
+  permissiveConflict.ok &&
+    permissiveConflict.compiledLanguage !== null &&
+    new Space(permissiveConflict.compiledLanguage.layers).read({
+      layer: asLayerName("demo-conflict"),
+      path: asLayerPath([]),
+      key: "charge",
+    }) === 1,
+);
+
+const strictSound = stageLayerAddition({
+  languageSource: kernel.languageSource,
+  previousAdditionSources: [],
+  draftSource: soundDraft,
+  livingLayerNames: [...KERNEL_LAYER_NAMES],
+  strictConflicts: true,
+});
+check(
+  "(e) the sound draft stays accepted in strict mode — vertical inheritance is never a conflict",
+  strictSound.ok === true && strictSound.verdicts.length === 0,
+);
+
+const strictConflict = stageLayerAddition({
+  languageSource: kernel.languageSource,
+  previousAdditionSources: [],
+  draftSource: conflictDraft,
+  livingLayerNames: [...KERNEL_LAYER_NAMES],
+  strictConflicts: true,
+});
+check(
+  "(e) the unsigned conflict is refused in strict mode, at the validation step",
+  strictConflict.ok === false && strictConflict.step === "validation",
+);
+check(
+  '(e) the unsigned conflict carries exactly the "conflit-d\'ordre" verdict',
+  strictConflict.verdicts.length === 1 && strictConflict.verdicts[0].kind === "conflit-d'ordre",
+);
+check(
+  "(e) the conflict verdict names the winner, the loser and the key",
+  strictConflict.verdicts.length === 1 &&
+    JSON.stringify(strictConflict.verdicts[0].fact.params).includes("charge") &&
+    JSON.stringify(strictConflict.verdicts[0].fact.params).includes("demo-left") &&
+    JSON.stringify(strictConflict.verdicts[0].fact.params).includes("demo-right"),
+);
+
+// =====================================================================
+// (f) the assume signs the conflict: the strict staging accepts a
+// signed convention, and the lint stays silent at the signing
+// address
+// =====================================================================
+
+const signedDraft = [
+  "layer demo-left refines @record",
+  "  charge = 1",
+  "layer demo-right refines @record",
+  "  charge = 2",
+  "layer demo-signed refines @demo-left then @demo-right",
+  "  assume charge",
+].join("\n");
+
+const strictSigned = stageLayerAddition({
+  languageSource: kernel.languageSource,
+  previousAdditionSources: [],
+  draftSource: signedDraft,
+  livingLayerNames: [...KERNEL_LAYER_NAMES],
+  strictConflicts: true,
+});
+check(
+  "(f) the signed conflict is accepted in strict mode — the assume is the signature",
+  strictSigned.ok === true && strictSigned.verdicts.length === 0,
+);
+
+const permissiveSigned = stage({ draftSource: signedDraft });
+check(
+  "(f) the signed conflict is accepted by the permissive staging too",
+  permissiveSigned.ok === true && permissiveSigned.verdicts.length === 0,
+);
+
+// the lint inventories the unsigned conflicts and respects the
+// signatures — the diagnostics channel tells them apart
+const unsignedLints = runAllLints({
+  space: new Space(permissiveConflict.compiledLanguage!.layers),
+  layerNames: permissiveConflict.layerNames,
+  compilation: permissiveConflict.compiledLanguage!,
+});
+check(
+  "(f) the lint records the unsigned conflict as a conflit-d'ordre diagnostic",
+  unsignedLints.some(
+    (diagnostic) =>
+      diagnostic.kind === "conflit-d'ordre" &&
+      diagnostic.address[0] === "demo-conflict" &&
+      JSON.stringify(diagnostic.fact.params).includes("charge"),
+  ),
+);
+const signedLints = runAllLints({
+  space: new Space(permissiveSigned.compiledLanguage!.layers),
+  layerNames: permissiveSigned.layerNames,
+  compilation: permissiveSigned.compiledLanguage!,
+});
+check(
+  "(f) the lint stays silent at the signing address — the assume is respected",
+  !signedLints.some((diagnostic) => diagnostic.kind === "conflit-d'ordre" && diagnostic.address[0] === "demo-signed"),
+);
+
+// =====================================================================
+// (g) an assume without a conflict is refused as assume-fantôme —
+// the signature judges nothing, the empty signature is a verdict
+// =====================================================================
+
+const ghostDraft = [
+  "layer demo-ghost refines @record",
+  "  assume charge",
+].join("\n");
+const refusedGhost = stage({ draftSource: ghostDraft });
+check(
+  "(g) the empty signature is refused at the validation step",
+  refusedGhost.ok === false && refusedGhost.step === "validation",
+);
+check(
+  '(g) the empty signature carries exactly the "assume-fantôme" verdict',
+  refusedGhost.verdicts.length === 1 && refusedGhost.verdicts[0].kind === "assume-fantôme",
 );
 
 // =====================================================================

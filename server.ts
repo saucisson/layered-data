@@ -61,6 +61,10 @@ const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? "codestral-latest";
 // The verified pen loop: the number of proposals the staging may
 // judge before the route gives up and answers 422.
 const MAX_PEN_ATTEMPTS = Math.max(1, Number(process.env.PEN_MAX_ATTEMPTS ?? 3));
+// The strict arm of the loop (ADR-0017): the pen may propose an
+// order-decided read only if the reading address signs an `assume`
+// — set PEN_STRICT_CONFLICTS=1 to arm it.
+const STRICT_CONFLICTS = process.env.PEN_STRICT_CONFLICTS === "1";
 
 // ------------------------------------------------------------
 // 2. THE WARDROBE ON DISK
@@ -502,6 +506,7 @@ const server = createServer(async (request, response) => {
             livingLayerNames: [...TRUNK_LAYER_NAMES, ...userNames],
             previousAdditionSources,
             maxAttempts: MAX_PEN_ATTEMPTS,
+            strictConflicts: STRICT_CONFLICTS,
             propose: async ({ instruction, feedback }) => {
               const generated = await generateLayer({ instruction, feedback });
               if (generated.statusCode !== 200) {

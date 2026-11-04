@@ -76,6 +76,14 @@ const DIAGNOSTIC_LABELS: Record<string, { label: BilingualText; tone: string; no
       fr: "inventaire : le premier-gagné a tranché ; à inspecter, pas une faute",
     },
   },
+  "conflit-d'ordre": {
+    label: { en: "order conflict", fr: "conflit d'ordre" },
+    tone: "border-amber-200 bg-amber-50 text-amber-700",
+    note: {
+      en: "first-wins decided between incomparable sources: the refines order, a convention — to inspect, or to sign with an assume",
+      fr: "le premier-gagné a tranché entre sources incomparables : l'ordre des refines, une convention — à inspecter, ou à signer d'un assume",
+    },
+  },
 };
 
 /** The diagnostics fold: kernel silences and assembly validation in
@@ -115,6 +123,7 @@ export function DiagnosticsPanel({
     "garde-de-cycle",
     "check-vacant",
     "étiquette-inconnue",
+    "conflit-d'ordre",
     "entrée-ignorée",
     "ombre-émergente",
     "ombre",
