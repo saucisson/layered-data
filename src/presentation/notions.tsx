@@ -220,11 +220,25 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       fr: "une désignation par chemin absolu (@couche/chemin), à travers les couches (liaison tardive) ; un chemin d'un seul segment cite une couche entière.",
     },
   },
+  registre: {
+    term: { en: "registry", fr: "registre" },
+    definition: {
+      en: "the nominal table of the checks: each tag declares its contract — where it judges, and which slots it must read to be able to (ADR-0018); a check carried but unable to judge is refused as check vacant.",
+      fr: "la table nominale des checks : chaque étiquette y déclare son contrat — où elle juge, et quels slots il lui faut lire pour pouvoir (ADR-0018) ; un check porté mais incapable de juger est refusé comme check vacant.",
+    },
+  },
   specification: {
     term: { en: "specification", fr: "specification" },
     definition: {
       en: "the sub-tree of a layer where the type declarations live (the former schema).",
       fr: "la sous-arborescence d'une couche où vivent les déclarations de types (l'ancien schéma).",
+    },
+  },
+  slot: {
+    term: { en: "slot", fr: "slot" },
+    definition: {
+      en: "the formal name a generic check reads (edges, arrows, arrow-vertex, end-source…): the layers bind it (bind), first-winner across the closure — a renaming rebinds the slot, the check follows the view.",
+      fr: "le nom formel qu'un check générique lit (edges, arrows, arrow-vertex, end-source…) : les couches le lient (bind), premier-gagné à travers la fermeture — un renommage re-lie le slot, le check suit la vue.",
     },
   },
   surcharger: {
