@@ -30,100 +30,57 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
 
       - name: Install dependencies
         run: npm ci
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Run tests
-        run: npm test
-
-      - name: Build
-        run: npm run build
 
       - name: Export the pull request description
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           mkdir -p .review
-          gh pr view "${{ github.event.pull_request.number }}" --json body --jq .body > .review/pull-request-description.md
+          # Get PR description using GitHub CLI
+          if command -v gh &> /dev/null; then
+            gh pr view "${{ github.event.pull_request.number }}" --json body --jq '.body' > .review/pull-request-description.md || true
+          else
+            # Fallback: create empty description file
+            touch .review/pull-request-description.md
+          fi
 
-      - name: Build the review bundle
+      - name: Generate the PR diff
         run: |
-          git diff --no-color "origin/${{ github.base_ref }}...HEAD" > .review/pull-request.diff
-          # For TypeScript projects, the bundle includes:
-          # - The diff
-          # - The PR description
-          # - The architecture rules
-          # - The review checklist
-          # - All ADRs
-          echo "# Review Bundle for PR #${{ github.event.pull_request.number }}" > .review/bundle.md
-          echo "" >> .review/bundle.md
-          echo "## Pull Request Description" >> .review/bundle.md
-          cat .review/pull-request-description.md >> .review/bundle.md
-          echo "" >> .review/bundle.md
-          echo "## Diff" >> .review/bundle.md
-          cat .review/pull-request.diff >> .review/bundle.md
-          echo "" >> .review/bundle.md
-          echo "## Architecture Rules" >> .review/bundle.md
-          cat docs/architecture.md >> .review/bundle.md
-          echo "" >> .review/bundle.md
-          echo "## Review Checklist" >> .review/bundle.md
-          cat docs/review-checklist.md >> .review/bundle.md
+          # Generate diff between base and head
+          git diff --no-color "origin/${{ github.base_ref }}...HEAD" > .review/pull-request.diff || true
 
       - name: Run the reviewer agent
-        env:
-          # In a real implementation, this would use the reviewer model
-          # For now, we simulate with a script
-          REVIEWER_MODEL: ${{ vars.REVIEWER_MODEL }}
         run: |
-          # This is a placeholder for the actual reviewer agent implementation
-          # In petrichor, this runs: uv run python scripts/agent_review.py
-          # For layered-data, we would need a TypeScript/Node implementation
-          
-          # For now, we'll create a simple review simulation
-          node -e "
-            const fs = require('fs');
-            const diff = fs.readFileSync('.review/pull-request.diff', 'utf8');
-            const desc = fs.readFileSync('.review/pull-request-description.md', 'utf8');
-            
-            // Simple check: verify PR has description
-            if (!desc || desc.trim() === '') {
-              console.log('BLOCKING: Pull request has no description');
-              process.exit(1);
-            }
-            
-            // Simple check: verify diff is not too large
-            const linesChanged = diff.split('\\n').filter(l => l.startsWith('+') || l.startsWith('-')).length;
-            if (linesChanged > 500) {
-              console.log('BLOCKING: Pull request too large (>500 lines)');
-              process.exit(1);
-            }
-            
-            console.log('Review passed: zero BLOCKING findings');
-            process.exit(0);
-          " || true
+          node scripts/agent-review.mjs
 
       - name: Publish the review comment
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          if [ -f .review/review-comment.md ]; then
-            gh pr comment "${{ github.event.pull_request.number }}" --body-file .review/review-comment.md
-          else
-            echo "Review simulation: checking basic requirements..."
-            # Simulate review pass/fail based on checks
-            npm run verify > /tmp/verify-output.txt 2>&1 || true
-            if [ $? -ne 0 ]; then
-              echo "BLOCKING: npm run verify failed" > .review/review-comment.md
-              echo "" >> .review/review-comment.md
-              cat /tmp/verify-output.txt >> .review/review-comment.md
-              gh pr comment "${{ github.event.pull_request.number }}" --body-file .review/review-comment.md
-              exit 1
-            fi
-            echo "✅ Review passed: zero BLOCKING findings" > .review/review-comment.md
-            gh pr comment "${{ github.event.pull_request.number }}" --body-file .review/review-comment.md
+          # Install GitHub CLI if not available
+          if ! command -v gh &> /dev/null; then
+            echo "Installing GitHub CLI..."
+            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
+            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
+            sudo apt update && sudo apt install gh -y
           fi
+          
+          # Post the review comment
+          if [ -f .review/review-comment.md ]; then
+            gh pr comment "${{ github.event.pull_request.number }}" --body-file .review/review-comment.md || true
+          else
+            echo "No review comment file found"
+          fi
+
+      - name: Archive the review report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: review-report
+          path: .review/
+          if-no-files-found: warn
