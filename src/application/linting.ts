@@ -12,6 +12,10 @@
 //   - étiquette-inconnue and check-vacant: a tag absent from the
 //     registry; cardinality bounds read without the closure ever
 //     reaching the collection root.
+//   - conflit-d'ordre: a leaf value decided between INCOMPARABLE
+//     sources — the diamond's convention made visible (the order
+//     stays the semantics, ADR-0017; a signature `assume` silences
+//     it, address by address).
 // The root sweep triggers the kernel channel once for all layers
 // (trace: bypasses the memo at this level).
 
@@ -24,6 +28,7 @@ import { declaredModeOf } from "../domain/validation.ts";
 import { walkAddresses } from "../domain/views.ts";
 import type { CompiledLanguage } from "../domain/language/compiler.ts";
 import { fact, type MessageFact } from "../domain/messages.ts";
+import { formatAddress, unsignedOrderConflictsOf } from "../domain/conflicts.ts";
 
 /** Everything the lint pass walks: the living space, its layer
  * inventory, and the compilation of the loaded corpus (declared
@@ -172,6 +177,42 @@ function lintVacuousBounds({ space, layerNames }: LintingTarget): void {
   }
 }
 
+/** The order conflicts of the whole inventory: every address whose
+ * first-wins walks incomparable providers with diverging laid
+ * values — the convention made visible, not a fault (the order IS
+ * the semantics, ADR-0017). A signature `assume` at the reading
+ * address silences the conflict: signed conventions are acts of
+ * the language, the lint respects them. */
+export function orderConflictsOf(target: LintingTarget) {
+  const { space, layerNames, compilation } = target;
+  return unsignedOrderConflictsOf({
+    space,
+    layerNames,
+    isAssumed: (address, key) =>
+      declaredModeOf({ layer: address[0], path: address[1], key, compilation }) === "assume",
+  });
+}
+
+/** Record the unsigned order conflicts as conflit-d'ordre
+ * diagnostics — the inventory of what the refines order decides
+ * silently elsewhere. */
+function lintOrderConflicts(target: LintingTarget): void {
+  for (const conflict of orderConflictsOf(target)) {
+    target.space.recordDiagnostic({
+      kind: "conflit-d'ordre",
+      address: conflict.address,
+      fact: fact("order-conflict", {
+        where: formatAddress(conflict.address),
+        key: conflict.key,
+        winner: formatAddress(conflict.winner),
+        winnerValue: conflict.winnerValue,
+        loser: formatAddress(conflict.loser),
+        loserValue: conflict.loserValue,
+      }),
+    });
+  }
+}
+
 /** The full diagnostics pass: one sweep at mount, on the memo — the
  * channel (space.diagnostics) gathers the kernel notes and those of
  * the lints; the verdict cites its silences. Returns the channel
@@ -181,6 +222,7 @@ export function runAllLints(target: LintingTarget): Diagnostic[] {
   lintShadow(target);
   lintTags(target);
   lintVacuousBounds(target);
+  lintOrderConflicts(target);
   // root sweep: re-resolves the entries of the roots — the ignored
   // entries and cycle guards of the roots are recorded (tracer: the
   // memo is bypassed at this level)
