@@ -20,7 +20,7 @@
 > vocabulary of the product. Its measured references live in
 > `tests/` (the audit harness and its baseline).
 
-**Statut.** Spécification normative, extraite du noyau de référence (`ldv2`, noyau
+**Statut.** Spécification normative, extraite du noyau de référence (layered-data, noyau
 TypeScript extrait de l'atelier). Elle décrit ce que le noyau *fait* — la fermeture par
 adresse, la re-racination, le premier-gagné, les masques, le désucrage, les checks,
 l'invalidation — indépendamment de toute implantation. Tout noyau conforme doit

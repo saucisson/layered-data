@@ -181,7 +181,7 @@ monolithe (`App.tsx` de 6 700 lignes) à une architecture en oignon
 documentée (`docs/architecture.md`, règles de codage dans
 `docs/coding-guidelines.md`).
 
-- Le noyau ldv2 vit dans `src/domain/` (pur : aucun import React, Node
+- Le noyau layered-data vit dans `src/domain/` (pur : aucun import React, Node
   ou fichier), les cas d'usage dans `src/application/`, les effets dans
   `src/infrastructure/`, le rendu dans `src/presentation/` (une vingtaine
   de composants purs), `src/App.tsx` (1 300 lignes) reste la racine de
@@ -209,7 +209,7 @@ de correctif vit ici, et lui seul.
 
 - Les marqueurs de fabrication (tours datés, runs, références au papier,
   règles, journal en pied d'atelier) sont retirés de l'interface, du
-  corpus, du serveur et du README ; le nom `ldv2` du noyau reste — c'est
+  corpus, du serveur et du README ; le nom `layered-data` du noyau reste — c'est
   son nom, pas un marqueur.
 - Les chiffres de mesure restent ; les histoires de correctifs migrent
   dans ce journal.

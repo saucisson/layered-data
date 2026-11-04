@@ -12,7 +12,7 @@ Le code suit une architecture en oignon, documentée dans
 `docs/architecture.md` (les règles de codage, binding pour tout `src/` et
 `server.ts`, vivent dans `docs/coding-guidelines.md`) :
 
-- `src/domain/` — le noyau ldv2, pur : l'espace (closures, carottage
+- `src/domain/` — le noyau layered-data, pur : l'espace (closures, carottage
   premier-gagné), le langage (tokenizer, parseur, compilateur,
   citations), les checks sémantiques, la validation, les vues (lentilles).
   Il n'importe ni React, ni Node, ni fichier : du calcul pur sur données.
