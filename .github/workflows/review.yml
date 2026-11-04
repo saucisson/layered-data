@@ -46,6 +46,18 @@ jobs:
             jq -r '.body // ""')
           echo "$PR_DESCRIPTION" > .review/pull-request-description.md
 
+      - name: Export the pull request labels
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          mkdir -p .review
+          # Labels of the PR via GitHub API — the reviewer reads them
+          # from the bundle (a manually posed `human-approved` label
+          # waives the constitutional-file gate, ADR-0011)
+          curl -s -H "Authorization: token ${{ github.token }}" \
+            "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/labels" | \
+            jq '[.[].name]' > .review/pull-request-labels.json
+
       - name: Generate the PR diff
         run: |
           # Generate diff between base and head
