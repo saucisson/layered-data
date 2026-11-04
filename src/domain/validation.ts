@@ -16,7 +16,7 @@
 // parameters, so staging can validate a whole assembly (corpus +
 // supplements + candidate) without touching the loaded globals.
 
-import { type LayerName, type LayerPath } from "./identifiers.ts";
+import { type LayerName, type LayerPath, asLayerName } from "./identifiers.ts";
 import { AddressView, LayerReference, MASK, PathReference, type RawValue, isDictionary } from "./addresses.ts";
 import { Space } from "./space.ts";
 import { checkRegistry } from "./checks.ts";
@@ -99,7 +99,7 @@ export function expectationsOf(layerNode: any): ExpectedRead[] {
       address,
       path: segments.slice(0, -1),
       key: segments[segments.length - 1],
-      expectation: (layerNode["tests"] as RawValue)[address],
+      expectation: layerNode["tests"][address],
     });
   }
   return expectations;
@@ -193,7 +193,9 @@ export function validateSpace({
       if (!isDictionary(node)) continue;
       const tags = node["checks"] ?? [];
       if (!Array.isArray(tags)) continue;
-      for (const tag of tags) labelsOf.get(layer)!.add(tag);
+      for (const tag of tags) {
+        if (typeof tag === "string") labelsOf.get(layer)!.add(tag);
+      }
     }
   }
 
@@ -280,7 +282,7 @@ export function validateSpace({
           // never declares itself alone.
           const declaredKey = key.startsWith("__note:") ? key.slice(7) : key;
           const mode = declaredModeOf({
-            layer: winner[0],
+            layer: asLayerName(winner[0]),
             path: winner[1],
             key: declaredKey,
             compilation,

@@ -43,7 +43,7 @@ export function displayCandidatePaths({ space, lens }: { space: Space; lens: Lay
 export function readDisplayTemplate({ space, lens, path }: { space: Space; lens: LayerName; path: LayerPath }): any {
   for (const [sourceLayer, sourcePath] of space.closure({ layer: lens, path })) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
-    if (node !== null && "display" in node) {
+    if (isDictionary(node) && "display" in node) {
       if ((node as any)["display"] !== null) return (node as any)["display"];
     }
   }
@@ -69,7 +69,7 @@ export function lensDrawingEntries({ space, lens }: { space: Space; lens: LayerN
         continue;
       }
       const node = space.raw({ layer: sourceLayer, path: sourcePath });
-      if (node !== null && "display" in node) continue;
+      if (isDictionary(node) && "display" in node) continue;
       if (!types.some((existing) => addressesEqual(existing, source))) types.push(source);
     }
     entries.push({ path, spec, types });
@@ -185,7 +185,7 @@ export function dressingApplicability({ space, lens, model }: { space: Space; le
 
 export function serializableValue(value: any): any {
   if (value === MASK) return { __mask: 1 };
-  if (value instanceof PathReference) return { __ref: [value.anchor].concat(value.path) };
+  if (value instanceof PathReference) return { __ref: [value.anchor, ...value.path] };
   if (value instanceof LayerReference) return { __lref: value.layer };
   if (Array.isArray(value)) return value.map(serializableValue);
   if (isDictionary(value)) {

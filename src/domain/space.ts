@@ -608,7 +608,10 @@ export class Space {
     if (raw instanceof PathReference) {
       const resolved = this.resolveReference({ reference: raw, holder: [layer, path], tracer });
       if (resolved === null) return null;
-      if (Array.isArray(resolved)) return new AddressView(resolved[0], resolved[1]);
+      if (Array.isArray(resolved)) {
+        const resolvedAddress = resolved as Address;
+        return new AddressView(resolvedAddress[0], resolvedAddress[1]);
+      }
       return resolved;
     }
     return raw;
