@@ -16,7 +16,7 @@ import { AddressView, MASK, type Address } from "../domain/addresses.ts";
 import { SPECIAL_KEYS, type SpecialKey } from "../domain/specialKeys.ts";
 import type { ReadObservation } from "../domain/space.ts";
 import type { Space } from "../domain/space.ts";
-import { asLayerPath } from "../domain/identifiers.ts";
+import { asLayerPath, asPathSegment } from "../domain/identifiers.ts";
 
 /** One visible key of a flattened node: the won value, or the
  * abstract slot ∅ with its declarer. */
@@ -147,7 +147,7 @@ export function flattenLayer({ space, layer }: { space: Space; layer: LayerName 
       // navigated (panel ②, "go there").
       const isRepeatedSpecialKey =
         (SPECIAL_KEYS as readonly string[]).includes(entry.key) &&
-        entry.target[1].slice(0, -1).includes(entry.key);
+        entry.target[1].slice(0, -1).includes(asPathSegment(entry.key));
       if (isRepeatedSpecialKey) continue;
 
       if (depth >= MAX_DESCENT_DEPTH) continue;

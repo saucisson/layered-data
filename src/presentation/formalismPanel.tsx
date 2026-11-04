@@ -8,6 +8,7 @@
 
 import React, { useMemo, useState } from "react";
 import type { LayeredDataKernel } from "../application/corpus.ts";
+import { asLayerName } from "../domain/identifiers.ts";
 import type { Language } from "../domain/messages.ts";
 import { RawLayerExplorer } from "./rawExplorer.tsx";
 import { LayerSourceView, type SourceLineTarget } from "./layerSourceView.tsx";
@@ -89,7 +90,7 @@ export function FormalismPanel({
               fr: "Ce que la couche stocke réellement — ni plus, ni moins. Les clés ambrées (refines, specification) sont structurelles.",
             })}
           </p>
-          <RawLayerExplorer space={kernel.space} layer={layer} language={language} />
+          <RawLayerExplorer space={kernel.space} layer={asLayerName(layer)} language={language} />
         </>
       )}
       {activeTab === "flattened" && (

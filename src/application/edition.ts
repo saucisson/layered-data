@@ -10,7 +10,7 @@
 // read-only: only the layers added at runtime are editable.
 
 import { type LayerName, asLayerName, asLayerPath } from "../domain/identifiers.ts";
-import { LayerReference } from "../domain/addresses.ts";
+import { LayerReference, type RawValue } from "../domain/addresses.ts";
 import { type Space } from "../domain/space.ts";
 import { extractLayerBlock, stageLayerAddition, type StagingOutcome } from "./staging.ts";
 import { DEFAULT_LANGUAGE, type Language } from "../domain/messages.ts";
@@ -150,8 +150,8 @@ export function applyStagedEdition({
   }
   space.layers[layerName] = compiledTree;
   space.touch({ layer: layerName, path: asLayerPath([]) });
-  const refinementTargetsOf = (compiledTree["refines"] ?? [])
-    .filter((entry) => entry instanceof LayerReference)
+  const refinementTargetsOf = ((compiledTree["refines"] ?? []) as RawValue[])
+    .filter((entry): entry is LayerReference => entry instanceof LayerReference)
     .map((entry) => entry.layer);
   return {
     layerName,

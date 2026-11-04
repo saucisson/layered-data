@@ -356,8 +356,8 @@ check(
 // of the walk (measured below), it never reaches the guard.
 const cyclicSpace = spaceFromLayerTrees({
   "model": {
-    x: { refines: [new PathReference("model", ["y"])] },
-    y: { refines: [new PathReference("model", ["x"])] },
+    x: { refines: [new PathReference(asLayerName("model"), asLayerPath(["y"]))] },
+    y: { refines: [new PathReference(asLayerName("model"), asLayerPath(["x"]))] },
   },
 });
 const guardedWalk = cyclicSpace.closure({ layer: asLayerName("model"), path: asLayerPath(["x"]) });
@@ -381,7 +381,7 @@ check(
 // The pure self-reference: absorbed by the deduplication, finite, and
 // memoizable — its result depends on nothing (measured).
 const selfRefSpace = spaceFromLayerTrees({
-  "looped": { node: { refines: [new PathReference("looped", ["node"])] } },
+  "looped": { node: { refines: [new PathReference(asLayerName("looped"), asLayerPath(["node"]))] } },
 });
 const selfRefWalk = selfRefSpace.closure({ layer: asLayerName("looped"), path: asLayerPath(["node"]) });
 check(
@@ -445,8 +445,8 @@ check(
 // model listed FIRST in the record: the topological order must still
 // desugar base before model (O13).
 const implicitsSpace = spaceFromLayerTrees({
-  "model": { refines: [new LayerReference("base")], c: {} },
-  "base": { implicits: [new PathReference("base", [])], a: {}, b: {} },
+  "model": { refines: [new LayerReference(asLayerName("base"))], c: {} },
+  "base": { implicits: [new PathReference(asLayerName("base"), asLayerPath([]))], a: {}, b: {} },
 });
 const topological = layerTopologicalOrder(implicitsSpace).map(String);
 check(
@@ -454,7 +454,7 @@ check(
   topological.indexOf("base") < topological.indexOf("model"),
 );
 
-const implicitEntry = new PathReference("base", []);
+const implicitEntry = new PathReference(asLayerName("base"), asLayerPath([]));
 const refinesOf = (layerName: string, nodeName: string): unknown[] =>
   (layerTreeOf(implicitsSpace, layerName)[nodeName] as { refines?: unknown[] }).refines ?? [];
 
@@ -491,7 +491,7 @@ check(
 
 const mutableSpace = spaceFromLayerTrees({
   "scheme": { collection: { bound: 5 } },
-  "model": { refines: [new LayerReference("scheme")], collection: { own: 1 }, collection2: { own: 2 } },
+  "model": { refines: [new LayerReference(asLayerName("scheme"))], collection: { own: 1 }, collection2: { own: 2 } },
 });
 const modelLayer = asLayerName("model");
 
@@ -506,14 +506,14 @@ check(
 
 // addition: a brand-new path invalidates nothing
 layerTreeOf(mutableSpace, "model")["fresh"] = { own: 3 };
-mutableSpace.touch({ layer: modelLayer, path: ["fresh"] });
+mutableSpace.touch({ layer: modelLayer, path: asLayerPath(["fresh"]) });
 check(
   "C7: the addition of a new path invalidates nothing (the protocol's zero-invalidation rule)",
   mutableSpace.staleMemoKeys().length === 0,
 );
 
 // value write on collection: exactly its own entry is invalidated
-mutableSpace.touch({ layer: modelLayer, path: ["collection"] });
+mutableSpace.touch({ layer: modelLayer, path: asLayerPath(["collection"]) });
 const staleAfterWrite = mutableSpace.staleMemoKeys();
 check(
   "C7: a value write on a node invalidates exactly the entries that depend on it",

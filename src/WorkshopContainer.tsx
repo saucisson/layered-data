@@ -298,8 +298,8 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
     let referenceEvents: any[] = [];
     if (last && last.raw instanceof PathReference) {
       referenceEvents = KERNEL.space
-        .traceReferenceResolution({ reference: last.raw, holder: [layer, path] })
-        .events.filter((event) => event.kind === "refsearch" && event.depth === 1);
+        .traceReferenceResolution({ reference: last.raw, holder: [asLayerName(layer), asLayerPath(path)] })
+        .events.filter((event: any) => event.kind === "refsearch" && event.depth === 1);
     }
     return { value, scan, winner, referenceEvents };
   }, [layer, path, selectedKey, spaceVersion]);
@@ -512,7 +512,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
             {(["en", "fr"] as Language[]).map((choice) => (
               <button
                 key={choice}
-                onClick={() => chooseLanguage(choice)}
+                onClick={() => onChooseLanguage(choice)}
                 className={
                   "rounded border px-1.5 py-0.5 font-bold uppercase " +
                   (language === choice

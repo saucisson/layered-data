@@ -143,10 +143,10 @@ function checkCardinality({ space, view }: { space: Space; view: AddressView }):
   if (minimum === null && maximum === null) return [];
   const count = space.keys({ layer: view.layer, path: view.path }).length;
   const errors: string[] = [];
-  if (minimum !== null && count < minimum) {
+  if (typeof minimum === "number" && count < minimum) {
     errors.push("cardinalité: " + count + " < min=" + pythonRepr(minimum));
   }
-  if (maximum !== null && count > maximum) {
+  if (typeof maximum === "number" && count > maximum) {
     errors.push("cardinalité: " + count + " > max=" + pythonRepr(maximum));
   }
   return errors;
@@ -581,6 +581,7 @@ export function runChecks({ space, layer }: { space: Space; layer: LayerName }):
       const tags = node["checks"] ?? [];
       if (!Array.isArray(tags)) continue;
       for (const tag of tags) {
+        if (typeof tag !== "string") continue;
         const checkFunction = checkRegistry[tag];
         if (!checkFunction) {
           // An unknown tag is ignored — and recorded.
