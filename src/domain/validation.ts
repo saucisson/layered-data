@@ -8,7 +8,8 @@
 // layer that descends from it), (d) the shadow confrontation: every
 // first-winner that overrides must have declared it, (e) the
 // expected-reads contract replays — a betrayed read, wherever it
-// lives, is a verdict.
+// lives, is a verdict, (f) the assumes: a signature without an
+// order conflict is a ghost.
 //
 // The verdict KINDS and the stat KEYS are kernel behavior — the panels
 // display them — they stay in French. Everything here is pure: the
@@ -24,6 +25,7 @@ import { walkAddresses } from "./views.ts";
 import { type CompiledLanguage, type Declaration } from "./language/compiler.ts";
 import { type ParsedLanguage } from "./language/parser.ts";
 import { fact, type MessageFact } from "./messages.ts";
+import { orderConflictsAt } from "./conflicts.ts";
 
 export interface Verdict {
   kind: string;
@@ -175,7 +177,11 @@ export function validateSpace({
     if (declaration.mode === "new") stats.nouveau++;
     else if (declaration.mode === "extend") stats.extension++;
     else if (declaration.mode === "override") stats.surcharge++;
-    else stats.masque++;
+    else if (declaration.mode === "assume") {
+      // a signature, not a value — the assume judges nothing here,
+      // the walk (f) below is its only judge
+      continue;
+    } else stats.masque++;
   }
 
   // ---- the labels of each layer (closure of its root) and its
@@ -201,6 +207,10 @@ export function validateSpace({
 
   // ---- (a) declarations against the closures
   for (const declaration of compilation.declarations) {
+    // the assume is judged by its own walk (f): its object is not
+    // an upstream key but an order conflict — the upstream
+    // confrontation would misjudge it
+    if (declaration.mode === "assume") continue;
     let existsUpstream = false;
     for (const [sourceLayer, sourcePath] of space.closure({ layer: declaration.layer, path: declaration.path as LayerPath })) {
       if (
@@ -289,6 +299,11 @@ export function validateSpace({
           });
           if (mode === "extend" || mode === "override") {
             stats.ombresDeclarées++;
+          } else if (mode === "assume") {
+            // the assume is a declared act — the signature of the
+            // shadow the order decides (the __note: of an assume
+            // lands here too: its winner is the signing node)
+            stats.ombresDeclarées++;
           } else if (mode === "new") {
             stats.ombresÉmergentes++;
           } else {
@@ -333,6 +348,27 @@ export function validateSpace({
           }),
         });
       }
+    }
+  }
+  // ---- (f) the assumes against the conflicts — a signature
+  // without an order conflict is a ghost: nothing was signed, the
+  // read is decided by structure (specificity), the assume adds
+  // nothing but noise. The conflict the assume signs may live at
+  // the very address of the signature (the reading address); its
+  // visibility belongs to the lint, its refusal to the strict
+  // staging — here, only the empty signature is a verdict.
+  for (const declaration of compilation.declarations) {
+    if (declaration.mode !== "assume") continue;
+    const conflicts = orderConflictsAt({
+      space,
+      address: [declaration.layer, declaration.path as LayerPath],
+    });
+    if (!conflicts.some((conflict) => conflict.key === declaration.key)) {
+      const where = declaration.layer + "::" + (declaration.path.join("/") || ".");
+      verdicts.push({
+        kind: "assume-fantôme",
+        fact: fact("ghost-assume", { where, key: declaration.key }),
+      });
     }
   }
   return { verdicts, stats };

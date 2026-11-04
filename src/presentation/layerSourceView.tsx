@@ -17,7 +17,7 @@ import type { Language } from "../domain/messages.ts";
  * strings, numbers, comments, identifiers, punctuation. */
 const LANGUAGE_KEYWORDS = new Set([
   "layer", "refines", "extend", "override", "mask", "bind", "check",
-  "abstract", "then",
+  "abstract", "then", "assume",
 ]);
 
 /** Where a written line points: the address (layer + path) and,
@@ -46,6 +46,12 @@ export function buildSourceLineTargets({ parsedLanguage }: { parsedLanguage: Par
           continue;
         }
         if (act.kind === "mask") {
+          targets.set(act.line, { layer: parsedLayer.name, path, key: act.key });
+          continue;
+        }
+        // the assume signs the read of its key at this address —
+        // the line designates the signing node, like the mask
+        if (act.kind === "assume") {
           targets.set(act.line, { layer: parsedLayer.name, path, key: act.key });
           continue;
         }
