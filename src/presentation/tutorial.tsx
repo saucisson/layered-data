@@ -1,18 +1,20 @@
 // The tutorial — why data in strata, and how: the philosophers'
-// dinner poses the problem and every step reads it again; the cited
-// addresses are clickable. The tutorial opens the page — one learns
-// the workshop before using it. The spine is drawn in the
-// "continuum" step: every line is a button that navigates to the
-// layer. This component only renders: no kernel reads, no derived
-// state — prose and links. Every text is bilingual: the French is
-// the historic prose, the English its mirror.
+// dinner is the running example and every step reads it again; the
+// layer names of the continuum are clickable. The tutorial renders
+// as one scrollable page — every step is a section, prose and real
+// corpus excerpts alternate, the excerpts are colored by the same
+// rules as the "Language" tab. This component only renders: no
+// kernel reads, no derived state — prose and links. Every text is
+// bilingual: the French is the historic prose, the English its
+// mirror.
 
-import React, { useState } from "react";
+import React from "react";
 import { GLOSSARY, NotionTip, NotionText } from "./notions.tsx";
 import { localized, say, type BilingualText } from "./i18n.ts";
+import { highlightSourceLine, SPAN_CLASSES } from "./layerSourceView.tsx";
 import type { Language } from "../domain/messages.ts";
 
-/** One step of the tutorial: a block is either prose (a bilingual
+/** One section of the tutorial: a block is either prose (a bilingual
  * text, notions ⟪ ⟫ rendered as tooltips) or a real corpus extract
  * ({ code, title }) — the walkthrough alternates the explanation
  * and the explained thing. */
@@ -22,61 +24,24 @@ export interface TutorialStep {
   title: BilingualText;
   body: (BilingualText | { code: string; title: BilingualText })[];
   see?: BilingualText;
-  /** real navigation links: each entry navigates to
-   * (layer, path) — the cited addresses exist, measured */
-  go?: { layer: string; path?: string[]; label: BilingualText }[];
 }
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
   {
     id: "pbm",
-    label: { en: "1 · The example, the problem", fr: "1 · L'exemple, le problème" },
+    label: { en: "1 · The example", fr: "1 · L'exemple" },
     title: {
-      en: "The net written four times lies — and its state space no longer knows it",
-      fr: "Le réseau écrit quatre fois ment — et son espace d'états ne le connaît plus",
+      en: "The philosophers' dinner: one Petri net, followed through the whole tutorial",
+      fr: "Le dîner des philosophes : un réseau de Petri, suivi tout au long du tutoriel",
     },
     body: [
       {
-        en: "Take the philosophers' dinner. It will follow the whole tutorial. A Petri net is few things. Places (thinking, eating, a fork). Transitions (take, release). Arcs joining the two, each with its weight. Tokens in the places. And yet, in a flat format — JSON, XML — this net is written four times. The schema declares that a place has a marking and an identifier. The instance says that think1 carries a token. The constraint says that an arc has a weight of 1. The rendering draws the graph. Four writings, sharing nothing.",
-        fr: "Prenons le dîner des philosophes. Il va suivre tout le tutoriel. Un réseau de Petri, c'est peu de choses. Des places (penser, manger, une fourchette). Des transitions (prendre, relâcher). Des arcs qui relient les deux, chacun avec son poids. Des jetons dans les places. Et pourtant, dans un format plat — JSON, XML —, ce réseau est écrit quatre fois. Le schéma déclare qu'une place a un marquage et un identifiant. L'instance dit que think1 porte un jeton. La contrainte dit qu'un arc a un poids de 1. Le rendu dessine le graphe. Quatre écritures, qui ne partagent rien.",
+        en: "Take the philosophers' dinner as the running example. A Petri net is few things: places (thinking, eating, a fork), transitions (take, release), arcs joining the two, each with its weight, and tokens in the places. In layered-data, this net is written once — as layers that refine one another — and every step of this tutorial reads it again.",
+        fr: "Prenons le dîner des philosophes comme exemple suivi. Un réseau de Petri, c'est peu de choses : des places (penser, manger, une fourchette), des transitions (prendre, relâcher), des arcs qui relient les deux, chacun avec son poids, et des jetons dans les places. Dans layered-data, ce réseau s'écrit une seule fois — en couches qui se raffinent — et chaque étape de ce tutoriel le relit.",
       },
       {
-        en: "The lie comes fast. Decide that your net starts otherwise — the philosopher is already eating. The initial marking must be hunted through the schema, the instance that copies it, the constraint, the drawing that displays it. Missing a single place leaves two truths. Worse: the errors are silent. A misspelled path — places::philo1.think1::marquing, one letter too many — breaks nothing. The read simply returns nothing, and the philosopher seems to think without a token. This is the exact failure mode of an AI assistant writing data: plausible but false, without a single exception.",
-        fr: "Le mensonge arrive vite. Décidez que votre réseau démarre autrement — le philosophe mange déjà. Il faut traquer le marquage initial dans le schéma, dans l'instance qui le recopie, dans la contrainte, dans le dessin qui l'affiche. Rater un seul endroit laisse deux vérités. Pire : les erreurs sont silencieuses. Un chemin mal orthographié — places::philo1.think1::marquing, une lettre de trop — ne plante rien. La lecture rend simplement rien, et le philosophe semble penser sans jeton. C'est le mode d'échec exact d'un assistant IA rédigeant des données : plausible mais faux, sans aucune exception.",
-      },
-      {
-        en: "A first shortfall shows without leaving the standard definitions of the literature — the quintuple N = (P, T, F, W, M₀). The net presents itself as a bipartite graph, the state space as a graph: neither definition is written as an instance of a common graph formalism. Everything that holds of a graph in general — a traversal, an acyclicity property, a drawing tool — is rewired at every definition, by hand; the genericity lives in the reader's eye. This tutorial will answer it: the generic graph becomes a layer, and every formalism ⟪refines⟫ it instead of rewiring it.",
-        fr: "Un premier manquement se voit sans quitter les définitions standard de la littérature — le quintuplet N = (P, T, F, W, M₀). Le réseau se présente comme un graphe biparti, l'espace d'états comme un graphe : aucune des deux définitions n'est écrite comme instance d'un formalisme de graphe commun. Tout ce qui vaut d'un graphe en général — un parcours, une propriété d'acyclicité, un outil de dessin — se recâble à chaque définition, à la main ; la généricité vit dans l'œil du lecteur. Ce tutoriel y répondra : le graphe générique devient une couche, et chaque formalisme la ⟪raffine⟫ au lieu de le recâbler.",
-      },
-      {
-        en: "But the real wound is deeper. The net presents itself as a bipartite graph, and its state space as a graph. The two definitions do not know each other: nothing in one references the other. The relation lives in prose, in the firing theorem. The state space's nodes should be labeled by « the net with a certain marking ». Most often they label the marking alone — a function of the places, with no path back to the net. And its arcs borrow transitions from the theorem's text, not from the data. The step-1 synchronization was only the symptom. The wound is one of composition: two graphs, no shared address.",
-        fr: "Mais la vraie blessure est plus profonde. On présente le réseau comme un graphe biparti, et son espace d'états comme un graphe. Les deux définitions ne se connaissent pas : rien, dans l'une, ne référence l'autre. La relation vit en prose, dans le théorème de tir. Les nœuds de l'espace d'états devraient être étiquetés par « le réseau avec un certain marquage ». Ils n'étiquettent le plus souvent que le marquage seul — une fonction des places, sans chemin de retour vers le réseau. Et ses arcs empruntent des transitions au texte du théorème, pas aux données. La synchronisation de l'étape 1 n'était que le symptôme. La blessure est de composition : deux graphes, aucune adresse partagée.",
-      },
-    ],
-    go: [
-      {
-        layer: "petrinet-scheme",
-        path: ["specification", "place_type"],
-        label: {
-          en: "petrinet-scheme::specification::place_type — the schema",
-          fr: "petrinet-scheme::specification::place_type — le schéma",
-        },
-      },
-      {
-        layer: "pn-philosophers-1",
-        path: ["places"],
-        label: {
-          en: "pn-philosophers-1::places — the template, think1/eat1/fork1",
-          fr: "pn-philosophers-1::places — le template, think1/eat1/fork1",
-        },
-      },
-      {
-        layer: "ss-pn-philosophers-5-inst",
-        path: ["states", "s1"],
-        label: {
-          en: "ss-pn-philosophers-5-inst::states::s1 — a state that knows its net",
-          fr: "ss-pn-philosophers-5-inst::states::s1 — un état qui connaît son réseau",
-        },
+        en: "Each section below pairs a piece of the idea with the real corpus excerpt that carries it. The layer names of the continuum are clickable: they open the workshop on that layer.",
+        fr: "Chaque section ci-dessous marie un morceau de l'idée à l'extrait réel du corpus qui le porte. Les noms des couches du continuum sont cliquables : ils ouvrent l'atelier sur cette couche.",
       },
     ],
     see: {
@@ -93,46 +58,12 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     },
     body: [
       {
-        en: "The idea: never write the net four times again — let it sediment. A layered datum is a tree of values, laid in a ⟪layer⟫ that ⟪refines⟫ others (refines). It inherits everything they define. It can specify it, mask it or extend it. The philosophers' dinner rests on the paper's spine. First multihypergraph, the atom: vertices, edges of any size. Then hypergraph, its pure restriction. Then pair-graph (exactly two arrows per edge) and graph, the mathematician's graph (« a 2-uniform hypergraph is a graph »). Then multidigraph and digraph: orientation is a renaming of the connection points. With bipartite-digraph, two classes of vertices. Then petrinet-scheme, the Petri net, refines three layers: the partition, the annotation of the vertices (the marking), that of the edges (the weight). Then pn-philosophers, the philosophers — think/eat/fork, take/release — and the default: an arc carries a weight of 1. Then pn-philosophers-1, the template: one philosopher alone, think1 = 1, eat1 = 0, fork1 = 1. Then pn-philosophers-5, the dinner: five CITATIONS of the template in a collection, linked in a ring by their forks — the engine expands each citation, the members land qualified (philo1.think1…), the data stays in the template. And the chain completes, closing the step-1 wound. Automaton-scheme is a graph whose vertices are states, plus an alphabet. Petrinet-statespace is the state space — an automaton parameterized by the net: the petrinet slot is typed petrinet-scheme, and a state's type descends from the behavior, which refines the parameter — a state's type is the net. Then ss-pn-philosophers-5, the dinner's state space (the petrinet slot laid on the dinner). Finally ss-pn-philosophers-5-inst, one state: s1 lays only philo1.think1 = 2, everything else inherits from the net through its type.",
-        fr: "L'idée : ne plus jamais écrire le réseau quatre fois — le sédimenter. Une donnée en strates est un arbre de valeurs, posé dans une ⟪couche⟫ qui en ⟪raffine⟫ d'autres (refines). Elle hérite de tout ce qu'elles définissent. Elle peut le préciser, le masquer ou l'étendre. Le dîner des philosophes repose sur la colonne vertébrale du papier. D'abord multihypergraph, l'atome : des sommets, des arêtes de taille quelconque. Puis hypergraph, sa restriction pure. Puis pair-graph (exactement deux flèches par arête) et graph, le graphe du mathématicien (« a 2-uniform hypergraph is a graph »). Puis multidigraph et digraph : l'orientation est un renommage des points de connexion. Avec bipartite-digraph, voilà deux classes de sommets. Alors petrinet-scheme, le réseau de Petri, raffine trois couches : la partition, l'annotation des sommets (le marquage), celle des arêtes (le poids). Puis pn-philosophers, les philosophes — think/eat/fork, take/release — et le défaut : un arc porte un poids de 1. Puis pn-philosophers-1, le template : un philosophe seul, think1 = 1, eat1 = 0, fork1 = 1. Puis pn-philosophers-5, le dîner : cinq CITATIONS du template dans une collection, reliées en anneau par leurs fourchettes — le moteur développe chaque citation, les membres atterrissent qualifiés (philo1.think1…), la donnée reste dans le template. Et la chaîne s'achève, refermant la blessure de l'étape 1. Automaton-scheme est un graphe dont les sommets sont des états, plus un alphabet. Petrinet-statespace est l'espace d'états — un automate paramétré par le réseau : le slot petrinet est typé petrinet-scheme, et le type d'un état descend du behavior, qui raffine le paramètre — le type d'un état est le réseau. Puis ss-pn-philosophers-5, l'espace d'états du dîner (le slot petrinet posé au dîner). Enfin ss-pn-philosophers-5-inst, un état : s1 ne pose que philo1.think1 = 2, tout le reste hérite du réseau à travers son type.",
+        en: "The idea: let the net sediment. A layered datum is a tree of values, laid in a ⟪layer⟫ that ⟪refines⟫ others (refines). It inherits everything they define. It can specify it, mask it or extend it. The philosophers' dinner rests on the paper's spine. First multihypergraph, the atom: vertices, edges of any size. Then hypergraph, its pure restriction. Then pair-graph (exactly two arrows per edge) and graph, the mathematician's graph (« a 2-uniform hypergraph is a graph »). Then multidigraph and digraph: orientation is a renaming of the connection points. With bipartite-digraph, two classes of vertices. Then petrinet-scheme, the Petri net, refines three layers: the partition, the annotation of the vertices (the marking), that of the edges (the weight). Then pn-philosophers, the philosophers — think/eat/fork, take/release — and the default: an arc carries a weight of 1. Then pn-philosophers-1, the template: one philosopher alone, think1 = 1, eat1 = 0, fork1 = 1. Then pn-philosophers-5, the dinner: five CITATIONS of the template in a collection, linked in a ring by their forks — the engine expands each citation, the members land qualified (philo1.think1…), the data stays in the template. And the chain completes with the state space. Automaton-scheme is a graph whose vertices are states, plus an alphabet. Petrinet-statespace is the state space — an automaton parameterized by the net: the petrinet slot is typed petrinet-scheme, and a state's type descends from the behavior, which refines the parameter — a state's type is the net. Then ss-pn-philosophers-5, the dinner's state space (the petrinet slot laid on the dinner). Finally ss-pn-philosophers-5-inst, one state: s1 lays only philo1.think1 = 2, everything else inherits from the net through its type.",
+        fr: "L'idée : sédimenter le réseau. Une donnée en strates est un arbre de valeurs, posé dans une ⟪couche⟫ qui en ⟪raffine⟫ d'autres (refines). Elle hérite de tout ce qu'elles définissent. Elle peut le préciser, le masquer ou l'étendre. Le dîner des philosophes repose sur la colonne vertébrale du papier. D'abord multihypergraph, l'atome : des sommets, des arêtes de taille quelconque. Puis hypergraph, sa restriction pure. Puis pair-graph (exactement deux flèches par arête) et graph, le graphe du mathématicien (« a 2-uniform hypergraph is a graph »). Puis multidigraph et digraph : l'orientation est un renommage des points de connexion. Avec bipartite-digraph, voilà deux classes de sommets. Alors petrinet-scheme, le réseau de Petri, raffine trois couches : la partition, l'annotation des sommets (le marquage), celle des arêtes (le poids). Puis pn-philosophers, les philosophes — think/eat/fork, take/release — et le défaut : un arc porte un poids de 1. Puis pn-philosophers-1, le template : un philosophe seul, think1 = 1, eat1 = 0, fork1 = 1. Puis pn-philosophers-5, le dîner : cinq CITATIONS du template dans une collection, reliées en anneau par leurs fourchettes — le moteur développe chaque citation, les membres atterrissent qualifiés (philo1.think1…), la donnée reste dans le template. Et la chaîne s'achève avec l'espace d'états. Automaton-scheme est un graphe dont les sommets sont des états, plus un alphabet. Petrinet-statespace est l'espace d'états — un automate paramétré par le réseau : le slot petrinet est typé petrinet-scheme, et le type d'un état descend du behavior, qui raffine le paramètre — le type d'un état est le réseau. Puis ss-pn-philosophers-5, l'espace d'états du dîner (le slot petrinet posé au dîner). Enfin ss-pn-philosophers-5-inst, un état : s1 ne pose que philo1.think1 = 2, tout le reste hérite du réseau à travers son type.",
       },
       {
         en: "The read is a ⟪core sample⟫. To read pn-philosophers-1::pre_arcs::pt1::weight, the kernel walks the stack from the newest to the oldest. The arc pt1 says nothing. The philosophers' arc type lays 1. ⟪First-wins⟫: 1, measured. The schema, the instance, the constraint have become ordinary layers, read by the same operation. Neither classes, nor a hard-coded metamodel: the kernel interprets data. The word says the idea. As in geology, layers sediment. And a datum left incomplete stays readable — its holes are inherited.",
         fr: "La lecture est un ⟪carottage⟫. Pour lire pn-philosophers-1::pre_arcs::pt1::weight, le noyau traverse la pile de la plus récente à la plus ancienne. L'arc pt1 ne dit rien. Le type des arcs des philosophes pose 1. ⟪Premier-gagné⟫ : 1, mesuré. Le schéma, l'instance, la contrainte sont devenus des couches ordinaires, lues par la même opération. Ni classes, ni métamodèle codé en dur : le noyau interprète des données. Le mot dit l'idée. Comme en géologie, les couches se sédimentent. Et une donnée restée incomplète reste lisible — ses trous sont hérités.",
-      },
-    ],
-    go: [
-      { layer: "multihypergraph", label: { en: "multihypergraph — the atom", fr: "multihypergraph — l'atome" } },
-      {
-        layer: "bipartite-digraph",
-        label: { en: "bipartite-digraph — the two classes", fr: "bipartite-digraph — les deux classes" },
-      },
-      {
-        layer: "petrinet-scheme",
-        label: { en: "petrinet-scheme — the Petri net", fr: "petrinet-scheme — le réseau de Petri" },
-      },
-      { layer: "pn-philosophers", label: { en: "pn-philosophers — the dinner", fr: "pn-philosophers — le dîner" } },
-      {
-        layer: "pn-philosophers-1",
-        label: {
-          en: "pn-philosophers-1 — the template: one philosopher alone",
-          fr: "pn-philosophers-1 — le template : un philosophe seul",
-        },
-      },
-      {
-        layer: "petrinet-statespace",
-        label: {
-          en: "petrinet-statespace — the state space, parameterized",
-          fr: "petrinet-statespace — l'espace d'états, paramétré",
-        },
-      },
-      {
-        layer: "ss-pn-philosophers-5-inst",
-        path: ["states", "s1"],
-        label: {
-          en: "ss-pn-philosophers-5-inst::states::s1 — a state: delta laid, type = the net",
-          fr: "ss-pn-philosophers-5-inst::states::s1 — un état : delta posé, type = le réseau",
-        },
       },
     ],
     see: {
@@ -220,21 +151,6 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         fr: "Septième geste — noter, et c'est tout. Une ligne // entière devient une donnée note : elle voyage avec le bloc et documente la clé qui suit. Ajoutez mask (rendre un héritage muet — le ⟪masque⟫) et bind (lier un slot de check à une adresse), et vous avez tout le langage. Le reste de ce tutoriel ne fait que le lire.",
       },
     ],
-    go: [
-      {
-        layer: "pn-philosophers-1",
-        path: ["places"],
-        label: { en: "pn-philosophers-1::places — the filled template", fr: "pn-philosophers-1::places — le template rempli" },
-      },
-      {
-        layer: "pn-philosophers-5",
-        path: ["philosophes"],
-        label: {
-          en: "pn-philosophers-5::philosophes — the five citations",
-          fr: "pn-philosophers-5::philosophes — les cinq citations",
-        },
-      },
-    ],
     see: {
       en: "the « Language » tab (a formalism's fold): the whole layer in language, colored by the same rules as these excerpts.",
       fr: "l'onglet « Langage » (repli d'un formalisme) : la couche entière en langage, colorée par les mêmes règles que ces extraits.",
@@ -271,38 +187,12 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     },
     body: [
       {
-        en: "The step-1 problem is closed: the net's four writings have become layers, read alike. What remains is to see how a layer distributes them. Every layer separates two regimes. Under ⟪specification⟫ live the declarations. Petrinet-scheme::specification declares place_type (marking, identifier), transition_type (identifier) and arc_type (weight, identifier, source, target). That was the schema. Outside ⟪specification⟫ live the ⟪contents⟫: the concrete collections — places, transitions, pre_arcs, post_arcs. That was the instance.",
-        fr: "Le problème de l'étape 1 est refermé : les quatre écritures du réseau sont devenues des couches, lues pareil. Reste à voir comment une couche les distribue. Chaque couche sépare deux régimes. Sous ⟪specification⟫ vivent les déclarations. Petrinet-scheme::specification déclare place_type (marquage, identifiant), transition_type (identifiant) et arc_type (weight, identifiant, source, target). C'était le schéma. Hors ⟪specification⟫ vivent les ⟪contenus⟫ : les collections concrètes — places, transitions, pre_arcs, post_arcs. C'était l'instance.",
+        en: "Every layer separates two regimes. Under ⟪specification⟫ live the declarations. Petrinet-scheme::specification declares place_type (marking, identifier), transition_type (identifier) and arc_type (weight, identifier, source, target). That was the schema. Outside ⟪specification⟫ live the ⟪contents⟫: the concrete collections — places, transitions, pre_arcs, post_arcs. That was the instance.",
+        fr: "Chaque couche sépare deux régimes. Sous ⟪specification⟫ vivent les déclarations. Petrinet-scheme::specification déclare place_type (marquage, identifiant), transition_type (identifiant) et arc_type (weight, identifiant, source, target). C'était le schéma. Hors ⟪specification⟫ vivent les ⟪contenus⟫ : les collections concrètes — places, transitions, pre_arcs, post_arcs. C'était l'instance.",
       },
       {
         en: "The ⟪constraint⟫ has become a value laid at the type level. Pn-philosophers writes arc_type::weight = 1 — the same declaration address, with one more member. And inheritance carries it down to the template's and the dinner's arcs. The rendering is a ⟪lens⟫: petrinet-display refines multidigraph and draws the net for every descendant, templates laid at the same path as the types. The specification border is an addressing convention, not a mechanism. On both sides, same closures, same first-wins, same crossings. What links them: a collection's type is a ⟪Ref⟫ (places is typed place_type). The declaration governs the contents, and nothing forbids a formalism from having contents.",
         fr: "La ⟪contrainte⟫ est devenue une valeur posée au niveau du type. Pn-philosophers écrit arc_type::weight = 1 — la même adresse de déclaration, avec un membre de plus. Et l'héritage la descend jusqu'aux arcs du template et du dîner. Le rendu est une ⟪lentille⟫ : petrinet-display raffine multidigraph et dessine le réseau pour tout descendant, gabarits posés au même chemin que les types. La frontière specification est une convention d'adressage, pas un mécanisme. Des deux côtés, mêmes fermetures, même premier-gagné, mêmes croisements. Ce qui les relie : le type d'une collection est un ⟪Ref⟫ (places est typé place_type). La déclaration gouverne les contenus, et rien n'interdit à un formalisme d'avoir des contenus.",
-      },
-    ],
-    go: [
-      {
-        layer: "petrinet-scheme",
-        path: ["specification", "place_type"],
-        label: {
-          en: "petrinet-scheme::specification::place_type — the declaration",
-          fr: "petrinet-scheme::specification::place_type — la déclaration",
-        },
-      },
-      {
-        layer: "pn-philosophers",
-        path: ["specification", "arc_type"],
-        label: {
-          en: "pn-philosophers::specification::arc_type — the weight = 1 default",
-          fr: "pn-philosophers::specification::arc_type — le défaut weight = 1",
-        },
-      },
-      {
-        layer: "pn-philosophers-1",
-        path: ["pre_arcs"],
-        label: {
-          en: "pn-philosophers-1::pre_arcs — the template, pt1/er1 (no weight laid)",
-          fr: "pn-philosophers-1::pre_arcs — le template, pt1/er1 (aucun poids posé)",
-        },
       },
     ],
     see: {
@@ -323,42 +213,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         fr: "La ⟪fermeture⟫ d'une ⟪adresse⟫ (couche, chemin) est la liste ordonnée de tous les nœuds qui la définissent : soi-même, puis chaque ancêtre refines. Toute lecture traverse cette liste. Le ⟪carottage⟫ de l'étape 2 a un nom.",
       },
       {
-        en: "⟪First-wins⟫: the kernel returns the first value found. Measured on the template: pn-philosophers-1::pre_arcs::pt1::weight = 1. The arc lays nothing, the philosophers' type wins — inherited. And pn-philosophers-1::places::eat1 locally overrides marking = 0 (think1 keeps 1). Measured on a constraint: pn-philosophers-5-bounds-c1::places::philo1.think1::bound = 1. Refining the dinner by a constraint does not break the model, the value descends. Measured on the great hierarchy's weighted diamond: e2 carries no weight, its chain walks weighted-bipartite (nothing) then weighted-hypergraph — weight = 1, inherited. Redefining locally is ⟪overriding⟫; laying nothing is ⟪inheriting⟫. And the deepest measure, the step-1 closure: ss-pn-philosophers-5-inst::states::s1 lays only philo1.think1 = 2. The values philo1.eat1 = 0 and philo1.fork1 = 1 still read. Its closure walks the state type, which binds late to the petrinet = pn-philosophers-5 parameter — the read descends the net's places (measured: the dinner is in s1's closure). The state's label is no longer the marking alone. It is the delta laid, and the net for type.",
-        fr: "⟪Premier-gagné⟫ : le noyau rend la première valeur trouvée. Mesuré sur le template : pn-philosophers-1::pre_arcs::pt1::weight = 1. L'arc ne pose rien, le type des philosophes gagne — hérité. Et pn-philosophers-1::places::eat1 surcharge localement marking = 0 (think1 garde 1). Mesuré sur une contrainte : pn-philosophers-5-bounds-c1::places::philo1.think1::bound = 1. Raffiner le dîner par une contrainte ne casse pas le modèle, la valeur descend. Mesuré sur le diamant pondéré de la grande hiérarchie : e2 ne porte pas weight, sa chaîne traverse weighted-bipartite (rien) puis weighted-hypergraph — weight = 1, hérité. Redéfinir localement, c'est ⟪surcharger⟫ ; ne rien poser, c'est ⟪hériter⟫. Et la mesure la plus profonde, l'étape 1 refermée : ss-pn-philosophers-5-inst::states::s1 ne pose que philo1.think1 = 2. Les valeurs philo1.eat1 = 0 et philo1.fork1 = 1 se lisent quand même. Sa fermeture traverse le type d'état, qui se lie tard au paramètre petrinet = pn-philosophers-5 — la lecture descend les places du réseau (mesuré : le dîner est dans la fermeture de s1). L'étiquette de l'état n'est plus le marquage seul. C'est le delta posé, et le réseau pour type.",
-      },
-    ],
-    go: [
-      {
-        layer: "pn-philosophers-1",
-        path: ["pre_arcs", "pt1"],
-        label: {
-          en: "pn-philosophers-1::pre_arcs::pt1 — weight = 1, inherited",
-          fr: "pn-philosophers-1::pre_arcs::pt1 — weight = 1, hérité",
-        },
-      },
-      {
-        layer: "pn-philosophers-1",
-        path: ["places", "eat1"],
-        label: {
-          en: "pn-philosophers-1::places::eat1 — marking = 0, overridden",
-          fr: "pn-philosophers-1::places::eat1 — marking = 0, surchargé",
-        },
-      },
-      {
-        layer: "pn-philosophers-5-bounds-c1",
-        path: ["places", "philo1.think1"],
-        label: {
-          en: "pn-philosophers-5-bounds-c1::places::philo1.think1 — bound = 1, the constraint",
-          fr: "pn-philosophers-5-bounds-c1::places::philo1.think1 — bound = 1, la contrainte",
-        },
-      },
-      {
-        layer: "ss-pn-philosophers-5-inst",
-        path: ["states", "s1"],
-        label: {
-          en: "ss-pn-philosophers-5-inst::states::s1 — philo1.eat1 = 0 inherited from the net, philo1.think1 = 2 laid",
-          fr: "ss-pn-philosophers-5-inst::states::s1 — philo1.eat1 = 0 hérité du réseau, philo1.think1 = 2 posé",
-        },
+        en: "⟪First-wins⟫: the kernel returns the first value found. Measured on the template: pn-philosophers-1::pre_arcs::pt1::weight = 1. The arc lays nothing, the philosophers' type wins — inherited. And pn-philosophers-1::places::eat1 locally overrides marking = 0 (think1 keeps 1). Measured on a constraint: pn-philosophers-5-bounds-c1::places::philo1.think1::bound = 1. Refining the dinner by a constraint does not break the model, the value descends. Measured on the great hierarchy's weighted diamond: e2 carries no weight, its chain walks weighted-bipartite (nothing) then weighted-hypergraph — weight = 1, inherited. Redefining locally is ⟪overriding⟫; laying nothing is ⟪inheriting⟫. And the deepest measure: ss-pn-philosophers-5-inst::states::s1 lays only philo1.think1 = 2. The values philo1.eat1 = 0 and philo1.fork1 = 1 still read. Its closure walks the state type, which binds late to the petrinet = pn-philosophers-5 parameter — the read descends the net's places (measured: the dinner is in s1's closure). The state's label is no longer the marking alone. It is the delta laid, and the net for type.",
+        fr: "⟪Premier-gagné⟫ : le noyau rend la première valeur trouvée. Mesuré sur le template : pn-philosophers-1::pre_arcs::pt1::weight = 1. L'arc ne pose rien, le type des philosophes gagne — hérité. Et pn-philosophers-1::places::eat1 surcharge localement marking = 0 (think1 garde 1). Mesuré sur une contrainte : pn-philosophers-5-bounds-c1::places::philo1.think1::bound = 1. Raffiner le dîner par une contrainte ne casse pas le modèle, la valeur descend. Mesuré sur le diamant pondéré de la grande hiérarchie : e2 ne porte pas weight, sa chaîne traverse weighted-bipartite (rien) puis weighted-hypergraph — weight = 1, hérité. Redéfinir localement, c'est ⟪surcharger⟫ ; ne rien poser, c'est ⟪hériter⟫. Et la mesure la plus profonde : ss-pn-philosophers-5-inst::states::s1 ne pose que philo1.think1 = 2. Les valeurs philo1.eat1 = 0 et philo1.fork1 = 1 se lisent quand même. Sa fermeture traverse le type d'état, qui se lie tard au paramètre petrinet = pn-philosophers-5 — la lecture descend les places du réseau (mesuré : le dîner est dans la fermeture de s1). L'étiquette de l'état n'est plus le marquage seul. C'est le delta posé, et le réseau pour type.",
       },
     ],
     see: {
@@ -385,31 +241,6 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
       {
         en: "Multiple inheritance is data, not a kernel function. Petrinet-scheme refines three layers — bipartite-digraph, the annotation of the vertices, that of the edges (measured). The weighted-bipartite ⟪diamond⟫ refines two. Scenario S11 lays two parents for one type at the pre-arc level; S12 lays three. The core sample walks the branches in the refines order — for weight, the first branch speaks.",
         fr: "L'héritage multiple est une donnée, pas une fonction du noyau. Petrinet-scheme raffine trois couches — bipartite-digraph, l'annotation des sommets, celle des arêtes (mesuré). Le ⟪diamant⟫ weighted-bipartite en raffine deux. Le scénario S11 pose deux parents pour un type au niveau arc pré ; S12 en pose trois. Le carottage traverse les branches dans l'ordre des refines — pour weight, la première branche parle.",
-      },
-    ],
-    go: [
-      {
-        layer: "petrinet-scheme",
-        label: { en: "petrinet-scheme — the three parents", fr: "petrinet-scheme — les trois parents" },
-      },
-      {
-        layer: "weighted-bipartite",
-        label: { en: "weighted-bipartite — the diamond", fr: "weighted-bipartite — le diamant" },
-      },
-      {
-        layer: "petrinet-behavior",
-        path: ["specification", "state_type"],
-        label: {
-          en: "petrinet-behavior::specification::state_type — refines the nonexistent parameter",
-          fr: "petrinet-behavior::specification::state_type — raffine le paramètre inexistant",
-        },
-      },
-      {
-        layer: "ss-pn-philosophers-5",
-        label: {
-          en: "ss-pn-philosophers-5 — the petrinet parameter laid on the dinner",
-          fr: "ss-pn-philosophers-5 — le paramètre petrinet posé au dîner",
-        },
       },
     ],
     see: {
@@ -468,23 +299,6 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
       {
         en: "The Tests panel of the fold (②) shows every expectation: met or betrayed, the read value, and the provenance — which layer carried the read. That is where it is measured: the AI proposes the pen, never the truth; an expectation enters a layer only for a read already seen in the workshop. Measured ≠ desired — it is the user who signs the contract.",
         fr: "Le panneau Tests du repli (②) montre chaque attendu : conforme ou trahi, la valeur lue, et la provenance — quelle couche a porté la lecture. C'est là que se mesure : l'IA propose la plume, jamais la vérité ; un attendu n'entre dans une couche que pour une lecture déjà vue dans l'atelier. Mesuré ≠ désiré — c'est l'utilisateur qui signe le contrat.",
-      },
-    ],
-    go: [
-      {
-        layer: "pn-philosophers-5",
-        label: {
-          en: "pn-philosophers-5 — the scene's tests block",
-          fr: "pn-philosophers-5 — le bloc tests de la scène",
-        },
-      },
-      {
-        layer: "pn-philosophers-5",
-        path: ["pre_arcs", "fk5"],
-        label: {
-          en: "pn-philosophers-5::pre_arcs::fk5 — the reference expectation, resolved",
-          fr: "pn-philosophers-5::pre_arcs::fk5 — l'attendu référence, résolu",
-        },
       },
     ],
     see: {
@@ -665,6 +479,32 @@ export const TUTORIAL_SPINE: { layer: string; depth: number; note: BilingualText
   },
 ];
 
+/** One corpus excerpt, colored by the same rules as the « Language »
+ * tab: the spans follow the boundaries the lexer draws. */
+function CodeExcerpt({ code, title, language }: { code: string; title: BilingualText; language: Language }) {
+  return (
+    <figure className="overflow-hidden rounded-md border border-slate-200 bg-slate-50">
+      <figcaption className="border-b border-slate-200 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+        {localized({ language, text: title })}
+      </figcaption>
+      <pre className="overflow-x-auto px-3 py-2 font-mono text-xs leading-5">
+        {code.split("\n").map((line, lineIndex) => (
+          <div key={lineIndex}>
+            {highlightSourceLine(line).map((span, spanIndex) => (
+              <span key={spanIndex} className={SPAN_CLASSES[span.kind]}>
+                {span.text}
+              </span>
+            ))}
+          </div>
+        ))}
+      </pre>
+    </figure>
+  );
+}
+
+/** The tutorial as one scrollable page: every step is a section,
+ * prose and real excerpts alternate, the continuum's layer names
+ * navigate to the workshop. */
 export function Tutorial({
   onNavigate,
   language,
@@ -672,128 +512,92 @@ export function Tutorial({
   onNavigate: (layer: string, path: string[]) => void;
   language: Language;
 }) {
-  const [stepIndex, setStepIndex] = useState(0);
-  const currentStep = TUTORIAL_STEPS[stepIndex];
   return (
-    <section className="mx-4 mt-3 rounded-lg border border-slate-200 bg-white p-4">
-      <h2 className="text-sm font-bold text-slate-800">
-        {say({
-          language,
-          en: "The tutorial — why data in strata, and how",
-          fr: "Le tutoriel — pourquoi les données en strates, et comment",
-        })}
-        <span className="ml-1 font-normal text-slate-400">
+    <div className="space-y-8">
+      <header>
+        <h2 className="text-lg font-bold text-slate-800">
           {say({
             language,
-            en: "the philosophers' dinner poses the problem and every step reads it again; the cited addresses are clickable",
-            fr: "le dîner des philosophes pose le problème et chaque étape le relit ; les adresses citées sont cliquables",
+            en: "The tutorial — why data in strata, and how",
+            fr: "Le tutoriel — pourquoi les données en strates, et comment",
           })}
-        </span>
-      </h2>
-      <div className="mb-3 mt-2 flex flex-wrap gap-1.5">
-        {TUTORIAL_STEPS.map((stepEntry, index) => (
-          <button
-            key={stepEntry.id}
-            onClick={() => setStepIndex(index)}
-            className={
-              "rounded-md px-2.5 py-1 text-[11px] font-semibold transition-colors " +
-              (index === stepIndex
-                ? "bg-slate-800 text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200")
-            }
-          >
-            {localized({ language, text: stepEntry.label })}
-          </button>
-        ))}
-      </div>
-      <h3 className="text-[13px] font-bold text-slate-800">
-        {localized({ language, text: currentStep.title })}
-      </h3>
-      {currentStep.body.map((block, index) =>
-        "code" in block ? (
-          <div
-            key={index}
-            className="mt-2 rounded-md border border-slate-200 bg-slate-50 px-2 py-1.5"
-          >
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-              {localized({ language, text: block.title })}
+        </h2>
+        <p className="mt-1 text-sm leading-6 text-slate-500">
+          {say({
+            language,
+            en: "the philosophers' dinner is the running example and every step reads it again; the layer names of the continuum are clickable",
+            fr: "le dîner des philosophes est l'exemple suivi et chaque étape le relit ; les noms des couches du continuum sont cliquables",
+          })}
+        </p>
+      </header>
+      {TUTORIAL_STEPS.map((step) => (
+        <section key={step.id} className="rounded-lg border border-slate-200 bg-white p-6">
+          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">
+            {localized({ language, text: step.label })}
+          </p>
+          <h3 className="mt-1 text-base font-bold text-slate-800">
+            {localized({ language, text: step.title })}
+          </h3>
+          <div className="mt-4 space-y-4">
+            {step.body.map((block, index) =>
+              "code" in block ? (
+                <CodeExcerpt key={index} code={block.code} title={block.title} language={language} />
+              ) : (
+                <p key={index} className="text-sm leading-6 text-slate-700">
+                  <NotionText text={localized({ language, text: block })} language={language} />
+                </p>
+              ),
+            )}
+          </div>
+          {step.id === "glossaire" && (
+            <div className="mt-4 flex flex-wrap gap-x-3 gap-y-1">
+              {Object.keys(GLOSSARY).map((term) => (
+                <NotionTip key={term} term={term} language={language} />
+              ))}
             </div>
-            <pre className="overflow-x-auto font-mono text-[11px] leading-4 text-slate-800">
-              {block.code}
-            </pre>
-          </div>
-        ) : (
-          <p key={index} className="mt-1.5 text-xs leading-5 text-slate-700">
-            <NotionText text={localized({ language, text: block })} language={language} />
-          </p>
-        ),
-      )}
-      {currentStep.id === "glossaire" && (
-        <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1">
-          {Object.keys(GLOSSARY).map((term) => (
-            <NotionTip key={term} term={term} language={language} />
-          ))}
-        </div>
-      )}
-      {currentStep.id === "continuum" && (
-        <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 p-2">
-          <div className="font-mono text-[11px] leading-5">
-            {TUTORIAL_SPINE.map((spineEntry) => (
-              <div key={spineEntry.layer} style={{ paddingLeft: spineEntry.depth * 18 }}>
-                <button
-                  onClick={() => onNavigate(spineEntry.layer, [])}
-                  title={say({ language, en: "go to layer ", fr: "aller à la couche " }) + spineEntry.layer}
-                  className="rounded px-1 font-bold text-amber-800 underline decoration-dotted hover:bg-amber-100"
-                >
-                  {spineEntry.layer}
-                </button>
-                <span className="ml-1 text-slate-600">
-                  {localized({ language, text: spineEntry.note })}
-                </span>
+          )}
+          {step.id === "continuum" && (
+            <div className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3">
+              <div className="font-mono text-xs leading-6">
+                {TUTORIAL_SPINE.map((spineEntry) => (
+                  <div key={spineEntry.layer} style={{ paddingLeft: spineEntry.depth * 18 }}>
+                    <button
+                      onClick={() => onNavigate(spineEntry.layer, [])}
+                      title={say({ language, en: "go to layer ", fr: "aller à la couche " }) + spineEntry.layer}
+                      className="rounded px-1 font-bold text-amber-800 underline decoration-dotted hover:bg-amber-100"
+                    >
+                      {spineEntry.layer}
+                    </button>
+                    <span className="ml-1 text-slate-600">
+                      {localized({ language, text: spineEntry.note })}
+                    </span>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-          <p className="mt-1 text-[10px] leading-4 text-slate-500">
-            {say({
-              language,
-              en: "Sixteen real layers of the spine (out of 42) — measured by the harness, every name is a button.",
-              fr: "Seize couches réelles de la colonne vertébrale (sur 42) — mesurées par le harnais, chaque nom est un bouton.",
-            })}
-          </p>
-        </div>
-      )}
-      {currentStep.go && (
-        <p className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] leading-4 text-slate-600">
-          {say({ language, en: "Go and see:", fr: "Aller voir :" })}
-          {currentStep.go.map((goEntry) => (
-            <button
-              key={goEntry.layer + (goEntry.path ? "::" + goEntry.path.join("::") : "")}
-              onClick={() => onNavigate(goEntry.layer, goEntry.path ?? [])}
-              title={
-                say({ language, en: "navigate to ", fr: "naviguer vers " }) +
-                goEntry.layer +
-                (goEntry.path ? "::" + goEntry.path.join("::") : "")
-              }
-              className="rounded border border-slate-300 bg-slate-50 px-1.5 py-0.5 font-mono text-[11px] hover:border-slate-500 hover:bg-slate-100"
-            >
-              {localized({ language, text: goEntry.label })}
-            </button>
-          ))}
-        </p>
-      )}
-      {currentStep.see && (
-        <p className="mt-2 border-l-2 border-slate-300 bg-slate-50 py-1 pl-2 text-[11px] leading-4 text-slate-600">
-          {say({ language, en: "To see in the tool: ", fr: "À voir dans l'outil : " })}
-          {localized({ language, text: currentStep.see })}
-        </p>
-      )}
-      <p className="mt-2 text-[10px] leading-4 text-slate-400">
+              <p className="mt-2 text-[11px] leading-4 text-slate-500">
+                {say({
+                  language,
+                  en: "Sixteen real layers of the spine (out of 42) — measured by the harness, every name is a button.",
+                  fr: "Seize couches réelles de la colonne vertébrale (sur 42) — mesurées par le harnais, chaque nom est un bouton.",
+                })}
+              </p>
+            </div>
+          )}
+          {step.see && (
+            <p className="mt-4 border-l-2 border-slate-300 bg-slate-50 py-1.5 pl-3 text-xs leading-5 text-slate-600">
+              {say({ language, en: "To see in the tool: ", fr: "À voir dans l'outil : " })}
+              {localized({ language, text: step.see })}
+            </p>
+          )}
+        </section>
+      ))}
+      <p className="text-[11px] leading-4 text-slate-400">
         {say({
           language,
           en: "The cited numbers are measured by the workshop's standalone harness.",
           fr: "Les chiffres cités sont mesurés par le harnais autonome de l'atelier.",
         })}
       </p>
-    </section>
+    </div>
   );
 }
