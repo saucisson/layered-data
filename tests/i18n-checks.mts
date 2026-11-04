@@ -290,11 +290,19 @@ const glossary = readExportedData({ file: join(presentationDirectory, "notions.t
 };
 const glossaryIds = Object.keys(glossary);
 check(
-  "the glossary keeps its thirty historic ids — the French keys the tutorial cites",
-  glossaryIds.length === 30 &&
-    ["adresse", "carottage", "fermeture", "lentille", "premier-gagné", "raffine", "union"].every((id) =>
-      glossaryIds.includes(id),
-    ),
+  "the glossary keeps its thirty-two ids — the French keys the tutorial cites, the two ADR-0017 notions included",
+  glossaryIds.length === 32 &&
+    [
+      "adresse",
+      "carottage",
+      "fermeture",
+      "lentille",
+      "premier-gagné",
+      "raffine",
+      "union",
+      "assume",
+      "conflit d'ordre",
+    ].every((id) => glossaryIds.includes(id)),
 );
 check(
   "every glossary entry carries a non-empty bilingual term and a translated definition",

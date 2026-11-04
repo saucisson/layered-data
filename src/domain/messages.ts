@@ -112,6 +112,46 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       ", lu " +
       text(p, "read"),
   },
+  "order-conflict": {
+    en: (p) =>
+      text(p, "where") +
+      ' : "' +
+      text(p, "key") +
+      '" decided by order — ' +
+      text(p, "winner") +
+      " lays " +
+      text(p, "winnerValue") +
+      ", " +
+      text(p, "loser") +
+      " lays " +
+      text(p, "loserValue") +
+      " — first-wins walked the branches as written",
+    fr: (p) =>
+      text(p, "where") +
+      " : « " +
+      text(p, "key") +
+      " » tranché par l'ordre — " +
+      text(p, "winner") +
+      " pose " +
+      text(p, "winnerValue") +
+      ", " +
+      text(p, "loser") +
+      " pose " +
+      text(p, "loserValue") +
+      " — le premier-gagné a traversé les branches telles qu'elles sont écrites",
+  },
+  "ghost-assume": {
+    en: (p) =>
+      text(p, "where") +
+      ' : "' +
+      text(p, "key") +
+      '" signed with an assume — no read is decided by order here',
+    fr: (p) =>
+      text(p, "where") +
+      " : « " +
+      text(p, "key") +
+      " » signé d'un assume — aucune lecture ne se tranche par l'ordre ici",
+  },
 
   // ---- staging verdicts (staging.ts) ----
   "unknown-target": {
@@ -250,6 +290,8 @@ export const VOCABULARY: Record<string, { en: string; fr: string }> = {
   "déclaration-fantôme": { en: "ghost-declaration", fr: "déclaration-fantôme" },
   "liaison-morte": { en: "dead-binding", fr: "liaison-morte" },
   "ombre-non-déclarée": { en: "undeclared-shadow", fr: "ombre-non-déclarée" },
+  "conflit-d'ordre": { en: "order-conflict", fr: "conflit-d'ordre" },
+  "assume-fantôme": { en: "ghost-assume", fr: "assume-fantôme" },
   "étiquette-inconnue": { en: "unknown-label", fr: "étiquette-inconnue" },
   "entrée-ignorée": { en: "entry-ignored", fr: "entrée-ignorée" },
   "garde-de-cycle": { en: "cycle-guard", fr: "garde-de-cycle" },

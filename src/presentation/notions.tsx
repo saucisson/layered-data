@@ -31,6 +31,13 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       fr: "la liberté de nommer un même contenu par plusieurs adresses (ex. vertices comme union) ; le prix : un même défaut est rapporté à chaque adresse qui le désigne.",
     },
   },
+  assume: {
+    term: { en: "assume", fr: "assume" },
+    definition: {
+      en: "the signature of an order-decided read: the act declares that first-wins walks incomparable sources at this address, and that the refines order as written is intended; an assume without a conflict is a ghost verdict.",
+      fr: "la signature d'une lecture tranchée par l'ordre : l'acte déclare que le premier-gagné traverse des sources incomparables à cette adresse, et que l'ordre des refines tel qu'il est écrit est voulu ; un assume sans conflit est un verdict fantôme.",
+    },
+  },
   carottage: {
     term: { en: "core sample", fr: "carottage" },
     definition: {
@@ -64,6 +71,13 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     definition: {
       en: "the chain of layers that carries the tutorial's thread, from multihypergraph to ss-pn-philosophers-5-inst.",
       fr: "la chaîne de couches qui porte le fil du tutoriel, de multihypergraph à ss-pn-philosophers-5-inst.",
+    },
+  },
+  "conflit d'ordre": {
+    term: { en: "order conflict", fr: "conflit d'ordre" },
+    definition: {
+      en: "a leaf value decided between incomparable sources: the refines order, a convention — visible as a lint diagnostic, refused in strict staging, silenced by an assume.",
+      fr: "une valeur feuille tranchée entre sources incomparables : l'ordre des refines, une convention — visible en diagnostic de linteuse, refusée en staging strict, tue par un assume.",
     },
   },
   contrainte: {
