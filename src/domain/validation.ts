@@ -3,6 +3,8 @@
 // Every diagnostic becomes a VERDICT before execution: (a) every
 // declared act against the closure of its node (implicit override,
 // phantom declaration), (b) every check tag against the registry,
+// (b2) the vacant checks — a check carried but unable to judge,
+// its required slots unbound (ADR-0018),
 // (c) every binding at the level where its check reads it (the trap:
 // an instance-level slot bound at a root is dead for every reading
 // layer that descends from it), (d) the shadow confrontation: every
@@ -20,7 +22,7 @@
 import { type LayerName, type LayerPath, asLayerName } from "./identifiers.ts";
 import { AddressView, LayerReference, MASK, PathReference, type RawValue, isDictionary } from "./addresses.ts";
 import { Space } from "./space.ts";
-import { checkRegistry } from "./checks.ts";
+import { checkContracts, checkRegistry, slotReadingLevelsOf, vacantChecksOf } from "./checks.ts";
 import { walkAddresses } from "./views.ts";
 import { type CompiledLanguage, type Declaration } from "./language/compiler.ts";
 import { type ParsedLanguage } from "./language/parser.ts";
@@ -40,16 +42,12 @@ export interface ValidationOutcome {
 // The slot contracts of the check tags: for each tag, its slots and
 // their READING LEVEL — root (layer check) or instance (arc check:
 // the type is in the arc's closure). A type-level binding posed at a
-// root (silently vacant check) is unwritable there.
-export const checkSlotContracts: Record<string, Record<string, "root" | "instance">> = {
-  simple: { edges: "root", ordered: "root", arrows: "root", "arrow-vertex": "root", "end-source": "instance", "end-target": "instance" },
-  nonempty: { edges: "root", arrows: "root", "arrow-vertex": "root" },
-  oriented: { "end-source": "instance", "end-target": "instance" },
-  sperner: { edges: "root", arrows: "root", "arrow-vertex": "root" },
-  "k-partite": { vertices: "root", edges: "root", arrows: "root", "arrow-vertex": "root" },
-  dag: { "end-source": "instance", "end-target": "instance" },
-  arbre: { vertices: "root", edges: "root", "end-source": "instance", "end-target": "instance" },
-};
+// root (silently vacant check) is unwritable there. Derived from the
+// nominal registry's contracts (ADR-0018) — one source: the
+// checkContracts of checks.ts.
+export const checkSlotContracts: Record<string, Record<string, "root" | "instance">> = Object.fromEntries(
+  Object.entries(checkContracts).map(([tag, contract]) => [tag, slotReadingLevelsOf(contract)]),
+);
 
 // The mode declared for (layer, path, key) — the shadow
 // confrontation reads this table. The declaration table arrives as a
@@ -247,6 +245,25 @@ export function validateSpace({
         verdicts.push({ kind: "étiquette-inconnue", fact: fact("unknown-label", { layer, tag }) });
       } else stats.etiquettes++;
     }
+  }
+
+  // ---- (b2) the vacant checks (ADR-0018): a check carried but
+  // unable to judge — a required slot unbound at the address the
+  // contract makes it judge. The verdict answers for the acts that
+  // CAN answer: a local POSE (the tag carried at the very address —
+  // the mirror of étiquette-inconnue, which refuses the posed tag
+  // that does not exist; the symmetry of assume-fantôme, which
+  // refuses the signature that judges nothing), and the root-level
+  // slots of the layer checks a layer's root carries. The instance
+  // slots of an inherited check are the lint's inventory: the type
+  // binds them, the root never sees it.
+  for (const vacancy of vacantChecksOf({ space, layerNames })) {
+    if (!vacancy.posed && !(vacancy.level === "root" && vacancy.address[1].length === 0)) continue;
+    const where = vacancy.address[0] + "::" + (vacancy.address[1].join("/") || ".");
+    verdicts.push({
+      kind: "check-vacant",
+      fact: fact("vacant-slot", { where, tag: vacancy.tag, slot: vacancy.slot }),
+    });
   }
 
   // ---- (c) dead bindings: an instance-level slot bound at the root

@@ -232,6 +232,32 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
     en: (p) => "unbound slots (" + text(p, "slots") + ")",
     fr: (p) => "slots non liés (" + text(p, "slots") + ")",
   },
+  "vacant-slot": {
+    en: (p) =>
+      text(p, "where") +
+      " : the check « " +
+      text(p, "tag") +
+      " » cannot judge — the slot « " +
+      text(p, "slot") +
+      " » is unbound (ADR-0018)",
+    fr: (p) =>
+      text(p, "where") +
+      " : le check « " +
+      text(p, "tag") +
+      " » ne peut pas juger — le slot « " +
+      text(p, "slot") +
+      " » n'est pas lié (ADR-0018)",
+  },
+  "check-betrayed": {
+    en: (p) =>
+      text(p, "where") +
+      " : the carried check refuses — " +
+      text(p, "error"),
+    fr: (p) =>
+      text(p, "where") +
+      " : le check porté refuse — " +
+      text(p, "error"),
+  },
 };
 
 /** All message codes, in template declaration order. */
@@ -296,6 +322,7 @@ export const VOCABULARY: Record<string, { en: string; fr: string }> = {
   "entrée-ignorée": { en: "entry-ignored", fr: "entrée-ignorée" },
   "garde-de-cycle": { en: "cycle-guard", fr: "garde-de-cycle" },
   "check-vacant": { en: "check-vacant", fr: "check-vacant" },
+  "check-trahi": { en: "check-betrayed", fr: "check-trahi" },
   "refines-inversés": { en: "refines-inverted", fr: "refines-inversés" },
   "ombre-émergente": { en: "emerging-shadow", fr: "ombre-émergente" },
   ombre: { en: "shadow", fr: "ombre" },

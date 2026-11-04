@@ -31,6 +31,8 @@ import { parseLanguage } from "../src/domain/language/parser.ts";
 import { compileLanguage } from "../src/domain/language/compiler.ts";
 import { walkAddresses } from "../src/domain/views.ts";
 import { KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
+import { checkContracts, checkRegistry, slotReadingLevelsOf, vacantChecksOf } from "../src/domain/checks.ts";
+import { checkSlotContracts } from "../src/domain/validation.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -540,6 +542,36 @@ const staleAfterLayer = mutableSpace.staleMemoKeys();
 check(
   "C7: an empty-path touch covers the whole layer",
   staleAfterLayer.includes("model|collection") && staleAfterLayer.includes("model|collection2"),
+);
+
+// =====================================================================
+// the nominal registry (ADR-0018) — the contracts of the check tags
+// =====================================================================
+
+// every tag of the registry declares a contract — the registry is
+// nominal: a check's semantics is readable without executing it
+check(
+  "ADR-0018: every check tag of the registry declares a contract",
+  Object.keys(checkRegistry).every((tag) => checkContracts[tag] !== undefined) &&
+    Object.keys(checkContracts).length === Object.keys(checkRegistry).length,
+);
+
+// one source: the reading levels the dead-binding rule reads are
+// derived from the contracts, never re-declared
+check(
+  "ADR-0018: the slot contracts derive from the nominal contracts — one source",
+  Object.keys(checkSlotContracts).every(
+    (tag) =>
+      JSON.stringify(checkSlotContracts[tag]) ===
+      JSON.stringify(slotReadingLevelsOf(checkContracts[tag])),
+  ),
+);
+
+// the trunk corpus carries no vacant check: every carried tag can
+// judge (measured: 79 contract judgments, 0 vacancies)
+check(
+  "ADR-0018: the trunk corpus carries no vacant check — every carried tag can judge",
+  vacantChecksOf({ space: trunk, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
 );
 
 // =====================================================================

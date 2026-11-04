@@ -11,7 +11,9 @@
 //     listed: to inspect, the closure order decides;
 //   - étiquette-inconnue and check-vacant: a tag absent from the
 //     registry; cardinality bounds read without the closure ever
-//     reaching the collection root.
+//     reaching the collection root; and a check carried but unable
+//     to judge — its required slots unbound, the contract's
+//     inventory (ADR-0018), never the check's execution.
 //   - conflit-d'ordre: a leaf value decided between INCOMPARABLE
 //     sources — the diamond's convention made visible (the order
 //     stays the semantics, ADR-0017; a signature `assume` silences
@@ -23,7 +25,7 @@ import { type LayerName, asLayerName, asLayerPath } from "../domain/identifiers.
 import type { Diagnostic } from "../domain/space.ts";
 import { LayerReference, type Address, isDictionary } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
-import { checkRegistry } from "../domain/checks.ts";
+import { checkRegistry, vacantChecksOf } from "../domain/checks.ts";
 import { declaredModeOf } from "../domain/validation.ts";
 import { walkAddresses } from "../domain/views.ts";
 import type { CompiledLanguage } from "../domain/language/compiler.ts";
@@ -177,6 +179,28 @@ function lintVacuousBounds({ space, layerNames }: LintingTarget): void {
   }
 }
 
+/** The vacant checks, inventory (ADR-0018): every check carried but
+ * unable to judge — a required slot unbound at an address the
+ * contract makes it judge, the detector reading the nominal
+ * registry, never executing the checks. The validation refuses what
+ * the acts can answer for (a pose, a layer root); here the WHOLE
+ * inventory is recorded, the inherited instance vacancies included
+ * — the lint's job is to see, not to judge. Measured on the trunk:
+ * 79 judgments, 0 vacancies. */
+function lintVacantChecks(target: LintingTarget): void {
+  for (const vacancy of vacantChecksOf({ space: target.space, layerNames: target.layerNames })) {
+    target.space.recordDiagnostic({
+      kind: "check-vacant",
+      address: vacancy.address,
+      fact: fact("vacant-slot", {
+        where: vacancy.address[0] + "::" + (vacancy.address[1].join("/") || "."),
+        tag: vacancy.tag,
+        slot: vacancy.slot,
+      }),
+    });
+  }
+}
+
 /** The order conflicts of the whole inventory: every address whose
  * first-wins walks incomparable providers with diverging laid
  * values — the convention made visible, not a fault (the order IS
@@ -222,6 +246,7 @@ export function runAllLints(target: LintingTarget): Diagnostic[] {
   lintShadow(target);
   lintTags(target);
   lintVacuousBounds(target);
+  lintVacantChecks(target);
   lintOrderConflicts(target);
   // root sweep: re-resolves the entries of the roots — the ignored
   // entries and cycle guards of the roots are recorded (tracer: the

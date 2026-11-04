@@ -86,9 +86,12 @@ revient au modèle avec ses verdicts, jusqu'à `PEN_MAX_ATTEMPTS`
 propositions (3 par défaut). `PEN_STRICT_CONFLICTS=1` arme le bras
 strict (ADR-0017) : la plume ne peut plus proposer une lecture que
 l'ordre des refines tranche entre sources incomparables, sauf si
-l'adresse lisante signe un `assume`. La réponse est toujours une couche
-stagée : texte brut sur 200, refus parlé sur 422 — et le staging du
-navigateur reste juge en dernier ressort.
+l'adresse lisante signe un `assume`. `PEN_STRICT_CHECKS=1` arme le
+second bras strict (ADR-0018) : les checks portés par la candidate
+s'exécutent enfin, et la plume ne peut plus proposer une couche que
+ses propres contraintes refusent (« check-trahi »). La réponse est
+toujours une couche stagée : texte brut sur 200, refus parlé sur 422 —
+et le staging du navigateur reste juge en dernier ressort.
 
 Le contrat de tests : les attendus (`expect … = …`, `expect … absent`)
 voyagent avec la couche et se rejouent à la validation ; un attendu trahi
@@ -127,7 +130,9 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    cible inconnue refusée (« cible-inconnue »), attendu trahi
    (« attendu-trahi »), conflit d'ordre refusé en mode strict sans
    signature (« conflit-d'ordre », ADR-0017), signature vide refusée
-   (« assume-fantôme »).
+   (« assume-fantôme »), check posé mais incapable de juger refusé
+   (« check-vacant », ADR-0018), et checks portés exécutés en mode
+   strict (« check-trahi »).
 4. **La boucle de la plume** (`npm run test:pen-loop`,
    `tests/pen-loop-checks.mts`) prouve la boucle vérifiée côté serveur
    (`src/application/penLoop.ts`, plume injectée — hors ligne) : refus

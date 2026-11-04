@@ -65,6 +65,10 @@ const MAX_PEN_ATTEMPTS = Math.max(1, Number(process.env.PEN_MAX_ATTEMPTS ?? 3));
 // order-decided read only if the reading address signs an `assume`
 // — set PEN_STRICT_CONFLICTS=1 to arm it.
 const STRICT_CONFLICTS = process.env.PEN_STRICT_CONFLICTS === "1";
+// The strict arm of the loop for the carried checks (ADR-0018): the
+// pen may no longer propose a layer whose checks refuse it — set
+// PEN_STRICT_CHECKS=1 to arm it.
+const STRICT_CHECKS = process.env.PEN_STRICT_CHECKS === "1";
 
 // ------------------------------------------------------------
 // 2. THE WARDROBE ON DISK
@@ -507,6 +511,7 @@ const server = createServer(async (request, response) => {
             previousAdditionSources,
             maxAttempts: MAX_PEN_ATTEMPTS,
             strictConflicts: STRICT_CONFLICTS,
+            strictChecks: STRICT_CHECKS,
             propose: async ({ instruction, feedback }) => {
               const generated = await generateLayer({ instruction, feedback });
               if (generated.statusCode !== 200) {

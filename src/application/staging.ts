@@ -14,6 +14,7 @@ import { type ParsedLanguage, parseLanguage } from "../domain/language/parser.ts
 import { type CompiledLanguage, compileLanguage } from "../domain/language/compiler.ts";
 import { type ValidationOutcome, validateSpace, declaredModeOf } from "../domain/validation.ts";
 import { formatAddress, unsignedOrderConflictsOf } from "../domain/conflicts.ts";
+import { runChecks } from "../domain/checks.ts";
 import { DEFAULT_LANGUAGE, fact, parseText, type Language } from "../domain/messages.ts";
 
 /** The staging verdict of a draft: which step refused (syntax or
@@ -74,7 +75,14 @@ export function extractLayerBlock({ name, source }: { name: string; source: stri
  * is refused as « conflit-d'ordre » unless the reading address
  * signs an `assume`. The judge is the same detector the lint
  * inventories the workshop with; only the strict spaces make the
- * convention contractual. */
+ * convention contractual.
+ *
+ * `strictChecks` (off by default) makes the carried constraints
+ * EXECUTE (ADR-0018): runChecks over the layers under judgment,
+ * their errors refused as « check-trahi ». The constraint semantics
+ * composes with the staging at last — bounded to the candidate:
+ * the workshop stays immutable, the frozen corpus is never
+ * re-executed. */
 export function stageLayerAddition({
   languageSource,
   previousAdditionSources,
@@ -82,6 +90,7 @@ export function stageLayerAddition({
   livingLayerNames,
   language = DEFAULT_LANGUAGE,
   strictConflicts = false,
+  strictChecks = false,
 }: {
   languageSource: string;
   previousAdditionSources: string[];
@@ -95,6 +104,10 @@ export function stageLayerAddition({
   /** refuse unsigned order conflicts (« conflit-d'ordre ») instead
    * of leaving them to the lint's inventory */
   strictConflicts?: boolean;
+  /** execute the carried checks of the judged layers, refusing
+   * their errors as « check-trahi » (ADR-0018) — instead of
+   * leaving the constraints decorative */
+  strictChecks?: boolean;
 }): StagingOutcome {
   const source = [languageSource, ...previousAdditionSources, draftSource.trim()].join("\n") + "\n";
 
@@ -188,6 +201,28 @@ export function stageLayerAddition({
           loserValue: conflict.loserValue,
         }),
       });
+    }
+  }
+
+  // ---- strict checks: the carried constraints of the judged layers
+  // finally EXECUTE (ADR-0018) — the semantics of the check tags,
+  // runChecks over the layers under judgment, their operands read
+  // through the composed closure. The errors of the checks become
+  // « check-trahi » verdicts; off by default, the workshop stays
+  // immutable — the frozen corpus is never re-executed, only the
+  // candidate is judged, and its cost is the candidate's size.
+  if (strictChecks) {
+    const judgedLayerNames = layerNames.filter((name) => !livingLayerNames.includes(name));
+    for (const judgedLayerName of judgedLayerNames) {
+      for (const error of runChecks({ space, layer: judgedLayerName })) {
+        const separator = error.indexOf(" — ");
+        const where = separator >= 0 ? error.slice(0, separator) : judgedLayerName;
+        const message = separator >= 0 ? error.slice(separator + 3) : error;
+        verdicts.push({
+          kind: "check-trahi",
+          fact: fact("check-betrayed", { where, error: message }),
+        });
+      }
     }
   }
 
