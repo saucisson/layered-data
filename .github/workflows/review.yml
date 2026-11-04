@@ -37,16 +37,14 @@ jobs:
 
       - name: Export the pull request description
         env:
-          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
         run: |
           mkdir -p .review
-          # Get PR description using GitHub CLI
-          if command -v gh &> /dev/null; then
-            gh pr view "${{ github.event.pull_request.number }}" --json body --jq '.body' > .review/pull-request-description.md || true
-          else
-            # Fallback: create empty description file
-            touch .review/pull-request-description.md
-          fi
+          # Try to get PR description via GitHub API
+          PR_DESCRIPTION=$(curl -s -H "Authorization: token ${{ github.token }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls/${PR_NUMBER}" | \
+            jq -r '.body // ""')
+          echo "$PR_DESCRIPTION" > .review/pull-request-description.md
 
       - name: Generate the PR diff
         run: |
@@ -60,19 +58,19 @@ jobs:
       - name: Publish the review comment
         if: always()
         env:
-          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
-          # Install GitHub CLI if not available
-          if ! command -v gh &> /dev/null; then
-            echo "Installing GitHub CLI..."
-            curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg | sudo gpg --dearmor -o /usr/share/keyrings/githubcli-archive-keyring.gpg
-            echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main" | sudo tee /etc/apt/sources.list.d/github-cli.list > /dev/null
-            sudo apt update && sudo apt install gh -y
-          fi
-          
-          # Post the review comment
+          # Post the review comment via GitHub API
           if [ -f .review/review-comment.md ]; then
-            gh pr comment "${{ github.event.pull_request.number }}" --body-file .review/review-comment.md || true
+            COMMENT_BODY=$(cat .review/review-comment.md)
+            # Escape newlines and special chars for JSON
+            COMMENT_BODY_JSON=$(echo "$COMMENT_BODY" | jq -Rs .)
+            curl -s -X POST \
+              -H "Authorization: token $GITHUB_TOKEN" \
+              -H "Accept: application/vnd.github.v3+json" \
+              "https://api.github.com/repos/${{ github.repository }}/issues/${PR_NUMBER}/comments" \
+              -d "{\"body\": $COMMENT_BODY_JSON}" || true
           else
             echo "No review comment file found"
           fi
