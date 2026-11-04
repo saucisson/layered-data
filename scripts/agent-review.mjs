@@ -50,6 +50,12 @@ const CONSTITUTIONAL_FILES = [
 // Maximum lines changed before BLOCKING
 const MAX_LINES_CHANGED = 500;
 
+// Label that waives the human-approval gate (ADR-0011): when a human
+// manually poses it on the PR, constitutional-file findings are
+// recorded as WAIVED instead of BLOCKING. Verify failures and every
+// other rule are never waivable.
+const HUMAN_APPROVED_LABEL = 'human-approved';
+
 function log(message) {
   console.log(`[REVIEWER] ${message}`);
 }
@@ -177,6 +183,26 @@ function checkPRSize(modifiedFiles) {
   }
   
   return [];
+}
+
+/**
+ * Get the labels of the PR: from the review bundle (created by the
+ * workflow), or from the PR_LABELS environment variable locally.
+ */
+function getPRLabels() {
+  try {
+    const raw = fs.readFileSync(path.join(repoRoot, '.review', 'pull-request-labels.json'), 'utf8');
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.map((label) => (typeof label === 'string' ? label : label.name));
+    }
+    return [];
+  } catch (e) {
+    if (process.env.PR_LABELS) {
+      return process.env.PR_LABELS.split(',').map((label) => label.trim()).filter(Boolean);
+    }
+    return [];
+  }
 }
 
 /**
@@ -348,6 +374,14 @@ function runReview() {
   const totalLines = modifiedFiles.reduce((s, f) => s + f.total, 0);
   log(`Total lines changed: ${totalLines}`);
   
+  // Human-approval gate: the label is posed manually by a human, it
+  // waives only the constitutional-file rule — never verify failures.
+  const prLabels = getPRLabels();
+  const humanApproved = prLabels.includes(HUMAN_APPROVED_LABEL);
+  if (humanApproved) {
+    log(`Label '${HUMAN_APPROVED_LABEL}' present: constitutional-file gate waived (ADR-0011)`);
+  }
+  
   // Run all checks
   const allFindings = [];
   
@@ -358,7 +392,15 @@ function runReview() {
   allFindings.push(...checkPRSize(modifiedFiles));
   
   // 3. Check constitutional files
-  allFindings.push(...checkConstitutionalFiles(modifiedFiles));
+  let constitutionalFindings = checkConstitutionalFiles(modifiedFiles);
+  if (humanApproved) {
+    constitutionalFindings = constitutionalFindings.map((finding) => ({
+      ...finding,
+      severity: 'WAIVED',
+      evidence: `${finding.evidence} — waived by label '${HUMAN_APPROVED_LABEL}' (human approval, ADR-0011)`
+    }));
+  }
+  allFindings.push(...constitutionalFindings);
   
   // 4. Check verify (only if we have dependencies installed)
   if (fs.existsSync(path.join(repoRoot, 'node_modules'))) {
@@ -380,7 +422,8 @@ function runReview() {
   const counts = {
     BLOCKING: allFindings.filter(f => f.severity === 'BLOCKING').length,
     TO_FIX: allFindings.filter(f => f.severity === 'TO-FIX').length,
-    SUGGESTION: allFindings.filter(f => f.severity === 'SUGGESTION').length
+    SUGGESTION: allFindings.filter(f => f.severity === 'SUGGESTION').length,
+    WAIVED: allFindings.filter(f => f.severity === 'WAIVED').length
   };
   
   // Generate report
@@ -404,7 +447,8 @@ function runReview() {
   comment += `|----------|-------|\n`;
   comment += `| **BLOCKING** | ${counts.BLOCKING} |\n`;
   comment += `| **TO-FIX** | ${counts.TO_FIX} |\n`;
-  comment += `| **SUGGESTION** | ${counts.SUGGESTION} |\n\n`;
+  comment += `| **SUGGESTION** | ${counts.SUGGESTION} |\n`;
+  comment += `| **WAIVED** (label \`${HUMAN_APPROVED_LABEL}\`) | ${counts.WAIVED} |\n\n`;
   
   if (counts.BLOCKING > 0) {
     comment += `### ❌ **BLOCKING Findings** (Merge blocked)\n\n`;
@@ -434,6 +478,14 @@ function runReview() {
     }
   }
   
+  if (counts.WAIVED > 0) {
+    comment += `### 🏷️ **WAIVED Findings** (label \`${HUMAN_APPROVED_LABEL}\` posed by a human)\n\n`;
+    for (const finding of allFindings.filter(f => f.severity === 'WAIVED')) {
+      comment += `- **\[${finding.rule}\\]** \`${finding.file}:${finding.line}\`\n`;
+      comment += `  > ${finding.evidence}\n\n`;
+    }
+  }
+  
   comment += `---\n`;
   comment += `*Review performed at ${new Date().toISOString()}*\n`;
   comment += `*Agent protocol: [ADR-0011](docs/decisions/adr-0011-agent-protocol.md) | Review checklist: [docs/review-checklist.md](docs/review-checklist.md)*\n`;
@@ -448,6 +500,7 @@ function runReview() {
   log(`  BLOCKING: ${counts.BLOCKING}`);
   log(`  TO-FIX: ${counts.TO_FIX}`);
   log(`  SUGGESTION: ${counts.SUGGESTION}`);
+  log(`  WAIVED: ${counts.WAIVED}`);
   
   // Print findings for debugging
   if (allFindings.length > 0) {
