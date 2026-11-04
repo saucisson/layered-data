@@ -1,0 +1,9 @@
+/* le style de l'atelier : les classes Tailwind du canvas, compilées
+   par @tailwindcss/vite — l'atelier local est identique au rendu */
+@import "tailwindcss";
+
+/* avant le montage de React : déjà le fond de l'atelier (slate-100) */
+body {
+  margin: 0;
+  background-color: #f1f5f9;
+}

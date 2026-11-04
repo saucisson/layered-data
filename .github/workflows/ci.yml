@@ -1,0 +1,42 @@
+# The CI of the atelier — the same gates, in the same order, as a
+# local `npm run verify`. The kernel behavior is a contract: any push
+# that breaks the types (strict, no emit), the presentation
+# structure, the harnesses (audit, executable specification,
+# staging), the bilingual parity, or the build is refused.
+#
+# The typecheck is the gate that no sandbox in this repository can
+# replace: Node strips types at run time, it never checks them. The
+# CI is where the strict compiler actually reads the whole tree —
+# src (app config) and server, tests, vite config (node config).
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      # No lockfile in the repository: the atelier keeps zero
+      # friction for a zip handover. The CI resolves the pinned
+      # versions of package.json.
+      - run: npm install
+
+      - name: Types (strict, no emit — both configs)
+        run: npm run typecheck
+
+      - name: Presentation structure
+        run: npm run check:structure
+
+      - name: The harnesses (audit, specification, staging, i18n)
+        run: npm test
+
+      - name: Build
+        run: npm run build

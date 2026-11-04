@@ -1,0 +1,36 @@
+{
+  "name": "layered-data-atelier",
+  "version": "2.23.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "npm run test:audit && npm run test:specification && npm run test:staging && npm run test:pen-loop && npm run test:editor && npm run test:i18n",
+    "test:audit": "node tests/audit-kernel.mts | diff tests/baseline-kernel.txt -",
+    "test:specification": "node tests/specification-properties.mts",
+    "test:staging": "node tests/staging-checks.mts",
+    "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
+    "check:structure": "node scripts/check-tsx-structure.mjs src/App.tsx src/presentation/*.tsx",
+    "verify": "npm run typecheck && npm run check:structure && npm test && npm run build",
+    "serve": "node server.ts",
+    "test:pen-loop": "node tests/pen-loop-checks.mts",
+    "test:editor": "node tests/editor-checks.mts",
+    "test:i18n": "node tests/i18n-checks.mts"
+  },
+  "dependencies": {
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "4.1.11",
+    "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "4.3.4",
+    "tailwindcss": "4.1.11",
+    "typescript": "5.6.3",
+    "vite": "5.4.11"
+  }
+}
