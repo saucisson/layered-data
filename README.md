@@ -83,7 +83,10 @@ rendue telle quelle dans la réponse, jamais muette.
 `/api/generate` est vérifiée côté serveur par le staging même de
 l'atelier (syntaxe, cible inconnue, attendus trahis…) ; un refus
 revient au modèle avec ses verdicts, jusqu'à `PEN_MAX_ATTEMPTS`
-propositions (3 par défaut). La réponse est toujours une couche
+propositions (3 par défaut). `PEN_STRICT_CONFLICTS=1` arme le bras
+strict (ADR-0017) : la plume ne peut plus proposer une lecture que
+l'ordre des refines tranche entre sources incomparables, sauf si
+l'adresse lisante signe un `assume`. La réponse est toujours une couche
 stagée : texte brut sur 200, refus parlé sur 422 — et le staging du
 navigateur reste juge en dernier ressort.
 
@@ -122,7 +125,9 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    `tests/staging-checks.mts`) figent le protocole des ajouts : brouillon
    sain accepté et appliqué, syntaxe cassée refusée à l'étape « syntaxe »,
    cible inconnue refusée (« cible-inconnue »), attendu trahi
-   (« attendu-trahi »).
+   (« attendu-trahi »), conflit d'ordre refusé en mode strict sans
+   signature (« conflit-d'ordre », ADR-0017), signature vide refusée
+   (« assume-fantôme »).
 4. **La boucle de la plume** (`npm run test:pen-loop`,
    `tests/pen-loop-checks.mts`) prouve la boucle vérifiée côté serveur
    (`src/application/penLoop.ts`, plume injectée — hors ligne) : refus

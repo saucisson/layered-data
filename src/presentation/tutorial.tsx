@@ -148,7 +148,7 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
       },
       {
         en: "Seventh gesture — note, and that's all. A whole // line becomes a note datum: it travels with the block and documents the key that follows. Add mask (to mute an inheritance — the ⟪mask⟫) and bind (to bind a check slot to an address), and you have the whole language. The rest of this tutorial only reads it.",
-        fr: "Septième geste — noter, et c'est tout. Une ligne // entière devient une donnée note : elle voyage avec le bloc et documente la clé qui suit. Ajoutez mask (rendre un héritage muet — le ⟪masque⟫) et bind (lier un slot de check à une adresse), et vous avez tout le langage. Le reste de ce tutoriel ne fait que le lire.",
+        fr: "Septième geste — noter, et c'est tout. Une ligne // entière devient une donnée note : elle voyage avec le bloc et documente la clé qui suit. Ajoutez mask (rendre un héritage muet — le ⟪masque⟫), bind (lier un slot de check à une adresse) et assume (signer une lecture que l'ordre des refines tranche entre sources incomparables — la convention muette du ⟪diamant⟫ devient un acte signé), et vous avez tout le langage. Le reste de ce tutoriel ne fait que le lire.",
       },
     ],
     see: {

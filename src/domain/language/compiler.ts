@@ -91,6 +91,16 @@ const emit = (
       declarations.push({ layer, path, key: act.key, mode: "mask" });
       continue;
     }
+    // The assume lays NOTHING in the tree — no data, no special
+    // key, the kernel's reading semantics are untouched. It lives
+    // only in the declaration table: mode "assume" at (layer, path,
+    // key), read by the lint (the signed conflict stays silent), the
+    // validation (an assume without a conflict is a ghost) and the
+    // strict staging (a signed conflict never refuses).
+    if (act.kind === "assume") {
+      declarations.push({ layer, path, key: act.key, mode: "assume" });
+      continue;
+    }
     declarations.push({ layer, path, key: act.key, mode: act.mode });
     if (act.block !== null) {
       const childNode: RawTree = {};
