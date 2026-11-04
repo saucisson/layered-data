@@ -1,17 +1,20 @@
 // The staging protocol checks: the composer never dies of a typo,
 // the living space never absorbs a refused draft.
 //
-// Seven scenarios over the assembled trunk corpus: a sound draft is
+// Nine scenarios over the assembled trunk corpus: a sound draft is
 // accepted and applied (its layers enter the living space, its
 // refinement targets are reported), a broken syntax is refused at
 // the syntax step, an unknown refinement target is refused as
 // "cible-inconnue", a betrayed expectation is refused as
 // "attendu-trahi", an unsigned order conflict is accepted
 // permissively but refused as "conflit-d'ordre" in strict mode
-// (ADR-0017), an assume signs it (both modes accept), and an empty
-// signature is refused as "assume-fantôme". The verdict kinds are
-// part of the observable contract — they are frozen exactly as the
-// kernel statuses are.
+// (ADR-0017), an assume signs it (both modes accept), an empty
+// signature is refused as "assume-fantôme", a check posed without
+// its slots is refused as "check-vacant" (ADR-0018), and a cyclic
+// candidate over the dag family is accepted permissively but its
+// carried check refuses it as "check-trahi" in strict mode. The
+// verdict kinds are part of the observable contract — they are
+// frozen exactly as the kernel statuses are.
 //
 //     node tests/staging-checks.mts   (exit 1 on any failure)
 
@@ -295,6 +298,107 @@ check(
 check(
   '(g) the empty signature carries exactly the "assume-fantôme" verdict',
   refusedGhost.verdicts.length === 1 && refusedGhost.verdicts[0].kind === "assume-fantôme",
+);
+
+// =====================================================================
+// (h) a check posed without its slots is refused as check-vacant —
+// the constraint carried but unable to judge (ADR-0018); the lint
+// inventories the same vacancy as a diagnostic
+// =====================================================================
+
+// a layer poses the sperner constraint but binds nothing: the check
+// cannot judge — its contract requires the edges slot
+const vacantDraft = [
+  "layer demo-vacant refines @record",
+  "  check sperner",
+].join("\n");
+const refusedVacant = stage({ draftSource: vacantDraft });
+check(
+  "(h) the posed check without slots is refused at the validation step",
+  refusedVacant.ok === false && refusedVacant.step === "validation",
+);
+check(
+  '(h) the vacant pose carries the "check-vacant" verdicts, one per required slot, naming the tag',
+  refusedVacant.verdicts.length === 3 &&
+    refusedVacant.verdicts.every((verdict) => verdict.kind === "check-vacant") &&
+    refusedVacant.verdicts.every((verdict) =>
+      JSON.stringify(verdict.fact.params).includes("sperner"),
+    ) &&
+    refusedVacant.verdicts.some((verdict) =>
+      JSON.stringify(verdict.fact.params).includes("edges"),
+    ),
+);
+// the same vacancy, seen by the lint — the diagnostics fold
+check(
+  "(h) the lint inventories the vacancy too — the detector sees, the validation judges",
+  refusedVacant.ok === false &&
+    refusedVacant.compiledLanguage !== null &&
+    runAllLints({
+      space: new Space(refusedVacant.compiledLanguage.layers),
+      layerNames: refusedVacant.layerNames,
+      compilation: refusedVacant.compiledLanguage,
+    }).some((diagnostic) => diagnostic.kind === "check-vacant"),
+);
+
+// =====================================================================
+// (i) the carried checks finally execute in strict mode (ADR-0018):
+// a cyclic candidate over the dag family is accepted permissively,
+// refused as "check-trahi" when the strict arm executes the checks
+// =====================================================================
+
+// three arcs in a cycle, refining the dag family's own edge type —
+// the check dag is carried by the type, its slots bound by the
+// family (multidigraph); only the execution can see the cycle
+const cyclicDraft = [
+  "layer demo-cycle refines @dag",
+  "  extend vertices",
+  "    v1 refines @multidigraph/edge_type",
+  "      identifier = 1",
+  "    v2 refines @multidigraph/edge_type",
+  "      identifier = 2",
+  "    v3 refines @multidigraph/edge_type",
+  "      identifier = 3",
+  "  extend edges",
+  "    a1 refines @dag/edge_type",
+  "      source = @demo-cycle/vertices/v1",
+  "      target = @demo-cycle/vertices/v2",
+  "    a2 refines @dag/edge_type",
+  "      source = @demo-cycle/vertices/v2",
+  "      target = @demo-cycle/vertices/v3",
+  "    a3 refines @dag/edge_type",
+  "      source = @demo-cycle/vertices/v3",
+  "      target = @demo-cycle/vertices/v1",
+].join("\n");
+
+const permissiveCycle = stage({ draftSource: cyclicDraft });
+check(
+  "(i) the cyclic candidate is accepted permissively — the workshop stays immutable, the constraint decorative",
+  permissiveCycle.ok === true && permissiveCycle.verdicts.length === 0,
+);
+
+const strictCycle = stageLayerAddition({
+  languageSource: kernel.languageSource,
+  previousAdditionSources: [],
+  draftSource: cyclicDraft,
+  livingLayerNames: [...KERNEL_LAYER_NAMES],
+  strictChecks: true,
+});
+check(
+  "(i) the strict arm executes the carried checks — the cycle is refused",
+  strictCycle.ok === false && strictCycle.step === "validation",
+);
+check(
+  '(i) each cyclic arc carries its "check-trahi" verdict, the carried check refusing',
+  strictCycle.verdicts.length === 3 &&
+    strictCycle.verdicts.every((verdict) => verdict.kind === "check-trahi") &&
+    strictCycle.verdicts.every((verdict) => JSON.stringify(verdict.fact.params).includes("cycle")),
+);
+check(
+  "(i) the refusal names the judging address — the arc the check refused at",
+  strictCycle.verdicts.length === 3 &&
+    strictCycle.verdicts.every((verdict) =>
+      JSON.stringify(verdict.fact.params).includes("demo-cycle::edges/"),
+    ),
 );
 
 // =====================================================================

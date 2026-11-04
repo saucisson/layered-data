@@ -264,6 +264,10 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         en: "Neither suffices alone: each is the other's exact blind spot. And the ⟪alias⟫'s price is assumed: the same defect is reported at every view address that designates it.",
         fr: "Aucun des deux ne suffit : chacun est l'angle mort exact de l'autre. Et le prix de l'⟪alias⟫ est assumé : un même défaut est rapporté à chaque adresse de vue qui le désigne.",
       },
+      {
+        en: "A carried check must also be ABLE to judge: each tag of the ⟪registre⟫ declares its contract — where it judges, and which ⟪slot⟫s it must read. A posed check whose slots are unbound is refused as « check vacant » (ADR-0018); and in strict staging the carried checks finally EXECUTE over the candidate, their refusals returned as « check-trahi » — the constraint composes with the validity.",
+        fr: "Un check porté doit aussi pouvoir JUGER : chaque étiquette du ⟪registre⟫ déclare son contrat — où elle juge, et quels ⟪slot⟫s il lui faut lire. Un check posé dont les slots ne sont pas liés est refusé comme « check vacant » (ADR-0018) ; et en staging strict, les checks portés s'exécutent enfin sur la candidate, leurs refus rendus comme « check-trahi » — la contrainte compose avec la validité.",
+      },
     ],
     see: {
       en: "panel ② — the Diagnostics & validation fold: the golden reads contract and the verdict, which says what was verified, never « correct ».",

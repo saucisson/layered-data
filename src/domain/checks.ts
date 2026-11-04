@@ -18,7 +18,10 @@
 // at the generic level, bound by the formalism that fixes it),
 // first-winner per slot across the closure. The registry knows only
 // the algorithm and the slot contract; an unbound slot is never
-// guessed — the check withdraws, recording check-vacant.
+// guessed — the check withdraws. The contract is DECLARED, in the
+// nominal registry above (ADR-0018): the withdrawal is no longer the
+// check's private affair — a posed check that cannot judge is a
+// check-vacant verdict, the inherited vacancies the lint's inventory.
 //
 // The placement rule follows from the closure: a binding lives at the
 // level where the check READS it. Layer-level checks (simple,
@@ -545,6 +548,195 @@ function checkConnected({ space, view }: { space: Space; view: AddressView }): s
     ];
   }
   return [];
+}
+
+// ---- the nominal registry: the contracts ------------------------------
+
+// The registry is NOMINAL: every check tag declares its contract —
+// WHERE it judges (a layer root, an instance of the type that
+// poses it) and WHICH slots it must read to be able to judge
+// (ADR-0018). The contract is the check's semantics made readable
+// WITHOUT executing it: the validation (a posed check that cannot
+// judge is a verdict), the lint (the inventory of the vacancies)
+// and the dead-binding rule (the reading levels) all read this
+// table — never the check's code. A check carried but unable to
+// judge is a vacant check; the withdrawal policy stops being local
+// to each function.
+export interface CheckContract {
+  /** where the check judges: a layer root (the layer checks read
+   * their operands there), or an instance (the arc checks: the
+   * type that poses them is in the instance's closure, the root
+   * never) */
+  level: "root" | "instance";
+  /** the slots the check CANNOT judge without, and the level each
+   * one is read at */
+  required: Record<string, "root" | "instance">;
+  /** the slots the check reads when present — never required */
+  optional?: Record<string, "root" | "instance">;
+  /** the conditional group: the slots the check needs DEPEND on the
+   * value of a binding (`simple` needs the ordered pair when
+   * ordered, the arrows otherwise). The instance-level slots of
+   * the group are read at the addresses of the operand view
+   * (the `edges`) */
+  conditional?: {
+    slot: string;
+    operand?: string;
+    "true": Record<string, "root" | "instance">;
+    "false": Record<string, "root" | "instance">;
+  };
+}
+
+export const checkContracts: Record<string, CheckContract> = {
+  // the two generic checks of the original kernel: no slots — they
+  // read the `specification` views directly. Carried by nothing in
+  // the trunk corpus (measured), they stay in the registry: the
+  // registry documents the kernel, not its usage.
+  containers: { level: "root", required: {} },
+  cardinality: { level: "root", required: {} },
+  simple: {
+    level: "root",
+    required: { edges: "root" },
+    optional: { ordered: "root" },
+    conditional: {
+      slot: "ordered",
+      operand: "edges",
+      "true": { "end-source": "instance", "end-target": "instance" },
+      "false": { arrows: "root", "arrow-vertex": "root" },
+    },
+  },
+  nonempty: { level: "root", required: { edges: "root", arrows: "root", "arrow-vertex": "root" } },
+  oriented: { level: "instance", required: { "end-source": "instance", "end-target": "instance" } },
+  sperner: { level: "root", required: { edges: "root", arrows: "root", "arrow-vertex": "root" } },
+  "k-partite": { level: "root", required: { vertices: "root", edges: "root", arrows: "root", "arrow-vertex": "root" } },
+  dag: { level: "instance", required: { "end-source": "instance", "end-target": "instance" } },
+  arbre: {
+    level: "root",
+    required: { vertices: "root", edges: "root" },
+    optional: { "end-source": "instance", "end-target": "instance" },
+  },
+};
+
+/** The reading level of every slot a check may read — required,
+ * optional or conditional — one source for the registry's
+ * semantics. The validation's dead-binding rule reads this table:
+ * a type-level binding read at a root is a dead binding. */
+export function slotReadingLevelsOf(contract: CheckContract): Record<string, "root" | "instance"> {
+  return {
+    ...contract.required,
+    ...(contract.optional ?? {}),
+    ...(contract.conditional
+      ? { ...contract.conditional["false"], ...contract.conditional["true"] }
+      : {}),
+  };
+}
+
+// ---- the vacant checks (ADR-0018) -------------------------------------
+
+/** A check that cannot judge: carried (posed, or inherited through
+ * the closure) at an address its contract makes it judge, but a
+ * required slot is unbound — the constraint withdraws and the
+ * workshop's validity says nothing. `posed` tells the local act (the
+ * tag carried at the very address) from the inherited one (a
+ * formalism's constraint traveling to a layer whose closure stops
+ * binding). */
+export interface VacantCheck {
+  address: Address;
+  tag: string;
+  slot: string;
+  /** the level the unbound slot is read at */
+  level: "root" | "instance";
+  posed: boolean;
+}
+
+function pathsEqual(first: string[], second: string[]): boolean {
+  return first.length === second.length && first.every((segment, index) => segment === second[index]);
+}
+
+/** Inventory the vacant checks of a space, WITHOUT executing the
+ * checks — the detector is the contract's reader, not the check's
+ * runner (ADR-0018). The walk mirrors runChecks': every address,
+ * the tags of its closure. The judgment follows the contract's
+ * placement rule: a local pose always judges; an inherited layer
+ * check judges at the layer roots that carry it; an inherited
+ * instance check judges at the addresses that inherit it from the
+ * posing type. The conditional group resolves its condition (the
+ * `ordered` binding, unbound reading as false — the mirror of the
+ * check's own code) at the judged address, and its instance slots
+ * are judged at the addresses of the operand view (the `edges`); a
+ * missing operand leaves the group dormant — nothing to judge.
+ * Measured on the trunk: 79 judgments, 0 vacancies. */
+export function vacantChecksOf({ space, layerNames }: { space: Space; layerNames: readonly LayerName[] }): VacantCheck[] {
+  const vacancies: VacantCheck[] = [];
+  const recordAt = (
+    address: Address,
+    tag: string,
+    slots: Record<string, "root" | "instance">,
+    posed: boolean,
+  ): void => {
+    for (const [slot, level] of Object.entries(slots)) {
+      const view = new AddressView(address[0], address[1]);
+      if (boundSlotValue({ space, view, slot }) !== null) continue;
+      vacancies.push({ address, tag, slot, level, posed });
+    }
+  };
+  const recordContractAt = (address: Address, tag: string, contract: CheckContract, posed: boolean): void => {
+    recordAt(address, tag, contract.required, posed);
+    if (!contract.conditional) return;
+    const view = new AddressView(address[0], address[1]);
+    const group =
+      contract.conditional[
+        boundSlotValue({ space, view, slot: contract.conditional.slot }) === true ? "true" : "false"
+      ];
+    const rootSlots: Record<string, "root" | "instance"> = {};
+    const instanceSlots: Record<string, "root" | "instance"> = {};
+    for (const [slot, level] of Object.entries(group)) {
+      (level === "instance" ? instanceSlots : rootSlots)[slot] = level;
+    }
+    recordAt(address, tag, rootSlots, posed);
+    if (!Object.keys(instanceSlots).length || !contract.conditional.operand) return;
+    // the operand view designates the addresses the group's
+    // instance slots are read at; without it the group is dormant
+    const operandSlot = boundSlotValue({ space, view, slot: contract.conditional.operand });
+    if (operandSlot === null) return;
+    const operandView = space.read({ layer: address[0], path: address[1], key: operandSlot as string });
+    if (!(operandView instanceof AddressView)) return;
+    for (const memberKey of space.keys({ layer: operandView.layer, path: operandView.path })) {
+      recordAt(
+        [operandView.layer, [...operandView.path, asPathSegment(memberKey)]],
+        tag,
+        instanceSlots,
+        posed,
+      );
+    }
+  };
+  for (const layerName of layerNames) {
+    for (const address of walkAddresses({ space, layer: layerName })) {
+      const [layer, path] = address;
+      let posed = false;
+      const tags = new Set<string>();
+      for (const [sourceLayer, sourcePath] of space.closure({ layer, path })) {
+        const node = space.raw({ layer: sourceLayer, path: sourcePath });
+        if (!isDictionary(node)) continue;
+        if (sourceLayer === layer && pathsEqual(sourcePath, path) && Array.isArray(node["checks"])) {
+          posed = true;
+        }
+        for (const tag of (node["checks"] ?? []) as unknown[]) {
+          if (typeof tag === "string" && checkContracts[tag]) tags.add(tag);
+        }
+      }
+      for (const tag of tags) {
+        const contract = checkContracts[tag];
+        if (posed) {
+          recordContractAt(address, tag, contract, true);
+        } else if (contract.level === "root" && path.length === 0) {
+          recordContractAt(address, tag, contract, false);
+        } else if (contract.level === "instance" && path.length > 0) {
+          recordAt(address, tag, contract.required, false);
+        }
+      }
+    }
+  }
+  return vacancies;
 }
 
 // ---- the registry ----------------------------------------------------

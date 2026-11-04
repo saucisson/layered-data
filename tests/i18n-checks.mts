@@ -290,8 +290,8 @@ const glossary = readExportedData({ file: join(presentationDirectory, "notions.t
 };
 const glossaryIds = Object.keys(glossary);
 check(
-  "the glossary keeps its thirty-two ids — the French keys the tutorial cites, the two ADR-0017 notions included",
-  glossaryIds.length === 32 &&
+  "the glossary keeps its thirty-four ids — the French keys the tutorial cites, the ADR-0017 notions and the ADR-0018 registry included",
+  glossaryIds.length === 34 &&
     [
       "adresse",
       "carottage",
@@ -302,6 +302,8 @@ check(
       "union",
       "assume",
       "conflit d'ordre",
+      "registre",
+      "slot",
     ].every((id) => glossaryIds.includes(id)),
 );
 check(
