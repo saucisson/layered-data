@@ -8,7 +8,7 @@
 // proposal (no network, no key, no randomness).
 
 import { type LayerName, asLayerName } from "../domain/identifiers.ts";
-import { LayerReference } from "../domain/addresses.ts";
+import { LayerReference, type RawValue } from "../domain/addresses.ts";
 import { Space } from "../domain/space.ts";
 import { type ParsedLanguage, parseLanguage } from "../domain/language/parser.ts";
 import { type CompiledLanguage, compileLanguage } from "../domain/language/compiler.ts";
@@ -128,7 +128,7 @@ export function stageLayerAddition({
     // phantom parent would break the graph of panel ① (the empty
     // position does not exist), the staging refuses it
     const layerTree = compiledLanguage.layers[layerName];
-    for (const entry of layerTree?.["refines"] ?? []) {
+    for (const entry of (layerTree?.["refines"] ?? []) as RawValue[]) {
       if (entry instanceof LayerReference && !(entry.layer in compiledLanguage.layers)) {
         orphanVerdicts.push({
           kind: "cible-inconnue",
@@ -196,9 +196,9 @@ export function applyStagedAddition({
     newLayerNames.push(layerName);
     space.layers[layerName] = staging.compiledLanguage!.layers[layerName];
     const layerTree = space.layers[layerName];
-    refinementTargetsOf[layerName] = (layerTree?.["refines"] ?? [])
-      .filter((entry: any) => entry instanceof LayerReference)
-      .map((entry: any) => entry.layer as string)
+    refinementTargetsOf[layerName] = ((layerTree?.["refines"] ?? []) as RawValue[])
+      .filter((entry): entry is LayerReference => entry instanceof LayerReference)
+      .map((entry) => entry.layer)
       .filter(
         (parent: string) =>
           knownLayerNames.includes(parent) || processedLayerNames.slice(0, -1).includes(parent),

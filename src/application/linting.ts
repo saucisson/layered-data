@@ -134,7 +134,8 @@ function lintTags({ space, layerNames }: LintingTarget): void {
       for (const [sourceLayer, sourcePath] of space.closure({ layer: addressLayer, path: addressPath })) {
         const node = space.raw({ layer: sourceLayer, path: sourcePath });
         if (!isDictionary(node)) continue;
-        for (const tag of node["checks"] ?? []) {
+        for (const tag of (node["checks"] ?? []) as unknown[]) {
+          if (typeof tag !== "string") continue;
           if (!checkRegistry[tag]) {
             space.recordDiagnostic({ kind: "étiquette-inconnue", address, fact: fact("label-unknown", { tag }) });
           }

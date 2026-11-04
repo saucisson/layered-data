@@ -108,7 +108,7 @@ const KERNEL_LAYER_NAMES = listLayerNames({ directory: KERNEL_DIRECTORY });
  * text. The users' feathers join per call — a feather written
  * seconds ago stays refinable for the pen. */
 const TRUNK_LANGUAGE_SOURCE = TRUNK_LAYER_NAMES.map((name) => {
-  const source = readFileSync(kernelLayerPath({ name }), "utf8");
+  const source = readFileSync(kernelLayerPath({ name: String(name) as LayerName }), "utf8");
   return source.endsWith("\n") ? source : source + "\n";
 }).join("");
 
@@ -177,12 +177,12 @@ LA COLONNE VERTÉBRALE CI-DESSOUS EST L'ÉTAT RÉEL DE L'ATELIER — un nouveau 
 function corpusBackbone(): string {
   const lines: string[] = [];
   for (const name of KERNEL_LAYER_NAMES) {
-    const source = readFileSync(kernelLayerPath({ name }), "utf8");
+    const source = readFileSync(kernelLayerPath({ name: name as LayerName }), "utf8");
     const header = source.split("\n").find((line) => line.startsWith("layer "));
     lines.push(header ?? "layer " + name);
   }
   for (const name of listLayerNames({ directory: USERS_DIRECTORY })) {
-    const source = readFileSync(userLayerPath({ name }), "utf8");
+    const source = readFileSync(userLayerPath({ name: name as LayerName }), "utf8");
     const header = source.split("\n").find((line) => line.startsWith("layer "));
     lines.push(header ?? "layer " + name + "  // plume d'un visiteur");
   }
@@ -494,7 +494,7 @@ const server = createServer(async (request, response) => {
         // users' feathers read at the call — a feather written
         // seconds ago stays refinable for the pen.
         const userNames = listLayerNames({ directory: USERS_DIRECTORY });
-        const previousAdditionSources = userNames.map((name) => readFileSync(userLayerPath({ name }), "utf8"));
+        const previousAdditionSources = userNames.map((name) => readFileSync(userLayerPath({ name: name as LayerName }), "utf8"));
         try {
           const loopOutcome = await composeVerifiedLayerDraft({
             instruction,

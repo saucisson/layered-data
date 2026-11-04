@@ -329,7 +329,7 @@ check(
     const bodyBilingual = step.body.every((block) => {
       const asBlock = block as { code?: string; title?: { en: string; fr: string }; en?: string; fr?: string };
       if (asBlock.code !== undefined) return bilingualParityOf(asBlock.title as { en: string; fr: string });
-      return asBlock.en.length > 0 && asBlock.fr.length > 0;
+      return (asBlock.en ?? "").length > 0 && (asBlock.fr ?? "").length > 0;
     });
     const goBilingual = (step.go ?? []).every((entry) => entry.layer.length > 0 && entry.label.en.length > 0 && entry.label.fr.length > 0);
     return bilingualParityOf(step.label) && bilingualParityOf(step.title) && bodyBilingual && goBilingual;
