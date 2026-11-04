@@ -132,7 +132,7 @@ export function highlightSourceLine(line: string): { text: string; kind: string 
   return spans;
 }
 
-const SPAN_CLASSES: Record<string, string> = {
+export const SPAN_CLASSES: Record<string, string> = {
   kw: "font-semibold text-violet-700",
   bo: "font-semibold text-violet-700",
   rf: "text-emerald-700",
