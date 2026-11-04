@@ -113,6 +113,7 @@ export async function composeVerifiedLayerDraft({
   maxAttempts = 3,
   language = DEFAULT_LANGUAGE,
   strictConflicts = false,
+  strictChecks = false,
   propose,
 }: {
   instruction: string;
@@ -127,6 +128,10 @@ export async function composeVerifiedLayerDraft({
    * loop (ADR-0017): the pen may propose an order-decided read only
    * if the reading address signs an `assume` */
   strictConflicts?: boolean;
+  /** execute the carried checks of the judged layers too — the
+   * strict arm of the loop (ADR-0018): the pen may no longer
+   * propose a layer whose carried constraints refuse it */
+  strictChecks?: boolean;
   propose: PenPropose;
 }): Promise<PenLoopOutcome> {
   const refusals: PenRefusal[] = [];
@@ -162,6 +167,7 @@ export async function composeVerifiedLayerDraft({
       livingLayerNames: [...livingLayerNames],
       language,
       strictConflicts,
+      strictChecks,
     });
     if (staging.ok) {
       return { ok: true, attempts: attempt, draftSource: proposal, staging, refusals };
