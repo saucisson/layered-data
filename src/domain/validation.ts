@@ -12,7 +12,9 @@
 // first-winner that overrides must have declared it, (e) the
 // expected-reads contract replays — a betrayed read, wherever it
 // lives, is a verdict, (f) the assumes: a signature without an
-// order conflict is a ghost.
+// order conflict is a ghost, (g) the check couples — a divergent
+// re-pose, an unsupported level, an unreadable formula, a template
+// out of its judgment's quantified scope (ADR-0022).
 //
 // The verdict KINDS and the stat KEYS are kernel behavior — the panels
 // display them — they stay in French. Everything here is pure: the
@@ -23,7 +25,15 @@
 import { type LayerName, type LayerPath, asLayerName } from "./identifiers.ts";
 import { AddressView, LayerReference, MASK, PathReference, type RawValue, isDictionary } from "./addresses.ts";
 import { Space } from "./space.ts";
-import { type CheckContract, registryContractsOf, slotReadingLevelsOf, vacantChecksOf } from "./checks.ts";
+import {
+  type CheckContract,
+  canonicalCoupleOf,
+  checkCoupleOfRecord,
+  registryContractsOf,
+  slotReadingLevelsOf,
+  vacantChecksOf,
+} from "./checks.ts";
+import { quantifiedVariablesOf, templateTermsOf, tryParseFormula } from "./formulas.ts";
 import { walkAddresses } from "./views.ts";
 import { type CompiledLanguage, type Declaration } from "./language/compiler.ts";
 import { type ParsedLanguage } from "./language/parser.ts";
@@ -173,6 +183,7 @@ export function validateSpace({
     ombresBrutes: 0,
     tests: 0,
     trahis: 0,
+    couples: 0,
   };
   for (const declaration of compilation.declarations) {
     if (declaration.mode === "new") stats.nouveau++;
@@ -395,6 +406,124 @@ export function validateSpace({
         kind: "assume-fantôme",
         fact: fact("ghost-assume", { where, key: declaration.key }),
       });
+    }
+  }
+
+  // ---- (g) the check couples (ADR-0022): the declarative strate is
+  // data too — it is judged at assembly, never at execution. A couple
+  // is never REPLACED: per name, per address, the sources of the
+  // closure confront each other — a re-pose is tolerated only up to
+  // the canonical identity (the renaming of quantified variables
+  // aside, the ENTIRE couple: level, condition, judgments); a
+  // divergent one is a verdict naming the culprit pose. Then the
+  // winner is judged for readability: the level the reading judges
+  // at (root, today — instance is the declared next strate), the
+  // condition a judgment's « when » names, the formulas the
+  // interpreter parses, and the message templates inside the
+  // judgment's quantified scope — a couple the reading cannot read
+  // is refused HERE, the execution never meets it.
+  const redefinitions = new Set<string>(); // name|first|second — one verdict per confrontation, not per address
+  for (const layer of layerNames) {
+    for (const address of walkAddresses({ space, layer })) {
+      const [addressLayer, addressPath] = address;
+      // per-address: only poses CO-VISIBLE at this address confront
+      // each other — two sibling branches never meet (the geometry
+      // of the refinement, the same the first-winner reads with)
+      const firstPoseOf = new Map<string, { pose: string; canonical: string }>();
+      for (const [sourceLayer, sourcePath] of space.closure({ layer: addressLayer, path: addressPath })) {
+        const node = space.raw({ layer: sourceLayer, path: sourcePath });
+        if (!isDictionary(node) || !isDictionary(node["check-definitions"])) continue;
+        for (const name of Object.keys(node["check-definitions"])) {
+          if (name.startsWith("__note:")) continue;
+          const pose = sourceLayer + "::" + (sourcePath.join("/") || ".");
+          const read = checkCoupleOfRecord(node["check-definitions"][name]);
+          if (read === null) continue;
+          const canonical = canonicalCoupleOf({
+            level: read.level === "root" || read.level === "instance" ? read.level : "root",
+            condition: read.condition,
+            judgments: read.judgments,
+          });
+          const first = firstPoseOf.get(name);
+          if (first === undefined) {
+            firstPoseOf.set(name, { pose, canonical });
+            continue;
+          }
+          if (first.pose === pose || first.canonical === canonical) continue; // idempotence: the identical re-pose is tolerated
+          // the closure reads specific-first: the earlier pose is the
+          // DESCENDANT — the re-poser; the one read now is its
+          // ancestor, the original definer. The verdict narrates the
+          // genealogy: the definer first, THEN the divergent re-pose.
+          const confrontation = name + "|" + pose + "|" + first.pose;
+          if (redefinitions.has(confrontation)) continue;
+          redefinitions.add(confrontation);
+          verdicts.push({
+            kind: "check-redéfini",
+            fact: fact("redefined-check", { where: first.pose, name, first: pose, second: first.pose }),
+          });
+        }
+      }
+    }
+  }
+
+  // the readability of each POSE (deduplicated by (source, path,
+  // name)) — the winner anywhere is judged exactly once
+  const judgedPoses = new Set<string>();
+  for (const layer of layerNames) {
+    for (const address of walkAddresses({ space, layer })) {
+      const [addressLayer, addressPath] = address;
+      for (const [sourceLayer, sourcePath] of space.closure({ layer: addressLayer, path: addressPath })) {
+        const node = space.raw({ layer: sourceLayer, path: sourcePath });
+        if (!isDictionary(node) || !isDictionary(node["check-definitions"])) continue;
+        for (const name of Object.keys(node["check-definitions"])) {
+          if (name.startsWith("__note:")) continue;
+          const poseKey = sourceLayer + "|" + sourcePath.join("/") + "|" + name;
+          if (judgedPoses.has(poseKey)) continue;
+          const read = checkCoupleOfRecord(node["check-definitions"][name]);
+          if (read === null) continue;
+          judgedPoses.add(poseKey);
+          stats.couples++;
+          const where = sourceLayer + "::" + (sourcePath.join("/") || ".");
+          if (read.level !== "root") {
+            verdicts.push({
+              kind: "niveau-non-soutenu",
+              fact: fact("unsupported-level", { where, name, level: read.level }),
+            });
+          }
+          for (const judgment of read.judgments) {
+            if (judgment.when !== null && read.condition === null) {
+              verdicts.push({
+                kind: "condition-manquante",
+                fact: fact("missing-condition", { where, name }),
+              });
+            }
+            const parsed = tryParseFormula(judgment.formula);
+            if (!("formula" in parsed)) {
+              verdicts.push({
+                kind: "formule-illisible",
+                fact: fact("unreadable-formula", { tag: name, detail: parsed.error }),
+              });
+              continue;
+            }
+            const scope = quantifiedVariablesOf(parsed.formula);
+            const templates = templateTermsOf(judgment.message);
+            if (templates === null) {
+              verdicts.push({
+                kind: "formule-illisible",
+                fact: fact("unreadable-formula", { tag: name, detail: "gabarit : « " + judgment.message + " »" }),
+              });
+              continue;
+            }
+            for (const template of templates) {
+              if (!scope.includes(template.term.variable)) {
+                verdicts.push({
+                  kind: "gabarit-hors-de-portée",
+                  fact: fact("template-out-of-scope", { where, name, term: template.term.variable + (template.term.segments.length ? "/" + template.term.segments.join("/") : "") }),
+                });
+              }
+            }
+          }
+        }
+      }
     }
   }
   return { verdicts, stats };

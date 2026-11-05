@@ -8,6 +8,12 @@
 //   - `specification` — the node typing this one;
 //   - `anchors` / `defaults` — anchor prefixes and default values;
 //   - `checks` — the check tags the node carries;
+//   - `check-definitions` — the check couples the node declares
+//     (ADR-0022): a check is a name, a level, its judgments — closed
+//     sentences in the reading language — and their message
+//     templates. The container is INTERNAL: the surface language
+//     fills it through the `check` act alone, it is never addressed
+//     as a key, and it accumulates — a couple is never replaced;
 //   - `bindings` — slot bindings of the checks: the parameterization
 //     of a check lives in the layers, never in the registry;
 //   - `note` — the comment of a layer is DATA (readable at the root),
@@ -24,6 +30,7 @@ export type SpecialKey =
   | "anchors"
   | "defaults"
   | "checks"
+  | "check-definitions"
   | "bindings"
   | "note"
   | "tests";
@@ -35,6 +42,7 @@ export const SPECIAL_KEYS: readonly SpecialKey[] = [
   "anchors",
   "defaults",
   "checks",
+  "check-definitions",
   "bindings",
   "note",
   "tests",
