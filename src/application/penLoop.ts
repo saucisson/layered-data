@@ -109,6 +109,7 @@ export async function composeVerifiedLayerDraft({
   instruction,
   languageSource,
   livingLayerNames,
+  readonlyLayerNames,
   previousAdditionSources = [],
   maxAttempts = 3,
   language = DEFAULT_LANGUAGE,
@@ -119,6 +120,12 @@ export async function composeVerifiedLayerDraft({
   instruction: string;
   languageSource: string;
   livingLayerNames: readonly string[];
+  /** the trunk's signature (ADR-0020): the pen may propose a layer
+   * that REFINES the trunk, never one that REPLACES it — a draft
+   * claiming a trunk name is refused « tronc-occupé », the refusal
+   * travels back to the model like any verdict, in the workshop
+   * language */
+  readonlyLayerNames: readonly string[];
   previousAdditionSources?: readonly string[];
   maxAttempts?: number;
   /** the workshop language the feedback speaks — the pen hears the
@@ -165,6 +172,7 @@ export async function composeVerifiedLayerDraft({
       previousAdditionSources: [...previousAdditionSources],
       draftSource: proposal,
       livingLayerNames: [...livingLayerNames],
+      readonlyLayerNames: [...readonlyLayerNames],
       language,
       strictConflicts,
       strictChecks,

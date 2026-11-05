@@ -300,6 +300,16 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       text(p, "tag") +
       " » est illisible — une clause que le noyau ne sait pas lire (ADR-0019)",
   },
+  "trunk-occupied": {
+    en: (p) =>
+      "the name « " +
+      text(p, "layer") +
+      " » belongs to the trunk — the read-only corpus: its layers are never rewritten, a draft may refine them, never replace them (ADR-0020)",
+    fr: (p) =>
+      "le nom « " +
+      text(p, "layer") +
+      " » appartient au tronc — le corpus en lecture seule : ses couches ne se réécrivent jamais, un brouillon peut les raffiner, jamais les remplacer (ADR-0020)",
+  },
 };
 
 /** All message codes, in template declaration order. */
@@ -369,6 +379,7 @@ export const VOCABULARY: Record<string, { en: string; fr: string }> = {
   "contrat-sans-algorithme": { en: "contract-without-algorithm", fr: "contrat-sans-algorithme" },
   "algorithme-sans-contrat": { en: "algorithm-without-contract", fr: "algorithme-sans-contrat" },
   "contrat-illisible": { en: "contract-unreadable", fr: "contrat-illisible" },
+  "tronc-occupé": { en: "trunk-occupied", fr: "tronc-occupé" },
   "refines-inversés": { en: "refines-inverted", fr: "refines-inversés" },
   "ombre-émergente": { en: "emerging-shadow", fr: "ombre-émergente" },
   ombre: { en: "shadow", fr: "ombre" },

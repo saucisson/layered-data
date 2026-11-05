@@ -508,6 +508,7 @@ const server = createServer(async (request, response) => {
             instruction,
             languageSource: TRUNK_LANGUAGE_SOURCE,
             livingLayerNames: [...TRUNK_LAYER_NAMES, ...userNames],
+            readonlyLayerNames: [...TRUNK_LAYER_NAMES],
             previousAdditionSources,
             maxAttempts: MAX_PEN_ATTEMPTS,
             strictConflicts: STRICT_CONFLICTS,
