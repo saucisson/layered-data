@@ -25,15 +25,23 @@ import {
   PathReference,
   isDictionary,
 } from "../src/domain/addresses.ts";
-import { asLayerName, asLayerPath } from "../src/domain/identifiers.ts";
+import { asLayerName, asLayerPath, type LayerName } from "../src/domain/identifiers.ts";
 import { SPECIAL_KEYS } from "../src/domain/specialKeys.ts";
 import { desugarLayer, layerTopologicalOrder, refinementEntriesEqual } from "../src/domain/desugaring.ts";
 import { parseLanguage } from "../src/domain/language/parser.ts";
 import { compileLanguage } from "../src/domain/language/compiler.ts";
 import { walkAddresses } from "../src/domain/views.ts";
 import { KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
-import { checkRegistry, registryAuditOf, registryContractsOf, slotReadingLevelsOf, vacantChecksOf } from "../src/domain/checks.ts";
-import { checkSlotContractsOf } from "../src/domain/validation.ts";
+import {
+  checkRegistry,
+  registryAuditOf,
+  registryContractsOf,
+  runChecks,
+  runChecksFO,
+  slotReadingLevelsOf,
+  vacantChecksOf,
+} from "../src/domain/checks.ts";
+import { checkSlotContractsOf, validateSpace } from "../src/domain/validation.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -621,6 +629,180 @@ check(
     (vacancy) => vacancy.tag === "sperner" && vacancy.slot === "tolerance",
   ).length === 1,
 );
+
+
+// =====================================================================
+// the declarative strate (ADR-0022): the couples of hypergraph, judged
+// by the reading interpreter, measured against the algorithmic strate
+// — the same violations, address by address, on two probes written in
+// the language. The witnesses are the free witnesses: the algorithmic
+// strate breaks at the first finding (one verdict per cause), the
+// declarative one ships EVERY falsified assignment — the comparison
+// reads them as unordered SETS of witness keys, the symmetric pairs
+// folding into one
+// =====================================================================
+
+// the corpus join, parsed and validated the way assembly does: the
+// two couples pose and read, the validation stays silent (measured:
+// 2 couples, 0 verdicts — the pose is well-formed)
+const bedrockParsed = parseLanguage(
+  KERNEL_LAYER_NAMES.map((layerName) => layerSources[layerName]).join(""),
+);
+const bedrockCompiled = compileLanguage(bedrockParsed.layers);
+const bedrockValidated = validateSpace({
+  space: bedrock,
+  parse: bedrockParsed,
+  compilation: bedrockCompiled,
+  layerNames: [...KERNEL_LAYER_NAMES],
+});
+check(
+  "ADR-0022: the bedrock poses its two couples and the validation stays silent",
+  bedrockValidated.verdicts.length === 0 && bedrockValidated.stats.couples === 2,
+);
+
+// the two strates stay separate walks on the bedrock (measured: the
+// algorithmic strate finds nothing to judge — the corpus is clean —
+// and the declarative one agrees, without ever exhausting)
+const bedrockAlgorithmic = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
+check(
+  "ADR-0022: the bedrock's algorithmic judgments are unchanged — nothing to judge",
+  KERNEL_LAYER_NAMES.every((layerName) => runChecks({ space: bedrockAlgorithmic, layer: layerName }).length === 0),
+);
+const bedrockDeclarative = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
+const bedrockFoJudgments = KERNEL_LAYER_NAMES.flatMap((layerName) =>
+  runChecksFO({ space: bedrockDeclarative, layer: layerName }),
+);
+check(
+  "ADR-0022: the bedrock's declarative strate agrees — no violation, no exhaustion",
+  bedrockFoJudgments.length === 0 &&
+    bedrockDeclarative.diagnostics.every(
+      (diagnostic) => diagnostic.kind !== "formule-illisible" && diagnostic.kind !== "formule-épuisée",
+    ),
+);
+
+// the unordered probe: e1 == e2 (same end-set — arête multiple), e3
+// (the same vertex twice — sommet répété), e4 (no arrow — arête
+// vide); the universe is the definer's vocabulary (vertices, edges,
+// arrows, vertex)
+const foProbeSource = [
+  "layer fo-probe refines @hypergraph",
+  "  extend vertices",
+  "    v1 refines @fo-probe/specification/vertex_type",
+  "      identifier = 1",
+  "    v2 refines @fo-probe/specification/vertex_type",
+  "      identifier = 2",
+  "  extend edges",
+  "    e1 refines @fo-probe/specification/edge_type",
+  "      extend arrows",
+  "        a1 refines @fo-probe/specification/edge_type/arrow_type",
+  "          vertex = @fo-probe/vertices/v1",
+  "        a2 refines @fo-probe/specification/edge_type/arrow_type",
+  "          vertex = @fo-probe/vertices/v2",
+  "    e2 refines @fo-probe/specification/edge_type",
+  "      extend arrows",
+  "        b1 refines @fo-probe/specification/edge_type/arrow_type",
+  "          vertex = @fo-probe/vertices/v1",
+  "        b2 refines @fo-probe/specification/edge_type/arrow_type",
+  "          vertex = @fo-probe/vertices/v2",
+  "    e3 refines @fo-probe/specification/edge_type",
+  "      extend arrows",
+  "        c1 refines @fo-probe/specification/edge_type/arrow_type",
+  "          vertex = @fo-probe/vertices/v1",
+  "        c2 refines @fo-probe/specification/edge_type/arrow_type",
+  "          vertex = @fo-probe/vertices/v1",
+  "    e4 refines @fo-probe/specification/edge_type",
+  "      identifier = 4",
+].join("\n");
+
+// the ordered probe: e1 == e2 (parallel arcs), e3 (a loop), e4 the
+// reverse of e1 (a 2-cycle — LEGAL, the ordered pair differs); the
+// arcs refine the family's own edge_type (multidigraph's idiom, where
+// the source/target fields and their arrows live)
+const foProbeOrderedSource = [
+  "layer fo-probe-ordered refines @digraph",
+  "  extend vertices",
+  "    v1 refines @fo-probe-ordered/specification/vertex_type",
+  "      identifier = 1",
+  "    v2 refines @fo-probe-ordered/specification/vertex_type",
+  "      identifier = 2",
+  "  extend edges",
+  "    e1 refines @digraph/edge_type",
+  "      source = @fo-probe-ordered/vertices/v1",
+  "      target = @fo-probe-ordered/vertices/v2",
+  "    e2 refines @digraph/edge_type",
+  "      source = @fo-probe-ordered/vertices/v1",
+  "      target = @fo-probe-ordered/vertices/v2",
+  "    e3 refines @digraph/edge_type",
+  "      source = @fo-probe-ordered/vertices/v1",
+  "      target = @fo-probe-ordered/vertices/v1",
+  "    e4 refines @digraph/edge_type",
+  "      source = @fo-probe-ordered/vertices/v2",
+  "      target = @fo-probe-ordered/vertices/v1",
+].join("\n");
+
+/** The algorithmic strate's violations, counted per (address, tag) —
+ * the error strings carry both, one per cause (the strate breaks at
+ * the first finding). */
+function tsViolationsOf({ space, layer }: { space: Space; layer: LayerName }): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const error of runChecks({ space, layer })) {
+    const separator = error.indexOf(" — ");
+    const address = error.slice(0, separator);
+    const message = error.slice(separator + 3);
+    const key = address + "|" + message.slice(0, message.indexOf(": "));
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+  return counts;
+}
+
+/** The declarative strate's violations, counted per (address, tag) —
+ * every falsified assignment ships; two assignments with the same
+ * UNORDERED witness keys are ONE violation (the symmetric pairs, the
+ * failed disjuncts of one same cause). */
+function foViolationsOf({ space, layer }: { space: Space; layer: LayerName }): Map<string, number> {
+  const witnesses = new Map<string, Set<string>>();
+  for (const judgment of runChecksFO({ space, layer })) {
+    const address = judgment.address[0] + "::" + (judgment.address[1].join("/") || ".");
+    const key = address + "|" + judgment.tag;
+    if (!witnesses.has(key)) witnesses.set(key, new Set());
+    witnesses.get(key)!.add([...judgment.witnessKeys].sort().join(","));
+    check(
+      "ADR-0022: the declarative judgment carries its measured cost",
+      judgment.steps > 0 && space.diagnostics.every((diagnostic) => diagnostic.kind !== "formule-épuisée"),
+    );
+  }
+  return new Map([...witnesses.entries()].map(([key, set]) => [key, set.size]));
+}
+
+// the two probes, each on its OWN space per strate — the two walks
+// record diagnostics on the space they read, never the same one twice
+for (const [probeName, probeSource, expected] of [
+  ["fo-probe", foProbeSource, { simple: 2, nonempty: 1 }],
+  ["fo-probe-ordered", foProbeOrderedSource, { simple: 2, nonempty: 0 }],
+] as const) {
+  const probeOrder = [...KERNEL_LAYER_NAMES, probeName];
+  const probeSources = { ...layerSources, [probeName]: probeSource };
+  const tsSpace = spaceFromSourcesMap(probeSources, probeOrder);
+  const tsCounts = tsViolationsOf({ space: tsSpace, layer: asLayerName(probeName) });
+  const foSpace = spaceFromSourcesMap(probeSources, probeOrder);
+  const foCounts = foViolationsOf({ space: foSpace, layer: asLayerName(probeName) });
+
+  // the strates agree, address by address, tag by tag
+  const keys = new Set([...tsCounts.keys(), ...foCounts.keys()]);
+  check(
+    "ADR-0022: probe " + probeName + " — the two strates judge the same violations (address, tag)",
+    [...keys].every((key) => (tsCounts.get(key) ?? 0) === (foCounts.get(key) ?? 0)),
+  );
+
+  // and the verdicts are the expected ones (measured): the probe's
+  // causes, seen by the reading formulas alone
+  const where = probeName + "::.";
+  check(
+    "ADR-0022: probe " + probeName + " — the causes are the expected ones",
+    (tsCounts.get(where + "|simple") ?? 0) === expected.simple &&
+      (tsCounts.get(where + "|nonempty") ?? 0) === expected.nonempty,
+  );
+}
 
 // =====================================================================
 // the ledger

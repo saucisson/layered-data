@@ -60,6 +60,8 @@ What this decision implies - good and bad.
 | [ADR-0019](adr-0019-registry-as-data.md) | Registry as data - the meta-model comes home: the checks' contracts written in the language | accepted | 2026-11-05 |
 | [ADR-0020](adr-0020-immutable-trunk.md) | The immutable trunk - read-only by protocol, not by convention: every mutation route carries the trunk's signature | accepted | 2026-11-05 |
 | [ADR-0021](adr-0021-mythologie.md) | The vocabulary's treaty - three strata, one story: informatics words stay, the language's words are marked code, the story lives in the geologist's field | accepted | 2026-11-05 |
+| [ADR-0022](adr-0022-checks-as-couples.md) | Checks as couples - the constraint's behavior written in the language, judged by the reading machine | accepted | 2026-11-05 |
+| [ADR-0023](adr-0023-two-regime-algebra.md) | The two-regime algebra - mask and assume retire, the guarantees become theorems | accepted | 2026-11-05 |
 
 ## Adding a new ADR
 

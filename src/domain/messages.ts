@@ -268,6 +268,39 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       text(p, "tag") +
       " » est déclaré dans le registre mais aucun algorithme ne l'exécute (ADR-0019)",
   },
+  // ---- the declarative strate's facts (ADR-0022) ----
+  "redefined-check": {
+    en: (p) =>
+      text(p, "where") + " : the check « " + text(p, "name") + " » is re-posed divergently (" + text(p, "first") + " then " + text(p, "second") + ") — a couple is never replaced (ADR-0022)",
+    fr: (p) =>
+      text(p, "where") + " : le check « " + text(p, "name") + " » est re-possé divergent (" + text(p, "first") + " puis " + text(p, "second") + ") — un couple n'est jamais remplacé (ADR-0022)",
+  },
+  "unsupported-level": {
+    en: (p) =>
+      text(p, "where") + " : the check « " + text(p, "name") + " » judges at the level « " + text(p, "level") + " » — the reading strate judges at layer roots only",
+    fr: (p) =>
+      text(p, "where") + " : le check « " + text(p, "name") + " » juge au niveau « " + text(p, "level") + " » — la strate de lecture ne juge qu'aux racines des couches",
+  },
+  "missing-condition": {
+    en: (p) =>
+      text(p, "where") + " : the judgment of « " + text(p, "name") + " » carries a « when » but the couple declares no condition",
+    fr: (p) =>
+      text(p, "where") + " : le jugement de « " + text(p, "name") + " » porte un « when » mais le couple ne déclare pas de condition",
+  },
+  "unreadable-formula": {
+    en: (p) => "the check « " + text(p, "tag") + " » carries an unreadable formula: " + text(p, "detail") + " (ADR-0022)",
+    fr: (p) => "le check « " + text(p, "tag") + " » porte une formule illisible : " + text(p, "detail") + " (ADR-0022)",
+  },
+  "template-out-of-scope": {
+    en: (p) =>
+      text(p, "where") + " : the message of « " + text(p, "name") + " » names « " + text(p, "term") + " », outside the judgment's quantified scope",
+    fr: (p) =>
+      text(p, "where") + " : le message de « " + text(p, "name") + " » nomme « " + text(p, "term") + " », hors de la portée quantifiée du jugement",
+  },
+  "exhausted-formula": {
+    en: (p) => "the check « " + text(p, "tag") + " » exhausted its budget (" + text(p, "steps") + " steps) — it never judges silently",
+    fr: (p) => "le check « " + text(p, "tag") + " » a épuisé son budget (" + text(p, "steps") + " pas) — il ne juge jamais en silence",
+  },
   "contract-without-algorithm": {
     en: (p) =>
       "the registry declares « " +
@@ -379,6 +412,12 @@ export const VOCABULARY: Record<string, { en: string; fr: string }> = {
   "contrat-sans-algorithme": { en: "contract-without-algorithm", fr: "contrat-sans-algorithme" },
   "algorithme-sans-contrat": { en: "algorithm-without-contract", fr: "algorithme-sans-contrat" },
   "contrat-illisible": { en: "contract-unreadable", fr: "contrat-illisible" },
+  "check-redéfini": { en: "redefined-check", fr: "check-redéfini" },
+  "niveau-non-soutenu": { en: "unsupported-level", fr: "niveau-non-soutenu" },
+  "condition-manquante": { en: "missing-condition", fr: "condition-manquante" },
+  "formule-illisible": { en: "unreadable-formula", fr: "formule-illisible" },
+  "gabarit-hors-de-portée": { en: "template-out-of-scope", fr: "gabarit-hors-de-portée" },
+  "formule-épuisée": { en: "exhausted-formula", fr: "formule-épuisée" },
   "socle-occupé": { en: "bedrock-occupied", fr: "socle-occupé" },
   "refines-inversés": { en: "refines-inverted", fr: "refines-inversés" },
   "ombre-émergente": { en: "emerging-shadow", fr: "ombre-émergente" },
