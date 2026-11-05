@@ -114,10 +114,16 @@ export function AddFormalismComposer({
       previousAdditionSources: [...previousAdditionSources],
       draftSource,
       livingLayerNames,
+      readonlyLayerNames: kernel.layerNames,
       language,
     });
     const applied = staging.ok
-      ? applyStagedAddition({ space: kernel.space, staging, knownLayerNames: livingLayerNames })
+      ? applyStagedAddition({
+          space: kernel.space,
+          staging,
+          knownLayerNames: livingLayerNames,
+          readonlyLayerNames: kernel.layerNames,
+        })
       : null;
     const newLayerNames = applied ? applied.newLayerNames : [];
     setComposerResult({ ...staging, newLayerNames });

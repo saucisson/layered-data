@@ -51,11 +51,12 @@ function scriptedPen({ scripts }: { scripts: string[] }) {
   return { propose, rounds };
 }
 
-function runLoop({ scripts, livingLayerNames = [...KERNEL_LAYER_NAMES], previousAdditionSources = [] }: { scripts: string[]; livingLayerNames?: string[]; previousAdditionSources?: string[] }): Promise<PenLoopOutcome> {
+function runLoop({ scripts, livingLayerNames = [...KERNEL_LAYER_NAMES], readonlyLayerNames = [...KERNEL_LAYER_NAMES], previousAdditionSources = [] }: { scripts: string[]; livingLayerNames?: string[]; readonlyLayerNames?: string[]; previousAdditionSources?: string[] }): Promise<PenLoopOutcome> {
   return composeVerifiedLayerDraft({
     instruction: "une couche de démonstration",
     languageSource: kernel.languageSource,
     livingLayerNames,
+    readonlyLayerNames,
     previousAdditionSources,
     maxAttempts: 3,
     propose: scriptedPen({ scripts }).propose,
@@ -99,6 +100,7 @@ const secondTry = await composeVerifiedLayerDraft({
   instruction: "une couche de démonstration",
   languageSource: kernel.languageSource,
   livingLayerNames: [...KERNEL_LAYER_NAMES],
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   maxAttempts: 3,
   propose: correctivePen.propose,
 });
@@ -137,6 +139,7 @@ const thirdTry = await composeVerifiedLayerDraft({
   instruction: "une couche de démonstration",
   languageSource: kernel.languageSource,
   livingLayerNames: [...KERNEL_LAYER_NAMES],
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   maxAttempts: 3,
   propose: stubbornPen.propose,
 });
@@ -169,6 +172,7 @@ const fourthTry = await composeVerifiedLayerDraft({
   instruction: "une couche de démonstration",
   languageSource: kernel.languageSource,
   livingLayerNames: [...KERNEL_LAYER_NAMES],
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   maxAttempts: 3,
   propose: measuringPen.propose,
 });
@@ -193,6 +197,7 @@ const fifthTry = await composeVerifiedLayerDraft({
   instruction: "une couche de démonstration",
   languageSource: kernel.languageSource,
   livingLayerNames: [...KERNEL_LAYER_NAMES],
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   maxAttempts: 3,
   propose: muteThenSound.propose,
 });
@@ -224,12 +229,41 @@ check(
 const seventhTry = await runLoop({
   scripts: [featherRefiningDraft, featherRefiningDraft, featherRefiningDraft],
   livingLayerNames: [...KERNEL_LAYER_NAMES],
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   previousAdditionSources: [],
 });
 check(
   "(f) the same proposal is refused without the feather — the gate is the living context, not the intention",
   seventhTry.ok === false &&
     seventhTry.refusals.every((refusal) => refusal.verdicts.some((verdict) => verdict.kind === "cible-inconnue")),
+);
+
+// =====================================================================
+// (g) the pen cannot replace the trunk (ADR-0020): a proposal
+//     claiming a trunk name is refused « tronc-occupé », the
+//     corrected proposal — a refinement — is accepted
+// =====================================================================
+
+const trunkClaimingDraft = 'layer record\n  specification\n    record = "volé"\n';
+const claimingThenSound = scriptedPen({ scripts: [trunkClaimingDraft, soundDraft] });
+const eighthTry = await composeVerifiedLayerDraft({
+  instruction: "une couche de démonstration",
+  languageSource: kernel.languageSource,
+  livingLayerNames: [...KERNEL_LAYER_NAMES],
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
+  maxAttempts: 3,
+  propose: claimingThenSound.propose,
+});
+check(
+  "(g) the trunk-claiming proposal is refused, the corrected refinement is accepted",
+  eighthTry.ok === true && eighthTry.attempts === 2,
+);
+check(
+  '(g) the refusal speaks the "trunk-occupied" verdict — the theft named, the pen told',
+  eighthTry.refusals[0].verdicts.length === 1 &&
+    eighthTry.refusals[0].verdicts[0].kind === "tronc-occupé" &&
+    eighthTry.refusals[0].feedback.includes("trunk-occupied") &&
+    eighthTry.refusals[0].feedback.includes("record"),
 );
 
 // =====================================================================

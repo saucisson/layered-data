@@ -63,12 +63,14 @@ function addLayer({ draftSource }: { draftSource: string }) {
     previousAdditionSources: livingAdditions.map((addition) => addition.source),
     draftSource,
     livingLayerNames: [...livingLayerNames],
+    readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   });
   if (!staging.ok) throw new Error("the setup addition was refused: " + JSON.stringify(staging.verdicts));
   const applied = applyStagedAddition({
     space: kernel.space,
     staging,
     knownLayerNames: [...livingLayerNames],
+    readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   });
   livingAdditions.push({ source: draftSource.trim(), layerNames: [...applied.newLayerNames] });
   livingLayerNames.push(...applied.newLayerNames);
@@ -82,6 +84,7 @@ function editLayer({ layerName, editedSource }: { layerName: string; editedSourc
     languageSource: kernel.languageSource,
     livingAdditions,
     livingLayerNames: [...livingLayerNames],
+    readonlyLayerNames: [...KERNEL_LAYER_NAMES],
     layerName: asLayerName(layerName),
     editedSource,
   });
@@ -142,6 +145,7 @@ const edition = applyStagedEdition({
   space: kernel.space,
   layerName: asLayerName("draft-demo"),
   staging: widened.staging,
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
 });
 check(
   "(a) the applied edition reports the widened refinement targets",
@@ -320,6 +324,32 @@ const closureWithTouch = kernel.space.closure({
 check(
   "(f) with the touch, the re-read closure serves the narrowed chain — kahn-scheme is gone",
   !closureWithTouch.some((address) => address[0] === "kahn-scheme"),
+);
+
+// =====================================================================
+// (g) the trunk never re-enters the tribunal (ADR-0020): an edition
+//     aimed at a trunk layer is refused as tronc-édité — the corpus
+//     is read-only by protocol, not by UI convention
+// =====================================================================
+
+const trunkEdition = editLayer({
+  layerName: "record",
+  editedSource: 'layer record\n  specification\n    record = "réécrit"\n',
+});
+check(
+  '(g) the edition aimed at the trunk layer is refused — the guard speaks before the tribunal is convened',
+  trunkEdition.ok === false && trunkEdition.refusals.includes("tronc-édité") === true,
+);
+const recordTreeBefore = kernel.space.layers["record"];
+const refusedTrunkApply = applyStagedEdition({
+  space: kernel.space,
+  layerName: asLayerName("record"),
+  staging: trunkEdition.staging,
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
+});
+check(
+  '(g) the act of edition never writes a trunk layer — the tree is untouched, whoever calls the route (measured before ADR-0020: `record` was mutable in place)',
+  kernel.space.layers["record"] === recordTreeBefore && refusedTrunkApply.block === "",
 );
 
 // =====================================================================

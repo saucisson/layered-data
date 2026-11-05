@@ -7,7 +7,11 @@
 // through the touch protocol: every memo entry that depends on the
 // layer — its own and the children's, O18 — is invalidated, the
 // panels re-read the space, the workshop reacts. The corpus stays
-// read-only: only the layers added at runtime are editable.
+// read-only BY PROTOCOL (ADR-0020), not by UI convention: the
+// route itself carries the trunk's signature and refuses to touch
+// it — an edition aimed at a trunk layer is « tronc-édité », and
+// the act of edition never writes a readonly name, whoever calls
+// it. Only the layers added at runtime are editable.
 
 import { type LayerName, asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { LayerReference, type RawValue } from "../domain/addresses.ts";
@@ -27,9 +31,9 @@ export interface LivingAddition {
  * false anywhere = the edition is refused and the space stays
  * intact. */
 /** The edition guards: an edition edits, it never renames a layer
- * nor adds one alongside — each guard is a stable refusal code,
- * rendered by the panels. */
-export type EditionRefusalCode = "couche-renomme" | "couche-glissée";
+ * nor adds one alongside — and it never aims at the trunk. Each
+ * guard is a stable refusal code, rendered by the panels. */
+export type EditionRefusalCode = "couche-renomme" | "couche-glissée" | "tronc-édité";
 
 export interface EditionOutcome {
   ok: boolean;
@@ -77,6 +81,7 @@ export function stageLayerEdition({
   languageSource,
   livingAdditions,
   livingLayerNames,
+  readonlyLayerNames,
   layerName,
   editedSource,
   language = DEFAULT_LANGUAGE,
@@ -84,11 +89,36 @@ export function stageLayerEdition({
   languageSource: string;
   livingAdditions: readonly LivingAddition[];
   livingLayerNames: readonly string[];
+  /** the trunk's signature (ADR-0020): the layers this route
+   * refuses to touch — an edition aimed at one of them is refused
+   * as « tronc-édité », before the tribunal is even convened (the
+   * trunk layer would leave the context and be judged as a draft —
+   * measured: the guard used to be missing, `record` was mutable
+   * in place) */
+  readonlyLayerNames: readonly string[];
   layerName: LayerName;
   editedSource: string;
   /** the workshop language — the syntax errors of the refusal speak it */
   language?: Language;
 }): EditionOutcome {
+  // ---- the trunk guard (ADR-0020): the refusal speaks before the
+  // tribunal is convened — a trunk layer never re-enters it, the
+  // frozen verdicts of the corpus stay true
+  if (readonlyLayerNames.includes(layerName)) {
+    return {
+      ok: false,
+      staging: {
+        ok: false,
+        step: "validation",
+        errors: [],
+        verdicts: [],
+        layerNames: [layerName],
+        compiledLanguage: null,
+        blocks: {},
+      },
+      refusals: ["tronc-édité"],
+    };
+  }
   // the staging context: every living addition keeps its place,
   // except the edited layer — it leaves its own addition's source
   // and the living names, the tribunal judges it again
@@ -103,6 +133,7 @@ export function stageLayerEdition({
     previousAdditionSources,
     draftSource: editedSource.trim(),
     livingLayerNames: contextLayerNames,
+    readonlyLayerNames,
     language,
   });
 
@@ -139,11 +170,19 @@ export function applyStagedEdition({
   space,
   layerName,
   staging,
+  readonlyLayerNames,
 }: {
   space: Space;
   layerName: LayerName;
   staging: StagingOutcome;
+  /** the trunk's signature (ADR-0020): the act of edition itself
+   * refuses to write a readonly name — the staged tree stays out,
+   * the space stays intact, whoever calls the route */
+  readonlyLayerNames: readonly string[];
 }): AppliedEdition {
+  if (readonlyLayerNames.includes(layerName)) {
+    return { layerName, refinementTargetsOf: [], block: "" };
+  }
   const compiledTree = staging.compiledLanguage?.layers[layerName];
   if (!compiledTree) {
     return { layerName, refinementTargetsOf: [], block: "" };
