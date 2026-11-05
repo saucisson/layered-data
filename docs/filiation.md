@@ -102,6 +102,33 @@ est identique. La différence : Nix a un langage dédié au
 rehaussement des valeurs ; l'atelier n'a pas de seconde sémantique —
 la fusion, c'est la lecture, et elle est la même du schéma au rendu.
 
+### Les langages de configuration : CUE, Jsonnet, Kustomize
+
+Les langages de configuration posent le geste industriel du projet :
+schéma et valeurs dans une seule langue, des couches qui se composent.
+CUE (van Lohuizen — la documentation de *cuelang.org* en tient lieu
+de spécification) fusionne types et valeurs dans un seul treillis :
+la combinaison est associative, commutative, idempotente — les
+contraintes de sources différentes se composent sans ordre, et le
+conflit est une erreur. Jsonnet (*Design Rationale* et *Language
+Reference*, jsonnet.org) pense déjà son objet comme une pile de
+couches : l'héritage `A + B` empile les couches de `B` sur celles de
+`A`, `self` est à liaison tardive — le vocabulaire de l'atelier, avec
+des opérateurs de fusion explicites (`+`, `+:`, `super`).
+Kustomize (le projet *kubernetes-sigs/kustomize*, documenté sur
+kubernetes.io) en fait le geste à l'échelle industrielle : des bases,
+des surcouches, des patchs à fusion stratégique — sans théorie. Le
+geste est identique. La différence est le sens de la fusion : CUE
+*unifie* — commutatif, le conflit refuse ; l'atelier *trie* — le
+premier-gagné tranche, l'ordre posé dans la donnée. L'histoire pèse
+sur ce choix : GCL, la langue de configuration de Google dont CUE
+descend, avait choisi un héritage par surcharge, et sa complexité a
+rendu l'outillage prévu intractable. L'atelier répond à la même mise
+en garde par la mesure : le mode strict (ADR-0017) refuse les
+conflits d'ordre non signés, et la non-commutativité est un prix
+affiché (§3) — le pari reste celui de GCL, tenu par des contrats
+mesurés plutôt que par une sémantique commutative.
+
 ### RDF et RDFS
 
 RDF/RDFS est le plus proche en esprit : tout est triple,

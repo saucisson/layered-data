@@ -7,7 +7,8 @@ hypergraphes jusqu'au dîner des cinq philosophes, et son espace d'états
 hérite du réseau par liaison tardive. Le modèle vient du papier
 *Layered Data: A Modular Formal Definition without Formalisms*
 (PNSE'16) ; sa filiation intellectuelle — les prédécesseurs
-nommés, des frames aux modules Nix, et les métamodélisations comparées
+nommés, des frames aux langages de configuration, et les
+métamodélisations comparées
 (EMF/Ecore, MOF, multi-niveaux, feature models…) — est établie dans
 `docs/filiation.md`.
 
