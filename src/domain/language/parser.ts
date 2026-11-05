@@ -20,6 +20,22 @@ export type DeclarationMode = "new" | "extend" | "override" | "mask";
 export type LanguageAct =
   | { kind: "bind"; slot: string; value: LanguageValue; line: number; notes?: string[] }
   | { kind: "check"; labels: string[]; line: number; notes?: string[] }
+  | {
+      /** `check name { … }` — the DEFINITION (ADR-0022): one check,
+       * its level, an optional condition slot, and its judgments —
+       * closed sentences in the reading language, each with its
+       * message template. The act desugars into the internal
+       * `check-definitions` container (the compile emits it); the
+       * container itself is never addressed as a key. A definition
+       * is also a pose: the name lands among the check tags. */
+      kind: "check-definition";
+      name: string;
+      level: string;
+      condition: string | null;
+      judgments: { when: string | null; formula: string; message: string }[];
+      line: number;
+      notes?: string[];
+    }
   | { kind: "mask"; key: string; line: number; notes?: string[] }
   | { kind: "assume"; key: string; line: number; notes?: string[] }
   | {
@@ -268,6 +284,81 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
         while (peek()?.kind === ",") {
           position++;
           labels.push(eatKey());
+        }
+        // The block opens the DEFINITION (ADR-0022) — the sugar is
+        // the only door into the check-definitions container: the
+        // language poses (`check simple`) and defines (`check
+        // simple { … }`); it never addresses the container itself.
+        if (peek()?.kind === "{") {
+          if (labels.length !== 1) {
+            throw new Error(
+              parseText({
+                language,
+                en: "l." + token.line + " : a check definition names ONE check",
+                fr: "l." + token.line + " : une définition de check nomme UN seul check",
+              }),
+            );
+          }
+          position++;
+          const readStringField = (field: string): string => {
+            eat("=");
+            const value = parseValue();
+            if (value.kind !== "literal" || typeof value.value !== "string") {
+              throw new Error(
+                parseText({
+                  language,
+                  en: "l." + token.line + " : '" + field + "' expects a string",
+                  fr: "l." + token.line + " : « " + field + " » attend une chaîne",
+                }),
+              );
+            }
+            return value.value;
+          };
+          let level = "root";
+          let condition: string | null = null;
+          const judgments: { when: string | null; formula: string; message: string }[] = [];
+          while (peek()?.kind !== "}") {
+            const field = eat("id");
+            if (field.text === "level") {
+              level = readStringField("level");
+            } else if (field.text === "condition") {
+              condition = readStringField("condition");
+            } else if (field.text === "judgment") {
+              eat("{");
+              let when: string | null = null;
+              let formula = "";
+              let message = "";
+              while (peek()?.kind !== "}") {
+                const inner = eat("id");
+                if (inner.text === "when") when = readStringField("when");
+                else if (inner.text === "formula") formula = readStringField("formula");
+                else if (inner.text === "message") message = readStringField("message");
+                else {
+                  throw new Error(
+                    parseText({
+                      language,
+                      en: "l." + token.line + " : unknown judgment field '" + inner.text + "'",
+                      fr: "l." + token.line + " : champ de jugement inconnu « " + inner.text + " »",
+                    }),
+                  );
+                }
+              }
+              eat("}");
+              judgments.push({ when, formula, message });
+            } else {
+              throw new Error(
+                parseText({
+                  language,
+                  en: "l." + token.line + " : unknown definition field '" + field.text + "'",
+                  fr: "l." + token.line + " : champ de définition inconnu « " + field.text + " »",
+                }),
+              );
+            }
+          }
+          eat("}");
+          acts.push({ kind: "check-definition", name: labels[0], level, condition, judgments, line: token.line });
+          if (notes.length) acts[acts.length - 1].notes = notes;
+          continue;
         }
         acts.push({ kind: "check", labels, line: token.line });
         if (notes.length) acts[acts.length - 1].notes = notes;

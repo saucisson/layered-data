@@ -43,6 +43,7 @@ import { type LayerName, type LayerPath, asLayerName, asPathSegment } from "./id
 import { type Address, AddressView, MASK, type RawValue, addressesEqual, isDictionary,  } from "./addresses.ts";
 import { Space } from "./space.ts";
 import { designatedAddress } from "./desugaring.ts";
+import { canonicalFormula, evaluateFormula, renderJudgmentMessage, tryParseFormula } from "./formulas.ts";
 import { walkAddresses } from "./views.ts";
 import { fact } from "./messages.ts";
 
@@ -933,3 +934,177 @@ export function runChecks({ space, layer }: { space: Space; layer: LayerName }):
   return errors;
 }
 
+
+// ---- the declarative strate: the check couples (ADR-0022) ---------
+
+/** One couple, READ from the data: a name, a level (root: the
+ * prototype's strate judges at layer roots), an optional condition
+ * slot (the ordered/unordered branch of `simple`), and its
+ * judgments — closed sentences in the reading language, each with
+ * its message template. The couple is written IN the language by its
+ * definer and lands in the internal `check-definitions` container
+ * (the compile's emit); the container accumulates and is never
+ * addressed as a key. */
+export interface CheckCouple {
+  level: "root" | "instance";
+  condition: string | null;
+  judgments: { when: string | null; formula: string; message: string }[];
+}
+
+/** The couple ONE record of the container reads: the level AS
+ * WRITTEN (the validation judges it — the reading walk narrows it),
+ * the optional condition, the well-formed judgments. A record the
+ * compiler did not write — or wrote off-shape — reads null; the
+ * shape is the compiler's own, so the reading never guesses. */
+export interface CheckCoupleRead {
+  level: string;
+  condition: string | null;
+  judgments: { when: string | null; formula: string; message: string }[];
+}
+
+export function checkCoupleOfRecord(record: RawValue): CheckCoupleRead | null {
+  if (!isDictionary(record)) return null;
+  const judgments: CheckCoupleRead["judgments"] = [];
+  if (Array.isArray(record["judgments"])) {
+    for (const entry of record["judgments"]) {
+      if (!isDictionary(entry)) continue;
+      const when = entry["when"];
+      const formula = entry["formula"];
+      const message = entry["message"];
+      if (typeof formula !== "string" || typeof message !== "string") continue;
+      judgments.push({ when: typeof when === "string" ? when : null, formula, message });
+    }
+  }
+  const level = record["level"];
+  const condition = record["condition"];
+  return {
+    level: typeof level === "string" ? level : "",
+    condition: typeof condition === "string" ? condition : null,
+    judgments,
+  };
+}
+
+/** The couples readable at an address — first-winner per name across
+ * the closure. The doublon rule (ADR-0022) is judged at validation:
+ * an identical re-pose is tolerated, a divergent one is a verdict,
+ * so the winner here is never ambiguous. */
+export function checkDefinitionsOf({ space, view }: { space: Space; view: AddressView }): Record<string, CheckCouple> {
+  const definitions: Record<string, CheckCouple> = {};
+  for (const [sourceLayer, sourcePath] of space.closure({ layer: view.layer, path: view.path })) {
+    const node = space.raw({ layer: sourceLayer, path: sourcePath });
+    if (!isDictionary(node) || !isDictionary(node["check-definitions"])) continue;
+    for (const name of Object.keys(node["check-definitions"])) {
+      if (name.startsWith("__note:") || definitions[name] !== undefined) continue;
+      const read = checkCoupleOfRecord(node["check-definitions"][name]);
+      if (read === null) continue;
+      const level = read.level;
+      if (level !== "root" && level !== "instance") continue;
+      definitions[name] = {
+        level,
+        condition: read.condition,
+        judgments: read.judgments,
+      };
+    }
+  }
+  return definitions;
+}
+
+/** The canonical identity of a couple — syntactic, up to the
+ * renaming of its quantified variables (the doublon rule reads, it
+ * never searches for a proof). An ill-formed formula marks the
+ * couple; the validation refuses it as its own verdict. */
+export function canonicalCoupleOf(couple: CheckCouple): string {
+  const judgments = couple.judgments
+    .map((judgment) => {
+      const parsed = tryParseFormula(judgment.formula);
+      const canonical = "formula" in parsed ? canonicalFormula(parsed.formula) : "<illisible>";
+      return (judgment.when ?? "-") + "|" + canonical + "|" + judgment.message;
+    })
+    .join("||");
+  return couple.level + "|" + (couple.condition ?? "-") + "|" + judgments;
+}
+
+/** One judgment of the declarative strate: the falsified sentence,
+ * rendered on its free witness, with the measured cost. The witness
+ * keys (in binding order) ride along — the harnesses compare them
+ * with the algorithmic strate's findings. */
+export interface FoJudgment {
+  address: Address;
+  tag: string;
+  when: string | null;
+  message: string;
+  witnessKeys: string[];
+  steps: number;
+}
+
+/** The declarative execution (ADR-0022): the same walk as
+ * `runChecks`, the same deduplication — wherever a posed tag has a
+ * readable couple, the sentences judge instead of the algorithm
+ * table. The algorithmic strate stays THE execution of the bedrock
+ * (the registry binds it); this walk answers for it: the harnesses
+ * measure the two strates against each other, address by address.
+ * A falsified sentence ships ALL its witnesses — the template
+ * renders each; an exhausted or ill-formed formula never judges
+ * silently, it records its diagnostic. */
+export function runChecksFO({ space, layer }: { space: Space; layer: LayerName }): FoJudgment[] {
+  const judgments: FoJudgment[] = [];
+  const seen = new Set<string>();
+  for (const address of walkAddresses({ space, layer })) {
+    const view = new AddressView(address[0], address[1]);
+    const definitions = checkDefinitionsOf({ space, view });
+    if (Object.keys(definitions).length === 0) continue;
+    for (const [sourceLayer, sourcePath] of space.closure({ layer: address[0], path: address[1] })) {
+      const node = space.raw({ layer: sourceLayer, path: sourcePath });
+      if (!isDictionary(node)) continue;
+      const tags = node["checks"] ?? [];
+      if (!Array.isArray(tags)) continue;
+      for (const tag of tags) {
+        if (typeof tag !== "string") continue;
+        const couple = definitions[tag];
+        if (couple === undefined) continue;
+        const deduplicationKey = address[0] + "|" + address[1].join("/") + "|" + tag;
+        if (seen.has(deduplicationKey)) continue;
+        seen.add(deduplicationKey);
+        const conditionTrue =
+          couple.condition !== null && boundSlotValue({ space, view, slot: couple.condition }) === true;
+        for (const judgment of couple.judgments) {
+          if (judgment.when !== null && (judgment.when === "true") !== conditionTrue) continue;
+          const parsed = tryParseFormula(judgment.formula);
+          if (!("formula" in parsed)) {
+            space.recordDiagnostic({
+              kind: "formule-illisible",
+              address: [address[0], address[1]],
+              fact: fact("unreadable-formula", { tag, detail: parsed.error }),
+            });
+            continue;
+          }
+          const evaluation = evaluateFormula({ space, view, formula: parsed.formula });
+          if (evaluation.exhausted) {
+            space.recordDiagnostic({
+              kind: "formule-épuisée",
+              address: [address[0], address[1]],
+              fact: fact("exhausted-formula", { tag, steps: String(evaluation.steps) }),
+            });
+            continue;
+          }
+          if (!evaluation.ok) {
+            for (const failure of evaluation.failures) {
+              judgments.push({
+                address: [address[0], address[1]],
+                tag,
+                when: judgment.when,
+                message: renderJudgmentMessage({ space, view, message: judgment.message, assignment: failure }),
+                witnessKeys: Object.keys(failure).map((variable) => {
+                  const witness = failure[variable];
+                  return witness.path.length ? witness.path[witness.path.length - 1] : witness.layer;
+                }),
+                steps: evaluation.steps,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+  return judgments;
+}
