@@ -67,7 +67,10 @@ lecture, pose, effacement) : c'est un alias d'héritage, les nouvelles
 intégrations parlent `api/layers`.
 
 Le tronc (les 47 couches du corpus) est en lecture seule : `PUT` et
-`DELETE` y répondent 403.
+`DELETE` y répondent 403 — et depuis l'ADR-0020, la règle vit dans le
+protocole lui-même, pas seulement à la porte de l'armoire : staging et
+édition portent la signature du tronc et refusent eux-mêmes d'y
+toucher (« tronc-occupé », « tronc-édité »).
 
 ## La plume et le contrat
 
@@ -137,13 +140,17 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    signature (« conflit-d'ordre », ADR-0017), signature vide refusée
    (« assume-fantôme »), check posé mais incapable de juger refusé
    (« check-vacant », ADR-0018), et checks portés exécutés en mode
-   strict (« check-trahi »).
+   strict (« check-trahi »). Brouillon réclamant un nom du tronc
+   refusé (« tronc-occupé », ADR-0020) — le vol nommé, la pièce
+   forgée jamais jugée.
 4. **La boucle de la plume** (`npm run test:pen-loop`,
    `tests/pen-loop-checks.mts`) prouve la boucle vérifiée côté serveur
    (`src/application/penLoop.ts`, plume injectée — hors ligne) : refus
    syntaxique puis correction acceptée, verdicts en français au modèle,
    budget épuisé (3 refus), plume muette refusée, proposition raffinant
-   une plume d'utilisateur acceptée quand l'armoire est dans le contexte.
+   une plume d'utilisateur acceptée quand l'armoire est dans le contexte,
+   proposition réclamant le nom d'une couche du tronc refusée
+   (« tronc-occupé », ADR-0020) puis corrigée vers un raffinement accepté.
 5. **Les checks de l'éditeur vivant** (`npm run test:editor`,
    `tests/editor-checks.mts`) figent le protocole des éditions
    (`src/application/edition.ts`) : la couche vivante quitte le
@@ -153,7 +160,8 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    l'écriture — le touch invalide la fermeture de la couche ET celle
    de l'enfant qui la lit (O18 à travers la chaîne de raffinement) ;
    renommage refusé, couche glissée dans l'édition refusée, attendu
-   trahi d'une autre couche refusé (l'espace reste intact) — et sans
+   trahi d'une autre couche refusé (l'espace reste intact), édition
+   visant le tronc refusée (« tronc-édité », ADR-0020) — et sans
    le touch, la fermeture mémoïsée sert l'ancienne chaîne en silence :
    le protocole est obligatoire.
 6. **Les checks de l'atelier bilingue** (`npm run test:i18n`,

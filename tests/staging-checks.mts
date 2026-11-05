@@ -54,6 +54,7 @@ function stage({ draftSource, previousAdditionSources = [] }: { draftSource: str
     previousAdditionSources,
     draftSource,
     livingLayerNames: [...KERNEL_LAYER_NAMES],
+    readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   });
 }
 
@@ -85,7 +86,7 @@ check(
   (accepted.blocks["draft-demo"] ?? "").includes("layer draft-demo refines @wb1"),
 );
 
-const applied = applyStagedAddition({ space: kernel.space, staging: accepted, knownLayerNames: KERNEL_LAYER_NAMES });
+const applied = applyStagedAddition({ space: kernel.space, staging: accepted, knownLayerNames: KERNEL_LAYER_NAMES, readonlyLayerNames: KERNEL_LAYER_NAMES });
 check(
   "(a) the applied addition registers exactly the new layer",
   applied.newLayerNames.length === 1 && applied.newLayerNames.includes(asLayerName("draft-demo")),
@@ -192,6 +193,7 @@ const strictSound = stageLayerAddition({
   previousAdditionSources: [],
   draftSource: soundDraft,
   livingLayerNames: [...KERNEL_LAYER_NAMES],
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   strictConflicts: true,
 });
 check(
@@ -204,6 +206,7 @@ const strictConflict = stageLayerAddition({
   previousAdditionSources: [],
   draftSource: conflictDraft,
   livingLayerNames: [...KERNEL_LAYER_NAMES],
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   strictConflicts: true,
 });
 check(
@@ -242,6 +245,7 @@ const strictSigned = stageLayerAddition({
   previousAdditionSources: [],
   draftSource: signedDraft,
   livingLayerNames: [...KERNEL_LAYER_NAMES],
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   strictConflicts: true,
 });
 check(
@@ -381,6 +385,7 @@ const strictCycle = stageLayerAddition({
   previousAdditionSources: [],
   draftSource: cyclicDraft,
   livingLayerNames: [...KERNEL_LAYER_NAMES],
+  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   strictChecks: true,
 });
 check(
@@ -399,6 +404,40 @@ check(
     strictCycle.verdicts.every((verdict) =>
       JSON.stringify(verdict.fact.params).includes("demo-cycle::edges/"),
     ),
+);
+
+// =====================================================================
+// (j) the trunk is read-only BY PROTOCOL (ADR-0020): a draft that
+//     claims a trunk name is refused as tronc-occupé — the theft
+//     named, the forgery never judged
+// =====================================================================
+
+const trunkDraft = 'layer record\n  specification\n    record = "volé"\n';
+const refusedTrunk = stage({ draftSource: trunkDraft });
+check(
+  '(j) the draft claiming a trunk name is refused at the validation step',
+  refusedTrunk.ok === false && refusedTrunk.step === "validation",
+);
+check(
+  '(j) the refusal carries exactly the "tronc-occupé" verdict — the theft named, never the forgery judged (measured before ADR-0020: 13 ghost declarations accusing innocent layers)',
+  refusedTrunk.verdicts.length === 1 && refusedTrunk.verdicts[0].kind === "tronc-occupé",
+);
+check(
+  '(j) the refused staging compiles nothing — the token space of a forgery never leaves the tribunal',
+  refusedTrunk.compiledLanguage === null,
+);
+check(
+  '(j) a draft that REFINES a trunk layer stays welcome — the trunk is read-only, not refinement-proof',
+  stage({ draftSource: "layer draft-welcome refines @record\n" }).ok === true,
+);
+check(
+  '(j) the act of addition itself never writes a readonly name — the route refuses, whoever calls it',
+  applyStagedAddition({
+    space: kernel.space,
+    staging: accepted,
+    knownLayerNames: [...KERNEL_LAYER_NAMES],
+    readonlyLayerNames: [asLayerName("draft-demo")],
+  }).newLayerNames.length === 0,
 );
 
 // =====================================================================
