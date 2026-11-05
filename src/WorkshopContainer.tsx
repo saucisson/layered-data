@@ -1582,17 +1582,19 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
         {say({
           language,
           fr:
-            "Atelier mesuré : noyau prouvé identique au noyau Python octet par " +
-            "octet (204 149 octets de lectures), harnais autonome — 84 " +
-            "assertions natives, 0 échec, aucun appel externe ; premier " +
-            "rendu une passe pure, sans effet de bord. Les chiffres " +
-            "cités dans l'atelier sont mesurés par ce même harnais.",
+            "Atelier mesuré : non-régression du noyau au bit près — " +
+            "chaque lecture observable comparée, octet par octet, à la " +
+            "ligne de base gelée — harnais autonome, aucun appel " +
+            "externe ; premier rendu une passe pure, sans effet de " +
+            "bord. Les chiffres cités dans l'atelier sont mesurés par " +
+            "ce même harnais.",
           en:
-            "Measured workshop: kernel proven identical to the Python kernel " +
-            "byte by byte (204 149 bytes of reads), self-contained harness — " +
-            "84 native assertions, 0 failures, no external call; first " +
-            "render a pure pass, without side effect. The figures " +
-            "quoted in the workshop are measured by that same harness.",
+            "Measured workshop: bit-exact kernel non-regression — " +
+            "every observable read compared, byte by byte, to the " +
+            "frozen baseline — self-contained harness, no external " +
+            "call; first render a pure pass, without side effect. " +
+            "The figures quoted in the workshop are measured by " +
+            "that same harness.",
         })}
       </footer>
 
