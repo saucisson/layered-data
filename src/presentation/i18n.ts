@@ -35,9 +35,9 @@ export const EDITION_REFUSAL_LABEL: Record<string, BilingualText> = {
     en: "the edition carries a layer besides — an edition is not an addition",
     fr: "l'édition glisse une couche en plus — une édition n'est pas un ajout",
   },
-  "tronc-édité": {
-    en: "the edition aims at the trunk — the trunk is read-only, its layers never re-enter the tribunal (ADR-0020)",
-    fr: "l'édition vise le tronc — le tronc est en lecture seule, ses couches ne repassent jamais au tribunal (ADR-0020)",
+  "socle-édité": {
+    en: "the edition aims at the bedrock — the bedrock is read-only, its layers never re-enter the staging (ADR-0020)",
+    fr: "l'édition vise le socle — le socle est en lecture seule, ses couches ne repassent jamais au staging (ADR-0020)",
   },
 };
 

@@ -2,7 +2,7 @@
 //
 // docs/specification.md is normative: obligations O1–O18 and
 // conformance requirements C1–C8. This file proves them as
-// properties — over the whole trunk corpus (every observable
+// properties — over the whole bedrock corpus (every observable
 // address, the same walk as the audit harness) and over dedicated
 // spaces built for the semantics the corpus does not exercise
 // (implicits, masks at the kernel level, the cycle guard, the touch
@@ -62,7 +62,7 @@ function spaceFromJoinOrder(order: readonly string[]): Space {
 
 /** A space assembled from a VARIANT of the corpus sources — the
  * data-driven semantics proof (ADR-0019) edits the registry layer
- * itself, the rest of the trunk joins unchanged. */
+ * itself, the rest of the bedrock joins unchanged. */
 function spaceFromSourcesMap(sources: Record<string, string>, order: readonly string[]): Space {
   const joined = order
     .map((layerName) =>
@@ -164,19 +164,19 @@ function layerTreeOf(space: Space, layerName: string): Record<string, unknown> {
 }
 
 // =====================================================================
-// C1 — CLOSURES over the whole trunk corpus
+// C1 — CLOSURES over the whole bedrock corpus
 // =====================================================================
 
-const trunk = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
+const bedrock = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
 let walkedAddresses = 0;
 let closureDuplicates = 0;
 let ownNodeNotFirst = 0;
 
 for (const layerName of KERNEL_LAYER_NAMES) {
-  for (const address of walkAddresses({ space: trunk, layer: asLayerName(layerName) })) {
+  for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
     walkedAddresses++;
     const [layer, path] = address;
-    const closure = trunk.closure({ layer, path });
+    const closure = bedrock.closure({ layer, path });
 
     // O3 — deduplication: an address appears at most once.
     const seen = new Set<string>();
@@ -187,18 +187,18 @@ for (const layerName of KERNEL_LAYER_NAMES) {
     }
 
     // O2 — specificity: the own node, when it exists, comes first.
-    if (trunk.raw({ layer, path }) !== null && closure.length > 0) {
+    if (bedrock.raw({ layer, path }) !== null && closure.length > 0) {
       if (addressText(closure[0]) !== addressText(address)) ownNodeNotFirst++;
     }
   }
 }
 
-check("C1 (O3): no closure of the trunk corpus contains a duplicate address", closureDuplicates === 0);
+check("C1 (O3): no closure of the bedrock corpus contains a duplicate address", closureDuplicates === 0);
 check("C1 (O2): the own node is always the first source when it exists", ownNodeNotFirst === 0);
 check("C1: the walk covers the measured corpus (thousands of addresses)", walkedAddresses > 3000);
 
 // The measured diamond (§13): the two ways of the refinement cross.
-const diamondClosure = trunk.closure({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]) });
+const diamondClosure = bedrock.closure({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]) });
 check(
   "C1 (O4, measured diamond §13): the closure of wb1::arcsAB::e2 is exactly the §13 walk",
   diamondClosure.map(addressText).join(" ") ===
@@ -231,11 +231,11 @@ let scalarNodeAnomalies = 0;
 let maskedVisibleAnomalies = 0;
 
 for (const layerName of KERNEL_LAYER_NAMES) {
-  for (const address of walkAddresses({ space: trunk, layer: asLayerName(layerName) })) {
+  for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
     const [layer, path] = address;
-    for (const key of trunk.keys({ layer, path })) {
+    for (const key of bedrock.keys({ layer, path })) {
       const scan: ReadObservation[] = [];
-      const value = trunk.read({ layer, path, key, scan });
+      const value = bedrock.read({ layer, path, key, scan });
 
       // O8 — the statuses are exactly the four documented ones.
       const statuses = scan.map((observation) => observation.status);
@@ -257,7 +257,7 @@ for (const layerName of KERNEL_LAYER_NAMES) {
 
       // O1 — a scalar is never a node: the raw of its address is null.
       if (typeof value === "number" || typeof value === "boolean" || typeof value === "string") {
-        if (trunk.raw({ layer: asLayerName(layer), path: asLayerPath([...path, key]) }) !== null) scalarNodeAnomalies++;
+        if (bedrock.raw({ layer: asLayerName(layer), path: asLayerPath([...path, key]) }) !== null) scalarNodeAnomalies++;
       }
     }
   }
@@ -272,19 +272,19 @@ check("C2 (O1): no scalar is ever visible as a node", scalarNodeAnomalies === 0)
 
 check(
   "C2 (S10, measured): wb1::arcsAB::e1::weight is the own override 3",
-  trunk.read({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e1"]), key: "weight" }) === 3,
+  bedrock.read({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e1"]), key: "weight" }) === 3,
 );
 check(
   "C2 (S10, measured): wb1::arcsAB::e2::weight is the inherited default 1 — through the second way of the diamond",
-  trunk.read({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]), key: "weight" }) === 1,
+  bedrock.read({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]), key: "weight" }) === 1,
 );
 check(
   "C2 (O6, measured): the late binding of ss-pn-philosophers-5-inst::alphabet::b1::transition resolves to the dinner",
-  valueText(trunk.read({ layer: asLayerName("ss-pn-philosophers-5-inst"), path: asLayerPath(["alphabet", "b1"]), key: "transition" })) === "@pn-philosophers-5/transitions/philo1.take1",
+  valueText(bedrock.read({ layer: asLayerName("ss-pn-philosophers-5-inst"), path: asLayerPath(["alphabet", "b1"]), key: "transition" })) === "@pn-philosophers-5/transitions/philo1.take1",
 );
 check(
   "C2 (measured): the state delta overrides the template marking (2 against 1)",
-  trunk.read({ layer: asLayerName("ss-pn-philosophers-5-inst"), path: asLayerPath(["states", "s1", "places", "philo1.think1"]), key: "marking" }) === 2,
+  bedrock.read({ layer: asLayerName("ss-pn-philosophers-5-inst"), path: asLayerPath(["states", "s1", "places", "philo1.think1"]), key: "marking" }) === 2,
 );
 
 // =====================================================================
@@ -293,12 +293,12 @@ check(
 
 let keysAnomalies = 0;
 for (const layerName of KERNEL_LAYER_NAMES) {
-  for (const address of walkAddresses({ space: trunk, layer: asLayerName(layerName) })) {
-    const keys = trunk.keys({ layer: address[0], path: address[1] });
+  for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
+    const keys = bedrock.keys({ layer: address[0], path: address[1] });
     // no special key ever surfaces, no duplicates, stable order
     if (keys.some((key) => (SPECIAL_KEYS as readonly string[]).includes(key))) keysAnomalies++;
     if (new Set(keys).size !== keys.length) keysAnomalies++;
-    if (trunk.keys({ layer: address[0], path: address[1] }).join("") !== keys.join("")) keysAnomalies++;
+    if (bedrock.keys({ layer: address[0], path: address[1] }).join("") !== keys.join("")) keysAnomalies++;
   }
 }
 check("C3: keys never surface a special key, never repeat, and are call-stable", keysAnomalies === 0);
@@ -309,20 +309,20 @@ check("C3: keys never surface a special key, never repeat, and are call-stable",
 
 let anchorsAnomalies = 0;
 for (const layerName of KERNEL_LAYER_NAMES) {
-  for (const address of walkAddresses({ space: trunk, layer: asLayerName(layerName) })) {
+  for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
     const expected: string[] = [];
-    for (const [sourceLayer, sourcePath] of trunk.closure({ layer: address[0], path: address[1] })) {
+    for (const [sourceLayer, sourcePath] of bedrock.closure({ layer: address[0], path: address[1] })) {
       const anchor = sourcePath.length ? sourcePath[sourcePath.length - 1] : sourceLayer;
       if (!expected.includes(anchor)) expected.push(anchor);
     }
-    const observed = trunk.anchorsAt({ layer: address[0], path: address[1], tracer: null });
+    const observed = bedrock.anchorsAt({ layer: address[0], path: address[1], tracer: null });
     if (observed.join("") !== expected.join("")) anchorsAnomalies++;
   }
 }
 check("C4 (O7): anchorsAt is exactly the ordered union of the closure anchors, over every address", anchorsAnomalies === 0);
 check(
   "C4 (measured diamond §13): the anchors of wb1::arcsAB::e2 are the closure walk",
-  trunk.anchorsAt({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]), tracer: null }).join(",") === "e2,arcAB_type,edge_type,record",
+  bedrock.anchorsAt({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]), tracer: null }).join(",") === "e2,arcAB_type,edge_type,record",
 );
 
 // =====================================================================
@@ -332,12 +332,12 @@ check(
 
 check(
   "C8 (O16): no touch, no stale memo entry over the whole walk",
-  trunk.staleMemoKeys().length === 0,
+  bedrock.staleMemoKeys().length === 0,
 );
 
 const secondAssembly = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
 const reverseWalk = observableDump({ space: secondAssembly, walkOrder: [...KERNEL_LAYER_NAMES].reverse() });
-const referenceDump = new Set(observableDump({ space: trunk, walkOrder: KERNEL_LAYER_NAMES }));
+const referenceDump = new Set(observableDump({ space: bedrock, walkOrder: KERNEL_LAYER_NAMES }));
 let orderDifferences = 0;
 for (const line of reverseWalk) if (!referenceDump.has(line)) orderDifferences++;
 check(
@@ -557,10 +557,10 @@ check(
 
 // the contracts are READ FROM THE DATA: the check-registry layer is
 // the single source — the nine tags, in writing order, no more
-const trunkContracts = registryContractsOf({ space: trunk });
+const bedrockContracts = registryContractsOf({ space: bedrock });
 check(
   "ADR-0019: the registry is data — the check-registry layer declares the nine tags",
-  Object.keys(trunkContracts).join(",") === "containers,cardinality,simple,nonempty,oriented,sperner,k-partite,dag,arbre",
+  Object.keys(bedrockContracts).join(",") === "containers,cardinality,simple,nonempty,oriented,sperner,k-partite,dag,arbre",
 );
 
 // the data and the algorithms answer for each other — the closed
@@ -568,37 +568,37 @@ check(
 // kernel's execution binding 1:1
 check(
   "ADR-0019: every kernel algorithm has a contract in the data, and every declared contract has its algorithm",
-  Object.keys(checkRegistry).every((tag) => trunkContracts[tag] !== undefined) &&
-    Object.keys(trunkContracts).length === Object.keys(checkRegistry).length,
+  Object.keys(checkRegistry).every((tag) => bedrockContracts[tag] !== undefined) &&
+    Object.keys(bedrockContracts).length === Object.keys(checkRegistry).length,
 );
 
-// the meta-audit is silent on the trunk — no contract without an
+// the meta-audit is silent on the bedrock — no contract without an
 // algorithm, no algorithm without a contract, no unreadable clause
 check(
-  "ADR-0019: the meta-audit of the trunk is silent — 0/0/0 (measured)",
-  registryAuditOf({ space: trunk }).length === 0,
+  "ADR-0019: the meta-audit of the bedrock is silent — 0/0/0 (measured)",
+  registryAuditOf({ space: bedrock }).length === 0,
 );
 
 // one source: the reading levels the dead-binding rule reads are
 // derived from the data's contracts, never re-declared
-const trunkSlotContracts = checkSlotContractsOf(trunkContracts);
+const bedrockSlotContracts = checkSlotContractsOf(bedrockContracts);
 check(
   "ADR-0019: the slot contracts derive from the data — one source",
-  Object.keys(trunkSlotContracts).every(
+  Object.keys(bedrockSlotContracts).every(
     (tag) =>
-      JSON.stringify(trunkSlotContracts[tag]) ===
-      JSON.stringify(slotReadingLevelsOf(trunkContracts[tag])),
+      JSON.stringify(bedrockSlotContracts[tag]) ===
+      JSON.stringify(slotReadingLevelsOf(bedrockContracts[tag])),
   ),
 );
 
-// the trunk corpus carries no vacant check: every carried tag can
+// the bedrock corpus carries no vacant check: every carried tag can
 // judge (measured: 79 contract judgments, 0 vacancies)
 check(
-  "ADR-0018: the trunk corpus carries no vacant check — every carried tag can judge",
-  vacantChecksOf({ space: trunk, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
+  "ADR-0018: the bedrock corpus carries no vacant check — every carried tag can judge",
+  vacantChecksOf({ space: bedrock, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
 );
 
-// the data-driven proof: a variant trunk whose registry layer EDITS
+// the data-driven proof: a variant bedrock whose registry layer EDITS
 // a contract — sperner gains a required slot « tolerance » that no
 // layer binds. The language said it; the detector reads it — the
 // semantics moved with the data, no code touched

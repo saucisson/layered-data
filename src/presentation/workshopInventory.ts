@@ -111,8 +111,8 @@ export const LAYER_ROLE: Record<string, BilingualText> = {
     fr: "axe arité généralisé : les bornes de la collection des flèches deviennent un slot non lié — le raffinement k-uniforme lie les deux à k",
   },
   "named-ends-hypergraph": {
-    en: "the named-ends trunk: free-cardinality arrows, able to designate a field of the edge (self-designation)",
-    fr: "tronc des extrémités nommées : flèches à cardinalité libre, pouvant désigner un champ de l'arête (auto-désignation)",
+    en: "the named-ends base: free-cardinality arrows, able to designate a field of the edge (self-designation)",
+    fr: "base des extrémités nommées : flèches à cardinalité libre, pouvant désigner un champ de l'arête (auto-désignation)",
   },
   "pair-graph": {
     en: "the bounded arity axis: exactly 2 arrows, no roles — an undirected graph",

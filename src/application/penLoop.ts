@@ -1,6 +1,6 @@
-// The verified pen loop — the server-side use case.
+// The verified geologist loop — the server-side use case.
 //
-// The pen proposes, the staging judges: every proposal is staged
+// The geologist proposes, the staging judges: every proposal is staged
 // over the living corpus before it reaches anyone, and a refusal
 // comes back to the model with its reasons — the observable verdict
 // vocabulary of the kernel — until the draft is accepted or the
@@ -12,7 +12,7 @@
 // Pure use case: the model call is injected (the server wires its
 // fetch), the corpus sources are passed in — no Node, no network,
 // no clock here. The loop is therefore testable offline, against a
-// deterministic pen that fails and corrects itself.
+// deterministic geologist that fails and corrects itself.
 
 import { stageLayerAddition, type StagingOutcome } from "./staging.ts";
 import type { Verdict } from "../domain/validation.ts";
@@ -24,7 +24,7 @@ import {
   type Language,
 } from "../domain/messages.ts";
 
-/** What the pen receives at each round: the intention, the number
+/** What the geologist receives at each round: the intention, the number
  * of the proposal being asked, and the refusal of the previous
  * proposal — null on the first round. */
 export interface PenRound {
@@ -33,7 +33,7 @@ export interface PenRound {
   feedback: string | null;
 }
 
-/** The pen itself — the injected model call. Returns the proposed
+/** The geologist itself — the injected model call. Returns the proposed
  * layer source, plain text. Infrastructure failures (missing key,
  * unreachable upstream) throw: they are not verdicts, the loop does
  * not retry them. */
@@ -59,7 +59,7 @@ export interface PenLoopOutcome {
   refusals: PenRefusal[];
 }
 
-/** The refusal as the pen reads it: the observable vocabulary of the
+/** The refusal as the geologist reads it: the observable vocabulary of the
  * kernel (steps, verdict kinds) plus the rendered facts, in the
  * workshop language — English by default, French its mirror. */
 export function formatPenFeedback(refusal: PenRefusal, language: Language = DEFAULT_LANGUAGE): string {
@@ -102,7 +102,7 @@ export function formatPenFeedback(refusal: PenRefusal, language: Language = DEFA
 }
 
 /** The verified composition: propose → stage → refuse with reasons
- * or accept. The trunk and the already-written layers form the
+ * or accept. The bedrock and the already-written layers form the
  * living space the draft is judged against; the judge is the exact
  * staging the workshop itself applies. */
 export async function composeVerifiedLayerDraft({
@@ -120,23 +120,23 @@ export async function composeVerifiedLayerDraft({
   instruction: string;
   languageSource: string;
   livingLayerNames: readonly string[];
-  /** the trunk's signature (ADR-0020): the pen may propose a layer
-   * that REFINES the trunk, never one that REPLACES it — a draft
-   * claiming a trunk name is refused « tronc-occupé », the refusal
+  /** the bedrock's signature (ADR-0020): the geologist may propose a layer
+   * that REFINES the bedrock, never one that REPLACES it — a draft
+   * claiming a bedrock name is refused « socle-occupé », the refusal
    * travels back to the model like any verdict, in the workshop
    * language */
   readonlyLayerNames: readonly string[];
   previousAdditionSources?: readonly string[];
   maxAttempts?: number;
-  /** the workshop language the feedback speaks — the pen hears the
+  /** the workshop language the feedback speaks — the geologist hears the
    * kernel's vocabulary in the language the workshop renders it */
   language?: Language;
   /** refuse unsigned order conflicts too — the strict arm of the
-   * loop (ADR-0017): the pen may propose an order-decided read only
+   * loop (ADR-0017): the geologist may propose an order-decided read only
    * if the reading address signs an `assume` */
   strictConflicts?: boolean;
   /** execute the carried checks of the judged layers too — the
-   * strict arm of the loop (ADR-0018): the pen may no longer
+   * strict arm of the loop (ADR-0018): the geologist may no longer
    * propose a layer whose carried constraints refuse it */
   strictChecks?: boolean;
   propose: PenPropose;
@@ -150,7 +150,7 @@ export async function composeVerifiedLayerDraft({
   for (let attempt = 1; attempt <= budget; attempt++) {
     const proposal = (await propose({ attempt, instruction, feedback })).trim();
 
-    // A mute pen is a refused pen — an empty proposal would stage
+    // A mute geologist is a refused geologist — an empty proposal would stage
     // as "no new layer" and sneak through as an empty acceptance.
     if (proposal === "") {
       const refusal: PenRefusal = {

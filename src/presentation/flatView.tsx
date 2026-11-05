@@ -18,7 +18,7 @@ import { LayerBadge } from "./layerBadge.tsx";
 import { say } from "./i18n.ts";
 
 /** The full flattened dump as plain text — the interactive tree and
- * this text share the same engine, the text pen derives from it. */
+ * this text share the same engine, the text rendering derives from it. */
 export function dumpFlattenedLayer({
   space,
   layer,

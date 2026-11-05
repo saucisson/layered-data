@@ -1,5 +1,5 @@
-// The disk wardrobe: the server's formalisms, one file per
-// formalism in the language format — the trunk read-only, the
+// The disk quarry: the server's formalisms, one file per
+// formalism in the language format — the bedrock read-only, the
 // pens of other visitors beside it. The source opens, gets
 // corrected, and enters the workshop only through staging — the
 // disk never bypasses the contract; local pens absent from the
@@ -12,8 +12,8 @@ import { stageLayerAddition, applyStagedAddition, type StagingOutcome } from "..
 import { apiFetch } from "../infrastructure/wardrobeClient.ts";
 import { labelOf, say } from "./i18n.ts";
 
-/** One wardrobe entry as the proxy reports it: a name and whether
- * it belongs to the trunk (read-only on the disk). */
+/** One quarry entry as the proxy reports it: a name and whether
+ * it belongs to the bedrock (read-only on the disk). */
 interface WardrobeEntry {
   name: string;
   builtIn: boolean;
@@ -57,7 +57,7 @@ export function DiskWardrobe({
       } else if (response.status === 401) {
         setEntries([]);
         setMessage(
-          say({ language, en: "access code required — the wardrobe is closed", fr: "code d'accès requis — l'armoire est fermée" }),
+          say({ language, en: "access code required — the quarry is closed", fr: "code d'accès requis — la carrière est fermée" }),
         );
       } else {
         setEntries([]);
@@ -70,8 +70,8 @@ export function DiskWardrobe({
       setMessage(
         say({
           language,
-          en: "without proxy — the wardrobe is empty, the workshop lives alone",
-          fr: "sans proxy — l'armoire est vide, l'atelier vit seul",
+          en: "without proxy — the quarry is empty, the workshop lives alone",
+          fr: "sans proxy — la carrière est vide, l'atelier vit seul",
         }),
       );
     }
@@ -163,8 +163,8 @@ export function DiskWardrobe({
         setMessage(
           say({
             language,
-            en: "« " + name + " » belongs to the trunk — read-only",
-            fr: "« " + name + " » appartient au tronc — lecture seule",
+            en: "« " + name + " » belongs to the bedrock — read-only",
+            fr: "« " + name + " » appartient au socle — lecture seule",
           }),
         );
       } else {
@@ -185,7 +185,7 @@ export function DiskWardrobe({
           {say({ language, en: "disk", fr: "disque" })}
         </span>
         <span className="text-xs font-semibold text-slate-700">
-          {say({ language, en: "the wardrobe of formalisms", fr: "l'armoire des formalismes" })}
+          {say({ language, en: "the quarry of formalisms", fr: "la carrière des formalismes" })}
         </span>
         <button
           onClick={() => {
@@ -198,22 +198,22 @@ export function DiskWardrobe({
         <span className="text-[11px] leading-4 text-slate-500">
           {say({
             language,
-            en: "one file per formalism, in the language format — the trunk read-only, the visitors' pens visible to all; every entry passes through the staging, the disk never bypasses the contract",
-            fr: "un fichier par formalisme, au format langage — le tronc en lecture seule, les plumes des visiteurs visibles de tous ; toute entrée passe par le staging, le disque ne contourne jamais le contrat",
+            en: "one file per formalism, in the language format — the bedrock read-only, the visitors' layers visible to all; every entry passes through the staging, the disk never bypasses the contract",
+            fr: "un fichier par formalisme, au format langage — le socle en lecture seule, les couches des visiteurs visibles de tous ; toute entrée passe par le staging, le disque ne contourne jamais le contrat",
           })}
         </span>
       </div>
       {entries === null && (
         <p className="text-[11px] text-slate-500">
-          {say({ language, en: "wardrobe opening…", fr: "armoire en cours d'ouverture…" })}
+          {say({ language, en: "quarry opening…", fr: "carrière en cours d'ouverture…" })}
         </p>
       )}
       {entries !== null && entries.length === 0 && (
         <p className="text-[11px] text-slate-500">
           {say({
             language,
-            en: "the wardrobe is empty or closed — without proxy, the workshop lives alone",
-            fr: "l'armoire est vide ou fermée — sans proxy, l'atelier vit seul",
+            en: "the quarry is empty or closed — without proxy, the workshop lives alone",
+            fr: "la carrière est vide ou fermée — sans proxy, l'atelier vit seul",
           })}
         </p>
       )}
@@ -235,8 +235,8 @@ export function DiskWardrobe({
               }
               title={
                 entry.builtIn
-                  ? say({ language, en: "trunk — read-only on the disk", fr: "tronc — en lecture seule sur le disque" })
-                  : say({ language, en: "a visitor's pen — on the disk", fr: "plume d'un visiteur — sur le disque" })
+                  ? say({ language, en: "bedrock — read-only on the disk", fr: "socle — en lecture seule sur le disque" })
+                  : say({ language, en: "a visitor's layer — on the disk", fr: "couche d'un visiteur — sur le disque" })
               }
             >
               {entry.name}
@@ -265,8 +265,8 @@ export function DiskWardrobe({
             <span className="text-[10px] leading-4 text-slate-400">
               {say({
                 language,
-                en: "the pen is corrected here like any other — the staging revalidates corpus + supplements + candidate, 0 verdict demanded",
-                fr: "la plume se corrige ici comme toute autre — le staging revalide corpus + suppléments + candidat, 0 verdict exigé",
+                en: "the layer is corrected here like any other — the staging revalidates corpus + supplements + candidate, 0 verdict demanded",
+                fr: "la couche se corrige ici comme toute autre — le staging revalide corpus + suppléments + candidat, 0 verdict exigé",
               })}
             </span>
           </div>
@@ -277,8 +277,8 @@ export function DiskWardrobe({
           <p className="mb-1 text-[11px] font-semibold text-slate-600">
             {say({
               language,
-              en: "the local pens, not yet on the disk:",
-              fr: "les plumes locales, pas encore sur le disque :",
+              en: "the local layers, not yet on the disk:",
+              fr: "les couches locales, pas encore sur le disque :",
             })}
           </p>
           <div className="flex flex-wrap gap-1">
