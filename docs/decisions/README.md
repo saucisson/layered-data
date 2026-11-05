@@ -58,6 +58,7 @@ What this decision implies - good and bad.
 | [ADR-0017](adr-0017-order-as-semantics.md) | Order as semantics - first-wins conflicts made visible, signable, contractual | accepted | 2026-11-04 |
 | [ADR-0018](adr-0018-checks-as-contracts.md) | Checks as contracts - the constraint semantics made nominal, visible, executable | accepted | 2026-11-04 |
 | [ADR-0019](adr-0019-registry-as-data.md) | Registry as data - the meta-model comes home: the checks' contracts written in the language | accepted | 2026-11-05 |
+| [ADR-0020](adr-0020-immutable-trunk.md) | The immutable trunk - read-only by protocol, not by convention: every mutation route carries the trunk's signature | accepted | 2026-11-05 |
 
 ## Adding a new ADR
 
