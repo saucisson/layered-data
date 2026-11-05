@@ -1,7 +1,7 @@
-// The views module: a faithful port of the Python kernel's view
-// module, verified bit by bit against it (closures, keys, reads, lens
-// entries, drawn reads, applicability). Everything here is a PURE
-// OBSERVATION of the space: nothing is written, no verdict changes.
+// The views module: the space's observable views (closures, keys,
+// reads, lens entries, drawn reads, applicability). Everything here
+// is a PURE OBSERVATION of the space: nothing is written, no verdict
+// changes.
 //
 // Three consumers read through this module:
 //   - the drawing panels (the lens shapes of the glyphs);
@@ -236,7 +236,7 @@ export function walkAddresses({ space, layer }: { space: Space; layer: LayerName
   return output;
 }
 
-// One golden entry: closure, keys, reads — the unit of proof. The
+// One golden entry: closure, keys, reads — the unit of measurement. The
 // audit harness consumes it; the workbench itself reads the space
 // through the panels.
 export function fullObservation({ space, address }: { space: Space; address: Address }): any {

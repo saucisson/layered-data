@@ -98,8 +98,8 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             <p className="text-sm text-slate-600">
               {say({
                 language,
-                en: "Every action is measured. The kernel is proven byte-by-byte identical to its Python reference.",
-                fr: "Chaque action est mesurée. Le noyau est prouvé identique octet par octet à sa référence Python.",
+                en: "Every action is measured. Every observable kernel read is compared, byte by byte, to a frozen baseline.",
+                fr: "Chaque action est mesurée. Chaque lecture observable du noyau est comparée, octet par octet, à une ligne de base gelée.",
               })}
             </p>
           </div>

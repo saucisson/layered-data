@@ -86,8 +86,8 @@ function addressViewRepr(view: AddressView): string {
   return view.layer + "::" + (view.path.join("/") || ".");
 }
 
-// Minimal Python %r (check parameters are integers).
-function pythonRepr(value: any): string {
+// Minimal %r-style rendering (check parameters are integers).
+function valueRepr(value: any): string {
   if (typeof value === "boolean") return value ? "True" : "False";
   if (typeof value === "string") return "'" + value + "'";
   return String(value);
@@ -100,8 +100,8 @@ function concreteNodeOf({ space, view }: { space: Space; view: AddressView }): A
   return designated !== null ? designated : [view.layer, view.path];
 }
 
-// str() of a Python (layer, path) tuple — the check messages quote it.
-function pythonTupleRepr(address: Address): string {
+// The rendering of a (layer, path) tuple — the check messages quote it.
+function addressTupleRepr(address: Address): string {
   return (
     "('" + address[0] + "', (" + address[1].map((segment) => "'" + segment + "'").join(", ") +
     (address[1].length === 1 ? "," : "") + "))"
@@ -155,10 +155,10 @@ function checkCardinality({ space, view }: { space: Space; view: AddressView }):
   const count = space.keys({ layer: view.layer, path: view.path }).length;
   const errors: string[] = [];
   if (typeof minimum === "number" && count < minimum) {
-    errors.push("cardinalité: " + count + " < min=" + pythonRepr(minimum));
+    errors.push("cardinalité: " + count + " < min=" + valueRepr(minimum));
   }
   if (typeof maximum === "number" && count > maximum) {
-    errors.push("cardinalité: " + count + " > max=" + pythonRepr(maximum));
+    errors.push("cardinalité: " + count + " > max=" + valueRepr(maximum));
   }
   return errors;
 }
@@ -254,7 +254,7 @@ function checkSimple({ space, view }: { space: Space; view: AddressView }): stri
       if (pair === null) continue;
       const [source, target] = pair;
       if (addressesEqual(source, target)) {
-        errors.push("simple: boucle (" + edgeKey + " : " + pythonTupleRepr(source) + ")");
+        errors.push("simple: boucle (" + edgeKey + " : " + addressTupleRepr(source) + ")");
         continue;
       }
       const signature =
@@ -263,7 +263,7 @@ function checkSimple({ space, view }: { space: Space; view: AddressView }): stri
       if (duplicate) {
         errors.push(
           "simple: arête multiple (" + duplicate.key + " == " + edgeKey + " : (" +
-            pythonTupleRepr(source) + ", " + pythonTupleRepr(target) + "))",
+            addressTupleRepr(source) + ", " + addressTupleRepr(target) + "))",
         );
       } else seen.push({ key: edgeKey, signature });
     } else {
@@ -288,7 +288,7 @@ function checkSimple({ space, view }: { space: Space; view: AddressView }): stri
         if (vertex === null || vertex === MASK || !(vertex instanceof AddressView)) continue;
         const concrete = concreteNodeOf({ space, view: vertex });
         if (rawEnds.some((existing) => addressesEqual(existing, concrete))) {
-          errors.push("simple: sommet répété (" + edgeKey + " : " + pythonTupleRepr(concrete) + ")");
+          errors.push("simple: sommet répété (" + edgeKey + " : " + addressTupleRepr(concrete) + ")");
           repeated = true;
           break;
         }
@@ -305,7 +305,7 @@ function checkSimple({ space, view }: { space: Space; view: AddressView }): stri
       if (duplicate) {
         errors.push(
           "simple: arête multiple (" + duplicate.key + " == " + edgeKey + " : {" +
-            ends.ends.map(pythonTupleRepr).join(", ") + "})",
+            ends.ends.map(addressTupleRepr).join(", ") + "})",
         );
       } else seen.push({ key: edgeKey, signature });
     }
@@ -354,7 +354,7 @@ function checkOriented({ space, view }: { space: Space; view: AddressView }): st
     });
     if (sibling !== null && addressesEqual(sibling[0], target) && addressesEqual(sibling[1], source)) {
       return [
-        "oriented: 2-cycle (" + pythonTupleRepr(source) + " ⇝ " + pythonTupleRepr(target) + " et inverse)",
+        "oriented: 2-cycle (" + addressTupleRepr(source) + " ⇝ " + addressTupleRepr(target) + " et inverse)",
       ];
     }
   }
@@ -486,7 +486,7 @@ function checkAcyclic({ space, view }: { space: Space; view: AddressView }): str
   while (stack.length) {
     const current = stack.pop()!;
     if (addressesEqual(current, source)) {
-      return ["dag: cycle (" + pythonTupleRepr(source) + " ⇝ … ⇝ " + pythonTupleRepr(target) + ")"];
+      return ["dag: cycle (" + addressTupleRepr(source) + " ⇝ … ⇝ " + addressTupleRepr(target) + ")"];
     }
     const currentKey = current[0] + "\u0001" + current[1].join("\u0001");
     if (seen.has(currentKey)) continue;
@@ -869,8 +869,7 @@ export type CheckFunction = (parameters: { space: Space; view: AddressView }) =>
 
 // The check registry's ALGORITHMS: the tags the kernel resolves to
 // code — the contracts live in the data (ADR-0019, read above); this
-// table binds each declared tag to its execution. On the Python side
-// these are functions in the layers; here the tag strings are
+// table binds each declared tag to its execution. The tag strings are
 // behavior, they stay as they are. The data declares what a check
 // means, this table says how it runs — and the meta-audit
 // (`registryAuditOf`) holds the two answer for each other.
@@ -920,8 +919,8 @@ export function runChecks({ space, layer }: { space: Space; layer: LayerName }):
           space.recordDiagnostic({ kind: "algorithme-absent", address: [address[0], address[1]], fact: fact("algorithm-missing", { tag }) });
           continue;
         }
-        // Deduplication by (address, check) — mirror of the Python
-        // (layer, path, id(fn)) tag: the tag string is the identity.
+        // Deduplication by (address, check) — the tag string is the
+        // identity of the judgment.
         const deduplicationKey = address[0] + "|" + address[1].join("/") + "|" + tag;
         if (seen.has(deduplicationKey)) continue;
         seen.add(deduplicationKey);

@@ -4,8 +4,9 @@
 > `src/domain/`: what the kernel *does*, implementation-independent.
 > The obligations below (O1–O18) and the conformance requirements
 > (C1–C8) are executable: `tests/specification-properties.mts`
-> proves them as properties over the bedrock corpus and over dedicated
-> spaces, and `tests/audit-kernel.mts` freezes C1–C3 as a
+> checks them as properties over the bedrock corpus and over dedicated
+> spaces — conformance measurements, not formal demonstrations —
+> and `tests/audit-kernel.mts` freezes C1–C3 as a
 > byte-identical baseline dump. Bracketed names refer to kernel
 > operations; in the TypeScript domain they read: `[closure]` →
 > `Space.closure`, `[computeClosure]` → `Space.computeClosure`,
@@ -334,7 +335,7 @@ Une implantation est conforme si, sur un espace de référence :
    d'appel (O16), y compris en présence de cycles de types (O5 : listes vides, non
    mémoïsées).
 
-**Style de preuve recommandé.** La conformité se prouve par **équivalence de dumps
+**Style de vérification recommandé.** La conformité se vérifie par **équivalence de dumps
 normalisés** sur des espaces dédiés (le protocole DATA/OUT du harnais), complétés par des
 tests de propriétés : idempotence du désucrage, invariance des fermetures par permutation de
 couches non liées, propagation exacte des `touch` (C7). Un diff d'octets n'est acceptable
@@ -366,7 +367,7 @@ weighted-hypergraph]` :
 ## 14. Précisions tranchées par la mesure (normatives)
 
 Deux points laissés ouverts par le texte ci-dessus ont été tranchés par un passage de
-conformité mesuré (oracle indépendant écrit depuis la présente spécification) et sont
+conformité mesuré et sont
 désormais normatifs :
 
 - le désucrage recopie les `implicits` dans les **enfants dicts non spéciaux directs** du

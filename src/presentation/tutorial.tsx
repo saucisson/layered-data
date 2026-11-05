@@ -312,15 +312,15 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     id: "preuve",
-    label: { en: "10 · The proof", fr: "10 · La preuve" },
+    label: { en: "10 · Verification", fr: "10 · La vérification" },
     title: {
-      en: "Everything is proven, nothing is believed — and the limits are displayed",
-      fr: "Tout est prouvé, rien n'est cru — et les limites sont affichées",
+      en: "Everything is verified, nothing is believed — and the limits are displayed",
+      fr: "Tout est vérifié, rien n'est cru — et les limites sont affichées",
     },
     body: [
       {
-        en: "This tool's kernel was proven identical to the Python kernel, byte by byte. 204,149 bytes of compared reads, then seven more spaces, up to the decision diagrams and the assistant. The oracle was then frozen. The harness now lives in TypeScript alone: 84 native assertions, 0 failures, a few seconds, no external call.",
-        fr: "Le noyau de cet outil a été prouvé identique au noyau Python, octet par octet. 204 149 octets de lectures comparées, puis sept espaces de plus, jusqu'aux diagrammes de décision et à l'assistant. L'oracle a alors été gelé. Le harnais vit désormais en TypeScript seul : 84 assertions natives, 0 échec, quelques secondes, aucun appel externe.",
+        en: "Nothing is claimed proven here: everything is measured. Every observable read of the kernel is compared, byte for byte, to a frozen baseline, and the specification's obligations are replayed as properties by the harness — a few seconds, no external call, and any difference is a refusal.",
+        fr: "Rien n'est dit prouvé ici : tout est mesuré. Chaque lecture observable du noyau est comparée, octet par octet, à une ligne de base gelée, et les obligations de la spécification sont rejouées comme des propriétés par le harnais — quelques secondes, aucun appel externe, et toute différence est un refus.",
       },
       {
         en: "The stratigraphic column — this tutorial's thread — is measured like everything else: same steps, same golden contract, same verifications. 47 layers in the inventory (38 hierarchy, 9 views) — the pn-philosophers-1 template and its pn-philosophers-5 dinner are counted separately there.",
