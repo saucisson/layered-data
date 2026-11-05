@@ -26,7 +26,7 @@ Le code suit une architecture en oignon, documentée dans
 - `src/App.tsx` — la racine de composition : le noyau y est assemblé,
   les états y vivent, les panneaux (① couches, ② formalisme, ③ lecture,
   ④ point de vue) y sont câblés.
-- `formalisms/kernel/` — les 46 couches du tronc, une par fichier `.ld`.
+- `formalisms/kernel/` — les 47 couches du tronc, une par fichier `.ld`.
 - `formalisms/users/` — l'armoire personnelle (vide au départ).
 - `server.ts` — l'armoire : API des couches + plume IA + statique.
 - `tests/` — les six harnais de vérification : audit, spécification
@@ -66,7 +66,7 @@ L'ancienne API `api/formalismes` reste servie à l'identique (liste,
 lecture, pose, effacement) : c'est un alias d'héritage, les nouvelles
 intégrations parlent `api/layers`.
 
-Le tronc (les 46 couches du corpus) est en lecture seule : `PUT` et
+Le tronc (les 47 couches du corpus) est en lecture seule : `PUT` et
 `DELETE` y répondent 403.
 
 ## La plume et le contrat
@@ -89,7 +89,12 @@ l'ordre des refines tranche entre sources incomparables, sauf si
 l'adresse lisante signe un `assume`. `PEN_STRICT_CHECKS=1` arme le
 second bras strict (ADR-0018) : les checks portés par la candidate
 s'exécutent enfin, et la plume ne peut plus proposer une couche que
-ses propres contraintes refusent (« check-trahi »). La réponse est
+ses propres contraintes refusent (« check-trahi »). Depuis l'ADR-0019,
+le registre des checks est lui-même une couche du tronc
+(`formalisms/kernel/check-registry.ld`) : les contrats sont des
+données, l'existence d'une étiquette est l'existence dans les
+données, et le lint audite la couture (« contrat-sans-algorithme »,
+« algorithme-sans-contrat », « contrat-illisible »). La réponse est
 toujours une couche stagée : texte brut sur 200, refus parlé sur 422 —
 et le staging du navigateur reste juge en dernier ressort.
 
@@ -121,7 +126,7 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    et exigences C1–C8 de `docs/specification.md` comme des propriétés :
    closures (dédoublonnage, nœud propre premier, diamant mesuré),
    lectures (premier-gagné, statuts, MASK), clés, ancres, immutabilité
-   (indépendance de l'ordre d'appel, invariance par permutation des 46
+   (indépendance de l'ordre d'appel, invariance par permutation des 47
    couches), garde de cycle, liaison tardive, désucrage (ordre
    topologique, idempotence), protocole d'invalidation exact.
 3. **Les checks de staging** (`npm run test:staging`,
@@ -157,7 +162,7 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    (statuts, kinds, étapes) restent stables dans les données —
    `renderMessage`/`kernelLabel` les habillent dans la langue de
    l'atelier ; chaque surface pédagogique (glossaire, tutoriel,
-   scénarios, notes de vue, rôle des 46 couches, diagnostics,
+   scénarios, notes de vue, rôle des 47 couches, diagnostics,
    instructions de la plume) porte ses deux textes, mesurés par le
    harnais. Les formalismes `.ld` du corpus restent dans leur langue.
 

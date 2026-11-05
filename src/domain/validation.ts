@@ -2,7 +2,8 @@
 //
 // Every diagnostic becomes a VERDICT before execution: (a) every
 // declared act against the closure of its node (implicit override,
-// phantom declaration), (b) every check tag against the registry,
+// phantom declaration), (b) every check tag against the registry —
+// the data of the check-registry layer since ADR-0019,
 // (b2) the vacant checks — a check carried but unable to judge,
 // its required slots unbound (ADR-0018),
 // (c) every binding at the level where its check reads it (the trap:
@@ -22,7 +23,7 @@
 import { type LayerName, type LayerPath, asLayerName } from "./identifiers.ts";
 import { AddressView, LayerReference, MASK, PathReference, type RawValue, isDictionary } from "./addresses.ts";
 import { Space } from "./space.ts";
-import { checkContracts, checkRegistry, slotReadingLevelsOf, vacantChecksOf } from "./checks.ts";
+import { type CheckContract, registryContractsOf, slotReadingLevelsOf, vacantChecksOf } from "./checks.ts";
 import { walkAddresses } from "./views.ts";
 import { type CompiledLanguage, type Declaration } from "./language/compiler.ts";
 import { type ParsedLanguage } from "./language/parser.ts";
@@ -43,11 +44,13 @@ export interface ValidationOutcome {
 // their READING LEVEL — root (layer check) or instance (arc check:
 // the type is in the arc's closure). A type-level binding posed at a
 // root (silently vacant check) is unwritable there. Derived from the
-// nominal registry's contracts (ADR-0018) — one source: the
-// checkContracts of checks.ts.
-export const checkSlotContracts: Record<string, Record<string, "root" | "instance">> = Object.fromEntries(
-  Object.entries(checkContracts).map(([tag, contract]) => [tag, slotReadingLevelsOf(contract)]),
-);
+// registry's contracts — one source since ADR-0019: the contracts
+// the DATA declares, read from the `check-registry` layer.
+export function checkSlotContractsOf(
+  contracts: Record<string, CheckContract>,
+): Record<string, Record<string, "root" | "instance">> {
+  return Object.fromEntries(Object.entries(contracts).map(([tag, contract]) => [tag, slotReadingLevelsOf(contract)]));
+}
 
 // The mode declared for (layer, path, key) — the shadow
 // confrontation reads this table. The declaration table arrives as a
@@ -238,10 +241,16 @@ export function validateSpace({
     } else stats.declOK++;
   }
 
+  // ---- the registry's contracts, read from the data (ADR-0019):
+  // existence in the data, slot reading levels derived — one
+  // source for (b), (b2) and (c)
+  const contracts = registryContractsOf({ space });
+  const slotContracts = checkSlotContractsOf(contracts);
+
   // ---- (b) check tags against the registry
   for (const layer of layerNames) {
     for (const tag of labelsOf.get(layer)!) {
-      if (!checkRegistry[tag]) {
+      if (!contracts[tag]) {
         verdicts.push({ kind: "étiquette-inconnue", fact: fact("unknown-label", { layer, tag }) });
       } else stats.etiquettes++;
     }
@@ -276,7 +285,7 @@ export function validateSpace({
       for (const readingLayer of layerNames) {
         if (readingLayer === layer || !ancestorsOf.get(readingLayer)!.has(layer)) continue;
         for (const tag of labelsOf.get(readingLayer)!) {
-          const contract = checkSlotContracts[tag];
+          const contract = slotContracts[tag];
           if (contract && contract[slot] === "instance") {
             verdicts.push({
               kind: "liaison-morte",
