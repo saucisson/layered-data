@@ -54,9 +54,9 @@ Le code suit une architecture en oignon, documentée dans
 ```bash
 npm install
 cp .env.example .env          # puis éditez API_TOKEN
-npm run serve                 # la carrière : API sur 127.0.0.1:8791
-npm run dev                    # l'atelier avec rechargement à chaud (proxy /api)
-npm run build && npm run serve # l'atelier construit, servi par la carrière
+npm run serve                 # carrière (API 127.0.0.1:8791) + atelier avec rechargement à chaud (localhost:5173, proxy /api)
+npm run dev                    # l'atelier seul, avec rechargement à chaud
+npm run build && npm run serve:prod # l'atelier construit, servi par la carrière
 npm test                       # non-régression du noyau (voir plus bas)
 npm run check:structure        # équilibre JSX/tsx (filet, sans compilateur)
 ```
