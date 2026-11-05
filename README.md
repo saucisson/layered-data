@@ -39,7 +39,8 @@ Le code suit une architecture en oignon, documentée dans
   exécutable, staging, boucle du géologue, éditeur vivant, atelier
   bilingue, vocabulaire du traité (voir plus bas).
 - `docs/specification.md` — la spécification normative du noyau
-  (obligations O1–O18, conformité C1–C8), rendue exécutable par
+  (obligations O1–O18, conformité C1–C8, théorèmes deux-régimes
+  T1–T3), rendue exécutable par
   `tests/specification-properties.mts`.
 - `docs/filiation.md` — la filiation intellectuelle : les
   prédécesseurs nommés (frames et KL-ONE, l'héritage par défaut de
@@ -147,7 +148,10 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    lectures (premier-gagné, statuts), clés, ancres, immutabilité
    (indépendance de l'ordre d'appel, invariance par permutation des 47
    couches), garde de cycle, liaison tardive, désucrage (ordre
-   topologique, idempotence), protocole d'invalidation exact.
+   topologique, idempotence), protocole d'invalidation exact — et,
+   depuis l'ADR-0023, les théorèmes de l'algèbre deux-régimes (§14 :
+   confluence, conservativité, monotonie), mesurés retrait par
+   retrait et croissance par croissance.
 3. **Les checks de staging** (`npm run test:staging`,
    `tests/staging-checks.mts`) figent le protocole des ajouts : brouillon
    sain accepté et appliqué, syntaxe cassée refusée à l'étape « syntaxe »,
