@@ -3,7 +3,8 @@
 > **Status in this repository.** This is the normative reference for
 > `src/domain/`: what the kernel *does*, implementation-independent.
 > The obligations below (O1–O18) and the conformance requirements
-> (C1–C8) are executable: `tests/specification-properties.mts`
+> (C1–C8) — and, since ADR-0023, the two-regime theorems (T1–T3) —
+> are executable: `tests/specification-properties.mts`
 > checks them as properties over the bedrock corpus and over dedicated
 > spaces — conformance measurements, not formal demonstrations —
 > and `tests/audit-kernel.mts` freezes C1–C3 as a
@@ -382,5 +383,78 @@ désormais normatifs :
 - une entrée invalidée par `touch` l'est **si et seulement si** une de ses *dépendances*
   (pas son adresse propre) est recouverte par l'événement — une fermeture de `vertices`
   dépend de `places` et s'invalide avec elle (§10).
+
+---
+
+## 14. Théorèmes de l'algèbre deux-régimes (ADR-0023)
+
+ADR-0023 retire deux gestes et gagne trois garanties : ce que `mask` et `assume`
+tenaient pour acquises devient démontrable — l'algèbre est assez petite pour porter
+ses propres théorèmes. Les voici énoncés et esquissés dans les termes de la présente
+spécification ; le harnais `tests/specification-properties.mts` les mesure (T1, T2,
+T3) avec la discipline du reste du dossier : mesurés d'abord, gelés ensuite.
+
+**Les deux régimes.** Les MEMBRES fusionnent cumulativement — union, ordre
+d'insertion préservé, re-fusionnés à chaque lecture (§7, O3, O10) ; les FEUILLES
+sont des pointes déclarées, lues premier-gagné par SPÉCIFICITÉ — la structure des
+`refines` est le seul juge (§6, O2). Aucun acte ne retranche depuis en dessous,
+aucun acte ne remplace, aucun acte ne bénit (O9 retirée).
+
+### Théorème T1 (confluence)
+
+La lecture d'une adresse est une fonction de l'ordre de spécificité de sa fermeture :
+aucun geste ne peut changer une lecture qu'il ne domine pas structurellement.
+
+*Esquisse.* La fermeture `C(l, p)` est un parcours déterministe de l'arbre brut et de
+la structure des `refines` (§3, O2–O4) ; la lecture parcourt `C(l, p)` de la plus
+récente à la plus ancienne source et s'arrête au premier fournisseur (§6). Entre
+sources comparables, la spécificité tranche — c'est la structure, pas une
+convention. Entre sources incomparables, aucun acte ne tranche plus : la divergence
+de feuille est un conflit d'ordre — inventorié, refusé en staging strict, jamais une
+sémantique (§6) — et la lecture retombe sur l'ordre d'insertion, qui ne possède que
+le déterminisme (O16). La lecture ne dépend donc que de ce qui la domine
+structurellement. **Mesuré** : le recensement des conflits de feuille sur tout le
+socle est nul ; la sonde de divergence inventorie exactement son conflit, le lit dans
+l'ordre des `refines`, s'inverse quand l'ordre s'inverse — et rien ne peut plus la
+taire ; l'invariance par permutation de l'assemblage (C8) est le même théorème sur
+les 47 couches.
+
+### Théorème T2 (conservativité)
+
+Une couche ajoutée ne fournit des membres et ne pointe des feuilles que dans sa
+propre postérité : l'espace ne trouble jamais la lecture des couches dont elle ne
+descend pas.
+
+*Esquisse.* Soit `L` une couche et `P(L)` sa postérité — les couches dont un
+nœud, n'importe où dans l'arbre, désigne, transitivement, la branche de `L` par les
+ancres de ses `refines` (§3). La postérité se prend nœud par nœud, pas racine par
+racine : un `positions` raffine `@collection` sans que sa racine descende de lui
+(mesuré). Une adresse `A` d'une couche `B ∉ P(L)` ne lit que ce que sa fermeture
+atteint ; or chaque `refines` est posé par la couche qui le porte, et la fermeture
+de `A` n'emprunte que des arêtes posées hors de la branche de `L` — le parcours de
+`A` n'y entre jamais. Retirer `L` et sa postérité entière ne change donc ni la
+fermeture, ni les clés, ni les lectures de `A`. **Mesuré** : pour chacune des 47
+couches du socle, le retrait de la couche et de sa postérité laisse intact, adresse
+par adresse, tout ce qui est hors de la postérité — fermetures, clés et lectures
+comparées à l'identique.
+
+### Théorème T3 (monotonie)
+
+Faire croître un espace ne peut que faire croître ce qu'une marche énumère : aucune
+arrivée ne retire un membre, un nom, ni un couple de check.
+
+*Esquisse.* Les trois conteneurs cumulatifs — les membres, les noms (la loi de
+l'alias : `extend` ajoute un synonyme, l'original survit), les couples de check
+(ADR-0022 : un couple n'est jamais remplacé — la re-pose identique est tolérée, la
+divergente est un verdict posé à l'assemblage) — sont des unions ordonnées,
+re-fusionnées à chaque lecture (§7, O3, O10) : une source de plus ajoute ses entrées en position, n'en retranche
+aucune. L'arrivée d'un ANCÊTRE — le sens difficile, une base qui atterrit après ses
+descendants — ne fait qu'allonger les fermetures : aucune clé d'une adresse ancienne
+ne disparaît ; une arrivée peut en déplacer une (le premier fournisseur change),
+jamais l'effacer (mesuré). **Mesuré** : les 46 croissances de l'assemblage en partant
+des couches les plus récentes — chaque arrivée est un ancêtre ou un incomparable,
+jamais un descendant — chaque adresse ancienne garde toutes ses clés et ne peut
+qu'en gagner ; et la sonde des couples : la re-pose identique est tolérée,
+silencieuse, la re-pose divergente est refusée — un remplacement n'atterrit jamais.
 
 ---

@@ -121,8 +121,10 @@ sequence, the determinism (O16).
 ## Future improvements
 
 - The retirement patch (see Decision 5) — the execution of this
-  decision;
+  decision (delivered);
 - A written proof sketch of the three theorems over the two regimes,
-  in the specification's terms, once the retirement patch lands;
+  in the specification's terms, once the retirement patch lands
+  (delivered: specification §14 states them with their measured
+  proof sketches; the property harness measures them as T1/T2/T3);
 - ADR-0017's « signed crossings » view retires with the signature —
   the lint's inventory is the whole story now.

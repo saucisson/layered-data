@@ -112,7 +112,10 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   statuses), keys, anchors, immutability (call-order
   independence, permutation invariance of the 47-layer assembly),
   the cycle guard, late binding, desugaring (topological order,
-  idempotence), and the touch protocol (exact invalidation).
+  idempotence), the touch protocol (exact invalidation) — and, since
+  ADR-0023, the two-regime theorems (§14): confluence,
+  conservativity, monotony, measured over every layer's removal and
+  every growth of the assembly.
 - **The staging checks** (`tests/staging-checks.mts`): a sound draft
   is accepted and applied, a broken syntax is refused at the syntax
   step, an orphan target is refused as « cible-inconnue », a betrayed

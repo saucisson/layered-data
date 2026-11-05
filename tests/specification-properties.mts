@@ -1,7 +1,8 @@
 // The executable specification of the kernel.
 //
 // docs/specification.md is normative: obligations O1–O18 and
-// conformance requirements C1–C8. This file checks them as
+// conformance requirements C1–C8 — and, since ADR-0023, the
+// two-regime theorems T1–T3 (§14). This file checks them as
 // properties — over the whole bedrock corpus (every observable
 // address, the same walk as the audit harness) and over dedicated
 // spaces built for the semantics the corpus does not exercise
@@ -26,10 +27,11 @@ import {
 } from "../src/domain/addresses.ts";
 import { asLayerName, asLayerPath, type LayerName } from "../src/domain/identifiers.ts";
 import { SPECIAL_KEYS } from "../src/domain/specialKeys.ts";
-import { desugarLayer, layerTopologicalOrder, refinementEntriesEqual } from "../src/domain/desugaring.ts";
+import { desugarLayer, layerTopologicalOrder, rawTreeWalk, refinementEntriesEqual } from "../src/domain/desugaring.ts";
 import { parseLanguage } from "../src/domain/language/parser.ts";
 import { compileLanguage } from "../src/domain/language/compiler.ts";
 import { walkAddresses } from "../src/domain/views.ts";
+import { orderConflictsOf } from "../src/domain/conflicts.ts";
 import { KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
 import {
   checkRegistry,
@@ -202,10 +204,10 @@ check("C1 (O3): no closure of the bedrock corpus contains a duplicate address", 
 check("C1 (O2): the own node is always the first source when it exists", ownNodeNotFirst === 0);
 check("C1: the walk covers the measured corpus (thousands of addresses)", walkedAddresses > 3000);
 
-// The measured diamond (§13): the two ways of the refinement cross.
+// The measured diamond (§12): the two ways of the refinement cross.
 const diamondClosure = bedrock.closure({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]) });
 check(
-  "C1 (O4, measured diamond §13): the closure of wb1::arcsAB::e2 is exactly the §13 walk",
+  "C1 (O4, measured diamond §12): the closure of wb1::arcsAB::e2 is exactly the §12 walk",
   diamondClosure.map(addressText).join(" ") ===
     "wb1/arcsAB/e2 " +
       "bipartite-digraph/specification/arcAB_type " +
@@ -217,12 +219,12 @@ check(
       "edge-annotated-hypergraph/edge_type",
 );
 check(
-  "C1 (O2, measured diamond §13): the first way of the diamond (bd specification) precedes the second (weight)",
+  "C1 (O2, measured diamond §12): the first way of the diamond (bd specification) precedes the second (weight)",
   diamondClosure.findIndex(([l, p]) => l === "bipartite-digraph" && p.join("/") === "specification/arcAB_type") <
     diamondClosure.findIndex(([l, p]) => l === "weighted-hypergraph" && p.join("/") === "edge_type"),
 );
 check(
-  "C1 (O4, measured diamond §13): the closure counts exactly the eight sources of the §13 walk",
+  "C1 (O4, measured diamond §12): the closure counts exactly the eight sources of the §12 walk",
   diamondClosure.length === 8,
 );
 
@@ -319,13 +321,13 @@ for (const layerName of KERNEL_LAYER_NAMES) {
 }
 check("C4 (O7): anchorsAt is exactly the ordered union of the closure anchors, over every address", anchorsAnomalies === 0);
 check(
-  "C4 (measured diamond §13): the anchors of wb1::arcsAB::e2 are the closure walk",
+  "C4 (measured diamond §12): the anchors of wb1::arcsAB::e2 are the closure walk",
   bedrock.anchorsAt({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]), tracer: null }).join(",") === "e2,arcAB_type,edge_type,record",
 );
 
 // =====================================================================
 // C8 — IMMUTABILITY: call-order independence and permutation
-// invariance (the recommended property of the specification §12)
+// invariance (the recommended property of the specification §11)
 // =====================================================================
 
 check(
@@ -448,7 +450,7 @@ check(
     refinementEntriesEqual(refinesOf("base", "a")[0] as PathReference, implicitEntry),
 );
 check(
-  "C5 (measured ruling §14): the implicits entry is inherited by first winner — the model child receives it too",
+  "C5 (measured ruling §13): the implicits entry is inherited by first winner — the model child receives it too",
   refinesOf("model", "c").length === 1 &&
     refinementEntriesEqual(refinesOf("model", "c")[0] as PathReference, implicitEntry),
 );
@@ -765,6 +767,208 @@ for (const [probeName, probeSource, expected] of [
       (tsCounts.get(where + "|nonempty") ?? 0) === expected.nonempty,
   );
 }
+
+// =====================================================================
+// ADR-0023 — THE TWO-REGIME THEOREMS (specification §14): the
+// guarantees mask and assume used to buy, measured now that no
+// gesture can buy them — confluence (T1), conservativity (T2),
+// monotony (T3)
+// =====================================================================
+
+// T1 — CONFLUENCE. (a) The census: zero leaf-value conflict anywhere
+// on the bedrock — specificity is the only judge that ever fires,
+// and no signature can hide one anymore (ADR-0017's census, a
+// standing property since ADR-0023).
+const confluentBedrock = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
+check(
+  "T1 (confluence, the census): the bedrock carries zero leaf-value order conflicts — ADR-0017's census, now a standing property",
+  orderConflictsOf({ space: confluentBedrock, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
+);
+
+// (b) The divergence probe: two incomparable providers of one leaf —
+// the dedicated space the corpus does not exercise (zero divergence
+// was the census, one is the probe). The unsigned read falls back on
+// the refines order — the order owns the determinism (O16), nothing
+// else is left — and the lint inventories the convention; swapping
+// the order swaps the read, never the inventory: no gesture can
+// silence what no gesture blesses.
+const branchSources = [
+  "layer branch-a\n  new slot\n    value = 1\n",
+  "layer branch-b\n  new slot\n    value = 2\n",
+];
+const forkAB = spaceFromWrittenSources([...branchSources, "layer fork refines @branch-a then @branch-b\n  extend slot\n"]);
+const forkBA = spaceFromWrittenSources([...branchSources, "layer fork refines @branch-b then @branch-a\n  extend slot\n"]);
+check(
+  "T1 (confluence, the divergence probe): the unsigned read is deterministic — the refines order owns the fallback (O16): 1, then 2 the other way",
+  forkAB.read({ layer: asLayerName("fork"), path: asLayerPath(["slot"]), key: "value" }) === 1 &&
+    forkBA.read({ layer: asLayerName("fork"), path: asLayerPath(["slot"]), key: "value" }) === 2,
+);
+const forkInventoryOf = (space: Space) => orderConflictsOf({ space, layerNames: [asLayerName("fork")] });
+check(
+  "T1 (confluence, the divergence probe): both orders carry exactly one inventoried conflict — visible either way, never silenced",
+  forkInventoryOf(forkAB).length === 1 && forkInventoryOf(forkBA).length === 1,
+);
+check(
+  "T1 (confluence, the divergence probe): the inventory names the winner the order picked — the convention is observable, not blessed",
+  String(forkInventoryOf(forkAB)[0].winner[0]) === "branch-a" && String(forkInventoryOf(forkBA)[0].winner[0]) === "branch-b",
+);
+
+// T2 — CONSERVATIVITY. For each layer L of the bedrock: L's posterity
+// is the set of layers whose node, ANYWHERE in the tree,
+// transitively designates L's branch (the anchors of the refines —
+// node by node, not root by root: a positions refines @collection
+// without its root descending from it). Removing L and its whole
+// posterity must leave every address of every remaining layer
+// untouched — closure, keys, reads — a space never disturbs the
+// reading of the layers it does not descend into.
+const layerDependencies = new Map<string, string[]>();
+for (const layerName of KERNEL_LAYER_NAMES) {
+  const dependencies: string[] = [];
+  for (const [, node] of rawTreeWalk(layerTreeOf(bedrock, String(layerName)) as never)) {
+    for (const entry of (node as { refines?: unknown[] }).refines ?? []) {
+      if (entry instanceof LayerReference && String(entry.layer) !== String(layerName)) dependencies.push(String(entry.layer));
+      if (entry instanceof PathReference && String(entry.anchor) !== String(layerName)) dependencies.push(String(entry.anchor));
+    }
+  }
+  layerDependencies.set(String(layerName), dependencies);
+}
+
+/** L's posterity: every layer whose tree, transitively, designates L. */
+function posterityOf(target: LayerName): Set<string> {
+  const posterity = new Set<string>();
+  let grew = true;
+  while (grew) {
+    grew = false;
+    for (const layerName of KERNEL_LAYER_NAMES) {
+      const name = String(layerName);
+      if (name === String(target) || posterity.has(name)) continue;
+      const dependencies = layerDependencies.get(name) ?? [];
+      if (dependencies.some((dependency) => dependency === String(target) || posterity.has(dependency))) {
+        posterity.add(name);
+        grew = true;
+      }
+    }
+  }
+  return posterity;
+}
+
+let conservativityComparisons = 0;
+let conservativityDisturbances = 0;
+for (const removed of KERNEL_LAYER_NAMES) {
+  const posterity = posterityOf(removed);
+  const outside = KERNEL_LAYER_NAMES.filter((name) => name !== removed && !posterity.has(String(name)));
+  if (outside.length === 0) continue;
+  const branchless = spaceFromJoinOrder(outside);
+  for (const layerName of outside) {
+    for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
+      const [layer, path] = address;
+      conservativityComparisons++;
+      if (branchless.closure({ layer, path }).map(addressText).join(" ") !== bedrock.closure({ layer, path }).map(addressText).join(" ")) {
+        conservativityDisturbances++;
+        continue;
+      }
+      const keptKeys = branchless.keys({ layer, path });
+      if (keptKeys.join("\u0001") !== bedrock.keys({ layer, path }).join("\u0001")) {
+        conservativityDisturbances++;
+        continue;
+      }
+      for (const key of keptKeys) {
+        if (valueText(branchless.read({ layer, path, key })) !== valueText(bedrock.read({ layer, path, key }))) {
+          conservativityDisturbances++;
+          break;
+        }
+      }
+    }
+  }
+}
+check(
+  "T2 (conservativity): removing any layer with its whole posterity disturbs nothing outside — closures, keys, reads identical (measured: 177911 comparisons over 47 removals, 0 disturbances)",
+  conservativityDisturbances === 0 && conservativityComparisons === 177911,
+);
+
+// T3 — MONOTONY. Growing the assembly from the most recent layers up
+// — each arrival an ancestor or an incomparable, never a descendant —
+// can only grow the enumeration: at every old address every key
+// survives (an arrival may MOVE a key — its first provider changes —
+// never remove one).
+const assemblyOrder = layerTopologicalOrder(bedrock);
+let monotonyComparisons = 0;
+let monotonyRemovals = 0;
+for (let step = 1; step < assemblyOrder.length; step++) {
+  const present = assemblyOrder.slice(step);
+  const grown = assemblyOrder.slice(step - 1);
+  const smallSpace = spaceFromJoinOrder(present);
+  const bigSpace = spaceFromJoinOrder(grown);
+  for (const layerName of present) {
+    for (const address of walkAddresses({ space: smallSpace, layer: asLayerName(layerName) })) {
+      monotonyComparisons++;
+      const kept = new Set(bigSpace.keys({ layer: address[0], path: address[1] }));
+      if (!smallSpace.keys({ layer: address[0], path: address[1] }).every((key) => kept.has(key))) monotonyRemovals++;
+    }
+  }
+}
+check(
+  "T3 (monotony): growing the assembly can only grow the enumeration — no arrival removes a key at any old address (measured: 125996 comparisons over 46 growths, 0 removals)",
+  monotonyRemovals === 0 && monotonyComparisons === 125996,
+);
+
+// T3's couple clause — the mechanism: a check couple is never
+// replaced. The probe space carries the registry as data
+// (check-registry, ADR-0019 — the same route as the bedrock) and a
+// couple on « containers », the generic tag with no required slot:
+// the identical re-pose is tolerated — the original survives, the
+// validation stays silent; the divergent re-pose is a verdict at
+// assembly — a replacement never lands. Nothing else writes
+// check-definitions, so nothing else can remove one.
+const coupleSources = [
+  "layer couple-base\n",
+  "  new slot\n",
+  "    value = 1\n",
+  "  check containers\n",
+  "    level = \"root\"\n",
+  "    judgment\n",
+  "      formula = \"forall s in slot: s/value\"\n",
+  "      message = \"containers: slot sans valeur ({s})\"\n",
+];
+const coupleHeirSource = (formula: string, message: string): string =>
+  [
+    "layer couple-heir refines @couple-base\n",
+    "  check containers\n",
+    "    level = \"root\"\n",
+    "    judgment\n",
+    "      formula = \"" + formula + "\"\n",
+    "      message = \"" + message + " ({s})\"\n",
+  ].join("");
+
+/** The validation of a written multi-layer space — the assembly's own
+ * walk: parse, compile, validate. */
+function validateWrittenSources(sources: readonly string[]) {
+  const joined = sources.map((source) => (source.endsWith("\n") ? source : source + "\n")).join("");
+  const parse = parseLanguage(joined);
+  const compilation = compileLanguage(parse.layers);
+  const space = new Space(compilation.layers);
+  const layerNames = Object.keys(compilation.layers).map(asLayerName);
+  return validateSpace({ space, parse, compilation, layerNames });
+}
+
+const identicalRePose = validateWrittenSources([
+  layerSources["check-registry"],
+  ...coupleSources,
+  coupleHeirSource("forall s in slot: s/value", "containers: slot sans valeur"),
+]);
+check(
+  "T3 (monotony, the couple clause): the identical re-pose is tolerated — the original couple survives (measured: 2 poses), the validation stays silent",
+  identicalRePose.verdicts.length === 0 && identicalRePose.stats.couples === 2,
+);
+const divergentRePose = validateWrittenSources([
+  layerSources["check-registry"],
+  ...coupleSources,
+  coupleHeirSource("forall s in slot: not s/value", "containers: autre lecture"),
+]);
+check(
+  "T3 (monotony, the couple clause): the divergent re-pose is refused at assembly — « check-redéfini », a replacement never lands",
+  divergentRePose.verdicts.filter((verdict) => verdict.kind === "check-redéfini").length === 1,
+);
 
 // =====================================================================
 // the ledger
