@@ -15,7 +15,7 @@ import { join } from "node:path";
 
 import { assembleLayeredDataKernel, KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
 import { MESSAGE_LANGUAGES, renderMessage, type Language } from "../src/domain/messages.ts";
-import { AddressView, LayerReference, MASK, PathReference, type Address } from "../src/domain/addresses.ts";
+import { AddressView, LayerReference, PathReference, type Address } from "../src/domain/addresses.ts";
 import { SPECIAL_KEYS } from "../src/domain/specialKeys.ts";
 import { walkAddresses } from "../src/domain/views.ts";
 
@@ -34,7 +34,6 @@ const kernel = assembleLayeredDataKernel({ layerSources });
 function dumpRepresentation(value: any): string {
   if (value === null) return "null";
   if (value === undefined) return "undefined";
-  if (value === MASK) return "MASK";
   if (value instanceof AddressView) {
     return "@" + value.layer + (value.path.length ? "/" + value.path.join("/") : "");
   }

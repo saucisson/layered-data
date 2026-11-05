@@ -16,8 +16,8 @@ import type { Language } from "../domain/messages.ts";
 /** The acts of the grammar, as highlighted: keywords, references,
  * strings, numbers, comments, identifiers, punctuation. */
 const LANGUAGE_KEYWORDS = new Set([
-  "layer", "refines", "extend", "override", "mask", "bind", "check",
-  "abstract", "then", "assume",
+  "layer", "refines", "extend", "override", "bind", "check",
+  "abstract", "then",
 ]);
 
 /** Where a written line points: the address (layer + path) and,
@@ -49,16 +49,6 @@ export function buildSourceLineTargets({ parsedLanguage }: { parsedLanguage: Par
         // the checks container, like a plain check
         if (act.kind === "check-definition") {
           targets.set(act.line, { layer: parsedLayer.name, path, key: "checks" });
-          continue;
-        }
-        if (act.kind === "mask") {
-          targets.set(act.line, { layer: parsedLayer.name, path, key: act.key });
-          continue;
-        }
-        // the assume signs the read of its key at this address —
-        // the line designates the signing node, like the mask
-        if (act.kind === "assume") {
-          targets.set(act.line, { layer: parsedLayer.name, path, key: act.key });
           continue;
         }
         // "expect" is an act without a block — the line designates

@@ -109,7 +109,7 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   the normative obligations O1–O18 and conformance requirements C1–C8
   of `docs/specification.md`, checked as properties — closures (dedup,
   own node first, the measured diamond), reads (first winner,
-  statuses, MASK), keys, anchors, immutability (call-order
+  statuses), keys, anchors, immutability (call-order
   independence, permutation invariance of the 47-layer assembly),
   the cycle guard, late binding, desugaring (topological order,
   idempotence), and the touch protocol (exact invalidation).
