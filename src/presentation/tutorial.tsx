@@ -1,12 +1,12 @@
-// The tutorial — why data in strata, and how: the philosophers'
-// dinner is the running example and every step reads it again; the
-// layer names of the continuum are clickable. The tutorial renders
-// as one scrollable page — every step is a section, prose and real
-// corpus excerpts alternate, the excerpts are colored by the same
-// rules as the "Language" tab. This component only renders: no
-// kernel reads, no derived state — prose and links. Every text is
-// bilingual: the French is the historic prose, the English its
-// mirror.
+// The tutorial — layered data in eleven steps: the philosophers'
+// dinner is the running example, every step pairs an idea with the
+// real corpus excerpt that carries it, and the layer names of the
+// column are clickable. The tutorial renders as one scrollable page
+// — every step is a section, prose and real corpus excerpts
+// alternate, the excerpts are colored by the same rules as the
+// « Language » tab. This component only renders: no kernel reads, no
+// derived state — prose and links. Every text is bilingual: the
+// French is the historic prose, the English its mirror.
 
 import React from "react";
 import { GLOSSARY, NotionTip, NotionText } from "./notions.tsx";
@@ -28,20 +28,22 @@ export interface TutorialStep {
 
 export const TUTORIAL_STEPS: TutorialStep[] = [
   {
+    // the itch — the four worlds every modeling tool splits a model
+    // into, and the dinner that will follow the whole walkthrough
     id: "pbm",
-    label: { en: "1 · The example", fr: "1 · L'exemple" },
+    label: { en: "1 · The problem", fr: "1 · Le problème" },
     title: {
-      en: "The philosophers' dinner: one Petri net, followed through the whole tutorial",
-      fr: "Le dîner des philosophes : un réseau de Petri, suivi tout au long du tutoriel",
+      en: "One model, several worlds: the itch before the layers",
+      fr: "Un modèle, plusieurs mondes : la démangeaison avant les couches",
     },
     body: [
       {
-        en: "Take the philosophers' dinner as the running example. A Petri net is few things: places (thinking, eating, a fork), transitions (take, release), arcs joining the two, each with its weight, and tokens in the places. In layered-data, this net is written once — as layers that refine one another — and every step of this tutorial reads it again.",
-        fr: "Prenons le dîner des philosophes comme exemple suivi. Un réseau de Petri, c'est peu de choses : des places (penser, manger, une fourchette), des transitions (prendre, relâcher), des arcs qui relient les deux, chacun avec son poids, et des jetons dans les places. Dans layered-data, ce réseau s'écrit une seule fois — en couches qui se raffinent — et chaque étape de ce tutoriel le relit.",
+        en: "Take a Petri net — the philosophers' dinner will be our running example, and every step of this tutorial reads it again. A net is little: places (thinking, eating, a fork), transitions (take, release), arcs joining them, each with its weight, tokens in the places. Now write it down with today's tools. The definition of what a Petri net is lives in one world (a metamodel, a schema). The model of the five philosophers lives in another (an editor file, an instance). The constraints — no deadlock, a bounded number of tokens — live in a third (a temporal-logic formula, a constraint language). The drawing of the net lives in a fourth (a renderer's code). Four worlds, four languages, four tool chains: every crossing is a translation, and when the definition changes, the copies drift.",
+        fr: "Prenons un réseau de Petri — le dîner des philosophes sera notre exemple suivi, et chaque étape de ce tutoriel le relit. Un réseau, c'est peu : des places (penser, manger, une fourchette), des transitions (prendre, relâcher), des arcs qui les relient, chacun avec son poids, des jetons dans les places. Écrivez-le maintenant avec les outils d'aujourd'hui. La définition de ce qu'est un réseau de Petri vit dans un monde (un métamodèle, un schéma). Le modèle des cinq philosophes vit dans un autre (un fichier d'éditeur, une instance). Les contraintes — pas d'interblocage, un nombre de jetons borné — vivent dans un troisième (une formule de logique temporelle, un langage de contraintes). Le dessin du réseau vit dans un quatrième (le code d'un rendu). Quatre mondes, quatre langages, quatre chaînes d'outils : chaque franchissement est une traduction, et quand la définition change, les copies dérivent.",
       },
       {
-        en: "Each section below pairs a piece of the idea with the real corpus excerpt that carries it. The layer names of the continuum are clickable: they open the workshop on that layer.",
-        fr: "Chaque section ci-dessous marie un morceau de l'idée à l'extrait réel du corpus qui le porte. Les noms des couches du continuum sont cliquables : ils ouvrent l'atelier sur cette couche.",
+        en: "Layered data answers with a single move: drop the worlds, keep the strata. One kind of datum, read by one operation — the rest of this page walks that move, section by section, on the dinner. Each section pairs an idea with the real corpus excerpt that carries it, and the « To see in the tool » line points at the workshop panels where it is measured. The layer names of the stratigraphic column are clickable: they open the workshop on that layer.",
+        fr: "Les layered data répondent par un seul geste : supprimer les mondes, garder les strates. Une seule espèce de donnée, lue par une seule opération — le reste de cette page parcourt ce geste, section par section, sur le dîner. Chaque section marie une idée à l'extrait réel du corpus qui la porte, et la ligne « À voir dans l'outil » pointe les panneaux de l'atelier où elle se mesure. Les noms des couches de la colonne stratigraphique sont cliquables : ils ouvrent l'atelier sur cette couche.",
       },
     ],
     see: {
@@ -53,57 +55,61 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: "idee",
     label: { en: "2 · The idea", fr: "2 · L'idée" },
     title: {
-      en: "The same net, in strata: structure is data",
-      fr: "Le même réseau, en strates : la structure est une donnée",
+      en: "Let the net sediment: everything is a layer",
+      fr: "Laisser le réseau se déposer : tout est couche",
     },
     body: [
       {
-        en: "The idea: let the net sediment. A layered datum is a tree of values, laid in a ⟪layer⟫ that ⟪refines⟫ others (refines). It inherits everything they define. It can specify it, mask it or extend it. The philosophers' dinner rests on the paper's stratigraphic column. First multihypergraph, the atom: vertices, edges of any size. Then hypergraph, its pure restriction. Then pair-graph (exactly two arrows per edge) and graph, the mathematician's graph (« a 2-uniform hypergraph is a graph »). Then multidigraph and digraph: orientation is a renaming of the connection points. With bipartite-digraph, two classes of vertices. Then petrinet-scheme, the Petri net, refines three layers: the partition, the annotation of the vertices (the marking), that of the edges (the weight). Then pn-philosophers, the philosophers — think/eat/fork, take/release — and the default: an arc carries a weight of 1. Then pn-philosophers-1, the template: one philosopher alone, think1 = 1, eat1 = 0, fork1 = 1. Then pn-philosophers-5, the dinner: five CITATIONS of the template in a collection, linked in a ring by their forks — the engine expands each citation, the members land qualified (philo1.think1…), the data stays in the template. And the chain completes with the state space. Automaton-scheme is a graph whose vertices are states, plus an alphabet. Petrinet-statespace is the state space — an automaton parameterized by the net: the petrinet slot is typed petrinet-scheme, and a state's type descends from the behavior, which refines the parameter — a state's type is the net. Then ss-pn-philosophers-5, the dinner's state space (the petrinet slot laid on the dinner). Finally ss-pn-philosophers-5-inst, one state: s1 lays only philo1.think1 = 2, everything else inherits from the net through its type.",
-        fr: "L'idée : sédimenter le réseau. Une donnée en strates est un arbre de valeurs, posé dans une ⟪couche⟫ qui en ⟪raffine⟫ d'autres (refines). Elle hérite de tout ce qu'elles définissent. Elle peut le préciser, le masquer ou l'étendre. Le dîner des philosophes repose sur la colonne stratigraphique du papier. D'abord multihypergraph, l'atome : des sommets, des arêtes de taille quelconque. Puis hypergraph, sa restriction pure. Puis pair-graph (exactement deux flèches par arête) et graph, le graphe du mathématicien (« a 2-uniform hypergraph is a graph »). Puis multidigraph et digraph : l'orientation est un renommage des points de connexion. Avec bipartite-digraph, voilà deux classes de sommets. Alors petrinet-scheme, le réseau de Petri, raffine trois couches : la partition, l'annotation des sommets (le marquage), celle des arêtes (le poids). Puis pn-philosophers, les philosophes — think/eat/fork, take/release — et le défaut : un arc porte un poids de 1. Puis pn-philosophers-1, le template : un philosophe seul, think1 = 1, eat1 = 0, fork1 = 1. Puis pn-philosophers-5, le dîner : cinq CITATIONS du template dans une collection, reliées en anneau par leurs fourchettes — le moteur développe chaque citation, les membres atterrissent qualifiés (philo1.think1…), la donnée reste dans le template. Et la chaîne s'achève avec l'espace d'états. Automaton-scheme est un graphe dont les sommets sont des états, plus un alphabet. Petrinet-statespace est l'espace d'états — un automate paramétré par le réseau : le slot petrinet est typé petrinet-scheme, et le type d'un état descend du behavior, qui raffine le paramètre — le type d'un état est le réseau. Puis ss-pn-philosophers-5, l'espace d'états du dîner (le slot petrinet posé au dîner). Enfin ss-pn-philosophers-5-inst, un état : s1 ne pose que philo1.think1 = 2, tout le reste hérite du réseau à travers son type.",
+        en: "The idea in one sentence: a layered datum is a tree of values laid in a ⟪layer⟫ that ⟪refines⟫ other layers — and everything else (definition, model, constraint, drawing) is a layer too. What a layer does not lay, it reads from its parents: to lay nothing is to ⟪inherit⟫. Three acts cover the rest — specify (lay a tighter value), mask (mute an inherited ⟪slot⟫), extend (add a branch). No class, no hard-wired metamodel: the kernel interprets data, and the word for the gesture is borrowed from geology — strata sediment, each one complete, each one readable on top of the others.",
+        fr: "L'idée en une phrase : une donnée en strates est un arbre de valeurs posé dans une ⟪couche⟫ qui en ⟪raffine⟫ d'autres — et tout le reste (définition, modèle, contrainte, dessin) est une couche aussi. Ce qu'une couche ne pose pas, elle le lit chez ses parents : ne rien poser, c'est ⟪hériter⟫. Trois actes couvrent le reste — préciser (poser une valeur plus serrée), masquer (rendre un ⟪slot⟫ hérité muet), étendre (ajouter une branche). Ni classe, ni métamodèle codé en dur : le noyau interprète des données, et le mot du geste est emprunté à la géologie — les strates se déposent, chacune complète, chacune lisible au-dessus des autres.",
       },
       {
-        en: "The read is a ⟪core sample⟫. To read pn-philosophers-1::pre_arcs::pt1::weight, the kernel walks the stack from the newest to the oldest. The arc pt1 says nothing. The philosophers' arc type lays 1. ⟪First-wins⟫: 1, measured. The schema, the instance, the constraint have become ordinary layers, read by the same operation. Neither classes, nor a hard-coded metamodel: the kernel interprets data. The word says the idea. As in geology, layers sediment. And a datum left incomplete stays readable — its holes are inherited.",
-        fr: "La lecture est un ⟪carottage⟫. Pour lire pn-philosophers-1::pre_arcs::pt1::weight, le noyau traverse la pile de la plus récente à la plus ancienne. L'arc pt1 ne dit rien. Le type des arcs des philosophes pose 1. ⟪Premier-gagné⟫ : 1, mesuré. Le schéma, l'instance, la contrainte sont devenus des couches ordinaires, lues par la même opération. Ni classes, ni métamodèle codé en dur : le noyau interprète des données. Le mot dit l'idée. Comme en géologie, les couches se sédimentent. Et une donnée restée incomplète reste lisible — ses trous sont hérités.",
+        en: "The dinner rests on a stack that the paper's stratigraphic column makes visible. At the bottom, multihypergraph — the atom: vertices, edges of any size. Hypergraph is its pure restriction (simple, non-empty edges); pair-graph tightens every edge to exactly two arrows, and graph — « a 2-uniform hypergraph is a graph » — refines both. Multidigraph and digraph add orientation as a renaming of the connection points; bipartite-digraph splits the vertices into two classes. Then petrinet-scheme, the Petri net itself, refines three layers: the partition, the annotation of the vertices (the marking), that of the edges (the weight). Pn-philosophers names the dinner's vocabulary — think, eat, fork, take, release — and lays the default: an arc carries weight 1. The template pn-philosophers-1 writes one philosopher alone; the dinner pn-philosophers-5 cites it five times in a collection, the ring closing on the shared forks. Above the net, the state space: automaton-scheme (a graph whose vertices are states, plus an alphabet), petrinet-statespace — an automaton whose petrinet slot is typed petrinet-scheme, so a state's type descends from the net — then ss-pn-philosophers-5, which lays that slot on the dinner, and ss-pn-philosophers-5-inst, one state that lays only philo1.think1 = 2: everything else is inherited through its type.",
+        fr: "Le dîner repose sur une pile que la colonne stratigraphique du papier rend visible. Au fond, multihypergraph — l'atome : des sommets, des arêtes de taille quelconque. Hypergraph en est la restriction pure (arêtes simples, non vides) ; pair-graph resserre chaque arête à exactement deux flèches, et graph — « a 2-uniform hypergraph is a graph » — raffine les deux. Multidigraph et digraph ajoutent l'orientation comme un renommage des points de connexion ; bipartite-digraph sépare les sommets en deux classes. Puis petrinet-scheme, le réseau de Petri lui-même, raffine trois couches : la partition, l'annotation des sommets (le marquage), celle des arêtes (le poids). Pn-philosophers nomme le vocabulaire du dîner — think, eat, fork, take, release — et pose le défaut : un arc porte un poids de 1. Le template pn-philosophers-1 écrit un philosophe seul ; le dîner pn-philosophers-5 le cite cinq fois dans une collection, l'anneau se refermant sur les fourchettes partagées. Au-dessus du réseau, l'espace d'états : automaton-scheme (un graphe dont les sommets sont des états, plus un alphabet), petrinet-statespace — un automate dont le slot petrinet est typé petrinet-scheme, si bien que le type d'un état descend du réseau — puis ss-pn-philosophers-5, qui pose ce slot sur le dîner, et ss-pn-philosophers-5-inst, un état qui ne pose que philo1.think1 = 2 : tout le reste est hérité à travers son type.",
+      },
+      {
+        en: "And the first read, to taste the gesture. To read pn-philosophers-1::pre_arcs::pt1::weight — the weight of one arc of the template — the kernel walks the ⟪closure⟫ of that ⟪address⟫, from the newest layer to the oldest. The arc lays nothing about its weight; the philosophers' arc type, older, lays 1. ⟪First-wins⟫: 1, measured. The definition that would have been a schema, the model that would have been an instance, the default that would have been a constraint: all three are ordinary layers here, read by the same operation — and a datum left incomplete stays readable, its holes inherited.",
+        fr: "Et la première lecture, pour goûter le geste. Pour lire pn-philosophers-1::pre_arcs::pt1::weight — le poids d'un arc du template — le noyau traverse la ⟪fermeture⟫ de cette ⟪adresse⟫, de la couche la plus récente à la plus ancienne. L'arc ne pose rien de son poids ; le type des arcs des philosophes, plus ancien, pose 1. ⟪Premier-gagné⟫ : 1, mesuré. La définition qui aurait été un schéma, le modèle qui aurait été une instance, le défaut qui aurait été une contrainte : les trois sont ici des couches ordinaires, lues par la même opération — et une donnée restée incomplète reste lisible, ses trous hérités.",
       },
     ],
     see: {
-      en: "panel ① — the refinement graph: the stratigraphic column is visible there, from the base to the state; panel ③ shows the core sample of any address.",
-      fr: "panneau ① — le graphe des raffinements : la colonne stratigraphique s'y voit, de la base à l'état ; panneau ③ montre le carottage de n'importe quelle adresse.",
+      en: "panel ① — the refinement graph: the column from the base to the state; panel ③ — the core sample of any address.",
+      fr: "panneau ① — le graphe des raffinements : la colonne de la base à l'état ; panneau ③ — le carottage de n'importe quelle adresse.",
     },
   },
   {
-    // the language explained step by step — seven gestures,
+    // the language explained gesture by gesture — seven lines,
     // every excerpt the real layer of the corpus
     id: "geologue",
-    label: { en: "3 · The geologist — the language", fr: "3 · Le géologue — le langage" },
+    label: { en: "3 · The geologist's language", fr: "3 · Le langage du géologue" },
     title: {
-      en: "The syntax, step by step: everything above writes itself in seven gestures",
-      fr: "La syntaxe, pas-à-pas : tout ce qui précède s'écrit en sept gestes",
+      en: "Seven gestures write the whole corpus",
+      fr: "Sept gestes écrivent tout le corpus",
     },
     body: [
       {
-        en: "The whole corpus — 47 layers, from the base to the dinner — writes itself in an indentation language. No JSON, no braces: one line per gesture, the layout structures. Seven gestures suffice: open a ⟪layer⟫, declare its parents, write a block, lay a value, cite an address, verify, note. Every excerpt below is the corpus's real layer — readable as is in a formalism's « Language » tab.",
-        fr: "Le corpus entier — 47 couches, du socle au dîner — s'écrit dans un langage à indentation. Pas de JSON, pas d'accolades : une ligne par geste, la mise en page structure. Sept gestes suffisent : ouvrir une ⟪couche⟫, déclarer ses parents, écrire un bloc, poser une valeur, citer une adresse, vérifier, noter. Chaque extrait ci-dessous est la couche réelle du corpus — lisible telle quelle dans l'onglet « Langage » d'un formalisme.",
+        en: "The language that writes those strata is an indentation language: one line per gesture, the layout structures, no JSON, no braces. The whole corpus — 47 layers, from the base to the dinner — writes itself in seven gestures: open a ⟪layer⟫, declare its parents, write a block, lay a value, cite an address, verify, note. Every excerpt below is a real layer of the corpus, readable as is in its « Language » tab. The tutorial calls it the geologist's language because the workshop's AI writer bears that name — but the language itself is entirely human-readable.",
+        fr: "Le langage qui écrit ces strates est un langage à indentation : une ligne par geste, la mise en page structure, pas de JSON, pas d'accolades. Le corpus entier — 47 couches, du socle au dîner — s'écrit en sept gestes : ouvrir une ⟪couche⟫, déclarer ses parents, écrire un bloc, poser une valeur, citer une adresse, vérifier, noter. Chaque extrait ci-dessous est une couche réelle du corpus, lisible telle quelle dans son onglet « Langage ». Le tutoriel l'appelle le langage du géologue parce que le rédacteur IA de l'atelier porte ce nom — mais le langage lui-même est entièrement lisible par un humain.",
       },
       {
-        en: "First gesture — open and tie. layer opens the layer; refines declares its parents; then separates the unions. The stack's base, the atom of vertices and edges of any size, ties itself to record:",
-        fr: "Premier geste — ouvrir et rattacher. layer ouvre la couche ; refines déclare ses parents ; then sépare les unions. Le socle de la pile, l'atome des sommets et des arêtes de taille quelconque, se rattache à record :",
+        en: "First gesture — open and tie. layer opens the layer, refines declares its parents — there may be several, then separates them. The base of the stack ties itself to record, the kernel's floor:",
+        fr: "Premier geste — ouvrir et rattacher. layer ouvre la couche, refines déclare ses parents — il peut y en avoir plusieurs, then les sépare. Le socle de la pile se rattache à record, le sol du noyau :",
       },
       {
         code: "layer multihypergraph refines @record",
         title: { en: "multihypergraph — the base", fr: "multihypergraph — le socle" },
       },
       {
-        en: "Second gesture — ⟪inherit⟫ by saying nothing. The mathematicians' pure layer ⟪refines⟫ the base and writes NOTHING about its vertices and edges: everything descends. Only two ⟪check⟫s, as data tags — and every refinement inherits them:",
-        fr: "Deuxième geste — ⟪hériter⟫ sans rien dire. La couche pure des mathématiciens ⟪raffine⟫ le socle et n'écrit RIEN de ses sommets et de ses arêtes : tout descend. Deux ⟪check⟫ seulement, en étiquettes de données — et tout raffinement les hérite :",
+        en: "Second gesture — ⟪inherit⟫ by saying nothing. The mathematicians' pure layer ⟪refines⟫ the base and writes NOTHING about its vertices and edges: everything descends. Two ⟪check⟫ tags only, carried as data — and every refinement inherits them:",
+        fr: "Deuxième geste — ⟪hériter⟫ sans rien dire. La couche pure des mathématiciens ⟪raffine⟫ le socle et n'écrit RIEN de ses sommets et de ses arêtes : tout descend. Deux étiquettes ⟪check⟫ seulement, portées comme des données — et tout raffinement les hérite :",
       },
       {
         code: "layer hypergraph refines @multihypergraph\n  check simple, nonempty",
         title: { en: "hypergraph — total inheritance", fr: "hypergraph — l'héritage total" },
       },
       {
-        en: "Third gesture — restrict by laying a value. The geologist's three acts read in this excerpt: extend (the parent already carries the key, I extend it), override (the parent carries it, I lay it again), abstract (an open slot, no value). pair-graph tightens the base's edges to exactly two arrows:",
-        fr: "Troisième geste — restreindre en posant une valeur. Les trois actes du géologue se lisent dans cet extrait : extend (le parent porte déjà la clé, je l'étends), override (le parent la porte, je la repose), abstract (un slot ouvert, sans valeur). pair-graph resserre les arêtes de la base à exactement deux flèches :",
+        en: "Third gesture — restrict by laying a value. Three acts read in this excerpt: extend (the parent already carries the key, I extend it), override (the parent carries it, I lay it again), abstract (an open ⟪slot⟫, no value). pair-graph tightens the base's edges to exactly two arrows:",
+        fr: "Troisième geste — restreindre en posant une valeur. Trois actes se lisent dans cet extrait : extend (le parent porte déjà la clé, je l'étends), override (le parent la porte, je la repose), abstract (un ⟪slot⟫ ouvert, sans valeur). pair-graph resserre les arêtes de la base à exactement deux flèches :",
       },
       {
         code: "layer pair-graph refines @multihypergraph\n  edge_type refines @multihypergraph/specification/edge_type\n    extend arrows\n      extend specification\n        extend collection\n          override minimum = 2\n          override maximum = 2",
@@ -113,12 +119,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         },
       },
       {
-        en: "Fourth gesture — the @ designates. A reference starts with @ and follows an absolute path — @layer/path/… — that crosses the layers (⟪late binding⟫): the same line reads from anywhere. A single-segment path (@petrinet-scheme) cites a whole layer. The ⟪key⟫ is the other way to designate — relative, local to its collection, without @.",
-        fr: "Quatrième geste — le @ désigne. Une référence commence par @ et suit un chemin absolu — @couche/chemin/… — qui traverse les couches (⟪liaison tardive⟫) : la même ligne se lit depuis n'importe où. Un chemin d'un seul segment (@petrinet-scheme) cite une couche entière. La ⟪clé⟫ est l'autre façon de désigner — relative, locale à sa collection, sans @.",
-      },
-      {
-        en: "Fifth gesture — declare the types, then fill. Under ⟪specification⟫, the dinner declares its five concrete types; the weight 1 is laid there at the type level — the ⟪constraint⟫ become value, which will descend by inheritance down to the arcs:",
-        fr: "Cinquième geste — déclarer les types, puis remplir. Sous ⟪specification⟫, le dîner déclare ses cinq types concrets ; le poids 1 y est posé au niveau du type — la ⟪contrainte⟫ devenue valeur, qui descendra par héritage jusqu'aux arcs :",
+        en: "Fourth gesture — the @ designates. A reference starts with @ and follows an absolute path — @layer/path/… — that crosses the layers (⟪late binding⟫): the same line reads from anywhere. A single-segment path (@petrinet-scheme) cites a whole layer. The ⟪key⟫ is the other designation — relative, local to its collection, without @. Fifth gesture — declare the types, then fill. Under ⟪specification⟫, the dinner declares its concrete vocabulary; the default weight 1 is laid there, at the type level — the ⟪constraint⟫ become value, which will descend to the arcs:",
+        fr: "Quatrième geste — le @ désigne. Une référence commence par @ et suit un chemin absolu — @couche/chemin/… — qui traverse les couches (⟪liaison tardive⟫) : la même ligne se lit depuis n'importe où. Un chemin d'un seul segment (@petrinet-scheme) cite une couche entière. La ⟪clé⟫ est l'autre désignation — relative, locale à sa collection, sans @. Cinquième geste — déclarer les types, puis remplir. Sous ⟪specification⟫, le dîner déclare son vocabulaire concret ; le poids 1 par défaut y est posé au niveau du type — la ⟪contrainte⟫ devenue valeur, qui descendra jusqu'aux arcs :",
       },
       {
         code: "layer pn-philosophers refines @petrinet-scheme\n  extend specification\n    think refines @pn-philosophers/specification/place_type\n    eat refines @pn-philosophers/specification/place_type\n    fork refines @pn-philosophers/specification/place_type\n    take refines @pn-philosophers/specification/transition_type\n    release refines @pn-philosophers/specification/transition_type\n    extend arc_type\n      weight = 1",
@@ -136,8 +138,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         },
       },
       {
-        en: "Sixth gesture — to instance is to cite. The dinner of five copies nothing: the philosophes collection carries one ⟪citation⟫ of the template per philosopher, the containers join the five windows by then — the engine expands, the members land qualified (philo2.think1…), the data stays in the template:",
-        fr: "Sixième geste — instancier, c'est citer. Le dîner des cinq ne copie rien : la collection philosophes porte une ⟪citation⟫ du template par philosophe, les conteneurs joignent les cinq fenêtres par then — le moteur développe, les membres atterrissent qualifiés (philo2.think1…), la donnée reste dans le template :",
+        en: "Sixth gesture — to instance is to cite. The dinner of five copies nothing: one ⟪citation⟫ of the template per philosopher, the containers join the five windows with then — the engine expands, the members land qualified (philo2.think1…), the data stays in the template:",
+        fr: "Sixième geste — instancier, c'est citer. Le dîner des cinq ne copie rien : une ⟪citation⟫ du template par philosophe, les conteneurs joignent les cinq fenêtres par then — le moteur développe, les membres atterrissent qualifiés (philo2.think1…), la donnée reste dans le template :",
       },
       {
         code: "layer pn-philosophers-5 refines @pn-philosophers then @positions-grid\n  philosophes refines @collection\n    philo1 refines @pn-philosophers-1\n      identifier = 1\n    philo2 refines @pn-philosophers-1\n      identifier = 2\n    …philosophes 3, 4, 5\n  extend places refines @pn-philosophers-5/philosophes/philo1/places\n    then @pn-philosophers-5/philosophes/philo2/places then …\n  extend pre_arcs\n    fk1 refines @petrinet-scheme/specification/pre_arc_type\n      source = @pn-philosophers-5/places/philo1.fork1\n      target = @pn-philosophers-5/transitions/philo2.take1",
@@ -147,8 +149,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         },
       },
       {
-        en: "Seventh gesture — note, and that's all. A whole // line becomes a note datum: it travels with the block and documents the key that follows. Add mask (to mute an inheritance — the ⟪mask⟫) and bind (to bind a check slot to an address), and you have the whole language. The rest of this tutorial only reads it.",
-        fr: "Septième geste — noter, et c'est tout. Une ligne // entière devient une donnée note : elle voyage avec le bloc et documente la clé qui suit. Ajoutez mask (rendre un héritage muet — le ⟪masque⟫), bind (lier un slot de check à une adresse) et assume (signer une lecture que l'ordre des refines tranche entre sources incomparables — la convention muette du ⟪diamant⟫ devient un acte signé), et vous avez tout le langage. Le reste de ce tutoriel ne fait que le lire.",
+        en: "Seventh gesture — note, and that is all: a // line becomes a note datum that travels with its block and documents the key that follows. Three acts complete the language — mask, to mute an inheritance (the ⟪mask⟫); bind, to bind a ⟪check⟫ slot to an address; assume, to sign a read that the refines order settles between incomparable sources, the mute convention of the ⟪diamond⟫ become a signed act. The rest of this tutorial only reads what these seven gestures write.",
+        fr: "Septième geste — noter, et c'est tout : une ligne // devient une donnée note qui voyage avec son bloc et documente la clé qui suit. Trois actes complètent le langage — mask, pour rendre un héritage muet (le ⟪masque⟫) ; bind, pour lier un slot de ⟪check⟫ à une adresse ; assume, pour signer une lecture que l'ordre des refines tranche entre sources incomparables, la convention muette du ⟪diamant⟫ devenue un acte signé. Le reste de ce tutoriel ne fait que lire ce que ces sept gestes écrivent.",
       },
     ],
     see: {
@@ -160,39 +162,39 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: "continuum",
     label: { en: "4 · The continuum", fr: "4 · Le continuum" },
     title: {
-      en: "Formalisms and models are layers — the net without a jump",
-      fr: "Formalismes et modèles sont des couches — le réseau sans saut",
+      en: "From formalism to model, no jump",
+      fr: "Du formalisme au modèle, pas de saut",
     },
     body: [
       {
-        en: "Read the column again. Petrinet-scheme is a formalism: three declared types — place_type, transition_type, arc_type. Pn-philosophers is a more concrete formalism: the philosophers' five types — think, eat, fork, take, release. And pn-philosophers-1 (the template), pn-philosophers-5 (the dinner) are models — ordinary layers. Everywhere else, the schema is on one side and the data on the other. Here, everything is a layer. No jump from type to instance: a ⟪continuum⟫ of ever more concrete formalisms, down to the models — addressable, refinable, inheriting. The benefit reads on the example. A promise laid at the top of the chain holds for everything that refines it. The weight 1 laid at the philosophers' arc type descends to the template's and the dinner's arcs, which lay nothing (pt1 reads 1, measured). And a model left incomplete stays readable — its holes are inherited.",
-        fr: "Relisez la colonne stratigraphique. Petrinet-scheme est un formalisme : trois types déclarés — place_type, transition_type, arc_type. Pn-philosophers est un formalisme plus concret : les cinq types des philosophes — think, eat, fork, take, release. Et pn-philosophers-1 (le template), pn-philosophers-5 (le dîner) sont des modèles — des couches ordinaires. Partout ailleurs, le schéma est d'un côté et les données de l'autre. Ici, tout est couche. Pas de saut du type à l'instance : un ⟪continuum⟫ de formalismes de plus en plus concrets, jusqu'aux modèles — adressables, raffinables, héritants. L'intérêt se lit sur l'exemple. Une promesse posée en haut de la chaîne vaut pour tout ce qui la raffine. Le poids 1 posé au type des arcs des philosophes descend jusqu'aux arcs du template et du dîner, qui ne posent rien (pt1 lit 1, mesuré). Et un modèle resté incomplet reste lisible — ses trous sont hérités.",
+        en: "Reread the column with the definition/model pair in mind. Petrinet-scheme is a formalism: it declares place_type, transition_type, arc_type. Pn-philosophers is a more concrete formalism: five types — think, eat, fork, take, release. The template and the dinner are models — ordinary layers like the others. Everywhere else the schema is on one side, the data on the other, and instancing is an operation that crosses a wall. Here there is no wall: a ⟪continuum⟫ of ever more concrete formalisms, down to the models — all addressable, all refinable, all inheriting.",
+        fr: "Relisez la colonne avec en tête le couple définition/modèle. Petrinet-scheme est un formalisme : il déclare place_type, transition_type, arc_type. Pn-philosophers est un formalisme plus concret : cinq types — think, eat, fork, take, release. Le template et le dîner sont des modèles — des couches ordinaires comme les autres. Partout ailleurs, le schéma est d'un côté, les données de l'autre, et l'instanciation est une opération qui franchit un mur. Ici, pas de mur : un ⟪continuum⟫ de formalismes de plus en plus concrets, jusqu'aux modèles — tous adressables, tous raffinables, tous héritants.",
       },
       {
-        en: "The great hierarchy overflows the column. The other axes — arity, acyclicity, partition, weighting — are trees that cross, not one thread. And the rendering is a ⟪lens⟫. Graph-display refines multidigraph and draws circles and lines for every descendant. Petrinet-display does the same for the Petri net. Fifteen real layers carry the thread below, every name is clickable.",
-        fr: "La grande hiérarchie déborde la colonne. Les autres axes — arité, acyclicité, partition, pondération — sont des arbres qui se croisent, pas un fil. Et le rendu est une ⟪lentille⟫. Graph-display raffine multidigraph et dessine cercles et traits pour tout descendant. Petrinet-display fait de même pour le réseau de Petri. Quinze couches réelles portent le fil ci-dessous, chaque nom est cliquable.",
+        en: "The benefit reads on the example. A promise laid at the top of the chain holds for everything that refines it: the weight 1 laid at the philosophers' arc type descends to the template's and the dinner's arcs, which lay nothing — pt1 reads 1, measured. A model left incomplete stays readable, its holes inherited. And the column overflows on both ends: the other axes (arity, acyclicity, partition, weighting) are ⟪facet⟫ trees that cross the thread, and the rendering is a ⟪lens⟫ — graph-display refines multidigraph and draws circles and lines for every descendant, petrinet-display does the same for the Petri net. Sixteen real layers carry the thread below; every name is a button.",
+        fr: "L'intérêt se lit sur l'exemple. Une promesse posée en haut de la chaîne vaut pour tout ce qui la raffine : le poids 1 posé au type des arcs des philosophes descend jusqu'aux arcs du template et du dîner, qui ne posent rien — pt1 lit 1, mesuré. Un modèle resté incomplet reste lisible, ses trous hérités. Et la colonne déborde par les deux bouts : les autres axes (arité, acyclicité, partition, pondération) sont des arbres de ⟪facettes⟫ qui croisent le fil, et le rendu est une ⟪lentille⟫ — graph-display raffine multidigraph et dessine cercles et traits pour tout descendant, petrinet-display fait de même pour le réseau de Petri. Seize couches réelles portent le fil ci-dessous ; chaque nom est un bouton.",
       },
     ],
     see: {
-      en: "panel ① — the stratigraphic column is visible there, from multihypergraph to the dinner; panel ③ shows any address's chain.",
-      fr: "panneau ① — la colonne stratigraphique s'y voit, de multihypergraph au dîner ; panneau ③ montre la chaîne de n'importe quelle adresse.",
+      en: "panel ① — the column from multihypergraph to the dinner; panel ③ — the chain of any address.",
+      fr: "panneau ① — la colonne de multihypergraph au dîner ; panneau ③ — la chaîne de n'importe quelle adresse.",
     },
   },
   {
     id: "specification",
-    label: { en: "5 · Specification and the rest", fr: "5 · Spécification et le reste" },
+    label: { en: "5 · Specification and contents", fr: "5 · Spécification et contenus" },
     title: {
-      en: "Declare and fill: two ways of being data",
-      fr: "Déclarer et remplir : deux façons d'être une donnée",
+      en: "The schema and the instance, two regimes of one tree",
+      fr: "Le schéma et l'instance, deux régimes d'un même arbre",
     },
     body: [
       {
-        en: "Every layer separates two regimes. Under ⟪specification⟫ live the declarations. Petrinet-scheme::specification declares place_type (marking, identifier), transition_type (identifier) and arc_type (weight, identifier, source, target). That was the schema. Outside ⟪specification⟫ live the ⟪contents⟫: the concrete collections — places, transitions, pre_arcs, post_arcs. That was the instance.",
-        fr: "Chaque couche sépare deux régimes. Sous ⟪specification⟫ vivent les déclarations. Petrinet-scheme::specification déclare place_type (marquage, identifiant), transition_type (identifiant) et arc_type (weight, identifiant, source, target). C'était le schéma. Hors ⟪specification⟫ vivent les ⟪contenus⟫ : les collections concrètes — places, transitions, pre_arcs, post_arcs. C'était l'instance.",
+        en: "Inside a layer, two regimes. Under ⟪specification⟫ live the declarations — that was the schema: petrinet-scheme::specification declares place_type (marking, identifier), transition_type (identifier), arc_type (weight, identifier, source, target). Outside ⟪specification⟫ live the ⟪contents⟫ — that was the instance: the concrete collections places, transitions, pre_arcs, post_arcs. What links the two regimes: a collection's type is a ⟪Ref⟫ (places is typed place_type), and the declaration governs the contents — nothing forbids a formalism from having contents of its own.",
+        fr: "Dans une couche, deux régimes. Sous ⟪specification⟫ vivent les déclarations — c'était le schéma : petrinet-scheme::specification déclare place_type (marquage, identifiant), transition_type (identifiant), arc_type (poids, identifiant, source, target). Hors ⟪specification⟫ vivent les ⟪contenus⟫ — c'était l'instance : les collections concrètes places, transitions, pre_arcs, post_arcs. Ce qui relie les deux régimes : le type d'une collection est un ⟪Ref⟫ (places est typé place_type), et la déclaration gouverne les contenus — rien n'interdit à un formalisme d'avoir des contenus.",
       },
       {
-        en: "The ⟪constraint⟫ has become a value laid at the type level. Pn-philosophers writes arc_type::weight = 1 — the same declaration address, with one more member. And inheritance carries it down to the template's and the dinner's arcs. The rendering is a ⟪lens⟫: petrinet-display refines multidigraph and draws the net for every descendant, templates laid at the same path as the types. The specification border is an addressing convention, not a mechanism. On both sides, same closures, same first-wins, same crossings. What links them: a collection's type is a ⟪Ref⟫ (places is typed place_type). The declaration governs the contents, and nothing forbids a formalism from having contents.",
-        fr: "La ⟪contrainte⟫ est devenue une valeur posée au niveau du type. Pn-philosophers écrit arc_type::weight = 1 — la même adresse de déclaration, avec un membre de plus. Et l'héritage la descend jusqu'aux arcs du template et du dîner. Le rendu est une ⟪lentille⟫ : petrinet-display raffine multidigraph et dessine le réseau pour tout descendant, gabarits posés au même chemin que les types. La frontière specification est une convention d'adressage, pas un mécanisme. Des deux côtés, mêmes fermetures, même premier-gagné, mêmes croisements. Ce qui les relie : le type d'une collection est un ⟪Ref⟫ (places est typé place_type). La déclaration gouverne les contenus, et rien n'interdit à un formalisme d'avoir des contenus.",
+        en: "The ⟪constraint⟫, here, is a value laid at the type level. Pn-philosophers writes arc_type::weight = 1 — the same declaration address with one more member — and inheritance carries it down to the template's and the dinner's arcs. The border between the two regimes is an addressing convention, not a mechanism: same closures, same ⟪first-wins⟫, same crossings on both sides. The drawing itself is data — the ⟪lens⟫ templates are laid at the same paths as the types, and petrinet-display draws the net for every descendant.",
+        fr: "La ⟪contrainte⟫, ici, est une valeur posée au niveau du type. Pn-philosophers écrit arc_type::weight = 1 — la même adresse de déclaration, avec un membre de plus — et l'héritage la descend jusqu'aux arcs du template et du dîner. La frontière entre les deux régimes est une convention d'adressage, pas un mécanisme : mêmes fermetures, même ⟪premier-gagné⟫, mêmes croisements des deux côtés. Le dessin lui-même est une donnée — les gabarits de la ⟪lentille⟫ sont posés aux mêmes chemins que les types, et petrinet-display dessine le réseau pour tout descendant.",
       },
     ],
     see: {
@@ -204,17 +206,17 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: "regles",
     label: { en: "6 · Reading", fr: "6 · Lire" },
     title: {
-      en: "Closure and first-wins: inheritance as a priority order",
-      fr: "Fermeture et premier-gagné : l'héritage comme ordre de priorité",
+      en: "Closure and first-wins: how a read is decided",
+      fr: "Fermeture et premier-gagné : comment se décide une lecture",
     },
     body: [
       {
-        en: "The ⟪closure⟫ of an ⟪address⟫ (layer, path) is the ordered list of all the nodes that define it: itself, then every refines ancestor. Every read walks this list. The step-2 ⟪core sample⟫ has a name.",
-        fr: "La ⟪fermeture⟫ d'une ⟪adresse⟫ (couche, chemin) est la liste ordonnée de tous les nœuds qui la définissent : soi-même, puis chaque ancêtre refines. Toute lecture traverse cette liste. Le ⟪carottage⟫ de l'étape 2 a un nom.",
+        en: "The ⟪closure⟫ of an ⟪address⟫ is the ordered list of all the nodes that define it: itself, then every refines ancestor. Every read walks this list from the newest to the oldest — the ⟪core sample⟫ of the idea step now has its name — and one rule suffices: ⟪first-wins⟫, the first value found is the answer. The order of the refines list encodes the specificity, the same order the geologist's language writes, and no rule lives in the engine.",
+        fr: "La ⟪fermeture⟫ d'une ⟪adresse⟫ est la liste ordonnée de tous les nœuds qui la définissent : soi-même, puis chaque ancêtre par refines. Toute lecture traverse cette liste de la plus récente à la plus ancienne — le ⟪carottage⟫ de l'étape de l'idée a maintenant son nom — et une seule règle suffit : ⟪premier-gagné⟫, la première valeur trouvée est la réponse. L'ordre de la liste des refines encode la spécificité, le même ordre que celui qu'écrit le langage du géologue, et aucune règle ne vit dans le moteur.",
       },
       {
-        en: "⟪First-wins⟫: the kernel returns the first value found. Measured on the template: pn-philosophers-1::pre_arcs::pt1::weight = 1. The arc lays nothing, the philosophers' type wins — inherited. And pn-philosophers-1::places::eat1 locally overrides marking = 0 (think1 keeps 1). Measured on a constraint: pn-philosophers-5-bounds-c1::places::philo1.think1::bound = 1. Refining the dinner by a constraint does not break the model, the value descends. Measured on the great hierarchy's weighted diamond: e2 carries no weight, its chain walks weighted-bipartite (nothing) then weighted-hypergraph — weight = 1, inherited. Redefining locally is ⟪overriding⟫; laying nothing is ⟪inheriting⟫. And the deepest measure: ss-pn-philosophers-5-inst::states::s1 lays only philo1.think1 = 2. The values philo1.eat1 = 0 and philo1.fork1 = 1 still read. Its closure walks the state type, which binds late to the petrinet = pn-philosophers-5 parameter — the read descends the net's places (measured: the dinner is in s1's closure). The state's label is no longer the marking alone. It is the delta laid, and the net for type.",
-        fr: "⟪Premier-gagné⟫ : le noyau rend la première valeur trouvée. Mesuré sur le template : pn-philosophers-1::pre_arcs::pt1::weight = 1. L'arc ne pose rien, le type des philosophes gagne — hérité. Et pn-philosophers-1::places::eat1 surcharge localement marking = 0 (think1 garde 1). Mesuré sur une contrainte : pn-philosophers-5-bounds-c1::places::philo1.think1::bound = 1. Raffiner le dîner par une contrainte ne casse pas le modèle, la valeur descend. Mesuré sur le diamant pondéré de la grande hiérarchie : e2 ne porte pas weight, sa chaîne traverse weighted-bipartite (rien) puis weighted-hypergraph — weight = 1, hérité. Redéfinir localement, c'est ⟪surcharger⟫ ; ne rien poser, c'est ⟪hériter⟫. Et la mesure la plus profonde : ss-pn-philosophers-5-inst::states::s1 ne pose que philo1.think1 = 2. Les valeurs philo1.eat1 = 0 et philo1.fork1 = 1 se lisent quand même. Sa fermeture traverse le type d'état, qui se lie tard au paramètre petrinet = pn-philosophers-5 — la lecture descend les places du réseau (mesuré : le dîner est dans la fermeture de s1). L'étiquette de l'état n'est plus le marquage seul. C'est le delta posé, et le réseau pour type.",
+        en: "Four measured reads, then the deepest. On the template: pn-philosophers-1::pre_arcs::pt1::weight = 1 — the arc lays nothing, the type wins: to lay nothing is to ⟪inherit⟫. On a local value: pn-philosophers-1::places::eat1 overrides marking = 0 while think1 keeps 1 — to lay again is to ⟪override⟫. On a constraint refined over the dinner: pn-philosophers-5-bounds-c1::places::philo1.think1::bound = 1 — refining a model by a constraint does not break it, the value descends. On the weighted ⟪diamond⟫ of the great hierarchy: e2 carries no weight, its chain walks weighted-bipartite (nothing) then weighted-hypergraph — weight = 1, inherited. And the deepest: ss-pn-philosophers-5-inst::states::s1 lays only philo1.think1 = 2; philo1.eat1 = 0 and philo1.fork1 = 1 still read, because the state's closure walks its type, which binds late to the petrinet parameter laid on the dinner — a state's type is the net, and the net answers through it.",
+        fr: "Quatre lectures mesurées, puis la plus profonde. Sur le template : pn-philosophers-1::pre_arcs::pt1::weight = 1 — l'arc ne pose rien, le type gagne : ne rien poser, c'est ⟪hériter⟫. Sur une valeur locale : pn-philosophers-1::places::eat1 surcharge marking = 0 pendant que think1 garde 1 — reposer, c'est ⟪surcharger⟫. Sur une contrainte posée au-dessus du dîner : pn-philosophers-5-bounds-c1::places::philo1.think1::bound = 1 — raffiner un modèle par une contrainte ne le casse pas, la valeur descend. Sur le ⟪diamant⟫ pondéré de la grande hiérarchie : e2 ne porte pas weight, sa chaîne traverse weighted-bipartite (rien) puis weighted-hypergraph — weight = 1, hérité. Et la plus profonde : ss-pn-philosophers-5-inst::states::s1 ne pose que philo1.think1 = 2 ; philo1.eat1 = 0 et philo1.fork1 = 1 se lisent quand même, parce que la fermeture de l'état traverse son type, qui se lie tard au paramètre petrinet posé au dîner — le type d'un état est le réseau, et le réseau répond à travers lui.",
       },
     ],
     see: {
@@ -226,21 +228,21 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     id: "composer",
     label: { en: "7 · Composing", fr: "7 · Composer" },
     title: {
-      en: "Unions, masks, late binding, multiple inheritance",
-      fr: "Unions, masques, liaison tardive, héritage multiple",
+      en: "Citations, unions, masks, late binding — composition is data too",
+      fr: "Citations, unions, masques, liaison tardive — la composition est une donnée aussi",
     },
     body: [
       {
-        en: "The space also knows how to compose itself — five ways, each measured on the stratigraphic column or the harness. The ⟪citation⟫s: the dinner no longer copies its template — five citations in a collection, one union equation per container; the engine's reader (expandCitations) expands each cited window, the members land qualified (philo1.think1…), the data stays in the template, the re-anchored arcs point into the dinner (measured: 15 places, 10 transitions, 25 arcs). The ⟪union⟫s: a collection can merge other collections (a diagram's vertices = internal ⊕ terminal nodes) — the enumeration composes. The ⟪mask⟫s: a slot can be present but mute (MASK), the read skips to the next ancestor — selective inheritance without deleting the origin.",
-        fr: "L'espace sait aussi se composer — cinq façons, chacune mesurée sur la colonne stratigraphique ou le harnais. Les ⟪citation⟫s : le dîner ne copie plus son template — cinq citations dans une collection, une équation d'union par conteneur ; le lecteur du moteur (expandCitations) développe chaque fenêtre citée, les membres atterrissent qualifiés (philo1.think1…), la donnée reste dans le template, les arcs re-ancrés pointent dans le dîner (mesuré : 15 places, 10 transitions, 25 arcs). Les ⟪union⟫s : une collection peut fusionner d'autres collections (les sommets d'un diagramme = nœuds internes ⊕ terminaux) — l'énumération compose. Les ⟪masque⟫s : un slot peut être présent mais muet (MASK), la lecture saute vers l'ancêtre suivant — l'héritage sélectif sans supprimer l'origine.",
+        en: "The ⟪citation⟫ first: the dinner does not copy its template — five citations in a collection, and the engine's reader expands each cited window; the members land qualified (philo1.think1…), the data stays in the template, the re-anchored arcs point into the dinner (measured: 15 places, 10 transitions, 25 arcs). The ⟪union⟫ next: a collection can merge other collections — a diagram's vertices are its internal nodes ⊕ its terminal ones — and the enumeration composes. The ⟪mask⟫ last: a slot present but mute; the read skips to the next ancestor — selective inheritance without deleting the origin.",
+        fr: "La ⟪citation⟫ d'abord : le dîner ne copie pas son template — cinq citations dans une collection, et le lecteur du moteur développe chaque fenêtre citée ; les membres atterrissent qualifiés (philo1.think1…), la donnée reste dans le template, les arcs re-ancrés pointent dans le dîner (mesuré : 15 places, 10 transitions, 25 arcs). L'⟪union⟫ ensuite : une collection peut fusionner d'autres collections — les sommets d'un diagramme sont ses nœuds internes ⊕ ses nœuds terminaux — et l'énumération compose. Le ⟪masque⟫ enfin : un slot présent mais muet ; la lecture saute vers l'ancêtre suivant — l'héritage sélectif sans supprimer l'origine.",
       },
       {
-        en: "⟪Late binding⟫: the schema says « every collection has a type »; the kernel copies this rule (the ⟪implicits⟫) onto the instances at desugaring. A task that says nothing still inherits its type. This is why a faulty refines stays tied to its type by the closure (measured on bad-pert-2). And the ⟪parameter⟫ is its most beautiful case. Petrinet-behavior declares state_type refining « petrinet » — a path that does not exist on it. The ss-pn-philosophers-5 layer lays petrinet = pn-philosophers-5. The resolution happens in the reading layer: s1's closure contains the dinner (measured), and b1::transition reads the dinner's philo1.take1 — generated by the citation of the template, without anything being copied.",
-        fr: "La ⟪liaison tardive⟫ : le schéma dit « chaque collection a un type » ; le noyau recopie cette règle (les ⟪implicits⟫) sur les instances au désucrage. Une tâche qui ne dit rien hérite quand même de son type. C'est pourquoi un refines fautif reste rattaché à son type par la fermeture (mesuré sur bad-pert-2). Et le ⟪paramètre⟫ en est le cas le plus beau. Petrinet-behavior déclare state_type raffinant « petrinet » — un chemin qui n'existe pas chez lui. La couche ss-pn-philosophers-5 pose petrinet = pn-philosophers-5. La résolution se fait dans la couche lisante : la fermeture de s1 contient le dîner (mesuré), et b1::transition lit la philo1.take1 du dîner — générée par la citation du template, sans que rien ne soit copié.",
+        en: "⟪Late binding⟫ carries the schema's rules onto the instances (the ⟪implicits⟫): a member that says nothing still inherits its type. Its most beautiful case is the ⟪parameter⟫. Petrinet-behavior declares a state type refining « petrinet » — a path that does not exist on it; the layer ss-pn-philosophers-5 lays petrinet = pn-philosophers-5; the resolution happens in the reading layer — s1's closure contains the dinner (measured), and a transition of the state space reads the dinner's philo1.take1, generated by the citation without anything being copied.",
+        fr: "La ⟪liaison tardive⟫ porte les règles du schéma sur les instances (les ⟪implicits⟫) : un membre muet hérite quand même de son type. Son cas le plus beau est le ⟪paramètre⟫. Petrinet-behavior déclare un type d'état raffinant « petrinet » — un chemin qui n'existe pas chez lui ; la couche ss-pn-philosophers-5 pose petrinet = pn-philosophers-5 ; la résolution se fait dans la couche lisante — la fermeture de s1 contient le dîner (mesuré), et une transition de l'espace d'états lit la philo1.take1 du dîner, générée par la citation sans que rien ne soit copié.",
       },
       {
-        en: "Multiple inheritance is data, not a kernel function. Petrinet-scheme refines three layers — bipartite-digraph, the annotation of the vertices, that of the edges (measured). The weighted-bipartite ⟪diamond⟫ refines two. Scenario S11 lays two parents for one type at the pre-arc level; S12 lays three. The core sample walks the branches in the refines order — for weight, the first branch speaks.",
-        fr: "L'héritage multiple est une donnée, pas une fonction du noyau. Petrinet-scheme raffine trois couches — bipartite-digraph, l'annotation des sommets, celle des arêtes (mesuré). Le ⟪diamant⟫ weighted-bipartite en raffine deux. Le scénario S11 pose deux parents pour un type au niveau arc pré ; S12 en pose trois. Le carottage traverse les branches dans l'ordre des refines — pour weight, la première branche parle.",
+        en: "Multiple inheritance is data, not an engine function. Petrinet-scheme refines three layers — the bipartite partition, the annotation of the vertices, that of the edges (measured); the weighted-bipartite ⟪diamond⟫ refines two. The core sample walks the branches in the refines order — for weight, the first branch that speaks wins, and a read settled between incomparable sources is an ⟪order conflict⟫: visible as a lint diagnostic, refused in strict staging, silenced only by a signed assume.",
+        fr: "L'héritage multiple est une donnée, pas une fonction du moteur. Petrinet-scheme raffine trois couches — la partition bipartite, l'annotation des sommets, celle des arêtes (mesuré) ; le ⟪diamant⟫ weighted-bipartite en raffine deux. Le carottage traverse les branches dans l'ordre des refines — pour weight, la première branche qui parle gagne, et une lecture tranchée entre sources incomparables est un ⟪conflit d'ordre⟫ : visible en diagnostic de linter, refusée en staging strict, que seul un assume signé réduit au silence.",
       },
     ],
     see: {
@@ -250,23 +252,19 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
   },
   {
     id: "travail",
-    label: { en: "8 · Who sees what", fr: "8 · Qui voit quoi" },
+    label: { en: "8 · Who verifies what", fr: "8 · Qui vérifie quoi" },
     title: {
       en: "Linter and checks: the division of labor, measured",
-      fr: "Linteuse et checks : la division du travail, mesurée",
+      fr: "Linter et checks : la division du travail, mesurée",
     },
     body: [
       {
-        en: "The ⟪linter⟫ verifies the structure — the memory of our strata: dead references, embeddings, inert late bindings. The ⟪check⟫s carried by the data verify the domain: cycles, duplicates, cardinalities. On the example. A net that would refine a nonexistent layer (a typo in refines): the linter alone sees (1 RAFFINE/ERREUR, measured on bad-pert-2). A place that would cite an unknown step by key: the checks alone see (measured on bad-pert: « unknown predecessor » — the linter is blind to designations by keys). The workshop's space is sound. The defects are planted in the harness's test spaces, to measure who sees what.",
-        fr: "Le ⟪linter⟫ vérifie la structure — la mémoire de nos strates : références mortes, plongements, liaisons tardives inertes. Les ⟪check⟫s portés par les données vérifient le domaine : cycles, doublons, cardinalités. Sur l'exemple. Un réseau qui raffinerait une couche inexistante (une faute de frappe dans refines) : le linter seul voit (1 RAFFINE/ERREUR, mesuré sur bad-pert-2). Une place qui citerait par clé une étape inconnue : les checks seuls voient (mesuré sur bad-pert : « prédécesseur inconnu » — le linter est aveugle aux désignations par clés). L'espace de l'atelier est sain. Les défauts sont plantés dans les espaces de test du harnais, pour mesurer qui voit quoi.",
+        en: "Two verifiers share the space, and neither sees what the other sees. The ⟪linter⟫ verifies the structure — the memory of our strata: dead references, embeddings, inert late bindings. The ⟪check⟫s carried by the data verify the domain: cycles, duplicates, cardinalities. Measured on the planted defects: a net that refines a nonexistent layer (a typo in refines) is seen by the linter alone (1 RAFFINE/ERREUR, on bad-pert-2); a place that cites an unknown step by ⟪key⟫ is seen by the checks alone (« unknown predecessor », on bad-pert — the linter is blind to designations by keys). The workshop's own space is sound; the defects live in the harness's test spaces, planted to measure who sees what.",
+        fr: "Deux vérificateurs se partagent l'espace, et aucun ne voit ce que voit l'autre. Le ⟪linter⟫ vérifie la structure — la mémoire de nos strates : références mortes, plongements, liaisons tardives inertes. Les ⟪check⟫s portés par les données vérifient le domaine : cycles, doublons, cardinalités. Mesuré sur les défauts plantés : un réseau qui raffine une couche inexistante (une faute de frappe dans refines) est vu par le seul linter (1 RAFFINE/ERREUR, sur bad-pert-2) ; une place qui cite par ⟪clé⟫ une étape inconnue est vue par les seuls checks (« prédécesseur inconnu », sur bad-pert — le linter est aveugle aux désignations par clés). L'espace de l'atelier est sain ; les défauts vivent dans les espaces de test du harnais, plantés pour mesurer qui voit quoi.",
       },
       {
-        en: "Neither suffices alone: each is the other's exact blind spot. And the ⟪alias⟫'s price is assumed: the same defect is reported at every view address that designates it.",
-        fr: "Aucun des deux ne suffit : chacun est l'angle mort exact de l'autre. Et le prix de l'⟪alias⟫ est assumé : un même défaut est rapporté à chaque adresse de vue qui le désigne.",
-      },
-      {
-        en: "A carried check must also be ABLE to judge: each tag of the ⟪registry⟫ declares its contract — where it judges, and which ⟪slot⟫s it must read. A posed check whose slots are unbound is refused as « check vacant » (ADR-0018); and in strict staging the carried checks finally EXECUTE over the candidate, their refusals returned as « check-trahi » — the constraint composes with the validity. Since ADR-0019 the registry itself is written in the language — the layer check-registry declares the contracts, and the meta-model came home. And since ADR-0020 the bedrock is read-only by protocol, not by convention: a draft claiming a bedrock name is refused (« socle-occupé »), an edition never aims at the bedrock.",
-        fr: "Un check porté doit aussi pouvoir JUGER : chaque étiquette du ⟪registre⟫ déclare son contrat — où elle juge, et quels ⟪slot⟫s il lui faut lire. Un check posé dont les slots ne sont pas liés est refusé comme « check vacant » (ADR-0018) ; et en staging strict, les checks portés s'exécutent enfin sur la candidate, leurs refus rendus comme « check-trahi » — la contrainte compose avec la validité. Depuis l'ADR-0019, le registre lui-même est écrit dans le langage — la couche check-registry déclare les contrats, et le métamodèle est rentré chez lui. Et depuis l'ADR-0020, le socle est immuable par protocole, non par convention : un brouillon réclamant un nom du socle est refusé (« socle-occupé »), une édition ne vise jamais le socle.",
+        en: "A carried check must also be ABLE to judge: each tag of the ⟪registry⟫ declares its contract — where it judges, which ⟪slot⟫s it must read. A posed check whose slots are unbound is refused as « check vacant » (ADR-0018); in strict staging the carried checks EXECUTE over the candidate, and their refusals come back as « check-trahi » — the constraint composes with the validity. Since ADR-0019 the registry itself is written in the language: the layer check-registry declares the contracts, and the metamodel came home. Since ADR-0020 the bedrock is read-only by protocol, not by convention — a draft claiming a bedrock name is refused (« socle-occupé »), and no edition ever aims at it. The ⟪alias⟫'s price is assumed: the same defect is reported at every view address that designates it.",
+        fr: "Un check porté doit aussi pouvoir JUGER : chaque étiquette du ⟪registre⟫ déclare son contrat — où elle juge, quels ⟪slot⟫s il lui faut lire. Un check posé dont les slots ne sont pas liés est refusé comme « check vacant » (ADR-0018) ; en staging strict, les checks portés s'exécutent sur la candidate et leurs refus reviennent comme « check-trahi » — la contrainte compose avec la validité. Depuis l'ADR-0019, le registre lui-même est écrit dans le langage : la couche check-registry déclare les contrats, et le métamodèle est rentré chez lui. Depuis l'ADR-0020, le socle est immuable par protocole, non par convention — un brouillon qui réclame un nom du socle est refusé (« socle-occupé »), et aucune édition ne le vise jamais. Le prix de l'⟪alias⟫ est assumé : un même défaut est rapporté à chaque adresse de vue qui le désigne.",
       },
     ],
     see: {
@@ -275,9 +273,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     },
   },
   {
-    // the third verification floor earns its
-    // step — the tests contract, with the seven real
-    // expectations of the dinner
+    // the third verification floor earns its step — the tests
+    // contract, with the seven real expectations of the dinner
     id: "contrat",
     label: { en: "9 · The contract", fr: "9 · Le contrat" },
     title: {
@@ -286,8 +283,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     },
     body: [
       {
-        en: "Two verifiers had shared the space — the ⟪linter⟫ for the structure, the ⟪check⟫s for the domain. The third was missing: the one that freezes READS. A tests block lives in the layer; each expect writes an address (path/key) and the value it must return — measured, not desired:",
-        fr: "Deux vérificateurs s'étaient partagé l'espace — le ⟪linter⟫ pour la structure, les ⟪check⟫ pour le domaine. Il manquait le troisième : celui qui gèle des LECTURES. Un bloc tests vit dans la couche ; chaque expect y écrit une adresse (chemin/clé) et la valeur qu'elle doit rendre — mesurée, pas désirée :",
+        en: "A third verifier was missing: one that freezes reads. A tests block lives in the layer, and each expect writes an ⟪address⟫ and the value it must return — measured, not desired. Here is the dinner's, in full:",
+        fr: "Il manquait un troisième vérificateur : celui qui gèle des lectures. Un bloc tests vit dans la couche, et chaque expect y écrit une ⟪adresse⟫ et la valeur qu'elle doit rendre — mesurée, pas désirée. Voici celui du dîner, en entier :",
       },
       {
         code: "tests\n  expect places/philo1.think1/marking = 1\n  expect places/philo1.eat1/marking = 0\n  expect philosophes/philo3/identifier = 3\n  expect pre_arcs/fk2/weight = 1\n  expect positions/philo1.seat/system = \"polar\"\n  expect positions/philo1.seat/x absent\n  expect pre_arcs/fk5/source = @pn-philosophers-5/places/philo5.fork1",
@@ -297,12 +294,12 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         },
       },
       {
-        en: "Three forms of expectation: a value (the read must return exactly 1), absent (the read must return null — a polar seat's x descends from the record, never from staging), a reference (the read must resolve the exact address — the arc fk5 points the fifth's fork). The ⟪contract⟫ travels with the layer — on disk as in memory, in a citation as in a refinement — and the validation replays it at every assembly: a betrayed read is an « expectation-betrayed » verdict that refuses the entry, from staging to the last re-freeze.",
-        fr: "Trois formes d'attendu : une valeur (la lecture doit rendre exactement 1), absent (la lecture doit rendre null — le x d'un siège polaire descend du record, jamais du staging), une référence (la lecture doit résoudre l'adresse exacte — l'arc fk5 pointe la fourchette du cinquième). Le ⟪contrat⟫ voyage avec la couche — au disque comme en mémoire, dans une citation comme dans un raffinement — et la validation le rejoue à chaque assemblage : une lecture trahie est un verdict « attendu-trahi » qui refuse l'entrée, du staging au dernier re-gel.",
+        en: "Three forms of expectation: a value (the read must return exactly 1), absent (the read must return null — a polar seat's x descends from the record, never from staging), a reference (the read must resolve the exact address — the arc fk5 points the fifth philosopher's fork). The ⟪contract⟫ travels with the layer — on disk as in memory, in a ⟪citation⟫ as in a refinement — and the validation replays it at every assembly: a betrayed read is an « expectation-betrayed » verdict that refuses the entry, from staging to the last re-freeze.",
+        fr: "Trois formes d'attendu : une valeur (la lecture doit rendre exactement 1), absent (la lecture doit rendre null — le x d'un siège polaire descend du record, jamais du staging), une référence (la lecture doit résoudre l'adresse exacte — l'arc fk5 pointe la fourchette du cinquième philosophe). Le ⟪contrat⟫ voyage avec la couche — au disque comme en mémoire, dans une ⟪citation⟫ comme dans un raffinement — et la validation le rejoue à chaque assemblage : une lecture trahie est un verdict « attendu-trahi » qui refuse l'entrée, du staging au dernier re-gel.",
       },
       {
-        en: "The Tests panel of the fold (②) shows every expectation: met or betrayed, the read value, and the provenance — which layer carried the read. That is where it is measured: the AI proposes the draft, never the truth; an expectation enters a layer only for a read already seen in the workshop. Measured ≠ desired — it is the user who signs the contract.",
-        fr: "Le panneau Tests du repli (②) montre chaque attendu : conforme ou trahi, la valeur lue, et la provenance — quelle couche a porté la lecture. C'est là que se mesure : l'IA propose le brouillon, jamais la vérité ; un attendu n'entre dans une couche que pour une lecture déjà vue dans l'atelier. Mesuré ≠ désiré — c'est l'utilisateur qui signe le contrat.",
+        en: "The Tests panel of the fold (②) shows every expectation — met or betrayed, the read value, and the provenance: which layer carried the read. The rule is the workshop's honesty: the geologist proposes drafts, never truth, and an expectation enters a layer only for a read already seen. Measured is not desired — the contract is signed by the human.",
+        fr: "Le panneau Tests du repli (②) montre chaque attendu — conforme ou trahi, la valeur lue, et la provenance : quelle couche a porté la lecture. La règle est celle de l'honnêteté de l'atelier : le géologue propose des brouillons, jamais la vérité, et un attendu n'entre dans une couche que pour une lecture déjà vue. Mesuré n'est pas désiré — le contrat est signé par l'humain.",
       },
     ],
     see: {
@@ -311,30 +308,32 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     },
   },
   {
+    // the honest floor — measured, not proven, and the limits on
+    // display
     id: "preuve",
     label: { en: "10 · Verification", fr: "10 · La vérification" },
     title: {
-      en: "Everything is verified, nothing is believed — and the limits are displayed",
-      fr: "Tout est vérifié, rien n'est cru — et les limites sont affichées",
+      en: "Everything is measured, nothing is claimed proven",
+      fr: "Tout est mesuré, rien n'est dit prouvé",
     },
     body: [
       {
-        en: "Nothing is claimed proven here: everything is measured. Every observable read of the kernel is compared, byte for byte, to a frozen baseline, and the specification's obligations are replayed as properties by the harness — a few seconds, no external call, and any difference is a refusal.",
-        fr: "Rien n'est dit prouvé ici : tout est mesuré. Chaque lecture observable du noyau est comparée, octet par octet, à une ligne de base gelée, et les obligations de la spécification sont rejouées comme des propriétés par le harnais — quelques secondes, aucun appel externe, et toute différence est un refus.",
+        en: "The workshop does not claim proofs; it claims measurements. Every observable read of the kernel is compared, byte for byte, to a frozen baseline, and the specification's obligations and conformances (docs/specification.md, O1–O18, C1–C8) are replayed as properties by the harness — 49 assertions in a few seconds, no external call, and any difference is a refusal. A property that passes is a conformance measured today, not a theorem: the vocabulary says verified, never proven.",
+        fr: "L'atelier ne revendique pas de preuves ; il revendique des mesures. Chaque lecture observable du noyau est comparée, octet par octet, à une ligne de base gelée, et les obligations et conformances de la spécification (docs/specification.md, O1–O18, C1–C8) sont rejouées comme des propriétés par le harnais — 49 assertions en quelques secondes, aucun appel externe, et toute différence est un refus. Une propriété qui passe est une conformance mesurée aujourd'hui, pas un théorème : le vocabulaire dit vérifié, jamais prouvé.",
       },
       {
-        en: "The stratigraphic column — this tutorial's thread — is measured like everything else: same steps, same golden contract, same verifications. 47 layers in the inventory (38 hierarchy, 9 views) — the pn-philosophers-1 template and its pn-philosophers-5 dinner are counted separately there.",
-        fr: "La colonne stratigraphique — le fil de ce tutoriel — est mesurée comme tout le reste : mêmes marches, même contrat d'or, mêmes vérifications. 47 couches à l'inventaire (38 de hiérarchie, 9 de vues) — le template pn-philosophers-1 et son dîner pn-philosophers-5 y sont comptés séparément.",
+        en: "The stratigraphic column — this tutorial's thread — is measured like everything else: same steps, same golden contract, same verifications. 47 layers in the inventory (38 of hierarchy, 9 of views), the template and the dinner counted separately, and the guided tour's fourteen scenarios walk the same space.",
+        fr: "La colonne stratigraphique — le fil de ce tutoriel — est mesurée comme tout le reste : mêmes marches, même contrat d'or, mêmes vérifications. 47 couches à l'inventaire (38 de hiérarchie, 9 de vues), le template et le dîner comptés séparément, et les quatorze scénarios de la visite guidée parcourent le même espace.",
       },
       {
-        en: "The limits are assumed. The linter is blind to designations by keys. An unformulated intention is not verified. The alias's price multiplies the reports.",
-        fr: "Les limites sont assumées. Le linter est aveugle aux désignations par clés. Une intention non formulée n'est pas vérifiée. Le prix de l'alias multiplie les signalements.",
+        en: "The limits are on display, not hidden: the linter is blind to designations by keys; an intention that no layer formulates is not verified; the ⟪alias⟫ multiplies the reports of one defect; the ⟪mask⟫ breaks the monotonicity of inheritance — a masked key no longer descends. Nothing here claims to be more than it measures.",
+        fr: "Les limites sont affichées, pas cachées : le linter est aveugle aux désignations par clés ; une intention qu'aucune couche ne formule n'est pas vérifiée ; l'⟪alias⟫ multiplie les signalements d'un même défaut ; le ⟪masque⟫ casse la monotonie de l'héritage — une clé masquée ne descend plus. Rien ici ne prétend être plus qu'il ne mesure.",
       },
     ],
   },
   {
-    // the last floor — the full list of
-    // notions, each term a hover tooltip
+    // the last floor — the full list of notions, each term a hover
+    // tooltip
     id: "glossaire",
     label: { en: "11 · The glossary", fr: "11 · Le glossaire" },
     title: {
@@ -343,8 +342,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     },
     body: [
       {
-        en: "Every notion of this tutorial is dotted-underlined where it appears: hover, the definition opens. Here, the whole list — same gesture, same source. A definition is not paraphrased: it is cited.",
-        fr: "Toutes les notions de ce tutoriel sont soulignées de pointillés là où elles apparaissent : survolez, la définition s'ouvre. Ici, la liste entière — même geste, même source. Une définition ne se paraphrase pas : elle se cite.",
+        en: "Every notion of this tutorial is dotted-underlined where it appears: hover, the definition opens — a definition is cited, not paraphrased. Here is the whole list, thirty-seven notions, each defined in one line; the rest — the filiation, the history, the comparison with the existing — lives on its own page.",
+        fr: "Toutes les notions de ce tutoriel sont soulignées de pointillés là où elles apparaissent : survolez, la définition s'ouvre — une définition se cite, elle ne se paraphrase pas. Voici la liste entière, trente-sept notions, chacune définie en une ligne ; le reste — la filiation, l'histoire, la comparaison avec l'existant — vit sur sa propre page.",
       },
     ],
     see: {
@@ -522,15 +521,15 @@ export function Tutorial({
         <h2 className="text-lg font-bold text-slate-800">
           {say({
             language,
-            en: "The tutorial — why data in strata, and how",
-            fr: "Le tutoriel — pourquoi les données en strates, et comment",
+            en: "The tutorial — layered data in eleven steps",
+            fr: "Le tutoriel — les layered data en onze étapes",
           })}
         </h2>
         <p className="mt-1 text-sm leading-6 text-slate-500">
           {say({
             language,
-            en: "the philosophers' dinner is the running example and every step reads it again; the layer names of the continuum are clickable",
-            fr: "le dîner des philosophes est l'exemple suivi et chaque étape le relit ; les noms des couches du continuum sont cliquables",
+            en: "the philosophers' dinner is the running example; every section pairs an idea with the real layer that carries it, and the layer names of the column are clickable",
+            fr: "le dîner des philosophes est l'exemple suivi ; chaque section marie une idée à la couche réelle qui la porte, et les noms des couches de la colonne sont cliquables",
           })}
         </p>
       </header>

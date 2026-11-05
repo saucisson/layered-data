@@ -1,10 +1,11 @@
 // Layered Data — Main application with routing
-// Routes: #landing, #tutorial, #workshop
+// Routes: #landing, #tutorial, #filiation, #workshop
 
 import React, { useState } from "react";
 import { RouterProvider, useRouter } from "./components/Router";
 import { LandingPage } from "./pages/LandingPage";
 import { TutorialPage } from "./pages/TutorialPage";
+import { FiliationPage } from "./pages/FiliationPage";
 import { WorkshopPage } from "./WorkshopContainer";
 import { readWorkshopLanguage, writeWorkshopLanguage } from "./infrastructure/browserLanguage";
 import type { Language } from "./domain/messages.ts";
@@ -21,6 +22,8 @@ function AppContent() {
   switch (page) {
     case "tutorial":
       return <TutorialPage language={language} onChooseLanguage={handleChooseLanguage} />;
+    case "filiation":
+      return <FiliationPage language={language} onChooseLanguage={handleChooseLanguage} />;
     case "workshop":
       return <WorkshopPage language={language} onChooseLanguage={handleChooseLanguage} />;
     case "landing":

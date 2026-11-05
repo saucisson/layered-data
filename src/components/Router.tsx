@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Page = "landing" | "tutorial" | "workshop";
+type Page = "landing" | "tutorial" | "filiation" | "workshop";
 
 interface RouterContextType {
   page: Page;
@@ -21,7 +21,7 @@ export function RouterProvider({ children }: RouterProviderProps) {
   useEffect(() => {
     const parseHash = () => {
       const hash = window.location.hash.slice(1) || "landing";
-      if (["landing", "tutorial", "workshop"].includes(hash)) {
+      if (["landing", "tutorial", "filiation", "workshop"].includes(hash)) {
         setPage(hash as Page);
       } else {
         setPage("landing");
