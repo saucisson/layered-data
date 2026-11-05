@@ -53,6 +53,7 @@ export function LayerEditor({
       languageSource: kernel.languageSource,
       livingAdditions,
       livingLayerNames,
+      readonlyLayerNames: kernel.layerNames,
       layerName: asLayerName(layerName),
       editedSource: source,
       language,
@@ -65,6 +66,7 @@ export function LayerEditor({
       space: kernel.space,
       layerName: asLayerName(layerName),
       staging: outcome.staging,
+      readonlyLayerNames: kernel.layerNames,
     });
     setResult({ outcome, applied: true });
     onApplied(edition);
@@ -100,8 +102,8 @@ export function LayerEditor({
       <p className="mb-2 text-[11px] leading-4 text-slate-500">
         {say({
           language,
-          en: "the layer leaves the living context for the time of the judgement: the staging revalidates the whole corpus + supplements, replays the expectations of the other living layers and demands 0 verdict; renaming the layer or sliding another one in is not editing",
-          fr: "la couche quitte le contexte vivant le temps du jugement : le staging revalide corpus + suppléments entiers, rejoue les attendus des autres couches vivantes et exige 0 verdict ; renommer la couche ou en glisser une autre n'est pas l'éditer",
+          en: "the layer leaves the living context for the time of the judgement: the staging revalidates the whole corpus + supplements, replays the expectations of the other living layers and demands 0 verdict; renaming the layer or sliding another one in is not editing; and the trunk is read-only by protocol — an edition never aims at it (ADR-0020)",
+          fr: "la couche quitte le contexte vivant le temps du jugement : le staging revalide corpus + suppléments entiers, rejoue les attendus des autres couches vivantes et exige 0 verdict ; renommer la couche ou en glisser une autre n'est pas l'éditer ; et le tronc est immuable par protocole — une édition ne vise jamais le tronc (ADR-0020)",
         })}
       </p>
       <textarea
