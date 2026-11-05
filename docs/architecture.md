@@ -90,7 +90,7 @@ assembler; the corpus order lives in the domain, not in the file list.
 
 ## Verification
 
-The kernel behavior is proven on complementary fronts, all replayed
+The kernel behavior is verified on complementary fronts, all replayed
 in the same order by the CI (`.github/workflows/ci.yml`) and by
 `npm run verify`:
 
@@ -107,7 +107,7 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   captured before the refactoring; any difference is a regression.
 - **The executable specification** (`tests/specification-properties.mts`):
   the normative obligations O1–O18 and conformance requirements C1–C8
-  of `docs/specification.md`, proven as properties — closures (dedup,
+  of `docs/specification.md`, checked as properties — closures (dedup,
   own node first, the measured diamond), reads (first winner,
   statuses, MASK), keys, anchors, immutability (call-order
   independence, permutation invariance of the 47-layer assembly),
@@ -118,13 +118,13 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   step, an orphan target is refused as « cible-inconnue », a betrayed
   expectation as « attendu-trahi » — the observable vocabulary of the
   verdicts is frozen like the statuses are.
-- **The verified geologist loop** (`src/application/penLoop.ts`, proven by
+- **The verified geologist loop** (`src/application/penLoop.ts`, verified by
   `tests/pen-loop-checks.mts`): the geologist proposes, the staging judges,
   the refusal travels back to the model with its verdicts — up to a
   spendable budget of attempts. A pure use case (the model call is
   injected), consumed by the server: `/api/generate` only ever answers
   with a staged draft.
-- **The living editor** (`src/application/edition.ts`, proven by
+- **The living editor** (`src/application/edition.ts`, verified by
   `tests/editor-checks.mts`): a runtime-added layer leaves the living
   context for its judgement, the staging re-validates corpus and
   additions whole and replays the expectations of the other living

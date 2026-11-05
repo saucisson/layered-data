@@ -42,7 +42,7 @@ export function rawTreeWalk(node: RawTree, path: LayerPath = []): [LayerPath, Ra
 }
 
 // Equality of refinement entries (references or scalars) — used to
-// deduplicate while desugaring; mirror of the Python `__eq__`.
+// deduplicate while desugaring; structural equality of the references.
 export function refinementEntriesEqual(first: RawValue, second: RawValue): boolean {
   if (first instanceof PathReference && second instanceof PathReference) {
     return first.anchor === second.anchor && first.path.join("\u0001") === second.path.join("\u0001");

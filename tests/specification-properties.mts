@@ -1,12 +1,13 @@
 // The executable specification of the kernel.
 //
 // docs/specification.md is normative: obligations O1–O18 and
-// conformance requirements C1–C8. This file proves them as
+// conformance requirements C1–C8. This file checks them as
 // properties — over the whole bedrock corpus (every observable
 // address, the same walk as the audit harness) and over dedicated
 // spaces built for the semantics the corpus does not exercise
 // (implicits, masks at the kernel level, the cycle guard, the touch
-// protocol). Every "measured" expectation was read from the
+// protocol). These are conformance measurements, not formal
+// demonstrations. Every "measured" expectation was read from the
 // running kernel first, then frozen — the same discipline as the
 // baseline dump.
 //
@@ -61,7 +62,7 @@ function spaceFromJoinOrder(order: readonly string[]): Space {
 }
 
 /** A space assembled from a VARIANT of the corpus sources — the
- * data-driven semantics proof (ADR-0019) edits the registry layer
+ * data-driven semantics check (ADR-0019) edits the registry layer
  * itself, the rest of the bedrock joins unchanged. */
 function spaceFromSourcesMap(sources: Record<string, string>, order: readonly string[]): Space {
   const joined = order
@@ -598,7 +599,7 @@ check(
   vacantChecksOf({ space: bedrock, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
 );
 
-// the data-driven proof: a variant bedrock whose registry layer EDITS
+// the data-driven check: a variant bedrock whose registry layer EDITS
 // a contract — sperner gains a required slot « tolerance » that no
 // layer binds. The language said it; the detector reads it — the
 // semantics moved with the data, no code touched
