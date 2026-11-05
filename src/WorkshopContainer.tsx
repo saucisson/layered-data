@@ -165,7 +165,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
     setCopied(false);
   }
 
-  // A line of the pen opens its step — the address it writes
+  // A line of the layer source opens its step — the address it writes
   // enters on the right of the cascade, the key is read there, the
   // calculation unfolds: the resolution becomes a story.
   function openSourceLine(target: SourceLineTarget) {
@@ -593,7 +593,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
           </header>
 
           {/* The tutorial at the top: the workshop is learned before
-              it is used — the addresses of the spine navigate the
+              it is used — the addresses of the stratigraphic column navigate the
               space like the rest of the tool (goto: the address is
               the artifact) */}
 

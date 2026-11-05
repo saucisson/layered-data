@@ -1,4 +1,4 @@
-// ② "The formalism": three tabs — Language (the colored pen), Raw
+// ② "The formalism": three tabs — Language (the colored source), Raw
 // (what the layer stores), Flattened (the formalism without
 // hierarchy + copyable dump) — three readings of the same layer,
 // in step with the navigation; the language is used everywhere in

@@ -1,10 +1,10 @@
 // The living editor checks: a runtime-added layer re-enters the
-// tribunal, is rewritten in place, and the write is declared —
+// staging, is rewritten in place, and the write is declared —
 // the touch protocol invalidates every memo entry that depends on
 // the layer, its own and the children's (O18 through the
 // refinement chain).
 //
-// Six scenarios over the assembled trunk corpus: a sound edition
+// Six scenarios over the assembled bedrock corpus: a sound edition
 // is accepted and applied (the new value crosses the diamond, the
 // child's memo entry is invalidated and re-read), a broken syntax
 // is refused and the space stays intact, an edition that betrays
@@ -40,7 +40,7 @@ function check(label: string, condition: boolean): void {
   if (!condition) failures.push(label);
 }
 
-// ---- the assembled trunk and the living workshop --------------------
+// ---- the assembled bedrock and the living workshop --------------------
 
 const corpusDirectory = join(import.meta.dirname, "..", "formalisms", "kernel");
 const layerSources = Object.fromEntries(
@@ -188,7 +188,7 @@ check(
   childWeightAfter === 1,
 );
 check(
-  "(a) the corpus layers never moved — the trunk stays intact under the living edition",
+  "(a) the corpus layers never moved — the bedrock stays intact under the living edition",
   [...KERNEL_LAYER_NAMES].every((name) => name in kernel.space.layers),
 );
 
@@ -327,28 +327,28 @@ check(
 );
 
 // =====================================================================
-// (g) the trunk never re-enters the tribunal (ADR-0020): an edition
-//     aimed at a trunk layer is refused as tronc-édité — the corpus
+// (g) the bedrock never re-enters staging (ADR-0020): an edition
+//     aimed at a bedrock layer is refused as socle-édité — the corpus
 //     is read-only by protocol, not by UI convention
 // =====================================================================
 
-const trunkEdition = editLayer({
+const bedrockEdition = editLayer({
   layerName: "record",
   editedSource: 'layer record\n  specification\n    record = "réécrit"\n',
 });
 check(
-  '(g) the edition aimed at the trunk layer is refused — the guard speaks before the tribunal is convened',
-  trunkEdition.ok === false && trunkEdition.refusals.includes("tronc-édité") === true,
+  '(g) the edition aimed at the bedrock layer is refused — the guard speaks before staging is convened',
+  bedrockEdition.ok === false && bedrockEdition.refusals.includes("socle-édité") === true,
 );
 const recordTreeBefore = kernel.space.layers["record"];
 const refusedTrunkApply = applyStagedEdition({
   space: kernel.space,
   layerName: asLayerName("record"),
-  staging: trunkEdition.staging,
+  staging: bedrockEdition.staging,
   readonlyLayerNames: [...KERNEL_LAYER_NAMES],
 });
 check(
-  '(g) the act of edition never writes a trunk layer — the tree is untouched, whoever calls the route (measured before ADR-0020: `record` was mutable in place)',
+  '(g) the act of edition never writes a bedrock layer — the tree is untouched, whoever calls the route (measured before ADR-0020: `record` was mutable in place)',
   kernel.space.layers["record"] === recordTreeBefore && refusedTrunkApply.block === "",
 );
 

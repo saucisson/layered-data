@@ -45,6 +45,13 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       fr: "la lecture d'une adresse : la traversée de sa fermeture, de la plus récente à la plus ancienne couche.",
     },
   },
+  carrière: {
+    term: { en: "quarry", fr: "carrière" },
+    definition: {
+      en: "the disk store of the layers: one file per formalism, the bedrock read-only, the visitors' layers visible to all; every entry passes through the staging — the disk never bypasses the contract.",
+      fr: "le magasin des couches sur disque : un fichier par formalisme, le socle en lecture seule, les couches des visiteurs visibles de tous ; toute entrée passe par le staging — le disque ne contourne jamais le contrat.",
+    },
+  },
   check: {
     term: { en: "check", fr: "check" },
     definition: {
@@ -66,8 +73,8 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       fr: "une désignation relative : locale à sa collection, dans la couche courante uniquement — par opposition au Ref.",
     },
   },
-  "colonne vertébrale": {
-    term: { en: "spine", fr: "colonne vertébrale" },
+  "colonne stratigraphique": {
+    term: { en: "stratigraphic column", fr: "colonne stratigraphique" },
     definition: {
       en: "the chain of layers that carries the tutorial's thread, from multihypergraph to ss-pn-philosophers-5-inst.",
       fr: "la chaîne de couches qui porte le fil du tutoriel, de multihypergraph à ss-pn-philosophers-5-inst.",
@@ -77,7 +84,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     term: { en: "order conflict", fr: "conflit d'ordre" },
     definition: {
       en: "a leaf value decided between incomparable sources: the refines order, a convention — visible as a lint diagnostic, refused in strict staging, silenced by an assume.",
-      fr: "une valeur feuille tranchée entre sources incomparables : l'ordre des refines, une convention — visible en diagnostic de linteuse, refusée en staging strict, tue par un assume.",
+      fr: "une valeur feuille tranchée entre sources incomparables : l'ordre des refines, une convention — visible en diagnostic de linter, refusée en staging strict, tue par un assume.",
     },
   },
   contrainte: {
@@ -136,6 +143,13 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       fr: "la liste ordonnée de tous les nœuds qui définissent une adresse : soi-même, puis chaque ancêtre via refines.",
     },
   },
+  "géologue": {
+    term: { en: "geologist", fr: "géologue" },
+    definition: {
+      en: "the AI layer-writer of the workshop: it proposes drafts, the staging judges them; it never applies anything, and an expectation is measured, never invented.",
+      fr: "le rédacteur IA de l'atelier : il propose des brouillons, le staging les juge ; il n'applique jamais rien, et un attendu se mesure, il ne s'invente pas.",
+    },
+  },
   "hériter": {
     term: { en: "inherit", fr: "hériter" },
     definition: {
@@ -164,8 +178,8 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       fr: "un Ref peut viser un chemin qui n'existe pas encore (ex. le paramètre petrinet, posé plus bas dans la pile) ; la résolution se fait dans la couche lisante.",
     },
   },
-  linteuse: {
-    term: { en: "linter", fr: "linteuse" },
+  linter: {
+    term: { en: "linter", fr: "linter" },
     definition: {
       en: "the structural verifier of the space (dead references, embeddings, inert late bindings); blind to designations by keys.",
       fr: "le vérificateur structurel de l'espace (références mortes, plongements, liaisons tardives inertes) ; aveugle aux désignations par clés.",
@@ -239,6 +253,13 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     definition: {
       en: "the formal name a generic check reads (edges, arrows, arrow-vertex, end-source…): the layers bind it (bind), first-winner across the closure — a renaming rebinds the slot, the check follows the view.",
       fr: "le nom formel qu'un check générique lit (edges, arrows, arrow-vertex, end-source…) : les couches le lient (bind), premier-gagné à travers la fermeture — un renommage re-lie le slot, le check suit la vue.",
+    },
+  },
+  socle: {
+    term: { en: "bedrock", fr: "socle" },
+    definition: {
+      en: "the kernel's 47 shipped layers, read-only by protocol (ADR-0020): a draft may refine them, never replace or edit them — the UI filter and the HTTP 403 are conveniences over the protocol's own rule.",
+      fr: "les 47 couches livrées par le noyau, en lecture seule par protocole (ADR-0020) : un brouillon peut les raffiner, jamais les remplacer ni les éditer — le filtre de l'interface et le 403 HTTP sont des commodités par-dessus la règle du protocole lui-même.",
     },
   },
   surcharger: {

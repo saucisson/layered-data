@@ -20,18 +20,18 @@ Le code suit une architecture en oignon, documentée dans
   sources, staging des ajouts (le refus d'un candidat casseur), vues
   aplaties, linting.
 - `src/infrastructure/` — les effets vers l'extérieur : chargement du
-  corpus (glob Vite), client HTTP de l'armoire, stockage du code d'accès.
+  corpus (glob Vite), client HTTP de la carrière, stockage du code d'accès.
 - `src/presentation/` — les composants React : purs dans le rendu, sans
   logique métier.
 - `src/App.tsx` — la racine de composition : le noyau y est assemblé,
   les états y vivent, les panneaux (① couches, ② formalisme, ③ lecture,
   ④ point de vue) y sont câblés.
-- `formalisms/kernel/` — les 47 couches du tronc, une par fichier `.ld`.
-- `formalisms/users/` — l'armoire personnelle (vide au départ).
-- `server.ts` — l'armoire : API des couches + plume IA + statique.
-- `tests/` — les six harnais de vérification : audit, spécification
-  exécutable, staging, boucle de la plume, éditeur vivant, atelier
-  bilingue (voir plus bas).
+- `formalisms/kernel/` — les 47 couches du socle, une par fichier `.ld`.
+- `formalisms/users/` — la carrière personnelle (vide au départ).
+- `server.ts` — la carrière : API des couches + géologue IA + statique.
+- `tests/` — les sept harnais de vérification : audit, spécification
+  exécutable, staging, boucle du géologue, éditeur vivant, atelier
+  bilingue, vocabulaire du traité (voir plus bas).
 - `docs/specification.md` — la spécification normative du noyau
   (obligations O1–O18, conformité C1–C8), rendue exécutable par
   `tests/specification-properties.mts`.
@@ -41,14 +41,14 @@ Le code suit une architecture en oignon, documentée dans
 ```bash
 npm install
 cp .env.example .env          # puis éditez API_TOKEN
-npm run serve                 # l'armoire : API sur 127.0.0.1:8791
+npm run serve                 # la carrière : API sur 127.0.0.1:8791
 npm run dev                    # l'atelier avec rechargement à chaud (proxy /api)
-npm run build && npm run serve # l'atelier construit, servi par l'armoire
+npm run build && npm run serve # l'atelier construit, servi par la carrière
 npm test                       # non-régression du noyau (voir plus bas)
 npm run check:structure        # équilibre JSX/tsx (filet, sans compilateur)
 ```
 
-## L'API de l'armoire
+## L'API de la carrière
 
 Le code d'accès passe dans l'en-tête `x-access-code` (le `Authorization:
 Bearer <API_TOKEN>` de compatibilité reste accepté). Toutes les routes le
@@ -57,43 +57,44 @@ demandent et rendent du JSON, sauf indication.
 | Route | Effet |
 | --- | --- |
 | `GET /api/whoami` | 200 avec code valide, 401 sinon |
-| `GET /api/layers` | `{ layers: [{ name, builtIn }] }` — tronc + plumes des visiteurs |
+| `GET /api/layers` | `{ layers: [{ name, builtIn }] }` — socle + couches des visiteurs |
 | `GET /api/layers/:nom` | `{ name, builtIn, source }` — la couche `.ld` |
-| `PUT /api/layers/:nom` | pose une plume visiteur (403 sur le tronc, 400 nom invalide) |
+| `PUT /api/layers/:nom` | pose une couche visiteur (403 sur le socle, 400 nom invalide) |
 | `POST /api/generate` | corps `{ prompt }`, réponse **texte brut** : la couche en langage |
 
 L'ancienne API `api/formalismes` reste servie à l'identique (liste,
 lecture, pose, effacement) : c'est un alias d'héritage, les nouvelles
 intégrations parlent `api/layers`.
 
-Le tronc (les 47 couches du corpus) est en lecture seule : `PUT` et
+Le socle (les 47 couches du corpus) est en lecture seule : `PUT` et
 `DELETE` y répondent 403 — et depuis l'ADR-0020, la règle vit dans le
-protocole lui-même, pas seulement à la porte de l'armoire : staging et
-édition portent la signature du tronc et refusent eux-mêmes d'y
-toucher (« tronc-occupé », « tronc-édité »).
+protocole lui-même, pas seulement à la porte de la carrière : staging et
+édition portent la signature du socle et refusent eux-mêmes d'y
+toucher (« socle-occupé », « socle-édité »). Le vocabulaire du produit
+suit le traité de l'ADR-0021 : trois strates, un seul récit.
 
-## La plume et le contrat
+## Le géologue et le contrat
 
 Le prompt système de `/api/generate` embarque l'état de l'atelier, lu sur
 le disque à chaque appel : le manifeste des données en strates (raffinement,
-carottage premier-gagné, citations, lentilles), la colonne vertébrale
-complète (une ligne `layer … refines …` par couche du tronc, plus les
-plumes des visiteurs), un exemple complet du corpus et le contrat de
+carottage premier-gagné, citations, lentilles), la colonne stratigraphique
+complète (une ligne `layer … refines …` par couche du socle, plus les
+couches des visiteurs), un exemple complet du corpus et le contrat de
 tests. L'erreur amont (clé refusée, modèle inconnu, quota épuisé) est
 rendue telle quelle dans la réponse, jamais muette.
 
-**La plume propose, le staging juge** : chaque proposition de
+**Le géologue propose, le staging juge** : chaque proposition de
 `/api/generate` est vérifiée côté serveur par le staging même de
 l'atelier (syntaxe, cible inconnue, attendus trahis…) ; un refus
 revient au modèle avec ses verdicts, jusqu'à `PEN_MAX_ATTEMPTS`
 propositions (3 par défaut). `PEN_STRICT_CONFLICTS=1` arme le bras
-strict (ADR-0017) : la plume ne peut plus proposer une lecture que
+strict (ADR-0017) : le géologue ne peut plus proposer une lecture que
 l'ordre des refines tranche entre sources incomparables, sauf si
 l'adresse lisante signe un `assume`. `PEN_STRICT_CHECKS=1` arme le
 second bras strict (ADR-0018) : les checks portés par la candidate
-s'exécutent enfin, et la plume ne peut plus proposer une couche que
+s'exécutent enfin, et le géologue ne peut plus proposer une couche que
 ses propres contraintes refusent (« check-trahi »). Depuis l'ADR-0019,
-le registre des checks est lui-même une couche du tronc
+le registre des checks est lui-même une couche du socle
 (`formalisms/kernel/check-registry.ld`) : les contrats sont des
 données, l'existence d'une étiquette est l'existence dans les
 données, et le lint audite la couture (« contrat-sans-algorithme »,
@@ -103,7 +104,7 @@ et le staging du navigateur reste juge en dernier ressort.
 
 Le contrat de tests : les attendus (`expect … = …`, `expect … absent`)
 voyagent avec la couche et se rejouent à la validation ; un attendu trahi
-devient un verdict « attendu-trahi ». Protocole : **la plume propose,
+devient un verdict « attendu-trahi ». Protocole : **le géologue propose,
 jamais la vérité — les attendus se mesurent, ils ne se devinent pas**.
 
 ## Vérification
@@ -140,17 +141,17 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    signature (« conflit-d'ordre », ADR-0017), signature vide refusée
    (« assume-fantôme »), check posé mais incapable de juger refusé
    (« check-vacant », ADR-0018), et checks portés exécutés en mode
-   strict (« check-trahi »). Brouillon réclamant un nom du tronc
-   refusé (« tronc-occupé », ADR-0020) — le vol nommé, la pièce
+   strict (« check-trahi »). Brouillon réclamant un nom du socle
+   refusé (« socle-occupé », ADR-0020) — le vol nommé, la pièce
    forgée jamais jugée.
-4. **La boucle de la plume** (`npm run test:pen-loop`,
+4. **La boucle du géologue** (`npm run test:pen-loop`,
    `tests/pen-loop-checks.mts`) prouve la boucle vérifiée côté serveur
-   (`src/application/penLoop.ts`, plume injectée — hors ligne) : refus
+   (`src/application/penLoop.ts`, géologue injecté — hors ligne) : refus
    syntaxique puis correction acceptée, verdicts en français au modèle,
-   budget épuisé (3 refus), plume muette refusée, proposition raffinant
-   une plume d'utilisateur acceptée quand l'armoire est dans le contexte,
-   proposition réclamant le nom d'une couche du tronc refusée
-   (« tronc-occupé », ADR-0020) puis corrigée vers un raffinement accepté.
+   budget épuisé (3 refus), géologue muet refusé, proposition raffinant
+   une couche d'utilisateur acceptée quand la carrière est dans le contexte,
+   proposition réclamant le nom d'une couche du socle refusée
+   (« socle-occupé », ADR-0020) puis corrigée vers un raffinement accepté.
 5. **Les checks de l'éditeur vivant** (`npm run test:editor`,
    `tests/editor-checks.mts`) figent le protocole des éditions
    (`src/application/edition.ts`) : la couche vivante quitte le
@@ -161,7 +162,7 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    de l'enfant qui la lit (O18 à travers la chaîne de raffinement) ;
    renommage refusé, couche glissée dans l'édition refusée, attendu
    trahi d'une autre couche refusé (l'espace reste intact), édition
-   visant le tronc refusée (« tronc-édité », ADR-0020) — et sans
+   visant le socle refusée (« socle-édité », ADR-0020) — et sans
    le touch, la fermeture mémoïsée sert l'ancienne chaîne en silence :
    le protocole est obligatoire.
 6. **Les checks de l'atelier bilingue** (`npm run test:i18n`,
@@ -171,10 +172,19 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    `renderMessage`/`kernelLabel` les habillent dans la langue de
    l'atelier ; chaque surface pédagogique (glossaire, tutoriel,
    scénarios, notes de vue, rôle des 47 couches, diagnostics,
-   instructions de la plume) porte ses deux textes, mesurés par le
+   instructions du géologue) porte ses deux textes, mesurés par le
    harnais. Les formalismes `.ld` du corpus restent dans leur langue.
+7. **Les checks du vocabulaire du traité** (`npm run test:terminology`,
+   `tests/terminology-checks.mts`) figent le traité de l'ADR-0021 :
+   trois strates, un seul récit. Les mots de l'informatique gardent
+   leur nom adopté (staging, linter — « la linteuse » est retirée),
+   les marques ⟪…⟫ citent le glossaire dans la langue de chacun, et
+   le récit vit chez le géologue (socle, carrière, colonne
+   stratigraphique) ; les mots retirés (la plume, l'armoire, le
+   tronc, la colonne vertébrale) n'apparaissent dans aucune chaîne
+   rendue, mesuré.
 
-`npm test` lance les six harnais ; `npm run verify` lance toute la
+`npm test` lance les sept harnais ; `npm run verify` lance toute la
 chaîne (typage, structure, harnais, build). La spécification normative
 vit dans `docs/specification.md` (texte en français : le vocabulaire
 observable du produit l'est aussi).
@@ -187,5 +197,5 @@ qu'une fois.
 
 - Le serveur écoute sur `127.0.0.1` par défaut ; ne changez `HOST`
   que derrière un reverse-proxy authentifié.
-- Aucune clé n'est embarquée : la plume sort seulement si
+- Aucune clé n'est embarquée : le géologue sort seulement si
   `MISTRAL_API_KEY` est posée dans l'environnement ou le `.env`.
