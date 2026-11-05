@@ -31,13 +31,6 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       fr: "la liberté de nommer un même contenu par plusieurs adresses (ex. vertices comme union) ; le prix : un même défaut est rapporté à chaque adresse qui le désigne.",
     },
   },
-  assume: {
-    term: { en: "assume", fr: "assume" },
-    definition: {
-      en: "the signature of an order-decided read: the act declares that first-wins walks incomparable sources at this address, and that the refines order as written is intended; an assume without a conflict is a ghost verdict.",
-      fr: "la signature d'une lecture tranchée par l'ordre : l'acte déclare que le premier-gagné traverse des sources incomparables à cette adresse, et que l'ordre des refines tel qu'il est écrit est voulu ; un assume sans conflit est un verdict fantôme.",
-    },
-  },
   carottage: {
     term: { en: "core sample", fr: "carottage" },
     definition: {
@@ -83,8 +76,8 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   "conflit d'ordre": {
     term: { en: "order conflict", fr: "conflit d'ordre" },
     definition: {
-      en: "a leaf value decided between incomparable sources: the refines order, a convention — visible as a lint diagnostic, refused in strict staging, silenced by an assume.",
-      fr: "une valeur feuille tranchée entre sources incomparables : l'ordre des refines, une convention — visible en diagnostic de linter, refusée en staging strict, tue par un assume.",
+      en: "a leaf value decided between incomparable sources: the refines order, a convention — visible as a lint diagnostic, refused in strict staging; nothing signs it (ADR-0023), to resolve it is to restructure.",
+      fr: "une valeur feuille tranchée entre sources incomparables : l'ordre des refines, une convention — visible en diagnostic de linter, refusée en staging strict ; rien ne la signe (ADR-0023), la résoudre, c'est restructurer.",
     },
   },
   contrainte: {
@@ -183,13 +176,6 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     definition: {
       en: "the structural verifier of the space (dead references, embeddings, inert late bindings); blind to designations by keys.",
       fr: "le vérificateur structurel de l'espace (références mortes, plongements, liaisons tardives inertes) ; aveugle aux désignations par clés.",
-    },
-  },
-  masque: {
-    term: { en: "mask", fr: "masque" },
-    definition: {
-      en: "a slot present but mute (the mask act); the read skips to the next ancestor — selective inheritance without deleting the origin.",
-      fr: "un slot présent mais muet (l'acte mask) ; la lecture saute vers l'ancêtre suivant — l'héritage sélectif sans supprimer l'origine.",
     },
   },
   "paramètre": {

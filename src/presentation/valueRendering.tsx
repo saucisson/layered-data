@@ -1,5 +1,5 @@
 // The kernel value renderers: the small display atoms that turn a
-// kernel value (address view, reference, scalar, mask) into styled
+// kernel value (address view, reference, scalar) into styled
 // text — never `[object Object]`. Every label is bilingual: the
 // kernel codes (statuses, vias) render through the vocabulary, the
 // composed ones through say().

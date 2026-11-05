@@ -2,10 +2,11 @@
 //
 // First-wins is the single read semantics — and when the two
 // providers of a key are INCOMPARABLE (neither lives in the other's
-// closure), what decides between them is not specificity but the
-// ORDER of the refines lists: a convention. The kernel stays silent
-// by design (O2: the order IS the semantics); this module makes the
-// convention observable without changing it.
+// closure), the first of the two wins by the ORDER of the refines
+// lists: a convention the reading never blesses (ADR-0023: the
+// algebra is two regimes, specificity is the only judge of values).
+// This module makes the convention observable without blessing it:
+// the lint inventories it, the strict staging refuses it.
 //
 // A conflict is a divergence of LEAF VALUE — a scalar, a
 // reference, a list: what a read can return directly. Two
@@ -17,16 +18,13 @@
 //
 // Vertical inheritance (the winner refined from the loser) is never
 // a conflict: the specificity order is a declared structure, not a
-// convention. MASK is an act, not a value: masked and masking
-// sources never conflict. Notes (__note:…) document, they do not
-// provide.
+// convention. Notes (__note:…) document, they do not provide.
 //
 // Everything here is pure: the space arrives as a parameter, the
 // kernel is only read, never written.
 
 import {
   LayerReference,
-  MASK,
   PathReference,
   type Address,
   isDictionary,
@@ -100,9 +98,9 @@ export function orderConflictsAt({ space, address }: { space: Space; address: Ad
       const node = space.raw({ layer: source[0], path: source[1] });
       if (!isDictionary(node)) continue;
       const laid = node[key];
-      // absent, transparent (null) and masking (MASK) sources do not
-      // provide; a dict opens a sub-address, it lays no leaf value
-      if (laid === undefined || laid === null || laid === MASK || isDictionary(laid)) continue;
+      // absent and transparent (null) sources do not provide; a dict
+      // opens a sub-address, it lays no leaf value
+      if (laid === undefined || laid === null || isDictionary(laid)) continue;
       providers.push({ address: [source[0], [...source[1]]], value: laid });
     }
     if (providers.length < 2) continue;
@@ -132,25 +130,21 @@ export function orderConflictsAt({ space, address }: { space: Space; address: Ad
   return conflicts;
 }
 
-/** The unsigned order conflicts of a set of layers: every conflict
- * of every address, minus the ones signed by an `assume` — the
- * signature is a declaration of the language, judged elsewhere
- * (an assume without a conflict is a ghost); `isAssumed` reads the
- * compilation's declaration table. */
-export function unsignedOrderConflictsOf({
+/** The order conflicts of a set of layers: every conflict of every
+ * address — the convention made visible, nothing silenced it
+ * anymore (ADR-0023: no act blesses an order-decided read; to
+ * resolve one is to restructure). */
+export function orderConflictsOf({
   space,
   layerNames,
-  isAssumed,
 }: {
   space: Space;
   layerNames: readonly LayerName[];
-  isAssumed: (address: Address, key: string) => boolean;
 }): OrderConflict[] {
   const output: OrderConflict[] = [];
   for (const layerName of layerNames) {
     for (const address of walkAddresses({ space, layer: layerName })) {
       for (const conflict of orderConflictsAt({ space, address })) {
-        if (isAssumed(address, conflict.key)) continue;
         output.push({ address, ...conflict });
       }
     }

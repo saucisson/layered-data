@@ -1,5 +1,5 @@
 === language en ===
-stats {"couches":47,"erreursSyntaxe":0,"decl":782,"nouveau":467,"extension":182,"surcharge":133,"masque":0,"declOK":782,"etiquettes":37,"ombresDeclarées":1148,"ombresÉmergentes":10,"ombresBrutes":0,"tests":7,"trahis":0,"couples":2}
+stats {"couches":47,"erreursSyntaxe":0,"decl":782,"nouveau":467,"extension":182,"surcharge":133,"declOK":782,"etiquettes":37,"ombresDeclarées":1148,"ombresÉmergentes":10,"ombresBrutes":0,"tests":7,"trahis":0,"couples":2}
 verdicts 0
 diag 97
 diag entrée-ignorée :: ss-pn-philosophers-5-inst/specification/state_type :: ref petrinet-behavior::petrinet — anchor not found or path interrupted
@@ -70604,7 +70604,7 @@ special wb-course/positions/a1 :: checks => null
 special wb-course/positions/a1 :: check-definitions => null
 special wb-course/positions/a1 :: bindings => null
 === language fr ===
-stats {"couches":47,"erreursSyntaxe":0,"decl":782,"nouveau":467,"extension":182,"surcharge":133,"masque":0,"declOK":782,"etiquettes":37,"ombresDeclarées":1148,"ombresÉmergentes":10,"ombresBrutes":0,"tests":7,"trahis":0,"couples":2}
+stats {"couches":47,"erreursSyntaxe":0,"decl":782,"nouveau":467,"extension":182,"surcharge":133,"declOK":782,"etiquettes":37,"ombresDeclarées":1148,"ombresÉmergentes":10,"ombresBrutes":0,"tests":7,"trahis":0,"couples":2}
 verdicts 0
 diag 97
 diag entrée-ignorée :: ss-pn-philosophers-5-inst/specification/state_type :: ref petrinet-behavior::petrinet — ancre introuvable ou chemin interrompu

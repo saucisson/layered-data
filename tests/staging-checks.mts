@@ -6,10 +6,11 @@
 // refinement targets are reported), a broken syntax is refused at
 // the syntax step, an unknown refinement target is refused as
 // "cible-inconnue", a betrayed expectation is refused as
-// "attendu-trahi", an unsigned order conflict is accepted
-// permissively but refused as "conflit-d'ordre" in strict mode
-// (ADR-0017), an assume signs it (both modes accept), an empty
-// signature is refused as "assume-fantôme", a check posed without
+// "attendu-trahi", an order conflict is accepted
+// permissively but refused as "conflit-d'ordre" in strict mode,
+// without exception (ADR-0017, retired as a semantics by ADR-0023),
+// the retired words fall back to the common vocabulary of keys
+// (ADR-0023), a check posed without
 // its slots is refused as "check-vacant" (ADR-0018), and a cyclic
 // candidate over the dag family is accepted permissively but its
 // carried check refuses it as "check-trahi" in strict mode. The
@@ -157,9 +158,10 @@ check(
 );
 
 // =====================================================================
-// (e) an unsigned order conflict: permissive staging accepts, the
-// strict mode refuses as conflit-d'ordre — and inheritance alone
-// never conflicts: the sound draft stays accepted in strict mode
+// (e) an order conflict: permissive staging accepts, the strict
+// mode refuses as conflit-d'ordre, without exception (ADR-0023) —
+// and inheritance alone never conflicts: the sound draft stays
+// accepted in strict mode
 // =====================================================================
 
 // two incomparable providers of the same leaf key: the draft layer
@@ -174,7 +176,7 @@ const conflictDraft = [
 
 const permissiveConflict = stage({ draftSource: conflictDraft });
 check(
-  "(e) the unsigned conflict is accepted by the permissive staging — the order stays the semantics",
+  "(e) the conflict is accepted by the permissive staging — the lint's inventory is the whole story",
   permissiveConflict.ok === true && permissiveConflict.verdicts.length === 0,
 );
 check(
@@ -210,11 +212,11 @@ const strictConflict = stageLayerAddition({
   strictConflicts: true,
 });
 check(
-  "(e) the unsigned conflict is refused in strict mode, at the validation step",
+  "(e) the conflict is refused in strict mode, at the validation step — without exception",
   strictConflict.ok === false && strictConflict.step === "validation",
 );
 check(
-  '(e) the unsigned conflict carries exactly the "conflit-d\'ordre" verdict',
+  '(e) the conflict carries exactly the "conflit-d\'ordre" verdict',
   strictConflict.verdicts.length === 1 && strictConflict.verdicts[0].kind === "conflit-d'ordre",
 );
 check(
@@ -226,82 +228,52 @@ check(
 );
 
 // =====================================================================
-// (f) the assume signs the conflict: the strict staging accepts a
-// signed convention, and the lint stays silent at the signing
-// address
+// (f) the retired words fall back to the common vocabulary of keys
+// (ADR-0023): `mask` and `assume` are no longer acts of the grammar
+// — written as members, they are ordinary data, declared and read
+// like any key. The door is closed, not welded.
 // =====================================================================
 
-const signedDraft = [
-  "layer demo-left refines @record",
-  "  charge = 1",
-  "layer demo-right refines @record",
-  "  charge = 2",
-  "layer demo-signed refines @demo-left then @demo-right",
-  "  assume charge",
+const retiredDraft = [
+  "layer demo-retired refines @record",
+  "  assume = 7",
+  "  mask = 3",
 ].join("\n");
 
-const strictSigned = stageLayerAddition({
-  languageSource: kernel.languageSource,
-  previousAdditionSources: [],
-  draftSource: signedDraft,
-  livingLayerNames: [...KERNEL_LAYER_NAMES],
-  readonlyLayerNames: [...KERNEL_LAYER_NAMES],
-  strictConflicts: true,
-});
+const retiredStage = stage({ draftSource: retiredDraft });
 check(
-  "(f) the signed conflict is accepted in strict mode — the assume is the signature",
-  strictSigned.ok === true && strictSigned.verdicts.length === 0,
+  "(f) the retired words parse as ordinary members — nothing reserves them anymore",
+  retiredStage.ok === true && retiredStage.verdicts.length === 0,
+);
+check(
+  "(f) the retired words are measured: both members read their laid values",
+  retiredStage.ok &&
+    retiredStage.compiledLanguage !== null &&
+    new Space(retiredStage.compiledLanguage.layers).read({ layer: asLayerName("demo-retired"), path: asLayerPath([]), key: "assume" }) === 7 &&
+    new Space(retiredStage.compiledLanguage.layers).read({ layer: asLayerName("demo-retired"), path: asLayerPath([]), key: "mask" }) === 3,
 );
 
-const permissiveSigned = stage({ draftSource: signedDraft });
-check(
-  "(f) the signed conflict is accepted by the permissive staging too",
-  permissiveSigned.ok === true && permissiveSigned.verdicts.length === 0,
-);
+// =====================================================================
+// (g) nothing signs a conflict anymore (ADR-0023): the lint
+// inventories the whole of it — conflit-d'ordre is a diagnostic, the
+// strict staging a verdict, and no act silences either
+// =====================================================================
 
-// the lint inventories the unsigned conflicts and respects the
-// signatures — the diagnostics channel tells them apart
-const unsignedLints = runAllLints({
+// the lint inventories the conflicts and respects nothing — every
+// crossing is recorded, the diagnostics channel hides none
+const conflictLints = runAllLints({
   space: new Space(permissiveConflict.compiledLanguage!.layers),
   layerNames: permissiveConflict.layerNames,
   compilation: permissiveConflict.compiledLanguage!,
 });
 check(
-  "(f) the lint records the unsigned conflict as a conflit-d'ordre diagnostic",
-  unsignedLints.some(
+  "(g) the lint records the conflict as a conflit-d'ordre diagnostic",
+  conflictLints.some(
     (diagnostic) =>
       diagnostic.kind === "conflit-d'ordre" &&
       diagnostic.address[0] === "demo-conflict" &&
       JSON.stringify(diagnostic.fact.params).includes("charge"),
   ),
-);
-const signedLints = runAllLints({
-  space: new Space(permissiveSigned.compiledLanguage!.layers),
-  layerNames: permissiveSigned.layerNames,
-  compilation: permissiveSigned.compiledLanguage!,
-});
-check(
-  "(f) the lint stays silent at the signing address — the assume is respected",
-  !signedLints.some((diagnostic) => diagnostic.kind === "conflit-d'ordre" && diagnostic.address[0] === "demo-signed"),
-);
-
-// =====================================================================
-// (g) an assume without a conflict is refused as assume-fantôme —
-// the signature judges nothing, the empty signature is a verdict
-// =====================================================================
-
-const ghostDraft = [
-  "layer demo-ghost refines @record",
-  "  assume charge",
-].join("\n");
-const refusedGhost = stage({ draftSource: ghostDraft });
-check(
-  "(g) the empty signature is refused at the validation step",
-  refusedGhost.ok === false && refusedGhost.step === "validation",
-);
-check(
-  '(g) the empty signature carries exactly the "assume-fantôme" verdict',
-  refusedGhost.verdicts.length === 1 && refusedGhost.verdicts[0].kind === "assume-fantôme",
 );
 
 // =====================================================================

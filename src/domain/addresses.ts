@@ -51,13 +51,6 @@ export class AddressView {
   }
 }
 
-// The opaque mask: it hides a key from every read, even before the
-// first-winner walk reaches it (unlike the abstract slot `null`,
-// which stays transparent). A symbol, so no data value can collide
-// with it.
-export const MASK = Symbol("MASK");
-export type Mask = typeof MASK;
-
 /** The raw tree of one layer, as the compiler emits it. */
 export type RawTree = { [key: string]: RawValue };
 export type RawValue =
@@ -65,7 +58,6 @@ export type RawValue =
   | RawValue[]
   | PathReference
   | LayerReference
-  | Mask
   | string
   | number
   | boolean

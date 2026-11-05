@@ -252,8 +252,7 @@ philosophes — chaque formalisme du papier, une famille de couches.
   tutoriel.
 - **Il paie des prix affichés.** Le prix de l'alias (un défaut
   rapporté à chaque adresse de vue qui le désigne), le linter aveugle
-  aux désignations par clés, le masque qui casse la monotonicité de
-  l'héritage (une clé masquée ne descend plus) — des limites
+  aux désignations par clés — des limites
   documentées dans le tutoriel, pas des découvertes à venir.
 
 ## 4. Le papier fondateur

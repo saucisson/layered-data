@@ -131,9 +131,10 @@ export async function composeVerifiedLayerDraft({
   /** the workshop language the feedback speaks — the geologist hears the
    * kernel's vocabulary in the language the workshop renders it */
   language?: Language;
-  /** refuse unsigned order conflicts too — the strict arm of the
-   * loop (ADR-0017): the geologist may propose an order-decided read only
-   * if the reading address signs an `assume` */
+  /** refuse order conflicts too — the strict arm of the loop
+   * (ADR-0017, retired by ADR-0023): the geologist may no longer
+   * propose a read the refines order settles between incomparable
+   * sources — to resolve it is to restructure, never to sign */
   strictConflicts?: boolean;
   /** execute the carried checks of the judged layers too — the
    * strict arm of the loop (ADR-0018): the geologist may no longer
