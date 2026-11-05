@@ -110,7 +110,7 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   of `docs/specification.md`, proven as properties — closures (dedup,
   own node first, the measured diamond), reads (first winner,
   statuses, MASK), keys, anchors, immutability (call-order
-  independence, permutation invariance of the 46-layer assembly),
+  independence, permutation invariance of the 47-layer assembly),
   the cycle guard, late binding, desugaring (topological order,
   idempotence), and the touch protocol (exact invalidation).
 - **The staging checks** (`tests/staging-checks.mts`): a sound draft
@@ -142,7 +142,7 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   `renderMessage` and `kernelLabel` dress them in the workshop
   language, threaded to every leaf by an explicit `language` prop (no
   React context). Every pedagogical surface — the glossary, the
-  tutorial, the scenarios, the view notes, the role of the 46 layers,
+  tutorial, the scenarios, the view notes, the role of the 47 layers,
   the diagnostics fold, the pen's system prompt — carries its two
   texts, and the harness measures the parity. The corpus `.ld`
   formalisms stay in their own tongue; the French audit half stays

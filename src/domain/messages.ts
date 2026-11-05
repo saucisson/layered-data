@@ -258,6 +258,48 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " : le check porté refuse — " +
       text(p, "error"),
   },
+  "algorithm-missing": {
+    en: (p) =>
+      "the check « " +
+      text(p, "tag") +
+      " » is declared in the registry but no algorithm executes it (ADR-0019)",
+    fr: (p) =>
+      "le check « " +
+      text(p, "tag") +
+      " » est déclaré dans le registre mais aucun algorithme ne l'exécute (ADR-0019)",
+  },
+  "contract-without-algorithm": {
+    en: (p) =>
+      "the registry declares « " +
+      text(p, "tag") +
+      " » but the kernel binds no algorithm to it (ADR-0019)",
+    fr: (p) =>
+      "le registre déclare « " +
+      text(p, "tag") +
+      " » mais le noyau ne lui lie aucun algorithme (ADR-0019)",
+  },
+  "algorithm-without-contract": {
+    en: (p) =>
+      "the kernel binds an algorithm for « " +
+      text(p, "tag") +
+      " » that the registry never declares (ADR-0019)",
+    fr: (p) =>
+      "le noyau lie un algorithme pour « " +
+      text(p, "tag") +
+      " » que le registre ne déclare pas (ADR-0019)",
+  },
+  "contract-unreadable": {
+    en: (p) =>
+      text(p, "where") +
+      " : the contract of « " +
+      text(p, "tag") +
+      " » is unreadable — a clause the kernel cannot parse (ADR-0019)",
+    fr: (p) =>
+      text(p, "where") +
+      " : le contrat de « " +
+      text(p, "tag") +
+      " » est illisible — une clause que le noyau ne sait pas lire (ADR-0019)",
+  },
 };
 
 /** All message codes, in template declaration order. */
@@ -323,6 +365,10 @@ export const VOCABULARY: Record<string, { en: string; fr: string }> = {
   "garde-de-cycle": { en: "cycle-guard", fr: "garde-de-cycle" },
   "check-vacant": { en: "check-vacant", fr: "check-vacant" },
   "check-trahi": { en: "check-betrayed", fr: "check-trahi" },
+  "algorithme-absent": { en: "algorithm-missing", fr: "algorithme-absent" },
+  "contrat-sans-algorithme": { en: "contract-without-algorithm", fr: "contrat-sans-algorithme" },
+  "algorithme-sans-contrat": { en: "algorithm-without-contract", fr: "algorithme-sans-contrat" },
+  "contrat-illisible": { en: "contract-unreadable", fr: "contrat-illisible" },
   "refines-inversés": { en: "refines-inverted", fr: "refines-inversés" },
   "ombre-émergente": { en: "emerging-shadow", fr: "ombre-émergente" },
   ombre: { en: "shadow", fr: "ombre" },

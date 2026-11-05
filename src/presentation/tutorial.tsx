@@ -82,8 +82,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
     },
     body: [
       {
-        en: "The whole corpus — 46 layers, from the base to the dinner — writes itself in an indentation language. No JSON, no braces: one line per gesture, the layout structures. Seven gestures suffice: open a ⟪layer⟫, declare its parents, write a block, lay a value, cite an address, verify, note. Every excerpt below is the corpus's real layer — readable as is in a formalism's « Language » tab.",
-        fr: "Le corpus entier — 46 couches, du socle au dîner — s'écrit dans un langage à indentation. Pas de JSON, pas d'accolades : une ligne par geste, la mise en page structure. Sept gestes suffisent : ouvrir une ⟪couche⟫, déclarer ses parents, écrire un bloc, poser une valeur, citer une adresse, vérifier, noter. Chaque extrait ci-dessous est la couche réelle du corpus — lisible telle quelle dans l'onglet « Langage » d'un formalisme.",
+        en: "The whole corpus — 47 layers, from the base to the dinner — writes itself in an indentation language. No JSON, no braces: one line per gesture, the layout structures. Seven gestures suffice: open a ⟪layer⟫, declare its parents, write a block, lay a value, cite an address, verify, note. Every excerpt below is the corpus's real layer — readable as is in a formalism's « Language » tab.",
+        fr: "Le corpus entier — 47 couches, du socle au dîner — s'écrit dans un langage à indentation. Pas de JSON, pas d'accolades : une ligne par geste, la mise en page structure. Sept gestes suffisent : ouvrir une ⟪couche⟫, déclarer ses parents, écrire un bloc, poser une valeur, citer une adresse, vérifier, noter. Chaque extrait ci-dessous est la couche réelle du corpus — lisible telle quelle dans l'onglet « Langage » d'un formalisme.",
       },
       {
         en: "First gesture — open and tie. layer opens the layer; refines declares its parents; then separates the unions. The stack's base, the atom of vertices and edges of any size, ties itself to record:",
@@ -265,8 +265,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         fr: "Aucun des deux ne suffit : chacun est l'angle mort exact de l'autre. Et le prix de l'⟪alias⟫ est assumé : un même défaut est rapporté à chaque adresse de vue qui le désigne.",
       },
       {
-        en: "A carried check must also be ABLE to judge: each tag of the ⟪registre⟫ declares its contract — where it judges, and which ⟪slot⟫s it must read. A posed check whose slots are unbound is refused as « check vacant » (ADR-0018); and in strict staging the carried checks finally EXECUTE over the candidate, their refusals returned as « check-trahi » — the constraint composes with the validity.",
-        fr: "Un check porté doit aussi pouvoir JUGER : chaque étiquette du ⟪registre⟫ déclare son contrat — où elle juge, et quels ⟪slot⟫s il lui faut lire. Un check posé dont les slots ne sont pas liés est refusé comme « check vacant » (ADR-0018) ; et en staging strict, les checks portés s'exécutent enfin sur la candidate, leurs refus rendus comme « check-trahi » — la contrainte compose avec la validité.",
+        en: "A carried check must also be ABLE to judge: each tag of the ⟪registre⟫ declares its contract — where it judges, and which ⟪slot⟫s it must read. A posed check whose slots are unbound is refused as « check vacant » (ADR-0018); and in strict staging the carried checks finally EXECUTE over the candidate, their refusals returned as « check-trahi » — the constraint composes with the validity. Since ADR-0019 the registry itself is written in the language — the layer check-registry declares the contracts, and the meta-model came home.",
+        fr: "Un check porté doit aussi pouvoir JUGER : chaque étiquette du ⟪registre⟫ déclare son contrat — où elle juge, et quels ⟪slot⟫s il lui faut lire. Un check posé dont les slots ne sont pas liés est refusé comme « check vacant » (ADR-0018) ; et en staging strict, les checks portés s'exécutent enfin sur la candidate, leurs refus rendus comme « check-trahi » — la contrainte compose avec la validité. Depuis l'ADR-0019, le registre lui-même est écrit dans le langage — la couche check-registry déclare les contrats, et le métamodèle est rentré chez lui.",
       },
     ],
     see: {
@@ -323,8 +323,8 @@ export const TUTORIAL_STEPS: TutorialStep[] = [
         fr: "Le noyau de cet outil a été prouvé identique au noyau Python, octet par octet. 204 149 octets de lectures comparées, puis sept espaces de plus, jusqu'aux diagrammes de décision et à l'assistant. L'oracle a alors été gelé. Le harnais vit désormais en TypeScript seul : 84 assertions natives, 0 échec, quelques secondes, aucun appel externe.",
       },
       {
-        en: "The spine — this tutorial's thread — is measured like everything else: same steps, same golden contract, same verifications. 46 layers in the inventory (37 hierarchy, 9 views) — the pn-philosophers-1 template and its pn-philosophers-5 dinner are counted separately there.",
-        fr: "La colonne vertébrale — le fil de ce tutoriel — est mesurée comme tout le reste : mêmes marches, même contrat d'or, mêmes vérifications. 46 couches à l'inventaire (37 de hiérarchie, 9 de vues) — le template pn-philosophers-1 et son dîner pn-philosophers-5 y sont comptés séparément.",
+        en: "The spine — this tutorial's thread — is measured like everything else: same steps, same golden contract, same verifications. 47 layers in the inventory (38 hierarchy, 9 views) — the pn-philosophers-1 template and its pn-philosophers-5 dinner are counted separately there.",
+        fr: "La colonne vertébrale — le fil de ce tutoriel — est mesurée comme tout le reste : mêmes marches, même contrat d'or, mêmes vérifications. 47 couches à l'inventaire (38 de hiérarchie, 9 de vues) — le template pn-philosophers-1 et son dîner pn-philosophers-5 y sont comptés séparément.",
       },
       {
         en: "The limits are assumed. The linter is blind to designations by keys. An unformulated intention is not verified. The alias's price multiplies the reports.",

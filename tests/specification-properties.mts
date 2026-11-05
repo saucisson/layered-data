@@ -31,8 +31,8 @@ import { parseLanguage } from "../src/domain/language/parser.ts";
 import { compileLanguage } from "../src/domain/language/compiler.ts";
 import { walkAddresses } from "../src/domain/views.ts";
 import { KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
-import { checkContracts, checkRegistry, slotReadingLevelsOf, vacantChecksOf } from "../src/domain/checks.ts";
-import { checkSlotContracts } from "../src/domain/validation.ts";
+import { checkRegistry, registryAuditOf, registryContractsOf, slotReadingLevelsOf, vacantChecksOf } from "../src/domain/checks.ts";
+import { checkSlotContractsOf } from "../src/domain/validation.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -57,9 +57,16 @@ const layerSources = Object.fromEntries(
 /** A space assembled from sources joined in the given layer order —
  * the order of the join is the only thing that varies. */
 function spaceFromJoinOrder(order: readonly string[]): Space {
+  return spaceFromSourcesMap(layerSources, order);
+}
+
+/** A space assembled from a VARIANT of the corpus sources — the
+ * data-driven semantics proof (ADR-0019) edits the registry layer
+ * itself, the rest of the trunk joins unchanged. */
+function spaceFromSourcesMap(sources: Record<string, string>, order: readonly string[]): Space {
   const joined = order
     .map((layerName) =>
-      layerSources[layerName].endsWith("\n") ? layerSources[layerName] : layerSources[layerName] + "\n",
+      sources[layerName].endsWith("\n") ? sources[layerName] : sources[layerName] + "\n",
     )
     .join("");
   const parsed = parseLanguage(joined);
@@ -343,7 +350,7 @@ const permutedDump = observableDump({ space: permutedAssembly, walkOrder: KERNEL
 let permutationDifferences = 0;
 for (const line of permutedDump) if (!referenceDump.has(line)) permutationDifferences++;
 check(
-  "C8 (permutation invariance): assembling the 46 layers in reverse order changes no closure, no keys, no read",
+  "C8 (permutation invariance): assembling the 47 layers in reverse order changes no closure, no keys, no read",
   permutationDifferences === 0 && permutedDump.length === referenceDump.size,
 );
 
@@ -545,25 +552,42 @@ check(
 );
 
 // =====================================================================
-// the nominal registry (ADR-0018) — the contracts of the check tags
+// the registry as data (ADR-0019) — the meta-model come home
 // =====================================================================
 
-// every tag of the registry declares a contract — the registry is
-// nominal: a check's semantics is readable without executing it
+// the contracts are READ FROM THE DATA: the check-registry layer is
+// the single source — the nine tags, in writing order, no more
+const trunkContracts = registryContractsOf({ space: trunk });
 check(
-  "ADR-0018: every check tag of the registry declares a contract",
-  Object.keys(checkRegistry).every((tag) => checkContracts[tag] !== undefined) &&
-    Object.keys(checkContracts).length === Object.keys(checkRegistry).length,
+  "ADR-0019: the registry is data — the check-registry layer declares the nine tags",
+  Object.keys(trunkContracts).join(",") === "containers,cardinality,simple,nonempty,oriented,sperner,k-partite,dag,arbre",
+);
+
+// the data and the algorithms answer for each other — the closed
+// registry of ADR-0018, now written in the language, covers the
+// kernel's execution binding 1:1
+check(
+  "ADR-0019: every kernel algorithm has a contract in the data, and every declared contract has its algorithm",
+  Object.keys(checkRegistry).every((tag) => trunkContracts[tag] !== undefined) &&
+    Object.keys(trunkContracts).length === Object.keys(checkRegistry).length,
+);
+
+// the meta-audit is silent on the trunk — no contract without an
+// algorithm, no algorithm without a contract, no unreadable clause
+check(
+  "ADR-0019: the meta-audit of the trunk is silent — 0/0/0 (measured)",
+  registryAuditOf({ space: trunk }).length === 0,
 );
 
 // one source: the reading levels the dead-binding rule reads are
-// derived from the contracts, never re-declared
+// derived from the data's contracts, never re-declared
+const trunkSlotContracts = checkSlotContractsOf(trunkContracts);
 check(
-  "ADR-0018: the slot contracts derive from the nominal contracts — one source",
-  Object.keys(checkSlotContracts).every(
+  "ADR-0019: the slot contracts derive from the data — one source",
+  Object.keys(trunkSlotContracts).every(
     (tag) =>
-      JSON.stringify(checkSlotContracts[tag]) ===
-      JSON.stringify(slotReadingLevelsOf(checkContracts[tag])),
+      JSON.stringify(trunkSlotContracts[tag]) ===
+      JSON.stringify(slotReadingLevelsOf(trunkContracts[tag])),
   ),
 );
 
@@ -572,6 +596,29 @@ check(
 check(
   "ADR-0018: the trunk corpus carries no vacant check — every carried tag can judge",
   vacantChecksOf({ space: trunk, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
+);
+
+// the data-driven proof: a variant trunk whose registry layer EDITS
+// a contract — sperner gains a required slot « tolerance » that no
+// layer binds. The language said it; the detector reads it — the
+// semantics moved with the data, no code touched
+const variantSources = Object.fromEntries(
+  KERNEL_LAYER_NAMES.map((layerName) => [
+    layerName,
+    String(layerName) === "check-registry"
+      ? layerSources[layerName].replace(
+          '    sperner\n      level = "root"\n      required\n        edges = "root"',
+          '    sperner\n      level = "root"\n      required\n        tolerance = "root"\n        edges = "root"',
+        )
+      : layerSources[layerName],
+  ]),
+);
+const variantTrunk = spaceFromSourcesMap(variantSources, KERNEL_LAYER_NAMES);
+check(
+  "ADR-0019: an edited registry contract edits the vacancies — the data drives the semantics (measured: 1)",
+  vacantChecksOf({ space: variantTrunk, layerNames: [...KERNEL_LAYER_NAMES] }).filter(
+    (vacancy) => vacancy.tag === "sperner" && vacancy.slot === "tolerance",
+  ).length === 1,
 );
 
 // =====================================================================
