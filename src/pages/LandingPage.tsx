@@ -105,12 +105,18 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
           </div>
         </section>
 
-        <section className="mt-12 flex justify-center gap-4">
+        <section className="mt-12 flex flex-wrap justify-center gap-4">
           <button
             onClick={() => navigate("tutorial")}
             className="rounded-lg bg-sky-600 px-6 py-3 text-white font-semibold hover:bg-sky-500 transition-colors"
           >
             {say({ language, en: "Tutorial →", fr: "Tutoriel →" })}
+          </button>
+          <button
+            onClick={() => navigate("filiation")}
+            className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            {say({ language, en: "Filiation & comparison →", fr: "Filiation & comparaison →" })}
           </button>
           <button
             onClick={() => navigate("workshop")}

@@ -64,8 +64,8 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
         <p className="mb-8 text-lg text-slate-600">
           {say({
             language,
-            en: "This tutorial explains the core concepts of Layered Data through practical examples.",
-            fr: "Ce tutoriel explique les concepts fondamentaux de Layered Data à travers des exemples concrets.",
+            en: "Eleven steps, one running example: the philosophers' dinner. Every section pairs an idea with the real layer that carries it — the excerpt is the artifact, the prose is the guide.",
+            fr: "Onze étapes, un exemple suivi : le dîner des philosophes. Chaque section marie une idée à la couche réelle qui la porte — l'extrait est l'artefact, la prose est le guide.",
           })}
         </p>
 
@@ -77,6 +77,12 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
             className="rounded-lg border-2 border-slate-300 px-6 py-3 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
           >
             {say({ language, en: "← Landing", fr: "← Accueil" })}
+          </button>
+          <button
+            onClick={() => navigate("filiation")}
+            className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+          >
+            {say({ language, en: "Filiation & comparison →", fr: "Filiation & comparaison →" })}
           </button>
           <button
             onClick={() => navigate("workshop")}
