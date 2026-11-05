@@ -51,9 +51,9 @@ const CONSTITUTIONAL_FILES = [
 const MAX_LINES_CHANGED = 500;
 
 // Label that waives the human-approval gate (ADR-0011): when a human
-// manually poses it on the PR, constitutional-file findings are
-// recorded as WAIVED instead of BLOCKING. Verify failures and every
-// other rule are never waivable.
+// manually poses it on the PR, constitutional-file and pr-too-large
+// findings are recorded as WAIVED instead of BLOCKING. Verify failures
+// and every other rule are never waivable.
 const HUMAN_APPROVED_LABEL = 'human-approved';
 
 function log(message) {
@@ -375,30 +375,38 @@ function runReview() {
   log(`Total lines changed: ${totalLines}`);
   
   // Human-approval gate: the label is posed manually by a human, it
-  // waives only the constitutional-file rule — never verify failures.
+  // waives the constitutional-file and pr-too-large rules — never
+  // verify failures.
   const prLabels = getPRLabels();
   const humanApproved = prLabels.includes(HUMAN_APPROVED_LABEL);
   if (humanApproved) {
-    log(`Label '${HUMAN_APPROVED_LABEL}' present: constitutional-file gate waived (ADR-0011)`);
+    log(`Label '${HUMAN_APPROVED_LABEL}' present: constitutional-file and size gates waived (ADR-0011)`);
   }
-  
+
+  // Waive a BLOCKING finding when the human-approved label is present.
+  const waive = (finding) => ({
+    ...finding,
+    severity: 'WAIVED',
+    evidence: `${finding.evidence} — waived by label '${HUMAN_APPROVED_LABEL}' (human approval, ADR-0011)`
+  });
+
   // Run all checks
   const allFindings = [];
-  
+
   // 1. Check PR description
   allFindings.push(...checkPRDescription(description));
-  
+
   // 2. Check PR size
-  allFindings.push(...checkPRSize(modifiedFiles));
+  let sizeFindings = checkPRSize(modifiedFiles);
+  if (humanApproved) {
+    sizeFindings = sizeFindings.map(waive);
+  }
+  allFindings.push(...sizeFindings);
   
   // 3. Check constitutional files
   let constitutionalFindings = checkConstitutionalFiles(modifiedFiles);
   if (humanApproved) {
-    constitutionalFindings = constitutionalFindings.map((finding) => ({
-      ...finding,
-      severity: 'WAIVED',
-      evidence: `${finding.evidence} — waived by label '${HUMAN_APPROVED_LABEL}' (human approval, ADR-0011)`
-    }));
+    constitutionalFindings = constitutionalFindings.map(waive);
   }
   allFindings.push(...constitutionalFindings);
   
