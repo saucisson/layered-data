@@ -49,7 +49,13 @@ const makeValue = (value: LanguageValue): any => {
 const makeNote = (rawLines: string[]): string[] => rawLines.map((line) => "  " + line + "\n");
 
 const noteKeyOfAct = (act: LanguageAct): string =>
-  act.kind === "bind" ? act.slot : act.kind === "check" ? act.labels[0] : act.key;
+  act.kind === "bind"
+    ? act.slot
+    : act.kind === "check"
+      ? act.labels[0]
+      : act.kind === "check-definition"
+        ? act.name
+        : act.key;
 
 // ---- the emission -----------------------------------------------------
 
@@ -70,6 +76,28 @@ const emit = (
     }
     if (act.kind === "check") {
       output.checks = act.labels;
+      continue;
+    }
+    // The definition (ADR-0022): a couple lands in the INTERNAL
+    // check-definitions container — the only door into it, never a
+    // writable key of the language — and the name lands among the
+    // check tags: defining a check is also posing it. The container
+    // accumulates: the emit never replaces an existing couple (the
+    // doublon rule is judged at validation, canonically).
+    if (act.kind === "check-definition") {
+      if (!Array.isArray(output.checks)) output.checks = [];
+      (output.checks as string[]).push(act.name);
+      if (!isDictionary(output["check-definitions"])) output["check-definitions"] = {};
+      const couple: RawTree = { level: act.level };
+      if (act.condition !== null) couple.condition = act.condition;
+      couple.judgments = act.judgments.map((judgment) => {
+        const entry: RawTree = {};
+        if (judgment.when !== null) entry.when = judgment.when;
+        entry.formula = judgment.formula;
+        entry.message = judgment.message;
+        return entry;
+      });
+      (output["check-definitions"] as RawTree)[act.name] = couple;
       continue;
     }
     // The expectation compiles into data of the "tests" dict — the

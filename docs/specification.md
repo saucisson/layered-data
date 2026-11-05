@@ -50,7 +50,8 @@ les clés sont des chaînes. Les valeurs sont :
 | `AddrView(layer, path)` | vue d'adresse, produit interne des lectures (non posé dans les données) |
 
 Un ensemble **fixe de clés spéciales** structure chaque nœud et n'est jamais vu comme
-contenu : `refines`, `implicits`, `specification`, `anchors`, `defaults`, `checks`. Toute
+contenu : `refines`, `implicits`, `specification`, `anchors`, `defaults`, `checks`,
+`check-definitions`, `bindings`, `note`, `tests`. Toute
 autre clé est un **membre** du nœud.
 
 **Conventions.** L'ordre d'insertion des clés est significatif et préservé par toute
@@ -276,6 +277,26 @@ modifié pour un formalisme) `[runChecks]` :
 **Obligation O15.** Une étiquette inconnue du registre est ignorée silencieusement (jamais
 d'exception). Une étiquette a **une seule sémantique par registre** : redéfinir `simple`
 dans un sous-espace avec un autre sens est une non-conformité à consigner, jamais un usage.
+
+**La strate déclarative (ADR-0022).** Une étiquette peut porter sa sémantique dans la
+langue même : `check nom { … }` définit le check en le posant. Le couple — niveau (la
+strate de lecture ne juge qu'aux racines des couches), condition (une liaison lue, le
+seul paramètre-valeur du socle), jugements (`when`/formule/message) — atterrit dans le
+conteneur interne `check-definitions`, jamais adressé directement : le sucre est sa
+seule porte. Les formules sont des phrases fermées du fragment du premier ordre
+(forall/exists, `=`, `!=`, `not`, `and`, `or`, `=>`, parenthèses ; un terme en position
+de proposition est le prédicat d'existence — un terme peut ne pas dénoter) ; les termes
+sont des chemins slash ancrés sur une variable quantifiée ou l'adresse jugée, et
+l'univers d'une formule est le vocabulaire déclaré du définisseur, jamais un nom de
+couche. Le doublon est refusé à l'assemblage : un couple n'est jamais remplacé — la
+re-pose identique (à l'alpha-renommage près, sur le couple entier) est tolérée, la
+re-pose divergente est un verdict, et seules des poses co-visibles à une même adresse
+se confrontent. O15 devient structurelle : une étiquette portant un couple ne peut plus
+être redéfinie. La table algorithmique reste l'exécution du socle (ADR-0019) ; la
+strate déclarative est mesurée contre elle, adresse par adresse, et juge avec les
+témoins libres de l'affectation falsifiée — tous, gabarits `{x}` (clé) et `{x*}` (tuple
+d'adresse) rendus sur place. Une formule qui épuise son budget ne juge jamais en
+silence : diagnostic, pas d'aveuglement.
 
 ---
 
