@@ -72,8 +72,8 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             <p className="text-sm text-slate-600">
               {say({
                 language,
-                en: "Each layer refines its parent. The kernel contains 46 layers from basic records to the philosophers' dinner.",
-                fr: "Chaque couche raffine sa parente. Le noyau contient 46 couches, des enregistrements de base au dîner des philosophes.",
+                en: "Each layer refines its parent. The kernel contains 47 layers from basic records to the philosophers' dinner.",
+                fr: "Chaque couche raffine sa parente. Le noyau contient 47 couches, des enregistrements de base au dîner des philosophes.",
               })}
             </p>
           </div>
