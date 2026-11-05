@@ -4,7 +4,12 @@ Un démonstrateur où **les définitions elles-mêmes sont des données** : form
 et modèles sont des couches qui se sédimentent (raffinement, héritage,
 carottage premier-gagné). Le réseau de Petri s'y dérive du socle des
 hypergraphes jusqu'au dîner des cinq philosophes, et son espace d'états
-hérite du réseau par liaison tardive.
+hérite du réseau par liaison tardive. Le modèle vient du papier
+*Layered Data: A Modular Formal Definition without Formalisms*
+(PNSE'16) ; sa filiation intellectuelle — quarante ans de
+représentation des connaissances et les métamodélisations comparées
+(EMF/Ecore, MOF, multi-niveaux, feature models…) — est établie dans
+`docs/filiation.md`.
 
 ## Contenu
 
@@ -35,6 +40,13 @@ Le code suit une architecture en oignon, documentée dans
 - `docs/specification.md` — la spécification normative du noyau
   (obligations O1–O18, conformité C1–C8), rendue exécutable par
   `tests/specification-properties.mts`.
+- `docs/filiation.md` — la filiation intellectuelle : les
+  prédécesseurs nommés (frames et KL-ONE, l'héritage par défaut de
+  Touretzky, les prototypes de Self, la cascade CSS, les modules
+  Nix, RDF/RDFS), les métamodélisations comparées (MOF, EMF/Ecore,
+  modélisation multi-niveaux, XML/JSON Schema, feature models),
+  puis la divergence mesurée — le papier fondateur (PNSE'16) y est
+  cité.
 
 ## Démarrage
 
