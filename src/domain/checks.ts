@@ -682,7 +682,7 @@ export function registryContractsOf({ space }: { space: Space }): Record<string,
  *     level that is neither root nor instance, a condition slot
  *     that is not a string, an operand that is not a string).
  *
- * Measured on the trunk: 0, 0, 0. */
+ * Measured on the bedrock: 0, 0, 0. */
 export interface RegistryDivergence {
   kind: "contrat-sans-algorithme" | "algorithme-sans-contrat" | "contrat-illisible";
   tag: string;
@@ -787,7 +787,7 @@ function pathsEqual(first: string[], second: string[]): boolean {
  * check's own code) at the judged address, and its instance slots
  * are judged at the addresses of the operand view (the `edges`); a
  * missing operand leaves the group dormant — nothing to judge.
- * Measured on the trunk: 79 judgments, 0 vacancies. */
+ * Measured on the bedrock: 79 judgments, 0 vacancies. */
 export function vacantChecksOf({ space, layerNames }: { space: Space; layerNames: readonly LayerName[] }): VacantCheck[] {
   const vacancies: VacantCheck[] = [];
   const contracts = registryContractsOf({ space });

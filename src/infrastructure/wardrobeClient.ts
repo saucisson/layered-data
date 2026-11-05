@@ -1,4 +1,4 @@
-// The infrastructure of the shared formalisms: the disk wardrobe
+// The infrastructure of the shared formalisms: the disk quarry
 // (the server's formalism files) and the access code that protects
 // it — never the workshop itself, which lives alone in the browser.
 //

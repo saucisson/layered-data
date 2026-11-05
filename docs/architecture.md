@@ -24,7 +24,7 @@ about the world outside it.
 └──────────────────────────────────────────────────────────┘
 
 infrastructure  lives outside the onion and points inward: the
-                armoire HTTP client, browser storage, corpus
+                quarry HTTP client, browser storage, corpus
                 file loading. Inner layers never import it.
 ```
 
@@ -64,8 +64,8 @@ interface layer; the parameter type *is* the contract.
 | Bilingual messages, the kernel vocabulary (`renderMessage`, `kernelLabel`) | domain | `src/domain/messages.ts` |
 | Corpus assembly (kernel construction) | application | `src/application/corpus.ts` |
 | Staging of additions, flattening, linting | application | `src/application/staging.ts`, `src/application/flatten.ts`, `src/application/linting.ts` |
-| The verified pen loop, the living edition | application | `src/application/penLoop.ts`, `src/application/edition.ts` |
-| Armoire HTTP client, browser storage, corpus loading | infrastructure | `src/infrastructure/` |
+| The verified geologist loop, the living edition | application | `src/application/penLoop.ts`, `src/application/edition.ts` |
+| Quarry HTTP client, browser storage, corpus loading | infrastructure | `src/infrastructure/` |
 | Workshop language detection and memory | infrastructure | `src/infrastructure/browserLanguage.ts` |
 | Bilingual labels (`say`, `localized`, `labelOf`) | presentation | `src/presentation/i18n.ts` |
 | React components and hooks | presentation | `src/presentation/` |
@@ -118,8 +118,8 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   step, an orphan target is refused as « cible-inconnue », a betrayed
   expectation as « attendu-trahi » — the observable vocabulary of the
   verdicts is frozen like the statuses are.
-- **The verified pen loop** (`src/application/penLoop.ts`, proven by
-  `tests/pen-loop-checks.mts`): the pen proposes, the staging judges,
+- **The verified geologist loop** (`src/application/penLoop.ts`, proven by
+  `tests/pen-loop-checks.mts`): the geologist proposes, the staging judges,
   the refusal travels back to the model with its verdicts — up to a
   spendable budget of attempts. A pure use case (the model call is
   injected), consumed by the server: `/api/generate` only ever answers
@@ -143,7 +143,7 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   language, threaded to every leaf by an explicit `language` prop (no
   React context). Every pedagogical surface — the glossary, the
   tutorial, the scenarios, the view notes, the role of the 47 layers,
-  the diagnostics fold, the pen's system prompt — carries its two
+  the diagnostics fold, the geologist's system prompt — carries its two
   texts, and the harness measures the parity. The corpus `.ld`
   formalisms stay in their own tongue; the French audit half stays
   byte-identical from one version to the next.

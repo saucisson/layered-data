@@ -1,7 +1,7 @@
 // The staging protocol checks: the composer never dies of a typo,
 // the living space never absorbs a refused draft.
 //
-// Nine scenarios over the assembled trunk corpus: a sound draft is
+// Nine scenarios over the assembled bedrock corpus: a sound draft is
 // accepted and applied (its layers enter the living space, its
 // refinement targets are reported), a broken syntax is refused at
 // the syntax step, an unknown refinement target is refused as
@@ -37,7 +37,7 @@ function check(label: string, condition: boolean): void {
   if (!condition) failures.push(label);
 }
 
-// ---- the assembled trunk ---------------------------------------------
+// ---- the assembled bedrock ---------------------------------------------
 
 const corpusDirectory = join(import.meta.dirname, "..", "formalisms", "kernel");
 const layerSources = Object.fromEntries(
@@ -82,7 +82,7 @@ check(
   accepted.layerNames.includes(asLayerName("draft-demo")),
 );
 check(
-  "(a) the staged outcome blocks the draft layer text for the wardrobe",
+  "(a) the staged outcome blocks the draft layer text for the quarry",
   (accepted.blocks["draft-demo"] ?? "").includes("layer draft-demo refines @wb1"),
 );
 
@@ -407,27 +407,27 @@ check(
 );
 
 // =====================================================================
-// (j) the trunk is read-only BY PROTOCOL (ADR-0020): a draft that
-//     claims a trunk name is refused as tronc-occupé — the theft
+// (j) the bedrock is read-only BY PROTOCOL (ADR-0020): a draft that
+//     claims a bedrock name is refused as socle-occupé — the theft
 //     named, the forgery never judged
 // =====================================================================
 
-const trunkDraft = 'layer record\n  specification\n    record = "volé"\n';
-const refusedTrunk = stage({ draftSource: trunkDraft });
+const bedrockDraft = 'layer record\n  specification\n    record = "volé"\n';
+const refusedBedrock = stage({ draftSource: bedrockDraft });
 check(
-  '(j) the draft claiming a trunk name is refused at the validation step',
-  refusedTrunk.ok === false && refusedTrunk.step === "validation",
+  '(j) the draft claiming a bedrock name is refused at the validation step',
+  refusedBedrock.ok === false && refusedBedrock.step === "validation",
 );
 check(
-  '(j) the refusal carries exactly the "tronc-occupé" verdict — the theft named, never the forgery judged (measured before ADR-0020: 13 ghost declarations accusing innocent layers)',
-  refusedTrunk.verdicts.length === 1 && refusedTrunk.verdicts[0].kind === "tronc-occupé",
+  '(j) the refusal carries exactly the "socle-occupé" verdict — the theft named, never the forgery judged (measured before ADR-0020: 13 ghost declarations accusing innocent layers)',
+  refusedBedrock.verdicts.length === 1 && refusedBedrock.verdicts[0].kind === "socle-occupé",
 );
 check(
-  '(j) the refused staging compiles nothing — the token space of a forgery never leaves the tribunal',
-  refusedTrunk.compiledLanguage === null,
+  '(j) the refused staging compiles nothing — the token space of a forgery never leaves the staging',
+  refusedBedrock.compiledLanguage === null,
 );
 check(
-  '(j) a draft that REFINES a trunk layer stays welcome — the trunk is read-only, not refinement-proof',
+  '(j) a draft that REFINES a bedrock layer stays welcome — the bedrock is read-only, not refinement-proof',
   stage({ draftSource: "layer draft-welcome refines @record\n" }).ok === true,
 );
 check(

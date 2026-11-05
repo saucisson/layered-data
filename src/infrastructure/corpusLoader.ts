@@ -1,4 +1,4 @@
-// The trunk corpus loader of the browser build: one `.ld` file per
+// The bedrock corpus loader of the browser build: one `.ld` file per
 // layer, resolved at construction by the Vite glob (raw imports).
 // The kernel folder is the single source of the corpus: no embedded
 // copy. The Node harness reads the same files with plain fs — both
