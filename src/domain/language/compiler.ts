@@ -7,7 +7,7 @@
 // this file is the parse boundary of the whole space.
 
 import { type LayerName, asLayerName, asLayerPath, asPathSegment } from "../identifiers.ts";
-import { LayerReference, MASK, PathReference, type RawTree, isDictionary,  } from "../addresses.ts";
+import { LayerReference, PathReference, type RawTree, isDictionary,  } from "../addresses.ts";
 import { SPECIAL_KEYS } from "../specialKeys.ts";
 import { type LanguageAct, type LanguageLayer, type LanguageValue } from "./parser.ts";
 
@@ -112,21 +112,6 @@ const emit = (
       if (!isDictionary(layerRoot.tests)) layerRoot.tests = {};
       (layerRoot.tests as RawTree)[act.path.concat(act.key).join("/")] =
         act.value === null ? null : makeValue(act.value);
-      continue;
-    }
-    if (act.kind === "mask") {
-      output[act.key] = MASK;
-      declarations.push({ layer, path, key: act.key, mode: "mask" });
-      continue;
-    }
-    // The assume lays NOTHING in the tree — no data, no special
-    // key, the kernel's reading semantics are untouched. It lives
-    // only in the declaration table: mode "assume" at (layer, path,
-    // key), read by the lint (the signed conflict stays silent), the
-    // validation (an assume without a conflict is a ghost) and the
-    // strict staging (a signed conflict never refuses).
-    if (act.kind === "assume") {
-      declarations.push({ layer, path, key: act.key, mode: "assume" });
       continue;
     }
     declarations.push({ layer, path, key: act.key, mode: act.mode });

@@ -49,8 +49,8 @@ const FILIATION_ERAS: FiliationEra[] = [
     years: "1987–2003",
     title: { en: "Objects that compose", fr: "Les objets qui composent" },
     text: {
-      en: "Self's prototypes (Ungar & Smith, 1987) erase the class: objects delegate to objects. CLOS (Bobrow et al., 1988) pays the multiple-inheritance diamond and settles it by computed linearization; mixins (Bracha & Cook, 1990) and traits (Schärli et al., 2003) refine the granularity; the metaobject protocol (1991) opens the engine itself as data. Same gesture, other discipline: here the order is laid in the data, and an unsigned conflict is refused.",
-      fr: "Les prototypes de Self (Ungar & Smith, 1987) effacent la classe : des objets délèguent à des objets. Le CLOS (Bobrow et al., 1988) paie le diamant de l'héritage multiple et le solde par la linéarisation calculée ; les mixins (Bracha & Cook, 1990) et les traits (Schärli et al., 2003) en font la granularité ; le protocole à méta-objets (1991) ouvre le moteur lui-même comme donnée. Même geste, autre discipline : ici l'ordre est posé dans la donnée, et un conflit non signé est refusé.",
+      en: "Self's prototypes (Ungar & Smith, 1987) erase the class: objects delegate to objects. CLOS (Bobrow et al., 1988) pays the multiple-inheritance diamond and settles it by computed linearization; mixins (Bracha & Cook, 1990) and traits (Schärli et al., 2003) refine the granularity; the metaobject protocol (1991) opens the engine itself as data. Same gesture, other discipline: here the order is laid in the data, and a conflict is refused.",
+      fr: "Les prototypes de Self (Ungar & Smith, 1987) effacent la classe : des objets délèguent à des objets. Le CLOS (Bobrow et al., 1988) paie le diamant de l'héritage multiple et le solde par la linéarisation calculée ; les mixins (Bracha & Cook, 1990) et les traits (Schärli et al., 2003) en font la granularité ; le protocole à méta-objets (1991) ouvre le moteur lui-même comme donnée. Même geste, autre discipline : ici l'ordre est posé dans la donnée, et un conflit est refusé.",
     },
   },
   {
@@ -89,8 +89,8 @@ const FILIATION_ERAS: FiliationEra[] = [
     years: "2014–2019",
     title: { en: "The configuration languages", fr: "Les langages de configuration" },
     text: {
-      en: "Jsonnet (2014) already thinks its object as a stack of layers — A + B, self late-bound. Kustomize (2017) makes the overlay the industrial gesture. CUE (2019, out of Google's GCL) chooses the other semantics: a single lattice, associative, commutative, idempotent — a conflict refuses. Layered data keeps the GCL bet — ordered override — and answers GCL's documented complexity by measurement: unsigned order conflicts are refused in strict staging, and the price is displayed.",
-      fr: "Jsonnet (2014) pense déjà son objet comme une pile de couches — A + B, self à liaison tardive. Kustomize (2017) fait de la surcouche le geste industriel. CUE (2019, sorti de la GCL de Google) choisit l'autre sémantique : un treillis unique, associatif, commutatif, idempotent — un conflit refuse. Les layered data gardent le pari de GCL — la surcharge ordonnée — et répondent à la complexité documentée de GCL par la mesure : les conflits d'ordre non signés sont refusés en staging strict, et le prix est affiché.",
+      en: "Jsonnet (2014) already thinks its object as a stack of layers — A + B, self late-bound. Kustomize (2017) makes the overlay the industrial gesture. CUE (2019, out of Google's GCL) chooses the other semantics: a single lattice, associative, commutative, idempotent — a conflict refuses. Layered data keeps the GCL bet — ordered override — and answers GCL's documented complexity by measurement: order conflicts are refused in strict staging, and the price is displayed.",
+      fr: "Jsonnet (2014) pense déjà son objet comme une pile de couches — A + B, self à liaison tardive. Kustomize (2017) fait de la surcouche le geste industriel. CUE (2019, sorti de la GCL de Google) choisit l'autre sémantique : un treillis unique, associatif, commutatif, idempotent — un conflit refuse. Les layered data gardent le pari de GCL — la surcharge ordonnée — et répondent à la complexité documentée de GCL par la mesure : les conflits d'ordre sont refusés en staging strict, et le prix est affiché.",
     },
   },
   {
@@ -156,8 +156,8 @@ const COMPARISON_ROWS: ComparisonRow[] = [
     merge: { en: "commutative — unification, idempotent", fr: "commutative — unification, idempotente" },
     floors: { en: "eroded — one lattice for types and values", fr: "érodés — un seul treillis pour types et valeurs" },
     diverges: {
-      en: "a conflict refuses; here the refines order decides, and strict staging refuses only unsigned conflicts",
-      fr: "un conflit refuse ; ici l'ordre des refines décide, et le staging strict ne refuse que les conflits non signés",
+      en: "a conflict refuses; here the refines order decides, and strict staging refuses the conflicts",
+      fr: "un conflit refuse ; ici l'ordre des refines décide, et le staging strict refuse les conflits",
     },
   },
   {
@@ -207,8 +207,8 @@ const COMPARISON_ROWS: ComparisonRow[] = [
     },
     floors: { en: "fixed — classes and instances", fr: "fixes — classes et instances" },
     diverges: {
-      en: "the engine computes the order; here the data lays it, and an unsigned conflict between incomparable sources is refused",
-      fr: "le moteur calcule l'ordre ; ici la donnée le pose, et un conflit non signé entre sources incomparables est refusé",
+      en: "the engine computes the order; here the data lays it, and a conflict between incomparable sources is refused",
+      fr: "le moteur calcule l'ordre ; ici la donnée le pose, et un conflit entre sources incomparables est refusé",
     },
   },
   {
@@ -230,8 +230,8 @@ const WORKSHOP_ADDS: BilingualText[] = [
     fr: "Une seule écriture, une seule lecture. Schéma, instance, contrainte et rendu sont des couches ; la fermeture puis le premier-gagné les lisent avec la même opération, du formalisme à la donnée.",
   },
   {
-    en: "Order as semantics. The inheritance conflict is settled by the data — the refines list — never by the engine; the refusal of unsigned conflicts is measured.",
-    fr: "L'ordre comme sémantique. Le conflit d'héritage est tranché par la donnée — la liste refines — jamais par le moteur ; le refus des conflits non signés est mesuré.",
+    en: "Order as structure. The inheritance conflict is settled by the data — the refines list — never by the engine; the refusal of conflicts is measured.",
+    fr: "L'ordre comme structure. Le conflit d'héritage est tranché par la donnée — la liste refines — jamais par le moteur ; le refus des conflits est mesuré.",
   },
   {
     en: "A normative specification verified by property. The obligations and conformances of docs/specification.md are replayed as measures by the harness — conformance measured, not theorems.",
@@ -265,8 +265,8 @@ const WORKSHOP_LIMITS: BilingualText[] = [
     fr: "Il n'a pas d'écosystème. EMF a vingt ans d'outils et l'adoption de l'industrie ; l'atelier a sept harnais et un tutoriel.",
   },
   {
-    en: "It pays displayed prices. The alias multiplies the reports of one defect, the linter is blind to designations by keys, the mask breaks the monotonicity of inheritance.",
-    fr: "Il paie des prix affichés. L'alias multiplie les signalements d'un même défaut, le linter est aveugle aux désignations par clés, le masque casse la monotonie de l'héritage.",
+    en: "It pays displayed prices. The alias multiplies the reports of one defect, the linter is blind to designations by keys.",
+    fr: "Il paie des prix affichés. L'alias multiplie les signalements d'un même défaut, le linter est aveugle aux désignations par clés.",
   },
   {
     en: "No external evaluation yet. The corpus is its own; the honest gap — importing an external corpus (PNML nets, for instance) and measuring the idea against it — is the next step, and it is not taken yet.",

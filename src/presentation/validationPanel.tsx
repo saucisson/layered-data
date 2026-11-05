@@ -1,6 +1,6 @@
 // The assembly-validation fold, rendered inside the "Diagnostics
 // & validation" fold of the formalism panel (②): the declared acts
-// (refines, extend, override, mask, bind, check) confronted with
+// (refines, extend, override, bind, check) confronted with
 // the reality of the closures before any execution. The French
 // stats keys (couches, decl, …) are the kernel's observable
 // vocabulary — they are shown as-is.
@@ -37,8 +37,8 @@ export function ValidationPanel({
       <p className="mb-3 mt-1 text-[11px] leading-4 text-slate-500">
         {say({
           language,
-          en: "JSON is no longer the writing tool: the 47 layers are written in the design language, where inheritance (refines), transparency (extend), overloading (override), opacity (mask), bindings (bind) and tags (check) are explicit acts. The assembly validation confronts every declared act with the reality of the closures BEFORE any execution: implicit overload, ghost declaration, unknown tag, binding laid at the wrong level. The first-wins shadows become declared acts; only an undeclared shadow is an error. The silences logged below remain the safety net.",
-          fr: "Le JSON n'est plus l'outil d'écriture : les 47 couches sont écrites dans le langage de conception, où héritage (refines), transparence (extend), surcharge (override), opacité (mask), liaisons (bind) et étiquettes (check) sont des actes explicites. La validation d'assemblage confronte chaque acte déclaré à la réalité des fermetures AVANT toute exécution : surcharge implicite, déclaration de fantôme, étiquette inconnue, liaison posée au mauvais niveau. Les ombres du premier-gagné deviennent des actes déclarés ; seule une ombre non déclarée est une erreur. Les silences consignés ci-dessous restent le filet de sécurité.",
+          en: "JSON is no longer the writing tool: the 47 layers are written in the design language, where inheritance (refines), transparency (extend), overloading (override), bindings (bind) and tags (check) are explicit acts. The assembly validation confronts every declared act with the reality of the closures BEFORE any execution: implicit overload, ghost declaration, unknown tag, binding laid at the wrong level. The first-wins shadows become declared acts; only an undeclared shadow is an error. The silences logged below remain the safety net.",
+          fr: "Le JSON n'est plus l'outil d'écriture : les 47 couches sont écrites dans le langage de conception, où héritage (refines), transparence (extend), surcharge (override), liaisons (bind) et étiquettes (check) sont des actes explicites. La validation d'assemblage confronte chaque acte déclaré à la réalité des fermetures AVANT toute exécution : surcharge implicite, déclaration de fantôme, étiquette inconnue, liaison posée au mauvais niveau. Les ombres du premier-gagné deviennent des actes déclarés ; seule une ombre non déclarée est une erreur. Les silences consignés ci-dessous restent le filet de sécurité.",
         })}
       </p>
       {stats.erreursSyntaxe > 0 && (

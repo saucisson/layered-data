@@ -101,9 +101,10 @@ rendue telle quelle dans la réponse, jamais muette.
 l'atelier (syntaxe, cible inconnue, attendus trahis…) ; un refus
 revient au modèle avec ses verdicts, jusqu'à `PEN_MAX_ATTEMPTS`
 propositions (3 par défaut). `PEN_STRICT_CONFLICTS=1` arme le bras
-strict (ADR-0017) : le géologue ne peut plus proposer une lecture que
-l'ordre des refines tranche entre sources incomparables, sauf si
-l'adresse lisante signe un `assume`. `PEN_STRICT_CHECKS=1` arme le
+strict (ADR-0017, retiré comme sémantique par l'ADR-0023) : le
+géologue ne peut plus proposer une lecture que l'ordre des refines
+tranche entre sources incomparables — la résoudre, c'est
+restructurer, jamais signer. `PEN_STRICT_CHECKS=1` arme le
 second bras strict (ADR-0018) : les checks portés par la candidate
 s'exécutent enfin, et le géologue ne peut plus proposer une couche que
 ses propres contraintes refusent (« check-trahi »). Depuis l'ADR-0019,
@@ -143,7 +144,7 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    et exigences C1–C8 de `docs/specification.md` comme des propriétés —
    des mesures de conformance, pas des démonstrations formelles :
    closures (dédoublonnage, nœud propre premier, diamant mesuré),
-   lectures (premier-gagné, statuts, MASK), clés, ancres, immutabilité
+   lectures (premier-gagné, statuts), clés, ancres, immutabilité
    (indépendance de l'ordre d'appel, invariance par permutation des 47
    couches), garde de cycle, liaison tardive, désucrage (ordre
    topologique, idempotence), protocole d'invalidation exact.
@@ -152,8 +153,8 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    sain accepté et appliqué, syntaxe cassée refusée à l'étape « syntaxe »,
    cible inconnue refusée (« cible-inconnue »), attendu trahi
    (« attendu-trahi »), conflit d'ordre refusé en mode strict sans
-   signature (« conflit-d'ordre », ADR-0017), signature vide refusée
-   (« assume-fantôme »), check posé mais incapable de juger refusé
+   exception (« conflit-d'ordre », ADR-0017 retiré comme sémantique
+   par l'ADR-0023), check posé mais incapable de juger refusé
    (« check-vacant », ADR-0018), et checks portés exécutés en mode
    strict (« check-trahi »). Brouillon réclamant un nom du socle
    refusé (« socle-occupé », ADR-0020) — le vol nommé, la pièce

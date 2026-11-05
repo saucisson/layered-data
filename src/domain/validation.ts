@@ -11,8 +11,7 @@
 // layer that descends from it), (d) the shadow confrontation: every
 // first-winner that overrides must have declared it, (e) the
 // expected-reads contract replays — a betrayed read, wherever it
-// lives, is a verdict, (f) the assumes: a signature without an
-// order conflict is a ghost, (g) the check couples — a divergent
+// lives, is a verdict, (f) the check couples — a divergent
 // re-pose, an unsupported level, an unreadable formula, a template
 // out of its judgment's quantified scope (ADR-0022).
 //
@@ -23,7 +22,7 @@
 // supplements + candidate) without touching the loaded globals.
 
 import { type LayerName, type LayerPath, asLayerName } from "./identifiers.ts";
-import { AddressView, LayerReference, MASK, PathReference, type RawValue, isDictionary } from "./addresses.ts";
+import { AddressView, LayerReference, PathReference, type RawValue, isDictionary } from "./addresses.ts";
 import { Space } from "./space.ts";
 import {
   type CheckContract,
@@ -38,7 +37,6 @@ import { walkAddresses } from "./views.ts";
 import { type CompiledLanguage, type Declaration } from "./language/compiler.ts";
 import { type ParsedLanguage } from "./language/parser.ts";
 import { fact, type MessageFact } from "./messages.ts";
-import { orderConflictsAt } from "./conflicts.ts";
 
 export interface Verdict {
   kind: string;
@@ -143,7 +141,6 @@ export function readMatchesExpectation(read: any, expectation: any): boolean {
 
 export function formatExpectation(value: any): string {
   if (value === null) return "null";
-  if (value === MASK) return "MASK";
   if (value instanceof AddressView) {
     return "@" + value.layer + (value.path.length ? "/" + value.path.join("/") : "");
   }
@@ -175,7 +172,6 @@ export function validateSpace({
     nouveau: 0,
     extension: 0,
     surcharge: 0,
-    masque: 0,
     declOK: 0,
     etiquettes: 0,
     ombresDeclarées: 0,
@@ -185,15 +181,12 @@ export function validateSpace({
     trahis: 0,
     couples: 0,
   };
+  // The declaration modes are three since ADR-0023: new, extend,
+  // override — the gestures the ontology measured, nothing else.
   for (const declaration of compilation.declarations) {
     if (declaration.mode === "new") stats.nouveau++;
     else if (declaration.mode === "extend") stats.extension++;
-    else if (declaration.mode === "override") stats.surcharge++;
-    else if (declaration.mode === "assume") {
-      // a signature, not a value — the assume judges nothing here,
-      // the walk (f) below is its only judge
-      continue;
-    } else stats.masque++;
+    else stats.surcharge++;
   }
 
   // ---- the labels of each layer (closure of its root) and its
@@ -219,10 +212,6 @@ export function validateSpace({
 
   // ---- (a) declarations against the closures
   for (const declaration of compilation.declarations) {
-    // the assume is judged by its own walk (f): its object is not
-    // an upstream key but an order conflict — the upstream
-    // confrontation would misjudge it
-    if (declaration.mode === "assume") continue;
     let existsUpstream = false;
     for (const [sourceLayer, sourcePath] of space.closure({ layer: declaration.layer, path: declaration.path as LayerPath })) {
       if (
@@ -272,8 +261,7 @@ export function validateSpace({
   // contract makes it judge. The verdict answers for the acts that
   // CAN answer: a local POSE (the tag carried at the very address —
   // the mirror of étiquette-inconnue, which refuses the posed tag
-  // that does not exist; the symmetry of assume-fantôme, which
-  // refuses the signature that judges nothing), and the root-level
+  // that does not exist), and the root-level
   // slots of the layer checks a layer's root carries. The instance
   // slots of an inherited check are the lint's inventory: the type
   // binds them, the root never sees it.
@@ -336,11 +324,6 @@ export function validateSpace({
           });
           if (mode === "extend" || mode === "override") {
             stats.ombresDeclarées++;
-          } else if (mode === "assume") {
-            // the assume is a declared act — the signature of the
-            // shadow the order decides (the __note: of an assume
-            // lands here too: its winner is the signing node)
-            stats.ombresDeclarées++;
           } else if (mode === "new") {
             stats.ombresÉmergentes++;
           } else {
@@ -387,29 +370,7 @@ export function validateSpace({
       }
     }
   }
-  // ---- (f) the assumes against the conflicts — a signature
-  // without an order conflict is a ghost: nothing was signed, the
-  // read is decided by structure (specificity), the assume adds
-  // nothing but noise. The conflict the assume signs may live at
-  // the very address of the signature (the reading address); its
-  // visibility belongs to the lint, its refusal to the strict
-  // staging — here, only the empty signature is a verdict.
-  for (const declaration of compilation.declarations) {
-    if (declaration.mode !== "assume") continue;
-    const conflicts = orderConflictsAt({
-      space,
-      address: [declaration.layer, declaration.path as LayerPath],
-    });
-    if (!conflicts.some((conflict) => conflict.key === declaration.key)) {
-      const where = declaration.layer + "::" + (declaration.path.join("/") || ".");
-      verdicts.push({
-        kind: "assume-fantôme",
-        fact: fact("ghost-assume", { where, key: declaration.key }),
-      });
-    }
-  }
-
-  // ---- (g) the check couples (ADR-0022): the declarative strate is
+  // ---- (f) the check couples (ADR-0022): the declarative strate is
   // data too — it is judged at assembly, never at execution. A couple
   // is never REPLACED: per name, per address, the sources of the
   // closure confront each other — a re-pose is tolerated only up to

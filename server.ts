@@ -61,9 +61,10 @@ const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? "codestral-latest";
 // The verified geologist loop: the number of proposals the staging may
 // judge before the route gives up and answers 422.
 const MAX_PEN_ATTEMPTS = Math.max(1, Number(process.env.PEN_MAX_ATTEMPTS ?? 3));
-// The strict arm of the loop (ADR-0017): the geologist may propose an
-// order-decided read only if the reading address signs an `assume`
-// — set PEN_STRICT_CONFLICTS=1 to arm it.
+// The strict arm of the loop (ADR-0017, retired as a semantics by
+// ADR-0023): the geologist may no longer propose a read the refines
+// order settles between incomparable sources — resolving it is
+// restructuring, never signing — set PEN_STRICT_CONFLICTS=1 to arm it.
 const STRICT_CONFLICTS = process.env.PEN_STRICT_CONFLICTS === "1";
 // The strict arm of the loop for the carried checks (ADR-0018): the
 // geologist may no longer propose a layer whose checks refuse it — set
@@ -234,7 +235,7 @@ THE LANGUAGE (the seven gestures, explained step by step in the workshop's tutor
 - "layer <name>" opens a layer; "refines @<layer>" declares a parent, "then @<other>" chains the unions of parents.
 - Blocks open by indentation: "specification" (the type declarations), the collections (places, transitions, arcs…), "tests".
 - Inside a block, a member is written "<key> refines @<absolute-path>"; "@" designates an absolute path "@<layer>/<path>/<target>" (a single segment cites a whole layer — the citation).
-- The acts: "extend <block>" (the parent already carries the key), "override <slot> = <value>" (lays a value again), "abstract <slot>" (open slot without value), "mask <slot>" (silent inheritance), "bind <slot> = @<address>" (binds a slot to an address), "check <label>, <label>" (domain check), a value "slot = <value>" (number, "string", @reference).
+- The acts: "extend <block>" (the parent already carries the key), "override <slot> = <value>" (lays a value again), "abstract <slot>" (open slot without value), "bind <slot> = @<address>" (binds a slot to an address), "check <label>, <label>" (domain check), a value "slot = <value>" (number, "string", @reference).
 - A "// comment" line before a key becomes a note: it travels with the block.
 - "extend <collection> refines @<window1> then @<window2> then …" expands citations: the members land qualified, the data stays in the template.
 
@@ -254,7 +255,7 @@ LE LANGAGE (les sept gestes, expliqués pas-à-pas dans le tutoriel de l'atelier
 - "layer <nom>" ouvre une couche ; "refines @<couche>" déclare un parent, "then @<autre>" enchaîne les unions de parents.
 - Les blocs s'ouvrent par indentation : "specification" (les déclarations de types), les collections (places, transitions, arcs…), "tests".
 - Dans un bloc, un membre s'écrit "<clé> refines @<chemin-absolu>" ; "@" désigne un chemin absolu "@<couche>/<chemin>/<cible>" (un seul segment cite une couche entière — la citation).
-- Les actes : "extend <bloc>" (le parent porte déjà la clé), "override <slot> = <valeur>" (repose une valeur), "abstract <slot>" (slot ouvert sans valeur), "mask <slot>" (héritage muet), "bind <slot> = @<adresse>" (lie un slot à une adresse), "check <étiquette>, <étiquette>" (vérification de domaine), une valeur "slot = <valeur>" (nombre, "chaîne", @référence).
+- Les actes : "extend <bloc>" (le parent porte déjà la clé), "override <slot> = <valeur>" (repose une valeur), "abstract <slot>" (slot ouvert sans valeur), "bind <slot> = @<adresse>" (lie un slot à une adresse), "check <étiquette>, <étiquette>" (vérification de domaine), une valeur "slot = <valeur>" (nombre, "chaîne", @référence).
 - Une ligne "// commentaire" avant une clé devient une note : elle voyage avec le bloc.
 - "extend <collection> refines @<fenêtre1> then @<fenêtre2> then …" développe des citations : les membres atterrissent qualifiés, la donnée reste dans le template.
 

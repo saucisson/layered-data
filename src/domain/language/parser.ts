@@ -15,7 +15,9 @@ export type LanguageValue =
   | { kind: "reference"; referenceClass: "R" | "LR"; segments: string[] }
   | { kind: "list"; items: LanguageValue[] };
 
-export type DeclarationMode = "new" | "extend" | "override" | "mask";
+// The declaration modes of the members: three gestures since
+// ADR-0023 — the ones the ontology measured, nothing else.
+export type DeclarationMode = "new" | "extend" | "override";
 
 export type LanguageAct =
   | { kind: "bind"; slot: string; value: LanguageValue; line: number; notes?: string[] }
@@ -36,8 +38,6 @@ export type LanguageAct =
       line: number;
       notes?: string[];
     }
-  | { kind: "mask"; key: string; line: number; notes?: string[] }
-  | { kind: "assume"; key: string; line: number; notes?: string[] }
   | {
       kind: "expect";
       path: string[];
@@ -361,26 +361,6 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
           continue;
         }
         acts.push({ kind: "check", labels, line: token.line });
-        if (notes.length) acts[acts.length - 1].notes = notes;
-        continue;
-      }
-      if (token.kind === "id" && token.text === "mask") {
-        position++;
-        acts.push({ kind: "mask", key: eatKey(), line: token.line });
-        if (notes.length) acts[acts.length - 1].notes = notes;
-        continue;
-      }
-      // ---- the "assume" act — the SIGNATURE of an order-decided
-      // read: `assume key` declares that the first-wins at this
-      // address walks incomparable sources, and that the order as
-      // written is an act, not an accident. It lays no value, no
-      // data enters the tree — only the declaration table. An
-      // assume without a conflict is a ghost (the validation says
-      // so); freezing the read VALUE stays the job of the expect
-      // contract — assume signs, expect measures.
-      if (token.kind === "id" && token.text === "assume") {
-        position++;
-        acts.push({ kind: "assume", key: eatKey(), line: token.line });
         if (notes.length) acts[acts.length - 1].notes = notes;
         continue;
       }

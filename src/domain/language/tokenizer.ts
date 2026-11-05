@@ -2,9 +2,8 @@
 //
 // JSON is not a writing format here: each layer is declared in a
 // grammar where inheritance (refines), transparency (defaults,
-// extended by `extend`), overriding (`override`), opacity (`mask`),
-// bindings (`bind`), check tags (`check`) and the signature of
-// order-decided reads (`assume`) are EXPLICIT ACTS —
+// extended by `extend`), overriding (`override`), bindings
+// (`bind`) and check tags (`check`) are EXPLICIT ACTS —
 // verifiable before any execution. One semantics only: the compiler
 // produces the exact dictionaries of the kernel, never a parallel
 // semantics.

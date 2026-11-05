@@ -2,6 +2,9 @@
 
 - Status: accepted
 - Date: 2026-11-04
+- Amended by: [ADR-0023](adr-0023-two-regime-algebra.md) — the signature
+  (decision 3) retires with it; the visibility (decision 1) and the
+  strict staging (decision 4, now without exception) stand.
 
 ## Context
 
@@ -52,7 +55,8 @@ it is given an address — and an address nobody could read.
    for every address, every key whose first-wins walks incomparable
    providers with diverging LAID values (structurally compared, never
    resolved — faithful to O6). Vertical inheritance never conflicts
-   (specificity is structure). `MASK` is an act, not a value. Notes
+   (specificity is structure). `MASK` is an act, not a value (the act
+   retired by ADR-0023). Notes
    document, they never provide. The diagnostic is an inventory —
    amber, « à inspecter » — never a fault.
 2. **Leaf values only**: two incomparable dict providers are NOT
@@ -62,7 +66,10 @@ it is given an address — and an address nobody could read.
    by design). This is a measured choice, not an oversight: the
    reported conflict is exactly the observable a reader can be
    surprised by — the VALUE the read returns.
-3. **`assume`** (new language act): `assume key` signs the
+3. **`assume`** (new language act — **retired by ADR-0023**: the
+   zero-divergence census emptied the signature of its object, the
+   reading is confluent, nothing blesses an order-decided read
+   anymore): `assume key` signs the
    order-decided read at its address. It lays no value, no data
    enters the tree, no special key is added — the kernel's reading
    semantics (O1–O18) are untouched; the act lives only in the
@@ -77,7 +84,10 @@ it is given an address — and an address nobody could read.
    the pen loop): the unsigned conflicts of the judged layers become
    staging verdicts — a candidate that lets the refines order decide a
    leaf value between incomparable sources is refused as
-   « conflit-d'ordre » unless the reading address signs. The trunk
+   « conflit-d'ordre » — since ADR-0023 the refusal is WITHOUT
+   EXCEPTION: no act signs a conflict, an exacting space restructures
+   (make the providers comparable, or diverge them into different
+   addresses). The trunk
    stays permissive; an exacting space makes the convention
    contractual. The judge is the same pure detector
    (`src/domain/conflicts.ts`) the lint inventories with.
@@ -93,13 +103,18 @@ it is given an address — and an address nobody could read.
   pass, the trunk corpus reads exactly as before.
 - New observable vocabulary: verdict/diagnostic kinds
   « conflit-d'ordre » and « assume-fantôme », fact codes
-  `order-conflict` and `ghost-assume`, both bilingual.
+  `order-conflict` and `ghost-assume`, both bilingual — the ghost
+  and its code retired with the signature (ADR-0023); the conflict
+  and its code stand.
 - The language grows an eighth gesture (`assume`), colored as a
-  keyword, in the tutorial's seventh step, in the glossary; the
-  tutorial's « sept gestes » prose now closes on it.
+  keyword, in the tutorial's seventh step, in the glossary — the
+  gesture, the keyword and the glossary entry retired with ADR-0023;
+  the word falls back to the common vocabulary of keys.
 - The staging protocol freezes two more scenarios (unsigned conflict
-  refused in strict mode; ghost assume refused always), and the lint
-  inventories a seventh kind.
+  refused in strict mode; ghost assume refused always) — the ghost
+  scenario retired with the signature (ADR-0023); since then the
+  strict refusal is without exception, and the lint inventories a
+  seventh kind.
 - The lint over the trunk reports zero conflit-d'ordre (measured): a
   curated spine is compatible with the strict reading of its own
   convention — the diagnostic would say so if it were not.
@@ -115,7 +130,8 @@ it is given an address — and an address nobody could read.
 
 - A workshop toggle for strict staging (presentation only).
 - A « signed crossings » view of the spine: the assume's addresses,
-  walkable like the closure's.
+  walkable like the closure's — retired with the signature
+  (ADR-0023); the lint's inventory is the whole story now.
 - Revisit the 59 topological crossings if a corpus ever shows a
   scalar surprise re-merged downstream — the detector is the same,
   the filter is one line.

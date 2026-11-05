@@ -64,7 +64,8 @@ Three design threads converged to force it open:
    nesting), `=`, `!=`, `not`, `and`, `or`, `=>`, parentheses — and
    nothing else. A TERM in proposition position is the existence
    predicate of free logic: a term may fail to denote (an abstract
-   slot, a masked member) and the sentence says so instead of guessing.
+   slot, a collection the closure never reaches) and the sentence says so
+   instead of guessing.
    The non-emptiness of a domain is `exists x in D: x = x` — the
    fragment has no `true` literal, and one member suffices.
    Quantifier domains are named collections: finite, the walk always

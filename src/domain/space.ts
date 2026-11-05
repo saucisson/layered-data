@@ -10,14 +10,14 @@
 // In scope: per-address closures, first-winner reads, anchors by
 // prefix, multi-refinement aliasing (unions), reference resolution
 // (re-rooting), invalidatable memoization (touch journal,
-// generations, O(1) fast path on an immutable space), the opaque mask,
+// generations, O(1) fast path on an immutable space),
 // desugaring support (topological ordering + implicits, late binding
 // preserved) and the generic checks (containers, cardinality).
 // Out of scope: lens checks.
 
 import { type LayerName, type LayerPath, type PathSegment, asLayerPath } from "./identifiers.ts";
 import { fact, type MessageFact } from "./messages.ts";
-import { type Address, AddressView, LayerReference, MASK, PathReference, type RawTree, type RawValue, isDictionary,  } from "./addresses.ts";
+import { type Address, AddressView, LayerReference, PathReference, type RawTree, type RawValue, isDictionary,  } from "./addresses.ts";
 import { SPECIAL_KEYS } from "./specialKeys.ts";
 
 /** One trace event of a closure or resolution walk. */
@@ -195,7 +195,7 @@ export class Space {
     return keys;
   }
 
-  raw({ layer, path }: { layer: LayerName; path: LayerPath }): RawTree | typeof MASK | null {
+  raw({ layer, path }: { layer: LayerName; path: LayerPath }): RawTree | null {
     // Every raw read during a closure is a dependency (layer, path)
     // of the entry being computed.
     if (this.frameStack.length) {
@@ -206,12 +206,11 @@ export class Space {
     let node: any = this.layers[layer];
     if (node === undefined) return null;
     for (const segment of path) {
-      if (node === MASK) return MASK;
       if (!isDictionary(node)) return null;
       node = node[segment];
       if (node === undefined) return null;
     }
-    return node === MASK || isDictionary(node) ? node : null;
+    return isDictionary(node) ? node : null;
   }
 
   // Raw (unresolved) value of a key, first-winner — desugaring uses
@@ -479,14 +478,6 @@ export class Space {
         return null;
       }
       if (Array.isArray(resolved)) return [resolved as Address, resolved as Address];
-      if (resolved === MASK) {
-        this.recordDiagnostic({
-          kind: "entrée-ignorée",
-          address: holder,
-          fact: fact("ref-masked", { ref: entry.anchor + "::" + entry.path.join("/") }),
-        });
-        return null;
-      }
       this.recordDiagnostic({
         kind: "entrée-ignorée",
         address: holder,
@@ -510,7 +501,7 @@ export class Space {
     reference: PathReference;
     holder: Address;
     tracer: Tracer | null;
-  }): Address | RawValue | typeof MASK | null {
+  }): Address | RawValue | null {
     const holderLayer = holder[0];
     const holderPath = holder[1];
     const search: any[] = [];
@@ -550,16 +541,6 @@ export class Space {
             result: "chemin interrompu",
           });
           return null;
-        }
-        if (value === MASK) {
-          tracer?.record({
-            kind: "refsearch",
-            ref: [reference.anchor, reference.path],
-            holder,
-            search,
-            result: "MASK",
-          });
-          return MASK;
         }
         if (value instanceof AddressView) {
           position = [value.layer, value.path];
@@ -632,20 +613,9 @@ export class Space {
   }): RawValue {
     for (const [sourceLayer, sourcePath] of this.closure({ layer, path, tracer })) {
       const node = this.raw({ layer: sourceLayer, path: sourcePath });
-      // Opaque mask: short-circuits before any key (unlike the
-      // transparent abstract slot null).
-      if (node === MASK) {
-        scan?.push({ source: [sourceLayer, sourcePath], status: "masqué" });
-        return MASK;
-      }
       if (node !== null && key in node && node[key] !== null) {
         const raw = node[key];
-        scan?.push({
-          source: [sourceLayer, sourcePath],
-          status: "fournit",
-          raw: raw === MASK ? "MASK" : raw,
-        });
-        if (raw === MASK) return MASK;
+        scan?.push({ source: [sourceLayer, sourcePath], status: "fournit", raw });
         return this.valueOf({ layer, path, key, raw, tracer });
       }
       const status = node !== null && key in node ? "transparent" : "absent";
@@ -666,11 +636,6 @@ export class Space {
         }
       }
     }
-    // A key read as MASK is not visible (masked keys excluded).
-    const visible: string[] = [];
-    for (const key of collected) {
-      if (this.read({ layer, path, key, tracer }) !== MASK) visible.push(key);
-    }
-    return visible;
+    return collected;
   }
 }
