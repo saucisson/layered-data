@@ -16,7 +16,7 @@ import type { SourceLineTarget } from "./layerSourceView.tsx";
 /** The chain of refined types — the refines DECLARED at an
  * address, followed step by step (cycle guard, bounded depth:
  * the chain is read crank by crank, a click extends it); the
- * @paths of the pen are addresses, the kernel read returns them
+ * @paths of the layer source are addresses, the kernel read returns them
  * as-is. */
 export function refinementChainOf({
   space,

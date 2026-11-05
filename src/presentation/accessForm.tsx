@@ -17,8 +17,8 @@ export function AccessCodeForm({ language }: { language: Language }) {
         setStateMessage(
           say({
             language,
-            en: "code verified — the wardrobe and the AI pen are open",
-            fr: "code vérifié — l'armoire et la plume IA sont ouvertes",
+            en: "code verified — the quarry and the AI geologist are open",
+            fr: "code vérifié — la carrière et le géologue IA sont ouverts",
           }),
         );
       } else if (response.status === 401) {
@@ -38,8 +38,8 @@ export function AccessCodeForm({ language }: { language: Language }) {
       setStateMessage(
         say({
           language,
-          en: "without proxy — the workshop lives alone, the wardrobe is empty",
-          fr: "sans proxy — l'atelier vit seul, l'armoire est vide",
+          en: "without proxy — the workshop lives alone, the quarry is empty",
+          fr: "sans proxy — l'atelier vit seul, la carrière est vide",
         }),
       );
     }
@@ -56,8 +56,8 @@ export function AccessCodeForm({ language }: { language: Language }) {
         <span className="text-[11px] leading-4 text-slate-500">
           {say({
             language,
-            en: "a shared key, laid in the proxy's .env — it protects the chatbot and the disk wardrobe; the workshop stays open to all",
-            fr: "une clé partagée, posée dans .env du proxy — elle protège le chatbot et l'armoire du disque ; l'atelier reste ouvert à tous",
+            en: "a shared key, laid in the proxy's .env — it protects the chatbot and the disk quarry; the workshop stays open to all",
+            fr: "une clé partagée, posée dans .env du proxy — elle protège le chatbot et la carrière du disque ; l'atelier reste ouvert à tous",
           })}
         </span>
       </div>

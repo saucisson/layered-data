@@ -11,7 +11,7 @@
 // reference, a list: what a read can return directly. Two
 // incomparable dict providers are NOT a conflict: a dict opens a
 // sub-address whose closure re-merges both branches, the divergence
-// does not survive the scalar read (measured on the trunk: 59 such
+// does not survive the scalar read (measured on the bedrock: 59 such
 // topological crossings, 0 leaf-value conflicts — the ADR-0017
 // records the choice).
 //

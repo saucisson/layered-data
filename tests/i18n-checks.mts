@@ -257,7 +257,7 @@ check(
 );
 
 // =====================================================================
-// the scenarios, the view tree, the layer wardrobe (imported modules)
+// the scenarios, the view tree, the layer inventory (imported modules)
 // =====================================================================
 
 check(
@@ -276,7 +276,7 @@ check(
 );
 
 check(
-  "the layer wardrobe describes every layer bilingually, layerRoleNames agrees with it",
+  "the layer inventory describes every layer bilingually, layerRoleNames agrees with it",
   Object.keys(LAYER_ROLE).length === layerRoleNames().length &&
     layerRoleNames().every((layerName) => bilingualParityOf(LAYER_ROLE[layerName])),
 );
@@ -290,15 +290,18 @@ const glossary = readExportedData({ file: join(presentationDirectory, "notions.t
 };
 const glossaryIds = Object.keys(glossary);
 check(
-  "the glossary keeps its thirty-four ids — the French keys the tutorial cites, the ADR-0017 notions and the ADR-0018 registry included",
-  glossaryIds.length === 34 &&
+  "the glossary keeps its thirty-seven ids — the French keys the tutorial cites, the ADR-0017 notions, the ADR-0018 registry and the ADR-0021 story terms included",
+  glossaryIds.length === 37 &&
     [
       "adresse",
       "carottage",
+      "carrière",
+      "géologue",
       "fermeture",
       "lentille",
       "premier-gagné",
       "raffine",
+      "socle",
       "union",
       "assume",
       "conflit d'ordre",
@@ -331,7 +334,7 @@ check(
   "the tutorial keeps its eleven steps, from pbm to glossaire",
   tutorialSteps.length === 11 &&
     tutorialSteps.map((step) => step.id).join(",") ===
-      "pbm,idee,plume,continuum,specification,regles,composer,travail,contrat,preuve,glossaire",
+      "pbm,idee,geologue,continuum,specification,regles,composer,travail,contrat,preuve,glossaire",
 );
 check(
   "every tutorial step speaks bilingually: label, title, body blocks, go labels",
@@ -366,12 +369,12 @@ check(
 );
 
 // =====================================================================
-// the pen's instructions (server source — both tongues follow VERSION)
+// the geologist's instructions (server source — both tongues follow VERSION)
 // =====================================================================
 
 const serverSource = readFileSync(join(import.meta.dirname, "..", "server.ts"), "utf8");
 check(
-  "the pen's system prompt speaks both workshop tongues, English by default, both following VERSION",
+  "the geologist's system prompt speaks both workshop tongues, English by default, both following VERSION",
   serverSource.includes("PEN_INSTRUCTIONS_EN") &&
     serverSource.includes("PEN_INSTRUCTIONS_FR") &&
     serverSource.includes('penInstructions("en")') &&

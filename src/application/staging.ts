@@ -2,13 +2,13 @@
 // living space — analysis, compilation, one token space, one
 // verdict. Wherever a verdict is, the addition is refused.
 //
-// The trunk's immutability is a PROTOCOL rule here, not a UI
-// convention (ADR-0020): every mutation route carries the trunk's
+// The bedrock's immutability is a PROTOCOL rule here, not a UI
+// convention (ADR-0020): every mutation route carries the bedrock's
 // signature (`readonlyLayerNames`) and refuses to touch it itself.
-// A draft that claims a trunk name would REPLACE the trunk layer
+// A draft that claims a bedrock name would REPLACE the bedrock layer
 // in the token space (the compiler keys the layers by name) — the
-// tribunal names the theft (« tronc-occupé ») and never judges the
-// forgery: a walk against a replaced trunk would accuse innocent
+// staging names the theft (« socle-occupé ») and never judges the
+// forgery: a walk against a replaced bedrock would accuse innocent
 // layers. The act of addition hard-skips the readonly names too —
 // the route itself never writes them, whoever calls it.
 //
@@ -109,9 +109,9 @@ export function stageLayerAddition({
   /** the layers the living space already holds — a draft layer of
    * the same name is neither re-judged nor re-added */
   livingLayerNames: readonly string[];
-  /** the trunk's signature (ADR-0020): the layers this route
+  /** the bedrock's signature (ADR-0020): the layers this route
    * refuses to touch — a draft claiming one of their names is
-   * refused as « tronc-occupé », the theft named, the forgery
+   * refused as « socle-occupé », the theft named, the forgery
    * never judged */
   readonlyLayerNames: readonly string[];
   /** the workshop language — the syntax errors of the refusal speak
@@ -155,32 +155,32 @@ export function stageLayerAddition({
     };
   }
 
-  // ---- the trunk's signature (ADR-0020): the draft's own declared
-  // names, read from the draft alone (the trunk blocks never claim
+  // ---- the bedrock's signature (ADR-0020): the draft's own declared
+  // names, read from the draft alone (the bedrock blocks never claim
   // anything — they ARE the names). A claimed readonly name is the
-  // theft itself: the verdict names it, and the tribunal never
+  // theft itself: the verdict names it, and the staging never
   // judges the token space — the compiler keys the layers by name,
-  // the claimed trunk layer would be REPLACED in it, and the walk
+  // the claimed bedrock layer would be REPLACED in it, and the walk
   // against the forgery would accuse innocent layers (measured: a
   // draft claiming `record` used to draw 13 ghost declarations on
   // layers that had done nothing).
   const draftOnly = parseLanguage(draftSource.trim(), language);
-  const claimedTrunkNames: string[] = [];
+  const claimedBedrockNames: string[] = [];
   if (draftOnly.errors.length === 0) {
     for (const draftLayer of draftOnly.layers) {
-      if (readonlyLayerNames.includes(draftLayer.name) && !claimedTrunkNames.includes(draftLayer.name)) {
-        claimedTrunkNames.push(draftLayer.name);
+      if (readonlyLayerNames.includes(draftLayer.name) && !claimedBedrockNames.includes(draftLayer.name)) {
+        claimedBedrockNames.push(draftLayer.name);
       }
     }
   }
-  if (claimedTrunkNames.length > 0) {
+  if (claimedBedrockNames.length > 0) {
     return {
       ok: false,
       step: "validation" as const,
       errors: [],
-      verdicts: claimedTrunkNames.map((claimedName) => ({
-        kind: "tronc-occupé" as const,
-        fact: fact("trunk-occupied", { layer: claimedName }),
+      verdicts: claimedBedrockNames.map((claimedName) => ({
+        kind: "socle-occupé" as const,
+        fact: fact("bedrock-occupied", { layer: claimedName }),
       })),
       layerNames: parsed.layers.map((parsedLayer) => asLayerName(parsedLayer.name)),
       compiledLanguage: null,
@@ -309,9 +309,9 @@ export function applyStagedAddition({
   space: Space;
   staging: StagingOutcome;
   knownLayerNames: readonly string[];
-  /** the trunk's signature (ADR-0020): the route itself refuses to
-   * write a readonly name — defense in depth, the tribunal's
-   * « tronc-occupé » verdict is the primary guard */
+  /** the bedrock's signature (ADR-0020): the route itself refuses to
+   * write a readonly name — defense in depth, the staging's
+   * « socle-occupé » verdict is the primary guard */
   readonlyLayerNames: readonly string[];
 }): AppliedAddition {
   const newLayerNames: LayerName[] = [];
@@ -321,7 +321,7 @@ export function applyStagedAddition({
   // A refinement target counts only if it is already known (corpus
   // or previously applied) — a self- or forward-reference within the
   // same draft does not found a graph position. A readonly name never
-  // enters: the trunk is written by nobody at runtime (ADR-0020).
+  // enters: the bedrock is written by nobody at runtime (ADR-0020).
   const processedLayerNames: string[] = [];
   for (const layerName of staging.layerNames) {
     if (knownLayerNames.includes(layerName)) continue;
@@ -364,8 +364,8 @@ export function simulatedAssistantProposal({
   return [
     parseText({
       language,
-      en: "// deterministic proposal — correct the pen freely,",
-      fr: "// proposition déterministe — corrigez la plume librement,",
+      en: "// deterministic proposal — correct the draft freely,",
+      fr: "// proposition déterministe — corrigez le brouillon librement,",
     }),
     parseText({
       language,

@@ -165,7 +165,7 @@ function lintTags({ space, layerNames }: LintingTarget): void {
  * promise the execution cannot keep; an algorithm without a
  * contract is a dead limb; an unreadable contract is a clause
  * written in a hand the kernel cannot parse. Measured on the
- * trunk: 0/0/0. */
+ * bedrock: 0/0/0. */
 function lintRegistry({ space }: LintingTarget): void {
   for (const divergence of registryAuditOf({ space })) {
     // the divergence's where is the registry address text
@@ -223,7 +223,7 @@ function lintVacuousBounds({ space, layerNames }: LintingTarget): void {
  * registry, never executing the checks. The validation refuses what
  * the acts can answer for (a pose, a layer root); here the WHOLE
  * inventory is recorded, the inherited instance vacancies included
- * — the lint's job is to see, not to judge. Measured on the trunk:
+ * — the lint's job is to see, not to judge. Measured on the bedrock:
  * 79 judgments, 0 vacancies. */
 function lintVacantChecks(target: LintingTarget): void {
   for (const vacancy of vacantChecksOf({ space: target.space, layerNames: target.layerNames })) {

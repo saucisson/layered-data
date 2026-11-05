@@ -4,7 +4,7 @@
 > `src/domain/`: what the kernel *does*, implementation-independent.
 > The obligations below (O1–O18) and the conformance requirements
 > (C1–C8) are executable: `tests/specification-properties.mts`
-> proves them as properties over the trunk corpus and over dedicated
+> proves them as properties over the bedrock corpus and over dedicated
 > spaces, and `tests/audit-kernel.mts` freezes C1–C3 as a
 > byte-identical baseline dump. Bracketed names refer to kernel
 > operations; in the TypeScript domain they read: `[closure]` →
@@ -169,7 +169,7 @@ Une source en cours de calcul (frame ouverte) ne contribue pas (prudence de cycl
 
 **Obligation O7.** Les ancres d'une adresse sont l'union des ancres de sa fermeture (R10) ;
 un fragment porte son nom comme ancre, sinon il est invisible depuis une instance qui
-remonte vers le tronc.
+remonte vers le socle.
 
 ---
 

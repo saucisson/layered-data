@@ -1,5 +1,5 @@
 // The living edition use case: a living layer re-enters the
-// tribunal. The edited layer leaves the living context (it is
+// staging. The edited layer leaves the living context (it is
 // judged again, exactly like a draft), every other living layer
 // stays as context — its declared expectations are replayed, a
 // betrayed contract refuses the edition. An accepted edition
@@ -8,8 +8,8 @@
 // layer — its own and the children's, O18 — is invalidated, the
 // panels re-read the space, the workshop reacts. The corpus stays
 // read-only BY PROTOCOL (ADR-0020), not by UI convention: the
-// route itself carries the trunk's signature and refuses to touch
-// it — an edition aimed at a trunk layer is « tronc-édité », and
+// route itself carries the bedrock's signature and refuses to touch
+// it — an edition aimed at a bedrock layer is « socle-édité », and
 // the act of edition never writes a readonly name, whoever calls
 // it. Only the layers added at runtime are editable.
 
@@ -26,14 +26,14 @@ export interface LivingAddition {
   layerNames: string[];
 }
 
-/** The outcome of staging an edition: the tribunal's answer (same
+/** The outcome of staging an edition: the staging's answer (same
  * verdict kinds as an addition, plus the edition guards) — `ok`
  * false anywhere = the edition is refused and the space stays
  * intact. */
 /** The edition guards: an edition edits, it never renames a layer
- * nor adds one alongside — and it never aims at the trunk. Each
+ * nor adds one alongside — and it never aims at the bedrock. Each
  * guard is a stable refusal code, rendered by the panels. */
-export type EditionRefusalCode = "couche-renomme" | "couche-glissée" | "tronc-édité";
+export type EditionRefusalCode = "couche-renomme" | "couche-glissée" | "socle-édité";
 
 export interface EditionOutcome {
   ok: boolean;
@@ -45,7 +45,7 @@ export interface EditionOutcome {
 /** What the workshop must know about an applied edition: the edited
  * layer, its declared refinement targets (the graph re-aims the
  * layer — they may have changed), and its new source block (for
- * the language tab and the wardrobe). */
+ * the language tab and the quarry). */
 export interface AppliedEdition {
   layerName: LayerName;
   refinementTargetsOf: string[];
@@ -69,10 +69,10 @@ function additionSourceWithoutLayer({
     .join("\n");
 }
 
-/** Judge the edited source of one living layer: same tribunal, same
+/** Judge the edited source of one living layer: same staging, same
  * verdicts as an addition — the edited layer alone is the draft,
  * the corpus and the other living additions are re-validated whole.
- * Two edition guards complete the tribunal: the draft must still
+ * Two edition guards complete the staging: the draft must still
  * declare the edited layer (a renamed or vanished layer is
  * refused), and it must declare it alone (a layer smuggled
  * alongside the edition is refused — an edition edits, it never
@@ -89,10 +89,10 @@ export function stageLayerEdition({
   languageSource: string;
   livingAdditions: readonly LivingAddition[];
   livingLayerNames: readonly string[];
-  /** the trunk's signature (ADR-0020): the layers this route
+  /** the bedrock's signature (ADR-0020): the layers this route
    * refuses to touch — an edition aimed at one of them is refused
-   * as « tronc-édité », before the tribunal is even convened (the
-   * trunk layer would leave the context and be judged as a draft —
+   * as « socle-édité », before the staging is even convened (the
+   * bedrock layer would leave the context and be judged as a draft —
    * measured: the guard used to be missing, `record` was mutable
    * in place) */
   readonlyLayerNames: readonly string[];
@@ -101,8 +101,8 @@ export function stageLayerEdition({
   /** the workshop language — the syntax errors of the refusal speak it */
   language?: Language;
 }): EditionOutcome {
-  // ---- the trunk guard (ADR-0020): the refusal speaks before the
-  // tribunal is convened — a trunk layer never re-enters it, the
+  // ---- the bedrock guard (ADR-0020): the refusal speaks before the
+  // staging is convened — a bedrock layer never re-enters it, the
   // frozen verdicts of the corpus stay true
   if (readonlyLayerNames.includes(layerName)) {
     return {
@@ -116,12 +116,12 @@ export function stageLayerEdition({
         compiledLanguage: null,
         blocks: {},
       },
-      refusals: ["tronc-édité"],
+      refusals: ["socle-édité"],
     };
   }
   // the staging context: every living addition keeps its place,
   // except the edited layer — it leaves its own addition's source
-  // and the living names, the tribunal judges it again
+  // and the living names, the staging judges it again
   const previousAdditionSources = livingAdditions.map((addition) =>
     addition.layerNames.includes(layerName)
       ? additionSourceWithoutLayer({ addition, layerName })
@@ -175,7 +175,7 @@ export function applyStagedEdition({
   space: Space;
   layerName: LayerName;
   staging: StagingOutcome;
-  /** the trunk's signature (ADR-0020): the act of edition itself
+  /** the bedrock's signature (ADR-0020): the act of edition itself
    * refuses to write a readonly name — the staged tree stays out,
    * the space stays intact, whoever calls the route */
   readonlyLayerNames: readonly string[];
