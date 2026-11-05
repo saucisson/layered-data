@@ -23,6 +23,7 @@ import type { BilingualText } from "./i18n.ts";
  * graph view shows it all. */
 export const PRINCIPAL_PARENT: Record<string, string | null> = {
   record: null,
+  "check-registry": null,
   collection: null,
   "positions-scheme": "record",
   "positions-grid": "positions-scheme",
@@ -76,6 +77,10 @@ export const LAYER_ROLE: Record<string, BilingualText> = {
   record: {
     en: "the ground: a record node",
     fr: "le fondamental : un nœud record",
+  },
+  "check-registry": {
+    en: "the meta-model come home: the checks' contracts, written in the language (ADR-0019)",
+    fr: "le métamodèle rentré chez lui : les contrats des checks, écrits dans le langage (ADR-0019)",
   },
   collection: {
     en: "the ground: a typed collection",
@@ -267,6 +272,7 @@ export function layerRoleNames(): string[] {
 /** The color class of each corpus layer (Tailwind badge colors). */
 export const LAYER_COLOR: Record<string, string> = {
   record: "bg-slate-500",
+  "check-registry": "bg-slate-400",
   collection: "bg-indigo-400",
   "positions-scheme": "bg-teal-600",
   "positions-grid": "bg-teal-400",

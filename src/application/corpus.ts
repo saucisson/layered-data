@@ -4,7 +4,10 @@
 // in a fixed order. The assembly itself is order-neutral for the
 // space (desugaring sorts topologically), the order only fixes the
 // workshop layer list — and, for byte-identical dumps, the join
-// order of the source text.
+// order of the source text. The trunk carries its own meta-model
+// since ADR-0019: the `check-registry` layer stands beside the
+// corpus (no refinement — the meta-model descends from nothing),
+// and the checks' contracts are read from it.
 
 import { type LayerName, asLayerName } from "../domain/identifiers.ts";
 import { Space } from "../domain/space.ts";
@@ -15,6 +18,7 @@ import { type ValidationOutcome, validateSpace } from "../domain/validation.ts";
 // The trunk layer order: also the layer list of the workshop.
 export const KERNEL_LAYER_NAMES: LayerName[] = [
   "record",
+  "check-registry",
   "collection",
   "positions-scheme",
   "positions-grid",

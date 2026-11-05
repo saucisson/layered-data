@@ -1,4 +1,4 @@
-// The check registry and every semantic check.
+// The check registry's algorithms and the reader of its data.
 //
 // The registry extends beyond the two generic checks of the original
 // kernel — that divergence is recorded. One rule throughout: a check
@@ -18,10 +18,18 @@
 // at the generic level, bound by the formalism that fixes it),
 // first-winner per slot across the closure. The registry knows only
 // the algorithm and the slot contract; an unbound slot is never
-// guessed — the check withdraws. The contract is DECLARED, in the
-// nominal registry above (ADR-0018): the withdrawal is no longer the
-// check's private affair — a posed check that cannot judge is a
-// check-vacant verdict, the inherited vacancies the lint's inventory.
+// guessed — the check withdraws.
+//
+// The CONTRACT itself lives in the language since ADR-0019: the
+// `check-registry` layer of the corpus declares every tag's level,
+// required, optional and conditional slots, and this file only
+// READS it (`registryContractsOf`) and binds the tag to its
+// ALGORITHM (`checkRegistry`). The data declares what a check
+// means; the kernel says how it executes; the two answer for each
+// other in the meta-audit (`registryAuditOf` — the lint's
+// registry pass). A posed check that cannot judge is a check-vacant
+// verdict (ADR-0018), a declared check without an algorithm is
+// refused as « algorithme absent » (ADR-0019).
 //
 // The placement rule follows from the closure: a binding lives at the
 // level where the check READS it. Layer-level checks (simple,
@@ -31,7 +39,7 @@
 // on the TYPE: the type is in the arc's closure, the root never is.
 // A renaming follows for free: the renaming formalism rebinds the slot.
 
-import { type LayerName, type LayerPath, asPathSegment } from "./identifiers.ts";
+import { type LayerName, type LayerPath, asLayerName, asPathSegment } from "./identifiers.ts";
 import { type Address, AddressView, MASK, type RawValue, addressesEqual, isDictionary,  } from "./addresses.ts";
 import { Space } from "./space.ts";
 import { designatedAddress } from "./desugaring.ts";
@@ -558,10 +566,10 @@ function checkConnected({ space, view }: { space: Space; view: AddressView }): s
 // (ADR-0018). The contract is the check's semantics made readable
 // WITHOUT executing it: the validation (a posed check that cannot
 // judge is a verdict), the lint (the inventory of the vacancies)
-// and the dead-binding rule (the reading levels) all read this
-// table — never the check's code. A check carried but unable to
-// judge is a vacant check; the withdrawal policy stops being local
-// to each function.
+// and the dead-binding rule (the reading levels) all read the
+// registry's data — never the check's code. A check carried but
+// unable to judge is a vacant check; the withdrawal policy stops
+// being local to each function.
 export interface CheckContract {
   /** where the check judges: a layer root (the layer checks read
    * their operands there), or an instance (the arc checks: the
@@ -586,35 +594,150 @@ export interface CheckContract {
   };
 }
 
-export const checkContracts: Record<string, CheckContract> = {
-  // the two generic checks of the original kernel: no slots — they
-  // read the `specification` views directly. Carried by nothing in
-  // the trunk corpus (measured), they stay in the registry: the
-  // registry documents the kernel, not its usage.
-  containers: { level: "root", required: {} },
-  cardinality: { level: "root", required: {} },
-  simple: {
-    level: "root",
-    required: { edges: "root" },
-    optional: { ordered: "root" },
-    conditional: {
-      slot: "ordered",
-      operand: "edges",
-      "true": { "end-source": "instance", "end-target": "instance" },
-      "false": { arrows: "root", "arrow-vertex": "root" },
-    },
-  },
-  nonempty: { level: "root", required: { edges: "root", arrows: "root", "arrow-vertex": "root" } },
-  oriented: { level: "instance", required: { "end-source": "instance", "end-target": "instance" } },
-  sperner: { level: "root", required: { edges: "root", arrows: "root", "arrow-vertex": "root" } },
-  "k-partite": { level: "root", required: { vertices: "root", edges: "root", arrows: "root", "arrow-vertex": "root" } },
-  dag: { level: "instance", required: { "end-source": "instance", "end-target": "instance" } },
-  arbre: {
-    level: "root",
-    required: { vertices: "root", edges: "root" },
-    optional: { "end-source": "instance", "end-target": "instance" },
-  },
-};
+// ---- the registry as data (ADR-0019) -----------------------------------
+
+/** The nominal anchor of the registry: the kernel layer that
+ * carries the checks' contracts, written in the language itself
+ * (`formalisms/kernel/check-registry.ld`). The name is kernel
+ * behavior — like the special keys, like the tag strings. */
+export const REGISTRY_LAYER_NAME = asLayerName("check-registry");
+
+/** One slot-levels record of a contract — required, optional, or a
+ * conditional branch. The note keys stay out (they are data too);
+ * a level that reads as neither root nor instance stays out of the
+ * contract — the meta-audit inventories it, the kernel stays
+ * total, never an exception. */
+function slotLevelsOf(node: unknown): Record<string, "root" | "instance"> {
+  const levels: Record<string, "root" | "instance"> = {};
+  if (!isDictionary(node)) return levels;
+  for (const slot of Object.keys(node)) {
+    if (slot.startsWith("__note:")) continue;
+    const level = node[slot];
+    if (level === "root" || level === "instance") levels[slot] = level;
+  }
+  return levels;
+}
+
+/** The conditional group of a contract, read from the data: the
+ * condition's slot, the operand view its instance slots are read
+ * at, and the two branches. A conditional without a readable
+ * condition slot is not a group. */
+function conditionalOf(node: unknown): NonNullable<CheckContract["conditional"]> | null {
+  if (!isDictionary(node)) return null;
+  const slot = node["slot"];
+  if (typeof slot !== "string") return null;
+  const conditional: NonNullable<CheckContract["conditional"]> = {
+    slot,
+    "true": slotLevelsOf(node["true"]),
+    "false": slotLevelsOf(node["false"]),
+  };
+  const operand = node["operand"];
+  if (typeof operand === "string") conditional.operand = operand;
+  return conditional;
+}
+
+/** The contracts of every declared tag, READ FROM THE DATA
+ * (ADR-0019): the single source is the `check-registry` layer of
+ * the space — @check-registry/specification/<tag> holds each tag's
+ * level, required, optional and conditional slots, declared in the
+ * language. The reader trusts the kernel's own anchor (a raw read:
+ * the registry is kernel-owned; a refinement extending it stays
+ * below the anchor, out of the resolution — that boundary is
+ * ADR-0019's). A space without the registry layer reads an empty
+ * registry: every posed tag is étiquette-inconnue — existence
+ * comes from the data, nowhere else. */
+export function registryContractsOf({ space }: { space: Space }): Record<string, CheckContract> {
+  const contracts: Record<string, CheckContract> = {};
+  const layerTree = space.raw({ layer: REGISTRY_LAYER_NAME, path: [] });
+  if (!isDictionary(layerTree)) return contracts;
+  const specification = layerTree["specification"];
+  if (!isDictionary(specification)) return contracts;
+  for (const tag of Object.keys(specification)) {
+    if (tag.startsWith("__note:")) continue;
+    const record = specification[tag];
+    if (!isDictionary(record)) continue;
+    const level = record["level"];
+    if (level !== "root" && level !== "instance") continue;
+    const contract: CheckContract = { level, required: slotLevelsOf(record["required"]) };
+    const optional = slotLevelsOf(record["optional"]);
+    if (Object.keys(optional).length > 0) contract.optional = optional;
+    const conditional = conditionalOf(record["conditional"]);
+    if (conditional) contract.conditional = conditional;
+    contracts[tag] = contract;
+  }
+  return contracts;
+}
+
+/** The meta-model's audit (ADR-0019): the registry data and the
+ * kernel's algorithm table answer for each other — and the fields
+ * the reader cannot interpret are inventoried, never guessed.
+ *
+ *   - contrat-sans-algorithme: a tag declared in the language but
+ *     bound to no kernel algorithm — its contract judges (the
+ *     vacancy verdicts work), but it never executes;
+ *   - algorithme-sans-contrat: a kernel algorithm answering to no
+ *     declared contract — it would execute with no one vouching
+ *     for its slots, the ADR-0018 guarantees void;
+ *   - contrat-illisible: a contract field the reader skips (a
+ *     level that is neither root nor instance, a condition slot
+ *     that is not a string, an operand that is not a string).
+ *
+ * Measured on the trunk: 0, 0, 0. */
+export interface RegistryDivergence {
+  kind: "contrat-sans-algorithme" | "algorithme-sans-contrat" | "contrat-illisible";
+  tag: string;
+  /** the registry address of the unreadable field, when there is one */
+  where?: string;
+}
+
+export function registryAuditOf({ space }: { space: Space }): RegistryDivergence[] {
+  const divergences: RegistryDivergence[] = [];
+  const contracts = registryContractsOf({ space });
+  for (const tag of Object.keys(contracts)) {
+    if (!checkRegistry[tag]) divergences.push({ kind: "contrat-sans-algorithme", tag });
+  }
+  for (const tag of Object.keys(checkRegistry)) {
+    if (!contracts[tag]) divergences.push({ kind: "algorithme-sans-contrat", tag });
+  }
+  const layerTree = space.raw({ layer: REGISTRY_LAYER_NAME, path: [] });
+  const specification = isDictionary(layerTree) && isDictionary(layerTree["specification"])
+    ? layerTree["specification"]
+    : null;
+  if (!specification) return divergences;
+  for (const tag of Object.keys(specification)) {
+    if (tag.startsWith("__note:") || !isDictionary(specification[tag])) continue;
+    const record = specification[tag];
+    const where = "check-registry::specification/" + tag;
+    if (record["level"] !== "root" && record["level"] !== "instance") {
+      divergences.push({ kind: "contrat-illisible", tag, where });
+      continue;
+    }
+    const lintLevels = (node: unknown, label: string): void => {
+      if (!isDictionary(node)) return;
+      for (const slot of Object.keys(node)) {
+        if (slot.startsWith("__note:")) continue;
+        const level = node[slot];
+        if (level !== "root" && level !== "instance") {
+          divergences.push({ kind: "contrat-illisible", tag, where: where + "/" + label + "/" + slot });
+        }
+      }
+    };
+    lintLevels(record["required"], "required");
+    lintLevels(record["optional"], "optional");
+    if (isDictionary(record["conditional"])) {
+      if (typeof record["conditional"]["slot"] !== "string") {
+        divergences.push({ kind: "contrat-illisible", tag, where: where + "/conditional/slot" });
+      }
+      const operand = record["conditional"]["operand"];
+      if (operand !== undefined && typeof operand !== "string") {
+        divergences.push({ kind: "contrat-illisible", tag, where: where + "/conditional/operand" });
+      }
+      lintLevels(record["conditional"]["true"], "conditional/true");
+      lintLevels(record["conditional"]["false"], "conditional/false");
+    }
+  }
+  return divergences;
+}
 
 /** The reading level of every slot a check may read — required,
  * optional or conditional — one source for the registry's
@@ -667,6 +790,7 @@ function pathsEqual(first: string[], second: string[]): boolean {
  * Measured on the trunk: 79 judgments, 0 vacancies. */
 export function vacantChecksOf({ space, layerNames }: { space: Space; layerNames: readonly LayerName[] }): VacantCheck[] {
   const vacancies: VacantCheck[] = [];
+  const contracts = registryContractsOf({ space });
   const recordAt = (
     address: Address,
     tag: string,
@@ -721,11 +845,11 @@ export function vacantChecksOf({ space, layerNames }: { space: Space; layerNames
           posed = true;
         }
         for (const tag of (node["checks"] ?? []) as unknown[]) {
-          if (typeof tag === "string" && checkContracts[tag]) tags.add(tag);
+          if (typeof tag === "string" && contracts[tag]) tags.add(tag);
         }
       }
       for (const tag of tags) {
-        const contract = checkContracts[tag];
+        const contract = contracts[tag];
         if (posed) {
           recordContractAt(address, tag, contract, true);
         } else if (contract.level === "root" && path.length === 0) {
@@ -743,9 +867,13 @@ export function vacantChecksOf({ space, layerNames }: { space: Space; layerNames
 
 export type CheckFunction = (parameters: { space: Space; view: AddressView }) => string[];
 
-// The check registry carried by the data: on the Python side these
-// are functions in the layers; here they are tags the kernel resolves
-// — the tag strings are behavior, they stay as they are.
+// The check registry's ALGORITHMS: the tags the kernel resolves to
+// code — the contracts live in the data (ADR-0019, read above); this
+// table binds each declared tag to its execution. On the Python side
+// these are functions in the layers; here the tag strings are
+// behavior, they stay as they are. The data declares what a check
+// means, this table says how it runs — and the meta-audit
+// (`registryAuditOf`) holds the two answer for each other.
 export const checkRegistry: Record<string, CheckFunction> = {
   containers: checkContainers,
   cardinality: checkCardinality,
@@ -760,10 +888,13 @@ export const checkRegistry: Record<string, CheckFunction> = {
 
 // Walks the flattened view; at each address, runs the checks carried
 // by the sources of its closure (checks inherited from the types) —
-// port of the original `run_checks`. Used by the audit harness; the
-// workbench itself reads the space immutably.
+// port of the original `run_checks`. Used by the strict staging arm
+// (ADR-0018) and the harnesses; the workbench itself reads the space
+// immutably. Existence is the data's (ADR-0019): the registry layer
+// declares, the algorithm table binds.
 export function runChecks({ space, layer }: { space: Space; layer: LayerName }): string[] {
   const errors: string[] = [];
+  const contracts = registryContractsOf({ space });
   const seen = new Set<string>();
   for (const address of walkAddresses({ space, layer })) {
     const view = new AddressView(address[0], address[1]);
@@ -774,10 +905,19 @@ export function runChecks({ space, layer }: { space: Space; layer: LayerName }):
       if (!Array.isArray(tags)) continue;
       for (const tag of tags) {
         if (typeof tag !== "string") continue;
+        // Existence comes from the data (ADR-0019): a tag the
+        // registry layer does not declare is ignored — and recorded.
+        const contract = contracts[tag];
+        if (!contract) {
+          space.recordDiagnostic({ kind: "étiquette-inconnue", address: [address[0], address[1]], fact: fact("label-unknown", { tag }) });
+          continue;
+        }
+        // A declared tag without an algorithm is refused — the
+        // contract judges (its vacancy is a verdict), the
+        // execution cannot.
         const checkFunction = checkRegistry[tag];
         if (!checkFunction) {
-          // An unknown tag is ignored — and recorded.
-          space.recordDiagnostic({ kind: "étiquette-inconnue", address: [address[0], address[1]], fact: fact("label-unknown", { tag }) });
+          space.recordDiagnostic({ kind: "algorithme-absent", address: [address[0], address[1]], fact: fact("algorithm-missing", { tag }) });
           continue;
         }
         // Deduplication by (address, check) — mirror of the Python

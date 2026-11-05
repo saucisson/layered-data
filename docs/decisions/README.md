@@ -57,6 +57,7 @@ What this decision implies - good and bad.
 | [ADR-0016](adr-0016-reviewer-launch-mechanics.md) | Reviewer launch mechanics - CI job as status check | accepted | 2026-11-02 |
 | [ADR-0017](adr-0017-order-as-semantics.md) | Order as semantics - first-wins conflicts made visible, signable, contractual | accepted | 2026-11-04 |
 | [ADR-0018](adr-0018-checks-as-contracts.md) | Checks as contracts - the constraint semantics made nominal, visible, executable | accepted | 2026-11-04 |
+| [ADR-0019](adr-0019-registry-as-data.md) | Registry as data - the meta-model comes home: the checks' contracts written in the language | accepted | 2026-11-05 |
 
 ## Adding a new ADR
 
