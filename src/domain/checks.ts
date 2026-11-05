@@ -40,7 +40,7 @@
 // A renaming follows for free: the renaming formalism rebinds the slot.
 
 import { type LayerName, type LayerPath, asLayerName, asPathSegment } from "./identifiers.ts";
-import { type Address, AddressView, MASK, type RawValue, addressesEqual, isDictionary,  } from "./addresses.ts";
+import { type Address, AddressView, type RawValue, addressesEqual, isDictionary,  } from "./addresses.ts";
 import { Space } from "./space.ts";
 import { designatedAddress } from "./desugaring.ts";
 import { canonicalFormula, evaluateFormula, renderJudgmentMessage, tryParseFormula } from "./formulas.ts";
@@ -129,7 +129,7 @@ function checkContainers({ space, view }: { space: Space; view: AddressView }): 
     });
     if (!(container instanceof AddressView)) continue;
     const value = space.read({ layer: view.layer, path: view.path, key: field });
-    if (value === null || value === MASK || !(value instanceof AddressView)) continue;
+    if (value === null || !(value instanceof AddressView)) continue;
     if (!isMemberOf({ space, value, container })) {
       errors.push(
         "conteneur: champ '" + field + "' = " + addressViewRepr(value) + " hors de " + addressViewRepr(container),
@@ -183,8 +183,7 @@ function boundSlotValue({ space, view, slot }: { space: Space; view: AddressView
 
 // ---- the end algebra of edges and arcs -------------------------------
 
-// The ends of an edge = its arrows → vertices, deduplicated; a masked
-// arrow is neutralized (mirror of checkContainers' neutralization);
+// The ends of an edge = its arrows → vertices, deduplicated;
 // empty: the edge declares no visible arrow. The arrow and
 // vertex-role names are resolved by the CALLER (at the check's
 // invocation level) and passed as parameters — the edge address is
@@ -199,7 +198,7 @@ function edgeEnds({ space, view, arrows, vertexRole }: { space: Space; view: Add
       path: [...arrowPath, asPathSegment(arrowKey)],
       key: vertexRole,
     });
-    if (vertex === null || vertex === MASK || !(vertex instanceof AddressView)) continue;
+    if (vertex === null || !(vertex instanceof AddressView)) continue;
     const concrete = concreteNodeOf({ space, view: vertex });
     if (!ends.some((existing) => addressesEqual(existing, concrete))) ends.push(concrete);
   }
@@ -247,9 +246,6 @@ function checkSimple({ space, view }: { space: Space; view: AddressView }): stri
   const seen: { key: string; signature: string }[] = [];
   for (const edgeKey of space.keys({ layer: edges.layer, path: edges.path })) {
     const edgeView = new AddressView(edges.layer, [...edges.path, asPathSegment(edgeKey)]);
-    if (arrowsSlot !== null && space.read({ layer: edgeView.layer, path: edgeView.path, key: arrowsSlot as string }) === MASK) {
-      continue;
-    }
     if (directed) {
       const pair = orderedEnds({ space, view: edgeView });
       if (pair === null) continue;
@@ -286,7 +282,7 @@ function checkSimple({ space, view }: { space: Space; view: AddressView }): stri
           path: [...arrowPath, asPathSegment(arrowKey)],
           key: vertexSlot as string,
         });
-        if (vertex === null || vertex === MASK || !(vertex instanceof AddressView)) continue;
+        if (vertex === null || !(vertex instanceof AddressView)) continue;
         const concrete = concreteNodeOf({ space, view: vertex });
         if (rawEnds.some((existing) => addressesEqual(existing, concrete))) {
           errors.push("simple: sommet répété (" + edgeKey + " : " + addressTupleRepr(concrete) + ")");
@@ -333,7 +329,6 @@ function checkNonempty({ space, view }: { space: Space; view: AddressView }): st
   const errors: string[] = [];
   for (const edgeKey of space.keys({ layer: edges.layer, path: edges.path })) {
     const edgeView = new AddressView(edges.layer, [...edges.path, asPathSegment(edgeKey)]);
-    if (space.read({ layer: edgeView.layer, path: edgeView.path, key: arrowsSlot as string }) === MASK) continue;
     const ends = edgeEnds({ space, view: edgeView, arrows: arrowsSlot as string, vertexRole: vertexSlot as string });
     if (ends.empty) errors.push("nonempty: arête vide (" + edgeKey + ")");
   }
@@ -376,10 +371,7 @@ function checkSperner({ space, view }: { space: Space; view: AddressView }): str
   const vertexSlot = boundSlotValue({ space, view, slot: "arrow-vertex" });
   for (const edgeKey of space.keys({ layer: edges.layer, path: edges.path })) {
     const edgeView = new AddressView(edges.layer, [...edges.path, asPathSegment(edgeKey)]);
-    if (
-      arrowsSlot === null ||
-      space.read({ layer: edgeView.layer, path: edgeView.path, key: arrowsSlot as string }) === MASK
-    ) {
+    if (arrowsSlot === null) {
       continue;
     }
     const ends = edgeEnds({ space, view: edgeView, arrows: arrowsSlot as string, vertexRole: vertexSlot as string });
@@ -411,7 +403,7 @@ function checkSperner({ space, view }: { space: Space; view: AddressView }): str
 // transitions, left/right…); every edge touches at most one vertex
 // per class. Without a declared partition (a simple collection) the
 // check stays silent; a vertex outside the partition is the
-// containers' business; mask = neutralized.
+// containers' business.
 function checkKPartite({ space, view }: { space: Space; view: AddressView }): string[] {
   const verticesSlot = boundSlotValue({ space, view, slot: "vertices" });
   const edgesSlot = boundSlotValue({ space, view, slot: "edges" });
@@ -442,7 +434,6 @@ function checkKPartite({ space, view }: { space: Space; view: AddressView }): st
   const errors: string[] = [];
   for (const edgeKey of space.keys({ layer: edges.layer, path: edges.path })) {
     const edgeView = new AddressView(edges.layer, [...edges.path, asPathSegment(edgeKey)]);
-    if (space.read({ layer: edgeView.layer, path: edgeView.path, key: arrowsSlot as string }) === MASK) continue;
     const arrowPath = [...edgeView.path, asPathSegment(arrowsSlot as string)];
     const touchedClasses = new Map<string, { count: number; name: string }>();
     for (const arrowKey of space.keys({ layer: view.layer, path: arrowPath })) {
@@ -451,7 +442,7 @@ function checkKPartite({ space, view }: { space: Space; view: AddressView }): st
         path: [...arrowPath, asPathSegment(arrowKey)],
         key: vertexSlot as string,
       });
-      if (vertex === null || vertex === MASK || !(vertex instanceof AddressView)) continue;
+      if (vertex === null || !(vertex instanceof AddressView)) continue;
       const concrete = concreteNodeOf({ space, view: vertex });
       const matchingClass = classes.find(
         (candidate) =>

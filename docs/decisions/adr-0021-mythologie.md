@@ -70,7 +70,7 @@ server's prompts), the accretion shows its seams:
      is corrected);
    - The **lexicon's words** are cited, not narrated: the ⟪…⟫ marks
      signal a glossary entry, and each tongue cites its own term —
-     the language's keywords (⟪check⟫, ⟪slot⟫, ⟪Ref⟫, ⟪assume⟫) are
+     the language's keywords (⟪check⟫, ⟪slot⟫, ⟪Ref⟫, ⟪extend⟫) are
      identical in both tongues because they are code, the
      translated notions keep one entry with two terms (⟪adresse⟫ in
      French, ⟪address⟫ in English, ⟪registre⟫/⟪registry⟫ the same

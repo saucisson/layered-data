@@ -12,7 +12,7 @@
 // diagnostics channel).
 
 import { type LayerName, asLayerName } from "../domain/identifiers.ts";
-import { AddressView, MASK, type Address } from "../domain/addresses.ts";
+import { AddressView, type Address } from "../domain/addresses.ts";
 import { SPECIAL_KEYS, type SpecialKey } from "../domain/specialKeys.ts";
 import type { ReadObservation } from "../domain/space.ts";
 import type { Space } from "../domain/space.ts";
@@ -74,11 +74,10 @@ export function flattenLayer({ space, layer }: { space: Space; layer: LayerName 
   let keys = 0;
 
   // ---- one observed read, classified: won value / abstract slot /
-  // masked (invisible) / absent (nothing to show) ----
+  // absent (nothing to show) ----
   const readEntry = ({ address, key }: { address: Address; key: string }): FlatEntry | null => {
     const scan: ReadObservation[] = [];
     const value = space.read({ layer: address[0], path: address[1], key, scan });
-    if (value === MASK) return null; // masked: the key is not visible
 
     const last = scan.length ? scan[scan.length - 1] : null;
     if (last !== null && last.status === "fournit") {

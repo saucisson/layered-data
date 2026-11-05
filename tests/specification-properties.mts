@@ -5,7 +5,7 @@
 // properties — over the whole bedrock corpus (every observable
 // address, the same walk as the audit harness) and over dedicated
 // spaces built for the semantics the corpus does not exercise
-// (implicits, masks at the kernel level, the cycle guard, the touch
+// (implicits, the cycle guard, the touch
 // protocol). These are conformance measurements, not formal
 // demonstrations. Every "measured" expectation was read from the
 // running kernel first, then frozen — the same discipline as the
@@ -21,7 +21,6 @@ import {
   AddressView,
   type Address,
   LayerReference,
-  MASK,
   PathReference,
   isDictionary,
 } from "../src/domain/addresses.ts";
@@ -99,7 +98,6 @@ function addressText([layer, path]: Address): string {
 }
 
 function valueText(value: unknown): string {
-  if (value === MASK) return "MASK";
   if (value instanceof AddressView) return "@" + addressText([value.layer, value.path]);
   if (value instanceof PathReference) return "@R:" + value.anchor + "/" + value.path.join("/");
   if (value instanceof LayerReference) return "@L:" + value.layer;
@@ -123,9 +121,8 @@ function observableDump({ space, walkOrder }: { space: Space; walkOrder: readonl
 }
 
 /** Structural comparison of raw trees — references by their fields,
- * MASK by identity, dicts key by key in insertion order. */
+ * dicts key by key in insertion order. */
 function rawTreesEqual(first: unknown, second: unknown): boolean {
-  if (first === MASK || second === MASK) return first === second;
   if (first instanceof PathReference || second instanceof PathReference) {
     return first instanceof PathReference && second instanceof PathReference && refinementEntriesEqual(first, second);
   }
@@ -144,9 +141,8 @@ function rawTreesEqual(first: unknown, second: unknown): boolean {
 }
 
 /** A manual snapshot of raw trees — structuredClone would lose the
- * reference classes and choke on the MASK symbol. */
+ * reference classes. */
 function cloneTree(value: unknown): unknown {
-  if (value === MASK) return MASK;
   if (value instanceof PathReference) return new PathReference(value.anchor, [...value.path]);
   if (value instanceof LayerReference) return new LayerReference(value.layer);
   if (Array.isArray(value)) return value.map(cloneTree);
@@ -237,8 +233,6 @@ check(
 let statusAnomalies = 0;
 let winnerAnomalies = 0;
 let scalarNodeAnomalies = 0;
-let maskedVisibleAnomalies = 0;
-
 for (const layerName of KERNEL_LAYER_NAMES) {
   for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
     const [layer, path] = address;
@@ -246,23 +240,19 @@ for (const layerName of KERNEL_LAYER_NAMES) {
       const scan: ReadObservation[] = [];
       const value = bedrock.read({ layer, path, key, scan });
 
-      // O8 — the statuses are exactly the four documented ones.
+      // O8 — the statuses are exactly the three documented ones
+      // (the mask retired with ADR-0023: fournit, transparent, absent).
       const statuses = scan.map((observation) => observation.status);
       for (const status of statuses) {
-        if (!["masqué", "fournit", "transparent", "absent"].includes(status)) statusAnomalies++;
+        if (!["fournit", "transparent", "absent"].includes(status)) statusAnomalies++;
       }
 
       // C2 — first winner: the scan is cut by at most one source,
       // always at the winner, and a visible value implies a cut.
       const winners = statuses.filter((status) => status === "fournit").length;
-      const masked = statuses.filter((status) => status === "masqué").length;
-      if (winners + masked > 1) winnerAnomalies++;
+      if (winners > 1) winnerAnomalies++;
       if (winners === 1 && statuses[statuses.length - 1] !== "fournit") winnerAnomalies++;
-      if (value !== null && value !== undefined && winners + masked === 0) winnerAnomalies++;
-      if (value === MASK && masked !== 1) winnerAnomalies++;
-
-      // O9 — a masked key renders MASK, never a value of the carrier.
-      if (value === MASK) maskedVisibleAnomalies++;
+      if (value !== null && value !== undefined && winners === 0) winnerAnomalies++;
 
       // O1 — a scalar is never a node: the raw of its address is null.
       if (typeof value === "number" || typeof value === "boolean" || typeof value === "string") {
@@ -272,9 +262,8 @@ for (const layerName of KERNEL_LAYER_NAMES) {
   }
 }
 
-check("C2 (O8): the statuses of every visible read are exactly masqué/fournit/transparent/absent", statusAnomalies === 0);
+check("C2 (O8): the statuses of every visible read are exactly fournit/transparent/absent", statusAnomalies === 0);
 check("C2: every read is cut by at most one winner, at the winner (first-winner)", winnerAnomalies === 0);
-check("C2 (O9): every masked read renders MASK", maskedVisibleAnomalies === 0);
 check("C2 (O1): no scalar is ever visible as a node", scalarNodeAnomalies === 0);
 
 // Measured conformance anchors (S10 and the late-binding flagship).
@@ -409,33 +398,6 @@ check(
 check(
   "O17 (measured): the unguarded self-reference closure is memoized like any other",
   selfRefSpace.closureMemo.has("looped|node"),
-);
-
-// =====================================================================
-// O9 — MASKS, on dedicated spaces (kernel raw tree and written .ld)
-// =====================================================================
-
-const maskedSpace = spaceFromLayerTrees({
-  "masked-node": {
-    child: MASK,
-    leaf: 1,
-    abstract: null,
-    deep: { inner: MASK },
-  },
-});
-const maskedLayer = asLayerName("masked-node");
-check("O9: the raw of a masked key is MASK", maskedSpace.raw({ layer: maskedLayer, path: asLayerPath(["child"]) }) === MASK);
-check("O9: the raw propagates MASK from an intermediate", maskedSpace.raw({ layer: maskedLayer, path: asLayerPath(["deep", "inner", "x"]) }) === MASK);
-check("O9: reading a masked key value renders MASK before any key", maskedSpace.read({ layer: maskedLayer, path: asLayerPath([]), key: "child" }) === MASK);
-check("O9: keys hides the masked key and keeps the transparent abstract slot", maskedSpace.keys({ layer: maskedLayer, path: asLayerPath([]) }).join(",") === "leaf,abstract,deep");
-
-const writtenMaskedSpace = spaceFromWrittenSources([
-  "layer masked-language\n  mask secret\n  keep = 1\n",
-]);
-check(
-  "O9 (language route): the written mask act produces the opaque mask, keys hides it",
-  writtenMaskedSpace.read({ layer: asLayerName("masked-language"), path: asLayerPath([]), key: "secret" }) === MASK &&
-    writtenMaskedSpace.keys({ layer: asLayerName("masked-language"), path: asLayerPath([]) }).join(",") === "keep",
 );
 
 // =====================================================================

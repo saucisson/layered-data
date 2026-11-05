@@ -9,7 +9,7 @@
 //   - the validator and the checks (walkAddresses).
 
 import { type LayerName, type LayerPath, asPathSegment } from "./identifiers.ts";
-import { type Address, AddressView, LayerReference, MASK, PathReference, type RawValue, addressesEqual, isDictionary,  } from "./addresses.ts";
+import { type Address, AddressView, LayerReference, PathReference, type RawValue, addressesEqual, isDictionary,  } from "./addresses.ts";
 import { Space } from "./space.ts";
 
 /** One lens drawing entry: where the template lives, and which types
@@ -180,11 +180,10 @@ export function dressingApplicability({ space, lens, model }: { space: Space; le
 
 // ---- serialization helpers -------------------------------------------
 // Comparable serialization (same conventions as the harness:
-// __ref, __lref, __addr, __mask) — driver-independent, so the kernel
+// __ref, __lref, __addr) — driver-independent, so the kernel
 // stays testable without one.
 
 export function serializableValue(value: any): any {
-  if (value === MASK) return { __mask: 1 };
   if (value instanceof PathReference) return { __ref: [value.anchor, ...value.path] };
   if (value instanceof LayerReference) return { __lref: value.layer };
   if (Array.isArray(value)) return value.map(serializableValue);

@@ -74,8 +74,9 @@ read without execution.
    contract judgments, 0 vacancies — the baseline is intact).
 3. **The verdict**: a POSED check whose required slots are unbound is
    refused as « check-vacant » — the mirror of étiquette-inconnue
-   (the posed tag that does not exist), the symmetry of
-   assume-fantôme (the signature that judges nothing). The inherited
+   (the posed tag that does not exist), the symmetry of the
+   retired assume-fantôme (the signature that judged nothing —
+   retired by ADR-0023). The inherited
    instance vacancies stay the lint's: the type binds them, the root
    never sees them.
 4. **The strict arm** (`strictChecks`, off by default;

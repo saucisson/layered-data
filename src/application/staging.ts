@@ -22,8 +22,8 @@ import { LayerReference, type RawValue } from "../domain/addresses.ts";
 import { Space } from "../domain/space.ts";
 import { type ParsedLanguage, parseLanguage } from "../domain/language/parser.ts";
 import { type CompiledLanguage, compileLanguage } from "../domain/language/compiler.ts";
-import { type ValidationOutcome, validateSpace, declaredModeOf } from "../domain/validation.ts";
-import { formatAddress, unsignedOrderConflictsOf } from "../domain/conflicts.ts";
+import { type ValidationOutcome, validateSpace } from "../domain/validation.ts";
+import { formatAddress, orderConflictsOf } from "../domain/conflicts.ts";
 import { runChecks } from "../domain/checks.ts";
 import { DEFAULT_LANGUAGE, fact, parseText, type Language } from "../domain/messages.ts";
 
@@ -78,14 +78,16 @@ export function extractLayerBlock({ name, source }: { name: string; source: stri
  * never dies of a typo (same discipline as the kernel: total, never
  * an exception towards the UI).
  *
- * `strictConflicts` (off by default) promotes the unsigned order
- * conflicts — the diamond's convention (ADR-0017) — from a lint
- * diagnostic to a staging verdict: a candidate that lets the
- * refines ORDER decide a leaf value between incomparable sources
- * is refused as « conflit-d'ordre » unless the reading address
- * signs an `assume`. The judge is the same detector the lint
- * inventories the workshop with; only the strict spaces make the
- * convention contractual.
+ * `strictConflicts` (off by default) promotes the order conflicts —
+ * the diamond's convention (ADR-0017, retired as a semantics by
+ * ADR-0023) — from a lint diagnostic to a staging verdict: a
+ * candidate that lets the refines ORDER decide a leaf value between
+ * incomparable sources is refused as « conflit-d'ordre », without
+ * exception — to resolve one is to RESTRUCTURE (make the providers
+ * comparable, or diverge them into different addresses), never to
+ * sign. The judge is the same detector the lint inventories the
+ * workshop with; only the strict spaces make the convention
+ * contractual.
  *
  * `strictChecks` (off by default) makes the carried constraints
  * EXECUTE (ADR-0018): runChecks over the layers under judgment,
@@ -117,8 +119,8 @@ export function stageLayerAddition({
   /** the workshop language — the syntax errors of the refusal speak
    * it; verdicts stay facts, rendered by the panels */
   language?: Language;
-  /** refuse unsigned order conflicts (« conflit-d'ordre ») instead
-   * of leaving them to the lint's inventory */
+  /** refuse order conflicts (« conflit-d'ordre ») instead of
+   * leaving them to the lint's inventory */
   strictConflicts?: boolean;
   /** execute the carried checks of the judged layers, refusing
    * their errors as « check-trahi » (ADR-0018) — instead of
@@ -224,21 +226,16 @@ export function stageLayerAddition({
   });
   const verdicts = [...validation.verdicts, ...orphanVerdicts];
 
-  // ---- strict conflicts: the unsigned order conflicts of the
-  // judged layers become verdicts — the convention, made
-  // contractual (ADR-0017). Only the layers under judgment are
-  // walked: the loaded corpus keeps its own frozen verdicts, and a
-  // draft layer can only create conflicts at its own addresses —
-  // nothing living refines a candidate.
+  // ---- strict conflicts: the order conflicts of the judged layers
+  // become verdicts — the convention, made contractual (ADR-0017,
+  // retired as a semantics by ADR-0023: no signed crossing, the
+  // refusal is without exception). Only the layers under judgment
+  // are walked: the loaded corpus keeps its own frozen verdicts,
+  // and a draft layer can only create conflicts at its own
+  // addresses — nothing living refines a candidate.
   if (strictConflicts) {
     const judgedLayerNames = layerNames.filter((name) => !livingLayerNames.includes(name));
-    for (const conflict of unsignedOrderConflictsOf({
-      space,
-      layerNames: judgedLayerNames,
-      isAssumed: (address, key) =>
-        declaredModeOf({ layer: address[0], path: address[1], key, compilation: compiledLanguage }) ===
-        "assume",
-    })) {
+    for (const conflict of orderConflictsOf({ space, layerNames: judgedLayerNames })) {
       verdicts.push({
         kind: "conflit-d'ordre",
         fact: fact("order-conflict", {

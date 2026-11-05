@@ -199,7 +199,6 @@ check(
 // kinds of the diagnostics fold.
 const displayedCodes = [
   "fournit",
-  "masqué",
   "transparent",
   "absent",
   "non atteint",
@@ -290,8 +289,8 @@ const glossary = readExportedData({ file: join(presentationDirectory, "notions.t
 };
 const glossaryIds = Object.keys(glossary);
 check(
-  "the glossary keeps its thirty-seven ids — the French keys the tutorial cites, the ADR-0017 notions, the ADR-0018 registry and the ADR-0021 story terms included",
-  glossaryIds.length === 37 &&
+  "the glossary keeps its thirty-five ids — the French keys the tutorial cites, the ADR-0018 registry and the ADR-0021 story terms included (the assume entry retired with ADR-0023)",
+  glossaryIds.length === 35 &&
     [
       "adresse",
       "carottage",
@@ -303,7 +302,6 @@ check(
       "raffine",
       "socle",
       "union",
-      "assume",
       "conflit d'ordre",
       "registre",
       "slot",

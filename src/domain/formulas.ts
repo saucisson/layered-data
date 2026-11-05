@@ -8,8 +8,9 @@
 // itself (`edges` reads at the carrier, `e/arrows` reads at e — the
 // same slash, the same reading machine as the rest of the language);
 // and a term in proposition position is the EXISTENCE predicate of
-// free logic: a term may fail to denote (an abstract slot, a masked
-// member) and the sentence says so instead of guessing.
+// free logic: a term may fail to denote (an abstract slot, a
+// collection the closure never reaches) and the sentence says so
+// instead of guessing.
 //
 //   forall e in edges: exists a in e/arrows: a/vertex
 //   — nonempty: every edge has a visible arrow pointing a vertex
