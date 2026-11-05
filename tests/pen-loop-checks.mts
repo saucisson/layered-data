@@ -2,7 +2,7 @@
 // judges, the refusal travels back with its verdicts.
 //
 // The loop itself is pure — the model call is injected — so the
-// whole protocol is proven offline, against deterministic pens
+// whole protocol is verified offline, against deterministic pens
 // that fail and correct themselves: syntax errors, orphan
 // targets, betrayed expectations, mute proposals. The loop must
 // accept exactly what the workshop staging accepts, refuse with

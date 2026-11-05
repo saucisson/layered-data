@@ -6,8 +6,8 @@ carottage premier-gagné). Le réseau de Petri s'y dérive du socle des
 hypergraphes jusqu'au dîner des cinq philosophes, et son espace d'états
 hérite du réseau par liaison tardive. Le modèle vient du papier
 *Layered Data: A Modular Formal Definition without Formalisms*
-(PNSE'16) ; sa filiation intellectuelle — quarante ans de
-représentation des connaissances et les métamodélisations comparées
+(PNSE'16) ; sa filiation intellectuelle — les prédécesseurs
+nommés, des frames aux modules Nix, et les métamodélisations comparées
 (EMF/Ecore, MOF, multi-niveaux, feature models…) — est établie dans
 `docs/filiation.md`.
 
@@ -138,8 +138,9 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    `tests/baseline-kernel.txt` (725 déclarations, 7 tests, 0 trahi,
    0 verdict). Aucune évolution du noyau ne passe sans dump identique.
 2. **La spécification exécutable** (`npm run test:specification`,
-   `tests/specification-properties.mts`) prouve les obligations O1–O18
-   et exigences C1–C8 de `docs/specification.md` comme des propriétés :
+   `tests/specification-properties.mts`) vérifie les obligations O1–O18
+   et exigences C1–C8 de `docs/specification.md` comme des propriétés —
+   des mesures de conformance, pas des démonstrations formelles :
    closures (dédoublonnage, nœud propre premier, diamant mesuré),
    lectures (premier-gagné, statuts, MASK), clés, ancres, immutabilité
    (indépendance de l'ordre d'appel, invariance par permutation des 47
@@ -157,7 +158,7 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    refusé (« socle-occupé », ADR-0020) — le vol nommé, la pièce
    forgée jamais jugée.
 4. **La boucle du géologue** (`npm run test:pen-loop`,
-   `tests/pen-loop-checks.mts`) prouve la boucle vérifiée côté serveur
+   `tests/pen-loop-checks.mts`) vérifie la boucle côté serveur
    (`src/application/penLoop.ts`, géologue injecté — hors ligne) : refus
    syntaxique puis correction acceptée, verdicts en français au modèle,
    budget épuisé (3 refus), géologue muet refusé, proposition raffinant
@@ -178,7 +179,7 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    le touch, la fermeture mémoïsée sert l'ancienne chaîne en silence :
    le protocole est obligatoire.
 6. **Les checks de l'atelier bilingue** (`npm run test:i18n`,
-   `tests/i18n-checks.mts`) prouvent la parité des deux langues :
+   `tests/i18n-checks.mts`) vérifient la parité des deux langues :
    l'anglais par défaut, le français en miroir. Les codes du noyau
    (statuts, kinds, étapes) restent stables dans les données —
    `renderMessage`/`kernelLabel` les habillent dans la langue de
