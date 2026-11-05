@@ -1,10 +1,10 @@
 // The application assembly of the layered data kernel.
 //
-// The kernel corpus is the trunk: one `.ld` file per layer, all read
+// The kernel corpus is the bedrock: one `.ld` file per layer, all read
 // in a fixed order. The assembly itself is order-neutral for the
 // space (desugaring sorts topologically), the order only fixes the
 // workshop layer list — and, for byte-identical dumps, the join
-// order of the source text. The trunk carries its own meta-model
+// order of the source text. The bedrock carries its own meta-model
 // since ADR-0019: the `check-registry` layer stands beside the
 // corpus (no refinement — the meta-model descends from nothing),
 // and the checks' contracts are read from it.
@@ -15,7 +15,7 @@ import { type ParsedLanguage, parseLanguage } from "../domain/language/parser.ts
 import { type CompiledLanguage, compileLanguage } from "../domain/language/compiler.ts";
 import { type ValidationOutcome, validateSpace } from "../domain/validation.ts";
 
-// The trunk layer order: also the layer list of the workshop.
+// The bedrock layer order: also the layer list of the workshop.
 export const KERNEL_LAYER_NAMES: LayerName[] = [
   "record",
   "check-registry",
@@ -93,7 +93,7 @@ export function assembleLayeredDataKernel({
   const readLayerSource = (layerName: string): string => {
     const source = layerSources[layerName];
     if (source === undefined) {
-      throw new Error("couche du tronc absente du dossier noyau : " + layerName);
+      throw new Error("couche du socle absente du dossier noyau : " + layerName);
     }
     return source.endsWith("\n") ? source : source + "\n";
   };

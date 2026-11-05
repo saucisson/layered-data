@@ -28,7 +28,7 @@ export interface SourceLineTarget {
   key: string | null;
 }
 
-/** The line-target table: each line of the pen designates the
+/** The line-target table: each line of the layer source designates the
  * address it writes. The acts carry their line; the walk is pure,
  * at load time, over the parsed layers. */
 export function buildSourceLineTargets({ parsedLanguage }: { parsedLanguage: ParsedLanguage }): Map<number, SourceLineTarget> {
@@ -149,7 +149,7 @@ export const SPAN_CLASSES: Record<string, string> = {
   pu: "text-slate-500",
 };
 
-/** The "Language" tab of ②: the pen follows the current layer of
+/** The "Language" tab of ②: the source follows the current layer of
  * the workshop, no selector. Added layers are read too — their
  * block lives in the additions, same color, same extraction; their
  * lines are not clickable (the line-target table stays that of the
@@ -187,7 +187,7 @@ export function LayerSourceView({
       <div className="max-h-80 overflow-auto rounded-md border border-slate-100 bg-slate-50/50 p-2 font-mono text-[11px] leading-4">
         {block === null ? (
           <div className="py-1 text-xs text-slate-400">
-            {say({ language, en: "layer unknown to the pen", fr: "couche inconnue de la plume" })}
+            {say({ language, en: "layer unknown to the geologist", fr: "couche inconnue du géologue" })}
           </div>
         ) : (
           block.split("\n").map((line, index) => {

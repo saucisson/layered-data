@@ -1,4 +1,4 @@
-// The verified pen loop checks: the pen proposes, the staging
+// The verified geologist loop checks: the geologist proposes, the staging
 // judges, the refusal travels back with its verdicts.
 //
 // The loop itself is pure — the model call is injected — so the
@@ -28,7 +28,7 @@ function check(label: string, condition: boolean): void {
   if (!condition) failures.push(label);
 }
 
-// ---- the trunk context, as the server builds it ---------------------
+// ---- the bedrock context, as the server builds it ---------------------
 
 const corpusDirectory = join(import.meta.dirname, "..", "formalisms", "kernel");
 const layerSources = Object.fromEntries(
@@ -39,7 +39,7 @@ const layerSources = Object.fromEntries(
 );
 const kernel = assembleLayeredDataKernel({ layerSources });
 
-/** A deterministic pen replaying a script of proposals, recording
+/** A deterministic geologist replaying a script of proposals, recording
  * the rounds it was asked — the offline double of the model call. */
 function scriptedPen({ scripts }: { scripts: string[] }) {
   const rounds: PenRound[] = [];
@@ -105,7 +105,7 @@ const secondTry = await composeVerifiedLayerDraft({
   propose: correctivePen.propose,
 });
 check(
-  "(b) the broken-then-corrected pen is accepted at the second attempt",
+  "(b) the broken-then-corrected geologist is accepted at the second attempt",
   secondTry.ok === true && secondTry.attempts === 2,
 );
 check(
@@ -130,7 +130,7 @@ check(
 );
 
 // =====================================================================
-// (c) a pen that never corrects itself exhausts the budget
+// (c) a geologist that never corrects itself exhausts the budget
 // =====================================================================
 
 const orphanDraft = "layer draft-orphan refines @unknown-layer\n  value = 1\n";
@@ -144,7 +144,7 @@ const thirdTry = await composeVerifiedLayerDraft({
   propose: stubbornPen.propose,
 });
 check(
-  "(c) the stubborn pen exhausts the budget: refused after three attempts",
+  "(c) the stubborn geologist exhausts the budget: refused after three attempts",
   thirdTry.ok === false && thirdTry.attempts === 3 && thirdTry.refusals.length === 3,
 );
 check(
@@ -188,7 +188,7 @@ check(
 );
 
 // =====================================================================
-// (e) a mute pen is a refused pen — the empty proposal never slips
+// (e) a mute geologist is a refused geologist — the empty proposal never slips
 //     through as an empty acceptance
 // =====================================================================
 
@@ -211,41 +211,41 @@ check(
 );
 
 // =====================================================================
-// (f) the loop judges over the living wardrobe too — a proposal
-//     refining a user's feather is accepted
+// (f) the loop judges over the living quarry too — a proposal
+//     refining a user's layer is accepted
 // =====================================================================
 
-const featherSource = "layer feather refines @record\n  value = 1\n";
-const featherRefiningDraft = "layer draft-feather refines @feather\n  extra = 2\n";
+const userLayerSource = "layer userlayer refines @record\n  value = 1\n";
+const userLayerRefiningDraft = "layer draft-userlayer refines @userlayer\n  extra = 2\n";
 const sixthTry = await runLoop({
-  scripts: [featherRefiningDraft],
-  livingLayerNames: [...KERNEL_LAYER_NAMES, "feather"],
-  previousAdditionSources: [featherSource],
+  scripts: [userLayerRefiningDraft],
+  livingLayerNames: [...KERNEL_LAYER_NAMES, "userlayer"],
+  previousAdditionSources: [userLayerSource],
 });
 check(
-  "(f) a proposal refining a user's feather is accepted when the feather is in the living context",
+  "(f) a proposal refining a user's layer is accepted when the layer is in the living context",
   sixthTry.ok === true && sixthTry.attempts === 1,
 );
 const seventhTry = await runLoop({
-  scripts: [featherRefiningDraft, featherRefiningDraft, featherRefiningDraft],
+  scripts: [userLayerRefiningDraft, userLayerRefiningDraft, userLayerRefiningDraft],
   livingLayerNames: [...KERNEL_LAYER_NAMES],
   readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   previousAdditionSources: [],
 });
 check(
-  "(f) the same proposal is refused without the feather — the gate is the living context, not the intention",
+  "(f) the same proposal is refused without the layer — the gate is the living context, not the intention",
   seventhTry.ok === false &&
     seventhTry.refusals.every((refusal) => refusal.verdicts.some((verdict) => verdict.kind === "cible-inconnue")),
 );
 
 // =====================================================================
-// (g) the pen cannot replace the trunk (ADR-0020): a proposal
-//     claiming a trunk name is refused « tronc-occupé », the
+// (g) the geologist cannot replace the bedrock (ADR-0020): a proposal
+//     claiming a bedrock name is refused « socle-occupé », the
 //     corrected proposal — a refinement — is accepted
 // =====================================================================
 
-const trunkClaimingDraft = 'layer record\n  specification\n    record = "volé"\n';
-const claimingThenSound = scriptedPen({ scripts: [trunkClaimingDraft, soundDraft] });
+const bedrockClaimingDraft = 'layer record\n  specification\n    record = "volé"\n';
+const claimingThenSound = scriptedPen({ scripts: [bedrockClaimingDraft, soundDraft] });
 const eighthTry = await composeVerifiedLayerDraft({
   instruction: "une couche de démonstration",
   languageSource: kernel.languageSource,
@@ -255,14 +255,14 @@ const eighthTry = await composeVerifiedLayerDraft({
   propose: claimingThenSound.propose,
 });
 check(
-  "(g) the trunk-claiming proposal is refused, the corrected refinement is accepted",
+  "(g) the bedrock-claiming proposal is refused, the corrected refinement is accepted",
   eighthTry.ok === true && eighthTry.attempts === 2,
 );
 check(
-  '(g) the refusal speaks the "trunk-occupied" verdict — the theft named, the pen told',
+  '(g) the refusal speaks the "bedrock-occupied" verdict — the theft named, the geologist told',
   eighthTry.refusals[0].verdicts.length === 1 &&
-    eighthTry.refusals[0].verdicts[0].kind === "tronc-occupé" &&
-    eighthTry.refusals[0].feedback.includes("trunk-occupied") &&
+    eighthTry.refusals[0].verdicts[0].kind === "socle-occupé" &&
+    eighthTry.refusals[0].feedback.includes("bedrock-occupied") &&
     eighthTry.refusals[0].feedback.includes("record"),
 );
 
@@ -305,7 +305,7 @@ check(
 // the ledger
 // =====================================================================
 
-console.log("pen loop checks: " + assertions + " assertions, " + failures.length + " failure(s)");
+console.log("geologist loop checks: " + assertions + " assertions, " + failures.length + " failure(s)");
 for (const failure of failures) {
   console.log("FAIL " + failure);
 }

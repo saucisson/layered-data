@@ -1,7 +1,7 @@
 // The kernel audit harness.
 //
 // The kernel behavior is a contract: every observable read over the
-// whole trunk corpus, dumped deterministically and compared bit by
+// whole bedrock corpus, dumped deterministically and compared bit by
 // bit against tests/baseline-kernel.txt. The baseline was captured
 // before the refactoring; any difference is a regression. Run from
 // the repository root:

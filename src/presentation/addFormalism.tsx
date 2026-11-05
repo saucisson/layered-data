@@ -1,5 +1,5 @@
 // The living workshop composer (the ＋ button): the intention is
-// said, the pen writes (or is generated), the staging judges, the
+// said, the geologist writes (or is generated), the staging judges, the
 // space extends. Dual mode: the local project (small proxy →
 // api.mistral.ai) when it answers, the simulated AI of the canvas
 // otherwise — degraded stream, deterministic, honestly labeled;
@@ -56,7 +56,7 @@ export function AddFormalismComposer({
   async function requestProposal() {
     setBusy(true);
     // Dual mode: the local proxy first, the degraded stream of the
-    // canvas otherwise — a failed network pen does not exist, the
+    // canvas otherwise — a failed network geologist does not exist, the
     // source of the proposal always speaks.
     let origin = say({
       language,
@@ -149,8 +149,8 @@ export function AddFormalismComposer({
         <span className="text-[11px] leading-4 text-slate-500">
           {say({
             language,
-            en: "the intention is said, the pen writes itself or is generated, the staging revalidates corpus + supplements and demands 0 assembly verdict — then the space extends, the corpus ranks stay frozen",
-            fr: "l'intention se dit, la plume s'écrit ou se génère, le staging revalide corpus + suppléments et exige 0 verdict d'assemblage — puis l'espace s'étend, les rangs du corpus restent gelés",
+            en: "the intention is said, the layer is written by hand or generated, the staging revalidates corpus + supplements and demands 0 assembly verdict — then the space extends, the corpus ranks stay frozen",
+            fr: "l'intention se dit, la couche s'écrit à la main ou se génère, le staging revalide corpus + suppléments et exige 0 verdict d'assemblage — puis l'espace s'étend, les rangs du corpus restent gelés",
           })}
         </span>
       </div>
@@ -177,7 +177,7 @@ export function AddFormalismComposer({
       </div>
       {proposalOrigin !== null && (
         <p className="mb-1 text-[10px] text-slate-500">
-          {say({ language, en: "pen proposed by: ", fr: "plume proposée par : " })}
+          {say({ language, en: "draft proposed by: ", fr: "brouillon proposé par : " })}
           {proposalOrigin}
         </p>
       )}

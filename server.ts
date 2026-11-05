@@ -1,11 +1,11 @@
 // ============================================================
-// Layered Data — the wardrobe proxy
+// Layered Data — the quarry proxy
 //
 // A dependency-free Node server (Node 22 runs TypeScript through
 // native type stripping) that plays three roles for the workshop:
-//   1. the disk wardrobe — the API that lists, reads, writes and
+//   1. the disk quarry — the API that lists, reads, writes and
 //      deletes the formalism layers (.ld files) of the corpus;
-//   2. the AI pen — a thin proxy to Mistral that carries the
+//   2. the AI geologist — a thin proxy to Mistral that carries the
 //      access key server-side and grounds the model in the real
 //      state of the corpus;
 //   3. the static host — serves dist/ when a production build
@@ -13,13 +13,13 @@
 //
 // By default it binds to the loopback only (127.0.0.1:8791):
 // HOST and PORT exist for real deployments, and the access code
-// (API_TOKEN) protects the wardrobe and the pen.
+// (API_TOKEN) protects the quarry and the geologist.
 //
 // What the server SENDS stays in French by design: the JSON keys
 // of the compatibility API (`noyau`, `utilisateurs`, `erreur`…)
 // are observable protocol and user-facing vocabulary of the
 // workshop — the code is English, the spoken surface is French.
-// The pen's system prompt alone follows the workshop's languages:
+// The geologist's system prompt alone follows the workshop's languages:
 // English by default, French its mirror (penInstructions).
 // ============================================================
 import { createServer } from "node:http";
@@ -27,10 +27,10 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 import { readFileSync, writeFileSync, unlinkSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import { join, extname } from "node:path";
 
-// The verified pen loop lives in the application layer — a pure
-// use case, injected with the model call. The trunk order is the
-// canonical one of the corpus assembly.
-import { KERNEL_LAYER_NAMES as TRUNK_LAYER_NAMES } from "./src/application/corpus.ts";
+// The verified geologist loop lives in the application layer — a pure
+// use case, injected with the model call. The canonical layer
+// order is the one of the corpus assembly.
+import { KERNEL_LAYER_NAMES as CANONICAL_LAYER_NAMES } from "./src/application/corpus.ts";
 import { composeVerifiedLayerDraft } from "./src/application/penLoop.ts";
 
 // ------------------------------------------------------------
@@ -58,25 +58,25 @@ const API_TOKEN = process.env.API_TOKEN ?? "changez-moi";
 const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY ?? "";
 const MISTRAL_URL = process.env.MISTRAL_URL ?? "https://api.mistral.ai/v1/chat/completions";
 const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? "codestral-latest";
-// The verified pen loop: the number of proposals the staging may
+// The verified geologist loop: the number of proposals the staging may
 // judge before the route gives up and answers 422.
 const MAX_PEN_ATTEMPTS = Math.max(1, Number(process.env.PEN_MAX_ATTEMPTS ?? 3));
-// The strict arm of the loop (ADR-0017): the pen may propose an
+// The strict arm of the loop (ADR-0017): the geologist may propose an
 // order-decided read only if the reading address signs an `assume`
 // — set PEN_STRICT_CONFLICTS=1 to arm it.
 const STRICT_CONFLICTS = process.env.PEN_STRICT_CONFLICTS === "1";
 // The strict arm of the loop for the carried checks (ADR-0018): the
-// pen may no longer propose a layer whose checks refuse it — set
+// geologist may no longer propose a layer whose checks refuse it — set
 // PEN_STRICT_CHECKS=1 to arm it.
 const STRICT_CHECKS = process.env.PEN_STRICT_CHECKS === "1";
 
 // ------------------------------------------------------------
-// 2. THE WARDROBE ON DISK
+// 2. THE QUARRY ON DISK
 //
 // The corpus lives in two folders: the kernel (read-only, the
-// spine of the workshop) and the users (the feathers written by
-// visitors). The users folder is created at startup so the
-// wardrobe exists even on a fresh clone.
+// stratigraphic column of the workshop) and the users (the layers
+// written by visitors). The users folder is created at startup so
+// the quarry exists even on a fresh clone.
 // ------------------------------------------------------------
 const KERNEL_DIRECTORY = join(import.meta.dirname, "formalisms", "kernel");
 const USERS_DIRECTORY = join(import.meta.dirname, "formalisms", "users");
@@ -99,8 +99,8 @@ function asLayerName({ candidate }: { candidate: string }): { name: LayerName } 
   return { reason: "nom invalide : minuscules, chiffres, tirets" };
 }
 
-/** List the layer names of a wardrobe folder, sorted. An absent
- * folder is an empty wardrobe, never an exception. */
+/** List the layer names of a quarry folder, sorted. An absent
+ * folder is an empty quarry, never an exception. */
 function listLayerNames({ directory }: { directory: string }): string[] {
   if (!existsSync(directory)) return [];
   return readdirSync(directory)
@@ -111,11 +111,11 @@ function listLayerNames({ directory }: { directory: string }): string[] {
 
 const KERNEL_LAYER_NAMES = listLayerNames({ directory: KERNEL_DIRECTORY });
 
-/** The trunk language source, in the canonical trunk order, joined
- * once at startup: the pen loop stages every proposal over this
- * text. The users' feathers join per call — a feather written
- * seconds ago stays refinable for the pen. */
-const TRUNK_LANGUAGE_SOURCE = TRUNK_LAYER_NAMES.map((name) => {
+/** The kernel language source, in the canonical layer order, joined
+ * once at startup: the geologist loop stages every proposal over this
+ * text. The visitors' layers join per call — a layer written
+ * seconds ago stays refinable for the geologist. */
+const KERNEL_LANGUAGE_SOURCE = CANONICAL_LAYER_NAMES.map((name) => {
   const source = readFileSync(kernelLayerPath({ name: String(name) as LayerName }), "utf8");
   return source.endsWith("\n") ? source : source + "\n";
 }).join("");
@@ -125,13 +125,13 @@ function kernelLayerPath({ name }: { name: LayerName }): string {
   return join(KERNEL_DIRECTORY, name + ".ld");
 }
 
-/** The path of a user layer — the writable wardrobe. */
+/** The path of a user layer — the writable quarry. */
 function userLayerPath({ name }: { name: LayerName }): string {
   return join(USERS_DIRECTORY, name + ".ld");
 }
 
 /** What a lookup found: a layer's source and where it lives.
- * The user wardrobe wins over the kernel — a visitor may shadow
+ * The user quarry wins over the kernel — a visitor may shadow
  * a read-only name with their own writing. */
 type LayerLookup =
   | { found: false }
@@ -162,13 +162,13 @@ function deleteUserLayer({ name }: { name: LayerName }): void {
 }
 
 // ------------------------------------------------------------
-// 3. THE AI PEN — GROUNDING
+// 3. THE AI GEOLOGIST — GROUNDING
 //
-// The pen writes layers; to be pertinent it must not guess what
-// already exists. The system prompt embeds, rebuilt at each
-// call: the manifesto of the model, the backbone (one line per
-// layer, read from the disk so feathers written seconds ago are
-// known), and one complete example of the corpus.
+// The geologist writes layers; to be pertinent it must not guess
+// what already exists. The system prompt embeds, rebuilt at each
+// call: the manifesto of the model, the stratigraphic column (one
+// line per layer, read from the disk so layers written seconds ago
+// are known), and one complete example of the corpus.
 // ------------------------------------------------------------
 const MANIFESTO = `CE QU'EST LAYERED DATA — les définitions elles-mêmes sont des données.
 Tout est couche : les formalismes (les schémas) et les modèles (les données) vivent dans le même espace, adressables, raffinables, héritants — pas de séparation schéma/instance.
@@ -177,11 +177,11 @@ Tout est couche : les formalismes (les schémas) et les modèles (les données) 
 - Instancier, c'est citer : un membre peut citer une couche entière (@couche) ; "extend <bloc> refines @<fenêtre> then @<fenêtre> …" développe les citations en membres qualifiés, la donnée reste dans le template.
 - Le rendu est une lentille : une couche d'affichage (graph-display, petrinet-display…) raffine le formalisme et dessine tout ce qui en descend.
 
-LA COLONNE VERTÉBRALE CI-DESSOUS EST L'ÉTAT RÉEL DE L'ATELIER — un nouveau formalisme s'y raccroche : raffiner une couche existante (chemins absolus vers ses membres), jamais redéfinir ce qui existe.`;
+LA COLONNE STRATIGRAPHIQUE CI-DESSOUS EST L'ÉTAT RÉEL DE L'ATELIER — un nouveau formalisme s'y raccroche : raffiner une couche existante (chemins absolus vers ses membres), jamais redéfinir ce qui existe.`;
 
 /** One line per existing layer: the `layer …` header as written.
- * Reading the files at each call keeps the backbone true — the
- * kernel and the visitors' feathers alike. */
+ * Reading the files at each call keeps the column true — the
+ * kernel and the visitors' layers alike. */
 function corpusBackbone(): string {
   const lines: string[] = [];
   for (const name of KERNEL_LAYER_NAMES) {
@@ -192,7 +192,7 @@ function corpusBackbone(): string {
   for (const name of listLayerNames({ directory: USERS_DIRECTORY })) {
     const source = readFileSync(userLayerPath({ name: name as LayerName }), "utf8");
     const header = source.split("\n").find((line) => line.startsWith("layer "));
-    lines.push(header ?? "layer " + name + "  // plume d'un visiteur");
+    lines.push(header ?? "layer " + name + "  // couche d'un visiteur");
   }
   return lines.join("\n");
 }
@@ -205,11 +205,11 @@ function buildSystemPrompt(): string {
       "UN EXEMPLE COMPLET DU CORPUS — pn-philosophers-1, le modèle d'un philosophe seul (il remplit les collections du schéma pn-philosophers, ses membres raffinent les types par chemin absolu, les arcs désignent leurs extrémités par @) :\n" +
       readFileSync(kernelLayerPath({ name: "pn-philosophers-1" as LayerName }), "utf8").trim();
   }
-  const featherNames = listLayerNames({ directory: USERS_DIRECTORY });
-  const feathers =
-    featherNames.length > 0
-      ? "\n\nLES PLUMES DES VISITEURS (sources complètes — un nouveau formalisme peut les raffiner ou les citer) :\n" +
-        featherNames
+  const visitorLayerNames = listLayerNames({ directory: USERS_DIRECTORY });
+  const visitorLayers =
+    visitorLayerNames.length > 0
+      ? "\n\nLES COUCHES DES VISITEURS (sources complètes — un nouveau formalisme peut les raffiner ou les citer) :\n" +
+        visitorLayerNames
           .sort()
           .map((name) => readFileSync(userLayerPath({ name: name as LayerName }), "utf8").trim())
           .join("\n\n")
@@ -218,17 +218,17 @@ function buildSystemPrompt(): string {
     penInstructions("en") +
     "\n\n" +
     MANIFESTO +
-    "\n\nLA COLONNE VERTÉBRALE (une ligne par couche — " +
+    "\n\nLA COLONNE STRATIGRAPHIQUE (une ligne par couche — " +
     KERNEL_LAYER_NAMES.length +
-    " du tronc en lecture seule, plus les plumes) :\n" +
+    " du socle en lecture seule, plus les couches des visiteurs) :\n" +
     corpusBackbone() +
     "\n\n" +
     example +
-    feathers
+    visitorLayers
   );
 }
 
-const PEN_INSTRUCTIONS_EN = `You are the pen of the Layered Data v${VERSION} workshop: you write layers in the workshop's indentation language, and nothing else.
+const PEN_INSTRUCTIONS_EN = `You are the geologist of the Layered Data v${VERSION} workshop: you write layers in the workshop's indentation language, and nothing else.
 
 THE LANGUAGE (the seven gestures, explained step by step in the workshop's tutorial):
 - "layer <name>" opens a layer; "refines @<layer>" declares a parent, "then @<other>" chains the unions of parents.
@@ -242,13 +242,13 @@ THE TESTS CONTRACT: the expected-reads contract travels with the layer, in a "te
 - "expect <path>/<key> = <value>" — the read must return exactly this value; "expect <path>/<key> absent" — the read must return null; an expected reference is written "expect <path>/<key> = @<layer>/<path>".
 - The contract's words (tests, expect, absent) are written in English.
 
-THE PROTOCOL: you propose the pen, never the truth. An expectation is never invented to please: expectations are measured, they are not guessed. Measure (or ask to measure) before writing an expect; what is measured is not what is desired.
+THE PROTOCOL: you propose the draft, never the truth. An expectation is never invented to please: expectations are measured, they are not guessed. Measure (or ask to measure) before writing an expect; what is measured is not what is desired.
 
 YOUR PROPOSALS ARE VERIFIED: every proposal is judged by the workshop's staging (step "syntax", verdicts "unknown-target", "expectation-betrayed", "implicit-overload"…). If a refusal is sent back to you, it carries the verdicts of your proposal — correct it and propose the complete layer again.
 
 Answer only with the layer or layers in the language, without code fencing, without explanation.`;
 
-const PEN_INSTRUCTIONS_FR = `Tu es la plume de l'atelier Layered Data v${VERSION} : tu écris des couches dans le langage à indentation de l'atelier, et rien d'autre.
+const PEN_INSTRUCTIONS_FR = `Tu es le géologue de l'atelier Layered Data v${VERSION} : tu écris des couches dans le langage à indentation de l'atelier, et rien d'autre.
 
 LE LANGAGE (les sept gestes, expliqués pas-à-pas dans le tutoriel de l'atelier) :
 - "layer <nom>" ouvre une couche ; "refines @<couche>" déclare un parent, "then @<autre>" enchaîne les unions de parents.
@@ -262,13 +262,13 @@ LE CONTRAT DE TESTS : le contrat de lectures attendues voyage avec la couche, da
 - "expect <chemin>/<clé> = <valeur>" — la lecture doit rendre exactement cette valeur ; "expect <chemin>/<clé> absent" — la lecture doit rendre null ; une référence attendue s'écrit "expect <chemin>/<clé> = @<couche>/<chemin>".
 - Les mots du contrat (tests, expect, absent) s'écrivent en anglais.
 
-LE PROTOCOLE : tu proposes la plume, jamais la vérité. Un attendu n'est jamais inventé pour faire plaisir : les attendus se mesurent, ils ne se devinent pas. Mesure (ou demande de mesurer) avant d'écrire un expect ; ce qui est mesuré n'est pas ce qui est désiré.
+LE PROTOCOLE : tu proposes le brouillon, jamais la vérité. Un attendu n'est jamais inventé pour faire plaisir : les attendus se mesurent, ils ne se devinent pas. Mesure (ou demande de mesurer) avant d'écrire un expect ; ce qui est mesuré n'est pas ce qui est désiré.
 
 TES PROPOSITIONS SONT VÉRIFIÉES : chaque proposition est jugée par le staging de l'atelier (étape « syntaxe », verdicts « cible-inconnue », « attendu-trahi », « surcharge-implicite »…). Si un refus t'est renvoyé, il porte les verdicts de ta proposition — corrige-la et repose la couche complète.
 
 Réponds uniquement avec la ou les couches en langage, sans enceinte de code, sans explication.`;
 
-/** The pen's instructions in the workshop language — English is
+/** The geologist's instructions in the workshop language — English is
  * the default, French its mirror; both follow VERSION. */
 function penInstructions(language: "en" | "fr" = "en"): string {
   return language === "fr" ? PEN_INSTRUCTIONS_FR : PEN_INSTRUCTIONS_EN;
@@ -328,14 +328,14 @@ function sourceOfRequestBody({ rawBody }: { rawBody: string }): { source: string
 // ------------------------------------------------------------
 // 5. THE AI PEN — THE VERIFIED LOOP
 //
-// The pen proposes, the staging judges, the refusal comes back to
+// The geologist proposes, the staging judges, the refusal comes back to
 // the model with its verdicts. The answer of the route is always a
 // STAGED draft: plain text on 200 (the accepted layer source), a
 // spoken refusal on 422 (budget spent), an infrastructure error
 // (no key, unreachable upstream) keeps its own status.
 // ------------------------------------------------------------
 
-/** An infrastructure failure of the pen — not a verdict, the loop
+/** An infrastructure failure of the geologist — not a verdict, the loop
  * never retries it: the route passes it through with its status. */
 class PenInfraFailure {
   readonly statusCode: number;
@@ -352,7 +352,7 @@ class PenInfraFailure {
  * the model's own writing, the verdict vocabulary speaks to it. */
 async function generateLayer({ instruction, feedback }: { instruction: string; feedback: string | null }): Promise<{ statusCode: number; body: string }> {
   if (!MISTRAL_API_KEY) {
-    throw new PenInfraFailure({ statusCode: 500, body: "pas de clé Mistral configurée (MISTRAL_API_KEY) — la plume reste locale" });
+    throw new PenInfraFailure({ statusCode: 500, body: "pas de clé Mistral configurée (MISTRAL_API_KEY) — le géologue reste local" });
   }
   let upstreamResponse: Response;
   try {
@@ -380,7 +380,7 @@ async function generateLayer({ instruction, feedback }: { instruction: string; f
   const data = (await upstreamResponse.json()) as { choices?: { message?: { content?: string } }[] };
   const proposal = data?.choices?.[0]?.message?.content ?? "";
   if (!proposal.trim()) {
-    throw new PenInfraFailure({ statusCode: 502, body: "la plume n'a rien écrit" });
+    throw new PenInfraFailure({ statusCode: 502, body: "le géologue n'a rien écrit" });
   }
   return { statusCode: 200, body: proposal };
 }
@@ -388,17 +388,17 @@ async function generateLayer({ instruction, feedback }: { instruction: string; f
 // ------------------------------------------------------------
 // 6. THE ROUTES
 //
-// The wardrobe API exists in two vocabularies: `api/layers` (the
+// The quarry API exists in two vocabularies: `api/layers` (the
 // workshop protocol — English keys, one shape for every client)
 // and `api/formalismes` (the compatibility API — French keys,
-// kept for the already-published pen clients).
+// kept for the already-published geologist clients).
 // ------------------------------------------------------------
 const server = createServer(async (request, response) => {
   const url = new URL(request.url ?? "/", "http://" + (request.headers.host ?? "localhost"));
   const segments = url.pathname.split("/").filter(Boolean);
 
   try {
-    // ---- the wardrobe and pen API ----
+    // ---- the quarry and geologist API ----
     if (segments[0] === "api") {
       if (url.pathname === "/api/whoami") {
         if (!isAccessGranted({ request })) return sendJson({ response, statusCode: 401, body: { erreur: "code d'accès requis" } });
@@ -430,7 +430,7 @@ const server = createServer(async (request, response) => {
 
         if (request.method === "PUT") {
           if (KERNEL_LAYER_NAMES.includes(name)) {
-            return sendJson({ response, statusCode: 403, body: { erreur: "le tronc est en lecture seule : " + name } });
+            return sendJson({ response, statusCode: 403, body: { erreur: "le socle est en lecture seule : " + name } });
           }
           const bodyCheck = sourceOfRequestBody({ rawBody: await readRequestBody({ request }) });
           if ("reason" in bodyCheck) return sendJson({ response, statusCode: 400, body: { erreur: bodyCheck.reason } });
@@ -467,7 +467,7 @@ const server = createServer(async (request, response) => {
 
         if (request.method === "PUT") {
           if (KERNEL_LAYER_NAMES.includes(name)) {
-            return sendJson({ response, statusCode: 403, body: { erreur: "le tronc est en lecture seule : " + name } });
+            return sendJson({ response, statusCode: 403, body: { erreur: "le socle est en lecture seule : " + name } });
           }
           const bodyCheck = sourceOfRequestBody({ rawBody: await readRequestBody({ request }) });
           if ("reason" in bodyCheck) return sendJson({ response, statusCode: 400, body: { erreur: bodyCheck.reason } });
@@ -477,7 +477,7 @@ const server = createServer(async (request, response) => {
 
         if (request.method === "DELETE") {
           if (KERNEL_LAYER_NAMES.includes(name)) {
-            return sendJson({ response, statusCode: 403, body: { erreur: "le tronc est en lecture seule : " + name } });
+            return sendJson({ response, statusCode: 403, body: { erreur: "le socle est en lecture seule : " + name } });
           }
           if (!existsSync(userLayerPath({ name }))) {
             return sendJson({ response, statusCode: 404, body: { erreur: "couche inconnue : " + name } });
@@ -487,7 +487,7 @@ const server = createServer(async (request, response) => {
         }
       }
 
-      // ---- the pen: prompt (workshop protocol) or instruction
+      // ---- the geologist: prompt (workshop protocol) or instruction
       // (compatibility), answered with a STAGED draft in plain
       // text. Every proposal is judged by the exact staging the
       // workshop applies; a refusal travels back to the model
@@ -498,17 +498,17 @@ const server = createServer(async (request, response) => {
         if (typeof instruction !== "string" || !instruction.trim()) {
           return sendJson({ response, statusCode: 400, body: { erreur: "corps JSON attendu : { \"prompt\": \"…\" }" } });
         }
-        // The living context of the loop: the trunk once, the
-        // users' feathers read at the call — a feather written
-        // seconds ago stays refinable for the pen.
+        // The living context of the loop: the kernel once, the
+        // visitors' layers read at the call — a layer written
+        // seconds ago stays refinable for the geologist.
         const userNames = listLayerNames({ directory: USERS_DIRECTORY });
         const previousAdditionSources = userNames.map((name) => readFileSync(userLayerPath({ name: name as LayerName }), "utf8"));
         try {
           const loopOutcome = await composeVerifiedLayerDraft({
             instruction,
-            languageSource: TRUNK_LANGUAGE_SOURCE,
-            livingLayerNames: [...TRUNK_LAYER_NAMES, ...userNames],
-            readonlyLayerNames: [...TRUNK_LAYER_NAMES],
+            languageSource: KERNEL_LANGUAGE_SOURCE,
+            livingLayerNames: [...KERNEL_LAYER_NAMES, ...userNames],
+            readonlyLayerNames: [...KERNEL_LAYER_NAMES],
             previousAdditionSources,
             maxAttempts: MAX_PEN_ATTEMPTS,
             strictConflicts: STRICT_CONFLICTS,
@@ -531,7 +531,7 @@ const server = createServer(async (request, response) => {
           return sendText({
             response,
             statusCode: 422,
-            body: "la plume n'a pas produit de couche acceptable en " + loopOutcome.attempts + " propositions — dernier refus :\n" + lastRefusal.feedback,
+            body: "le géologue n'a pas produit de couche acceptable en " + loopOutcome.attempts + " propositions — dernier refus :\n" + lastRefusal.feedback,
           });
         } catch (error) {
           if (error instanceof PenInfraFailure) {
@@ -571,8 +571,8 @@ const server = createServer(async (request, response) => {
 });
 
 server.listen(PORT, HOST, () => {
-  console.log("armoire Layered Data v" + VERSION + " sur http://" + HOST + ":" + PORT);
-  console.log("tronc : " + KERNEL_LAYER_NAMES.length + " couches ; plume vérifiée : jusqu'à " + MAX_PEN_ATTEMPTS + " propositions jugées par le staging" + (MISTRAL_API_KEY ? "" : " (MISTRAL_API_KEY absente — la plume reste locale)"));
+  console.log("carrière Layered Data v" + VERSION + " sur http://" + HOST + ":" + PORT);
+  console.log("socle : " + KERNEL_LAYER_NAMES.length + " couches ; géologue vérifié : jusqu'à " + MAX_PEN_ATTEMPTS + " propositions jugées par le staging" + (MISTRAL_API_KEY ? "" : " (MISTRAL_API_KEY absente — le géologue reste local)"));
   if (API_TOKEN === "changez-moi") {
     console.log("ATTENTION : code d'accès par défaut « changez-moi » encore en place — posez API_TOKEN dans .env");
   }
