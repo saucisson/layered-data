@@ -333,8 +333,8 @@ check(
 );
 
 check(
-  "the glossary keeps thirty-seven entries — the treaty's ledger, one entry per notion the workshop names",
-  glossaryIds.length === 37,
+  "the glossary keeps thirty-five entries — the treaty's ledger, one entry per notion the workshop names (assume and masque retired with ADR-0023)",
+  glossaryIds.length === 35,
 );
 
 // =====================================================================

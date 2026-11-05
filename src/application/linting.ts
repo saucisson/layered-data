@@ -19,9 +19,9 @@
 //     contracts live in the data now, so the data and the kernel's
 //     algorithms can drift apart; the lint watches the seam.
 //   - conflit-d'ordre: a leaf value decided between INCOMPARABLE
-//     sources — the diamond's convention made visible (the order
-//     stays the semantics, ADR-0017; a signature `assume` silences
-//     it, address by address).
+//     sources — the diamond's convention made visible (ADR-0017;
+//     retired as a semantics by ADR-0023: nothing silences it
+//     anymore, to resolve it is to restructure).
 // The root sweep triggers the kernel channel once for all layers
 // (trace: bypasses the memo at this level).
 
@@ -34,7 +34,7 @@ import { declaredModeOf } from "../domain/validation.ts";
 import { walkAddresses } from "../domain/views.ts";
 import type { CompiledLanguage } from "../domain/language/compiler.ts";
 import { fact, type MessageFact } from "../domain/messages.ts";
-import { formatAddress, unsignedOrderConflictsOf } from "../domain/conflicts.ts";
+import { formatAddress, orderConflictsOf } from "../domain/conflicts.ts";
 
 /** Everything the lint pass walks: the living space, its layer
  * inventory, and the compilation of the loaded corpus (declared
@@ -239,27 +239,12 @@ function lintVacantChecks(target: LintingTarget): void {
   }
 }
 
-/** The order conflicts of the whole inventory: every address whose
- * first-wins walks incomparable providers with diverging laid
- * values — the convention made visible, not a fault (the order IS
- * the semantics, ADR-0017). A signature `assume` at the reading
- * address silences the conflict: signed conventions are acts of
- * the language, the lint respects them. */
-export function orderConflictsOf(target: LintingTarget) {
-  const { space, layerNames, compilation } = target;
-  return unsignedOrderConflictsOf({
-    space,
-    layerNames,
-    isAssumed: (address, key) =>
-      declaredModeOf({ layer: address[0], path: address[1], key, compilation }) === "assume",
-  });
-}
-
-/** Record the unsigned order conflicts as conflit-d'ordre
- * diagnostics — the inventory of what the refines order decides
- * silently elsewhere. */
+/** Record the order conflicts as conflit-d'ordre diagnostics — the
+ * inventory of what the refines order decides silently elsewhere.
+ * Nothing signs a conflict anymore (ADR-0023): the inventory is
+ * the whole story, the strict staging makes it contractual. */
 function lintOrderConflicts(target: LintingTarget): void {
-  for (const conflict of orderConflictsOf(target)) {
+  for (const conflict of orderConflictsOf({ space: target.space, layerNames: target.layerNames })) {
     target.space.recordDiagnostic({
       kind: "conflit-d'ordre",
       address: conflict.address,
