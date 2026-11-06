@@ -14,7 +14,9 @@
 //
 //     node tests/vscode-checks.mts   (exit 1 on any failure)
 
-import { readdirSync, readFileSync } from "node:fs";
+import { cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { spawnSync } from "node:child_process";
 import { join } from "node:path";
 
 // ---- the extension under test --------------------------------------
@@ -22,9 +24,11 @@ import { join } from "node:path";
 const rootDirectory = join(import.meta.dirname, "..");
 const extensionDirectory = join(rootDirectory, "vscode");
 const manifest = JSON.parse(readFileSync(join(extensionDirectory, "package.json"), "utf8")) as {
+  main: string;
   contributes: {
     languages: { id: string; extensions: string[]; configuration: string }[];
     grammars: { scopeName: string; path: string }[];
+    commands: { command: string }[];
   };
 };
 const languageConfiguration = JSON.parse(
@@ -224,6 +228,120 @@ check(
   "the comment line is one comment, a trailing comment follows a value",
   hasToken({ line: "// ---- le dîner des philosophes", scope: "comment.line.double-slash.layered-data", text: "// ---- le dîner des philosophes" }) &&
     hasToken({ line: "  weight = 1 // trailing", scope: "comment.line.double-slash.layered-data", text: "// trailing" }),
+);
+
+// (e) the linter: the CLI reuses the kernel and answers in JSON —
+//     silent on the pristine corpus, precise on broken ones
+
+interface LintAnswer {
+  version: number;
+  language: string;
+  diagnostics: { file: string; line: number; severity: string; message: string; code: string }[];
+}
+
+const runLinter = ({ root }: { root: string }): LintAnswer => {
+  const run = spawnSync(process.execPath, [join(extensionDirectory, "linter.mts"), "--root", root], {
+    encoding: "utf8",
+  });
+  if (run.status !== 0 || run.stdout === "") {
+    throw new Error("linter run failed: " + String(run.stderr));
+  }
+  return JSON.parse(run.stdout) as LintAnswer;
+};
+
+const brokenCorpus = ({ mutate }: { mutate: (kernelDirectory: string) => void }): string => {
+  const caseRoot = mkdtempSync(join(tmpdir(), "layered-data-lint-"));
+  cpSync(join(rootDirectory, "formalisms", "kernel"), join(caseRoot, "formalisms", "kernel"), { recursive: true });
+  mutate(join(caseRoot, "formalisms", "kernel"));
+  return caseRoot;
+};
+
+const pristineAnswer = runLinter({ root: rootDirectory });
+check(
+  "the linter answers in JSON (version 1) and stays silent on the pristine corpus",
+  pristineAnswer.version === 1 && pristineAnswer.diagnostics.length === 0,
+);
+
+const syntaxRoot = brokenCorpus({
+  mutate: (kernelDirectory) => {
+    writeFileSync(join(kernelDirectory, "record.ld"), "layer record\n\tspecification\n");
+  },
+});
+const syntaxAnswer = runLinter({ root: syntaxRoot });
+rmSync(syntaxRoot, { recursive: true, force: true });
+check(
+  "a tab in a kernel layer is one syntax diagnostic at its own line, and the assembly pass suspends (it cannot judge a text it cannot read)",
+  syntaxAnswer.diagnostics.length === 1 &&
+    syntaxAnswer.diagnostics[0].file === "formalisms/kernel/record.ld" &&
+    syntaxAnswer.diagnostics[0].line === 2 &&
+    syntaxAnswer.diagnostics[0].code === "syntaxe",
+);
+
+const betrayedRoot = brokenCorpus({
+  mutate: (kernelDirectory) => {
+    const file = join(kernelDirectory, "pn-philosophers-5.ld");
+    writeFileSync(file, readFileSync(file, "utf8").replace("expect places/philo1.think1/marking = 1", "expect places/philo1.think1/marking = 7"));
+  },
+});
+const betrayedAnswer = runLinter({ root: betrayedRoot });
+const betrayedLine = readFileSync(join(rootDirectory, "formalisms", "kernel", "pn-philosophers-5.ld"), "utf8")
+  .split("\n")
+  .findIndex((line) => line.trim().startsWith("expect places/philo1.think1/marking")) + 1;
+rmSync(betrayedRoot, { recursive: true, force: true });
+check(
+  "a betrayed expect is a verdict on its own expect line, rendered in French",
+  betrayedAnswer.diagnostics.length === 1 &&
+    betrayedAnswer.diagnostics[0].file === "formalisms/kernel/pn-philosophers-5.ld" &&
+    betrayedAnswer.diagnostics[0].line === betrayedLine &&
+    betrayedAnswer.diagnostics[0].code === "attendu-trahi" &&
+    betrayedAnswer.diagnostics[0].message.includes("attendu 7, lu 1"),
+);
+
+const overloadRoot = brokenCorpus({
+  mutate: (kernelDirectory) => {
+    const file = join(kernelDirectory, "pn-philosophers.ld");
+    writeFileSync(file, readFileSync(file, "utf8").replace("override abstract weight", "abstract weight"));
+  },
+});
+const overloadAnswer = runLinter({ root: overloadRoot });
+rmSync(overloadRoot, { recursive: true, force: true });
+check(
+  "an undeclared overload is a verdict pinned on its layer's file",
+  overloadAnswer.diagnostics.length === 1 &&
+    overloadAnswer.diagnostics[0].file === "formalisms/kernel/pn-philosophers.ld" &&
+    overloadAnswer.diagnostics[0].code === "surcharge-implicite",
+);
+
+const mixedRoot = brokenCorpus({
+  mutate: (kernelDirectory) => {
+    const file = join(kernelDirectory, "pn-philosophers.ld");
+    writeFileSync(file, readFileSync(file, "utf8").replace("override abstract weight", "abstract weight"));
+    mkdirSync(join(kernelDirectory, "..", "users"), { recursive: true });
+    writeFileSync(join(kernelDirectory, "..", "users", "draft.ld"), "layer user-draft\n\tbroken\n");
+  },
+});
+const mixedAnswer = runLinter({ root: mixedRoot });
+rmSync(mixedRoot, { recursive: true, force: true });
+check(
+  "a syntax error outside the kernel (a users draft) suspends nothing: both the draft's line and the kernel's verdict show",
+  mixedAnswer.diagnostics.length === 2 &&
+    mixedAnswer.diagnostics.some((entry) => entry.file === "formalisms/users/draft.ld" && entry.line === 2 && entry.code === "syntaxe") &&
+    mixedAnswer.diagnostics.some((entry) => entry.file === "formalisms/kernel/pn-philosophers.ld" && entry.code === "surcharge-implicite"),
+);
+
+// (f) the extension glue: no dependency, no build — thin enough to
+//     check structurally (the JSON contract itself is pinned above)
+
+const extensionSource = readFileSync(join(extensionDirectory, "extension.js"), "utf8");
+const extensionSyntax = spawnSync(process.execPath, ["--check", join(extensionDirectory, "extension.js")], { encoding: "utf8" });
+check(
+  "the extension glue parses (node --check) and wires the linter: it spawns linter.mts with the configured Node, debounces, and maps the JSON to diagnostics",
+  extensionSyntax.status === 0 &&
+    extensionSource.includes('"layered-data.lint"') &&
+    extensionSource.includes("linter.mts") &&
+    extensionSource.includes("nodePath") &&
+    manifest.main === "./extension.js" &&
+    manifest.contributes.commands.some((command: { command: string }) => command.command === "layered-data.lint"),
 );
 
 // =====================================================================
