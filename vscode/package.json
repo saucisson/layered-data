@@ -1,0 +1,36 @@
+{
+  "name": "layered-data",
+  "displayName": "Layered Data",
+  "description": "Syntax highlighting for the .ld layer language: indentation blocks, refines acts, @layer/path addresses.",
+  "version": "0.1.0",
+  "publisher": "saucisson",
+  "license": "MIT",
+  "categories": [
+    "Programming Languages"
+  ],
+  "engines": {
+    "vscode": "^1.63.0"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "layered-data",
+        "aliases": [
+          "Layered Data",
+          "ld"
+        ],
+        "extensions": [
+          ".ld"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "layered-data",
+        "scopeName": "source.layered-data",
+        "path": "./syntaxes/ld.tmLanguage.json"
+      }
+    ]
+  }
+}
