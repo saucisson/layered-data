@@ -9,7 +9,7 @@ import { asLayerName, asLayerPath } from "./domain/identifiers.ts";
 import { AddressView, PathReference, addressesEqual } from "./domain/addresses.ts";
 import { Tracer } from "./domain/space.ts";
 import { type Language } from "./domain/messages.ts";
-import { coversAddresses, drawnShape, dressingApplicability, dressingEntries } from "./domain/views.ts";
+import { coversAddresses, drawnShape, dressingEntries } from "./domain/views.ts";
 import { assembleLayeredDataKernel } from "./application/corpus.ts";
 import { loadKernelLayerSources } from "./infrastructure/corpusLoader.ts";
 
@@ -44,11 +44,10 @@ import {
   VIEWPOINT_LAYERS,
   VIEW_NOTES,
   bindingOf,
-  circlePosition,
   groupTree,
-  positionOf,
   shapeLabel,
 } from "./presentation/viewTree.ts";
+import { buildWorkshopLook } from "./presentation/lensDrawing.ts";
 
 // ---- the kernel, the graph, the line-target table -------------
 // Assembled once from the corpus files — the single source, never
@@ -332,122 +331,10 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
   // lone lens applies to the current model of ①; a viewpoint
   // imposes its own model; without decided positions, the circle
   // layout takes over.
-  const look = useMemo(() => {
-    const isLens = LENS_LAYERS.includes(selectedView);
-    // The model: the viewpoint's (model slot resolved as an
-    // address), otherwise the current model of ①.
-    let model = layer;
-    if (!isLens) {
-      const modelBinding = bindingOf({ space: KERNEL.space, view: selectedView, key: "model" }).value;
-      if (modelBinding instanceof AddressView) model = modelBinding.layer;
-    }
-    // The lens: the lens itself when chosen, otherwise the display
-    // slot of the viewpoint (the zoom stays a slot: undecided).
-    let lens: string | null = null;
-    if (isLens) lens = selectedView;
-    else {
-      const displayBinding = bindingOf({ space: KERNEL.space, view: selectedView, key: "display" }).value;
-      if (displayBinding instanceof AddressView) lens = displayBinding.layer;
-    }
-    // The position cascade — decided by the viewpoint (they win),
-    // otherwise carried by the model (the formalism poses them,
-    // the reader resolves them: grid or pole, absolute or
-    // relative), otherwise the circle layout takes over.
-    const viewpointDecidesPositions =
-      !isLens &&
-      KERNEL.space.read({ layer: asLayerName(selectedView), path: asLayerPath([]), key: "positions" }) instanceof AddressView;
-    const modelCarriesPositions =
-      lens !== null &&
-      KERNEL.space.read({ layer: asLayerName(model), path: asLayerPath([]), key: "positions" }) instanceof AddressView;
-    const positionOfName = (name: string, index: number, all: string[]) =>
-      (viewpointDecidesPositions ? positionOf({ space: KERNEL.space, source: selectedView, name }) : null) ??
-      (modelCarriesPositions ? positionOf({ space: KERNEL.space, source: model, name }) : null) ??
-      circlePosition({ index, total: all.length });
-    const vertices =
-      lens !== null
-        ? KERNEL.space.keys({ layer: asLayerName(model), path: asLayerPath(["vertices"]) }).map(
-            (name, index, all) => ({
-              name,
-              position: positionOfName(name, index, all),
-              drawn: drawnShape({
-                space: KERNEL.space,
-                lens: asLayerName(lens),
-                layer: asLayerName(model),
-                path: asLayerPath(["vertices", name]),
-              }),
-            }),
-          )
-        : [];
-    // The frame follows the positions: a layout wider than the box
-    // is no longer cropped, the drawing adjusts; without resolved
-    // positions, the circle box stays.
-    const frame = (() => {
-      const positions = vertices
-        .map((vertex) => vertex.position)
-        .filter((position): position is { x: number; y: number } => position !== null);
-      if (positions.length === 0) return null;
-      const margin = 30;
-      const x0 = Math.min(...positions.map((position) => position.x)) - margin;
-      const y0 = Math.min(...positions.map((position) => position.y)) - margin;
-      const x1 = Math.max(...positions.map((position) => position.x)) + margin;
-      const y1 = Math.max(...positions.map((position) => position.y)) + margin;
-      return x0 + " " + y0 + " " + (x1 - x0) + " " + (y1 - y0);
-    })();
-    const edges =
-      lens !== null
-        ? KERNEL.space.keys({ layer: asLayerName(model), path: asLayerPath(["edges"]) }).map((name) => {
-            const drawn = drawnShape({
-              space: KERNEL.space,
-              lens: asLayerName(lens),
-              layer: asLayerName(model),
-              path: asLayerPath(["edges", name]),
-            });
-            const source = KERNEL.space.read({
-              layer: asLayerName(model),
-              path: asLayerPath(["edges", name]),
-              key: "source",
-            });
-            const target = KERNEL.space.read({
-              layer: asLayerName(model),
-              path: asLayerPath(["edges", name]),
-              key: "target",
-            });
-            // Weight of the diamond: a datum read through the view —
-            // e1 carries it, e2 inherits the default of
-            // weighted-hypergraph.
-            const weight =
-              model === "wb1"
-                ? KERNEL.space.read({
-                    layer: asLayerName(model),
-                    path: asLayerPath(["edges", name]),
-                    key: "weight",
-                  })
-                : null;
-            return {
-              name,
-              drawn,
-              weight,
-              from: source instanceof AddressView ? source.path[source.path.length - 1] : null,
-              to: target instanceof AddressView ? target.path[target.path.length - 1] : null,
-            };
-          })
-        : [];
-    const applicability =
-      lens !== null
-        ? dressingApplicability({ space: KERNEL.space, lens: asLayerName(lens), model: asLayerName(model) })
-        : { dressed: -1, total: -1 };
-    return {
-      isLens,
-      model,
-      lens,
-      viewpointDecidesPositions,
-      modelCarriesPositions,
-      frame,
-      vertices,
-      edges,
-      applicability,
-    };
-  }, [selectedView, layer]);
+  const look = useMemo(
+    () => buildWorkshopLook({ space: KERNEL.space, selectedView, currentLayer: layer }),
+    [selectedView, layer],
+  );
 
   // The living layers — the loaded corpus plus those added at
   // runtime; the structures of ① extend on addition, the ranks of

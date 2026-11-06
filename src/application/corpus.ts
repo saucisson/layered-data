@@ -90,6 +90,50 @@ export function assembleLayeredDataKernel({
 }: {
   layerSources: Readonly<Record<string, string>>;
 }): LayeredDataKernel {
+  return assembleCorpusKernel({ layerSources, layerNames: KERNEL_LAYER_NAMES });
+}
+
+// The tutorial corpus: a dedicated, simpler hierarchy — ten layers,
+// beside the kernel corpus. The two chains the tutorial walks
+// (graph → petrinet → philosophers → philosophers-5, and graph →
+// automaton → state-space → philosophers-5-state-space) live in
+// formalisms/tutorial, never inside the bedrock: the kernel corpus
+// keeps its forty-seven layers, the tutorial keeps its ten, and
+// the same assembly reads both.
+export const TUTORIAL_LAYER_NAMES: LayerName[] = [
+  "record",
+  "collection",
+  "check-registry",
+  "graph",
+  "petrinet",
+  "philosophers",
+  "philosophers-5",
+  "automaton",
+  "state-space",
+  "philosophers-5-state-space",
+].map(asLayerName);
+
+/** Assemble the tutorial corpus: the same assembly, the same
+ * validation — only the layer list changes. The flattened
+ * listings of the tutorial page read this space, never the
+ * kernel's. */
+export function assembleTutorialKernel({
+  layerSources,
+}: {
+  layerSources: Readonly<Record<string, string>>;
+}): LayeredDataKernel {
+  return assembleCorpusKernel({ layerSources, layerNames: TUTORIAL_LAYER_NAMES });
+}
+
+/** The shared assembly of one corpus: raw sources keyed by layer
+ * name, a fixed layer order, one parse, one validation. */
+function assembleCorpusKernel({
+  layerSources,
+  layerNames,
+}: {
+  layerSources: Readonly<Record<string, string>>;
+  layerNames: LayerName[];
+}): LayeredDataKernel {
   const readLayerSource = (layerName: string): string => {
     const source = layerSources[layerName];
     if (source === undefined) {
@@ -98,7 +142,7 @@ export function assembleLayeredDataKernel({
     return source.endsWith("\n") ? source : source + "\n";
   };
 
-  const languageSource = KERNEL_LAYER_NAMES.map(readLayerSource).join("");
+  const languageSource = layerNames.map(readLayerSource).join("");
   const parsedLanguage = parseLanguage(languageSource);
   const compiledLanguage = compileLanguage(parsedLanguage.layers);
   const space = new Space(compiledLanguage.layers);
@@ -106,14 +150,14 @@ export function assembleLayeredDataKernel({
     space,
     parse: parsedLanguage,
     compilation: compiledLanguage,
-    layerNames: KERNEL_LAYER_NAMES,
+    layerNames,
   });
 
   return {
     space,
     parsedLanguage,
     compiledLanguage,
-    layerNames: KERNEL_LAYER_NAMES,
+    layerNames,
     languageSource,
     validation,
   };

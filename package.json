@@ -1,6 +1,6 @@
 {
   "name": "layered-data-atelier",
-  "version": "2.23.0",
+  "version": "2.25.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -8,17 +8,18 @@
     "build": "vite build",
     "preview": "vite preview",
     "bench": "node --expose-gc benchmarks/kernel.mts",
-    "test": "npm run test:audit && npm run test:specification && npm run test:staging && npm run test:pen-loop && npm run test:editor && npm run test:i18n && npm run test:terminology",
+    "test": "npm run test:audit && npm run test:specification && npm run test:staging && npm run test:pen-loop && npm run test:editor && npm run test:pages && npm run test:i18n && npm run test:terminology",
     "test:audit": "node tests/audit-kernel.mts | diff tests/baseline-kernel.txt -",
     "test:specification": "node tests/specification-properties.mts",
     "test:staging": "node tests/staging-checks.mts",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
-    "check:structure": "node scripts/cli.mjs check-structure src/App.tsx src/presentation/*.tsx",
+    "check:structure": "node scripts/cli.mjs check-structure src/App.tsx src/presentation/*.tsx src/pages/*.tsx src/WorkshopContainer.tsx",
     "verify": "npm run typecheck && npm run check:structure && npm test && npm run build",
     "serve": "node scripts/cli.mjs serve",
     "serve:prod": "node server.ts",
     "test:pen-loop": "node tests/pen-loop-checks.mts",
     "test:editor": "node tests/editor-checks.mts",
+  "test:pages": "node tests/pages-checks.mts",
     "test:i18n": "node tests/i18n-checks.mts",
     "test:terminology": "node tests/terminology-checks.mts"
   },

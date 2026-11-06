@@ -51,7 +51,7 @@ if (existsSync(environmentFilePath)) {
   }
 }
 
-const VERSION = "2.23.0";
+const VERSION = "2.25.0";
 const PORT = Number(process.env.PORT ?? 8791);
 const HOST = process.env.HOST ?? "127.0.0.1";
 const API_TOKEN = process.env.API_TOKEN ?? "changez-moi";

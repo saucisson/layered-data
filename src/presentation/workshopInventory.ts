@@ -318,6 +318,16 @@ export const LAYER_COLOR: Record<string, string> = {
   "pn-philosophers-5-course": "bg-emerald-600",
   "kahn-course": "bg-rose-700",
   "wb-course": "bg-amber-700",
+  // the tutorial corpus names — the dedicated hierarchy the tutorial
+  // page flattens; the same map feeds their badges, the hues mirror
+  // the kernel's analogues (petri sky, philosophers violet/emerald,
+  // the automaton line cyan, the state space blue)
+  petrinet: "bg-sky-500",
+  philosophers: "bg-violet-500",
+  "philosophers-5": "bg-emerald-400",
+  automaton: "bg-cyan-500",
+  "state-space": "bg-cyan-800",
+  "philosophers-5-state-space": "bg-blue-500",
 };
 
 /** The refinement DAG of the workshop: the targets and children of
