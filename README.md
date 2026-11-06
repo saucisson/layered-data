@@ -38,6 +38,8 @@ Le code suit une architecture en oignon, documentée dans
 - `tests/` — les sept harnais de vérification : audit, spécification
   exécutable, staging, boucle du géologue, éditeur vivant, atelier
   bilingue, vocabulaire du traité (voir plus bas).
+- `vscode/` — l'extension VS Code : coloration syntaxique du langage
+  `.ld` (build et installation plus bas).
 - `docs/specification.md` — la spécification normative du noyau
   (obligations O1–O18, conformité C1–C8, théorèmes deux-régimes
   T1–T3), rendue exécutable par
@@ -61,6 +63,27 @@ npm run build && npm run serve:prod # l'atelier construit, servi par la carrièr
 npm test                       # non-régression du noyau (voir plus bas)
 npm run check:structure        # équilibre JSX/tsx (filet, sans compilateur)
 ```
+
+## Coloration syntaxique dans VS Code
+
+L'extension déclarative vit dans `vscode/` : grammaire TextMate
+(`syntaxes/ld.tmLanguage.json`) et manifeste, sans dépendance ni
+compilation. Détails dans `vscode/README.md`.
+
+```bash
+# essayer sans installer, depuis la racine du dépôt :
+code --extensionDevelopmentPath=vscode
+
+# empaqueter le .vsix (vsce via npx, depuis le dossier de l'extension) :
+cd vscode && npx @vscode/vsce package
+
+# installer (le .vsix pré-construit est fourni dans vscode/) :
+code --install-extension vscode/layered-data-0.1.0.vsix
+```
+
+Après toute modification de la grammaire, re-générez le `.vsix` avant
+installation. Le harnais `node tests/vscode-checks.mts` valide la
+grammaire contre tout le corpus `.ld`.
 
 ## L'API de la carrière
 
