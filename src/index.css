@@ -7,3 +7,11 @@ body {
   margin: 0;
   background-color: #f1f5f9;
 }
+
+/* le curseur dit ce qui se clique : Tailwind v4 laisse le bouton
+   au curseur par défaut du navigateur — la main redevient la règle
+   de l'atelier, partout, sans classe par classe */
+button:not(:disabled),
+[role="button"]:not(:disabled) {
+  cursor: pointer;
+}

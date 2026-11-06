@@ -58,8 +58,8 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
           <p className="mx-auto max-w-2xl text-lg text-slate-600">
             {say({
               language,
-              en: "A demonstrator where formalisms and models are layered data. Refinement, inheritance, and first-winner reading create a powerful system.",
-              fr: "Un démonstrateur où formalismes et modèles sont des couches de données. Raffinement, héritage et lecture premier-gagné créent un système puissant.",
+              en: "A demonstrator where formalisms and models are layered data. Refinement, inheritance: the first definition wins, and the system becomes powerful.",
+              fr: "Un démonstrateur où formalismes et modèles sont des couches de données. Raffinement, héritage : la première définition l'emporte, le système devient puissant.",
             })}
           </p>
         </section>
@@ -67,20 +67,20 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
         <section className="mt-12 grid gap-6 md:grid-cols-3">
           <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-slate-800">
-              {say({ language, en: "Layered Definitions", fr: "Définitions en couches" })}
+              {say({ language, en: "Incremental Definitions", fr: "Définitions incrémentales" })}
             </h3>
             <p className="text-sm text-slate-600">
               {say({
                 language,
-                en: "Each layer refines its parent. The kernel contains 47 layers from basic records to the philosophers' dinner.",
-                fr: "Chaque couche raffine sa parente. Le noyau contient 47 couches, des enregistrements de base au dîner des philosophes.",
+                en: "Definition is incremental: each notion is a small, finely composable layer that refines its parent — 47 layers, from basic records to the philosophers' dinner.",
+                fr: "La définition est incrémentale : chaque notion est une petite couche, finement composable, qui raffine sa parente — 47 couches, des enregistrements de base au dîner des philosophes.",
               })}
             </p>
           </div>
 
           <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-slate-800">
-              {say({ language, en: "First-Winner Reading", fr: "Lecture premier-gagné" })}
+              {say({ language, en: "First-Wins Reading", fr: "La première définition l'emporte" })}
             </h3>
             <p className="text-sm text-slate-600">
               {say({
@@ -93,15 +93,74 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
 
           <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-slate-800">
-              {say({ language, en: "Measured Workspace", fr: "Atelier mesuré" })}
+              {say({ language, en: "One Model, Several Formalisms", fr: "Un modèle, plusieurs formalismes" })}
             </h3>
             <p className="text-sm text-slate-600">
               {say({
                 language,
-                en: "Every action is measured. Every observable kernel read is compared, byte by byte, to a frozen baseline.",
-                fr: "Chaque action est mesurée. Chaque lecture observable du noyau est comparée, octet par octet, à une ligne de base gelée.",
+                en: "See the same model through different formalisms: the data does not move, the lens changes — the philosophers' dinner draws as a generic graph or as a Petri net.",
+                fr: "Visualisez un même modèle à travers plusieurs formalismes : la donnée ne bouge pas, la lentille change — le dîner des philosophes se dessine en graphe générique ou en réseau de Petri.",
               })}
             </p>
+          </div>
+        </section>
+
+        <section className="mt-12 grid gap-6 md:grid-cols-3">
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-3 text-lg font-semibold text-slate-800">
+              {say({ language, en: "Visualize the Hierarchy", fr: "Visualisez la hiérarchie" })}
+            </h3>
+            <p className="text-sm text-slate-600">
+              {say({
+                language,
+                en: "The complete refinement graph of the corpus. Click a layer to understand it.",
+                fr: "Le graphe de raffinement complet du corpus. Cliquez sur une couche pour la comprendre.",
+              })}
+            </p>
+            <button
+              onClick={() => navigate("hierarchy")}
+              className="mt-4 rounded-lg border-2 border-slate-400 px-4 py-2 text-sm text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+            >
+              {say({ language, en: "Visualize the hierarchy →", fr: "Visualisez la hiérarchie →" })}
+            </button>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-3 text-lg font-semibold text-slate-800">
+              {say({ language, en: "Create a Formalism", fr: "Créez un formalisme" })}
+            </h3>
+            <p className="text-sm text-slate-600">
+              {say({
+                language,
+                en: "Say the intention; the workshop's AI geologist proposes a draft in the language; the staging judges it; the accepted layer enters the living session.",
+                fr: "Dites l'intention ; le géologue IA de l'atelier propose un brouillon en langage ; le staging le juge ; la couche acceptée entre dans la session vivante.",
+              })}
+            </p>
+            <button
+              onClick={() => navigate("creation")}
+              className="mt-4 rounded-lg border-2 border-emerald-500 px-4 py-2 text-sm text-emerald-600 font-semibold hover:bg-emerald-50 transition-colors"
+            >
+              {say({ language, en: "Create a formalism →", fr: "Créez un formalisme →" })}
+            </button>
+          </div>
+
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <h3 className="mb-3 text-lg font-semibold text-slate-800">
+              {say({ language, en: "Study and Understand", fr: "Étudiez et comprenez" })}
+            </h3>
+            <p className="text-sm text-slate-600">
+              {say({
+                language,
+                en: "One layer at a time: its source as written, its complete closure flattened and resolved in place, and the lenses that draw it.",
+                fr: "Une couche à la fois : sa source telle qu'écrite, sa fermeture complète aplatie et résolue en place, et les lentilles qui la dessinent.",
+              })}
+            </p>
+            <button
+              onClick={() => navigate("formalism")}
+              className="mt-4 rounded-lg border-2 border-sky-600 px-4 py-2 text-sm text-sky-600 font-semibold hover:bg-sky-50 transition-colors"
+            >
+              {say({ language, en: "Study and understand →", fr: "Étudiez et comprenez →" })}
+            </button>
           </div>
         </section>
 
