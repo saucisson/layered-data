@@ -3,7 +3,11 @@
 // entries to VS Code diagnostics; the harness (tests/vscode-checks.mts)
 // pins the contract on real corpora, clean and broken.
 //
-//     node vscode/linter.mts --root <repo> [--language fr]
+//     node vscode/linter.mts --root <repo> [--language fr] [--kernel <src>]
+//
+// --kernel points at the kernel sources (the repo's src/): the default
+// is the src/ next to this script, which only exists in a repo checkout
+// — an extension installed as a .vsix passes the workspace's src/.
 //
 // Three passes, all reusing the kernel — nothing is re-derived here:
 //   - syntax, per file (parseLanguage): every .ld under formalisms/,
@@ -23,10 +27,8 @@
 
 import { readFileSync, readdirSync } from "node:fs";
 import { join, relative, sep } from "node:path";
+import { pathToFileURL } from "node:url";
 
-import { assembleLayeredDataKernel, KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
-import { parseLanguage } from "../src/domain/language/parser.ts";
-import { renderMessage } from "../src/domain/messages.ts";
 import type { Language } from "../src/domain/messages.ts";
 
 // ---- the arguments ---------------------------------------------------
@@ -38,6 +40,31 @@ const optionValue = ({ name }: { name: string }): string | undefined => {
 };
 const rootDirectory = optionValue({ name: "--root" }) ?? ".";
 const language: Language = optionValue({ name: "--language" }) === "en" ? "en" : "fr";
+const kernelDirectory = optionValue({ name: "--kernel" }) ?? join(import.meta.dirname, "..", "src");
+
+// ---- the kernel, loaded from the kernel directory --------------------
+// Dynamic imports on purpose: installed as a .vsix, the extension lives
+// outside the repo, so the kernel cannot be a static ../src import —
+// it is addressed by --kernel (the extension passes the workspace's
+// src/), defaulting to the repo's own src/ in a checkout.
+
+const kernelModule = async <T>(modulePath: string): Promise<T> => {
+  try {
+    return (await import(pathToFileURL(join(kernelDirectory, modulePath)).href)) as T;
+  } catch (error) {
+    console.error(
+      "layered-data linter: noyau introuvable (" + kernelDirectory + "/" + modulePath + ") — " +
+        "passez --kernel <dossier src du dépôt> : " + String((error as Error).message),
+    );
+    process.exit(1);
+  }
+};
+
+const { parseLanguage } = await kernelModule<typeof import("../src/domain/language/parser.ts")>("domain/language/parser.ts");
+const { renderMessage } = await kernelModule<typeof import("../src/domain/messages.ts")>("domain/messages.ts");
+const { assembleLayeredDataKernel, KERNEL_LAYER_NAMES } = await kernelModule<typeof import("../src/application/corpus.ts")>(
+  "application/corpus.ts",
+);
 
 // ---- the ledger ------------------------------------------------------
 
