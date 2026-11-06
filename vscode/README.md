@@ -58,7 +58,12 @@ Une erreur de syntaxe dans le noyau suspend les passes 2 et 3
 une erreur de syntaxe ailleurs (par exemple `formalisms/users/`)
 ne suspend rien. Le CLI répond en JSON :
 
-    node vscode/linter.mts --root . [--language fr]
+    node vscode/linter.mts --root . [--language fr] [--kernel <src>]
+
+`--kernel` désigne le dossier `src/` du noyau : par défaut celui à
+côté du script (un checkout du dépôt) ; une extension installée en
+`.vsix` vit hors du dépôt, elle passe donc le `src/` de l'espace de
+travail ouvert.
 
 L'extension (`extension.js`, CommonJS sans dépendance) lance ce CLI
 à l'ouverture et à l'enregistrement des `.ld` (frappe : 400 ms de
