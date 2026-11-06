@@ -1,0 +1,85 @@
+{
+  "name": "Layered Data",
+  "scopeName": "source.layered-data",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#values" },
+    { "include": "#acts" },
+    { "include": "#keys" },
+    { "include": "#punctuation" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.layered-data",
+          "match": "//[^\\n]*"
+        }
+      ]
+    },
+    "values": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.layered-data",
+          "match": "\"[^\"\\n]*\""
+        },
+        {
+          "name": "constant.language.boolean.layered-data",
+          "match": "(?<![A-Za-z0-9_.\\-])(?:true|false)(?![A-Za-z0-9_.\\-])"
+        },
+        {
+          "name": "constant.numeric.layered-data",
+          "match": "(?<![A-Za-z0-9_.\\-])\\-?[0-9]+(?:\\.[0-9]+)*"
+        },
+        {
+          "name": "entity.name.type.reference.layered-data",
+          "match": "@[A-Za-z_][A-Za-z0-9_.\\-]*(?:/[A-Za-z_][A-Za-z0-9_.\\-]*)*"
+        },
+        {
+          "name": "variable.parameter.path.layered-data",
+          "match": "(?:[A-Za-z_][A-Za-z0-9_.\\-]*/)+[A-Za-z_][A-Za-z0-9_.\\-]*"
+        }
+      ]
+    },
+    "acts": {
+      "patterns": [
+        {
+          "name": "keyword.other.act.layered-data",
+          "match": "(?<![A-Za-z0-9_.\\-])(?:layer|refines|then|extend|override|abstract|bind|check|expect|absent)(?![A-Za-z0-9_.\\-])"
+        },
+        {
+          "name": "storage.type.special-key.layered-data",
+          "match": "(?<![A-Za-z0-9_.\\-])(?:specification|defaults|checks|check-definitions|bindings|implicits|anchors|note|tests)(?![A-Za-z0-9_.\\-])"
+        }
+      ]
+    },
+    "keys": {
+      "patterns": [
+        {
+          "name": "variable.other.key.layered-data",
+          "match": "[A-Za-z_][A-Za-z0-9_.\\-]*(?=\\s*(?:=|\\-\\>)|\\s+refines(?![A-Za-z0-9_.\\-])|\\s*$)"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "keyword.operator.arrow.layered-data",
+          "match": "\\-\\>"
+        },
+        {
+          "name": "keyword.operator.assignment.layered-data",
+          "match": "="
+        },
+        {
+          "name": "punctuation.separator.comma.layered-data",
+          "match": ","
+        },
+        {
+          "name": "punctuation.definition.bracket.square.layered-data",
+          "match": "\\[|\\]"
+        }
+      ]
+    }
+  }
+}
