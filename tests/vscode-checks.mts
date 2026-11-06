@@ -239,10 +239,10 @@ interface LintAnswer {
   diagnostics: { file: string; line: number; severity: string; message: string; code: string }[];
 }
 
-const runLinter = ({ root }: { root: string }): LintAnswer => {
-  const run = spawnSync(process.execPath, [join(extensionDirectory, "linter.mts"), "--root", root], {
-    encoding: "utf8",
-  });
+const runLinter = ({ root, kernel }: { root: string; kernel?: string }): LintAnswer => {
+  const args = [join(extensionDirectory, "linter.mts"), "--root", root];
+  if (kernel !== undefined) args.push("--kernel", kernel);
+  const run = spawnSync(process.execPath, args, { encoding: "utf8" });
   if (run.status !== 0 || run.stdout === "") {
     throw new Error("linter run failed: " + String(run.stderr));
   }
@@ -260,6 +260,12 @@ const pristineAnswer = runLinter({ root: rootDirectory });
 check(
   "the linter answers in JSON (version 1) and stays silent on the pristine corpus",
   pristineAnswer.version === 1 && pristineAnswer.diagnostics.length === 0,
+);
+
+const explicitKernelAnswer = runLinter({ root: rootDirectory, kernel: join(rootDirectory, "src") });
+check(
+  "the kernel directory is addressable with --kernel — an extension installed as a .vsix has no ../src of its own",
+  explicitKernelAnswer.version === 1 && explicitKernelAnswer.diagnostics.length === 0,
 );
 
 const syntaxRoot = brokenCorpus({
@@ -340,6 +346,7 @@ check(
     extensionSource.includes('"layered-data.lint"') &&
     extensionSource.includes("linter.mts") &&
     extensionSource.includes("nodePath") &&
+    extensionSource.includes('"--kernel"') &&
     manifest.main === "./extension.js" &&
     manifest.contributes.commands.some((command: { command: string }) => command.command === "layered-data.lint"),
 );
