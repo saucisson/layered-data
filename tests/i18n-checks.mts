@@ -27,6 +27,9 @@ import { WORKSHOP_SCENARIOS } from "../src/presentation/scenarios.ts";
 import { LENS_LAYERS, shapeLabel, VIEWPOINT_LAYERS, VIEW_NOTES } from "../src/presentation/viewTree.ts";
 import { LAYER_ROLE, layerRoleNames } from "../src/presentation/workshopInventory.ts";
 import { detectBrowserLanguage, readWorkshopLanguage, writeWorkshopLanguage } from "../src/infrastructure/browserLanguage.ts";
+import { asLayerName } from "../src/domain/identifiers.ts";
+import { TUTORIAL_LAYER_NAMES } from "../src/application/corpus.ts";
+import { listingLayersOf, parseTutorialMarkdown } from "../src/presentation/tutorialMarkdown.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -321,39 +324,51 @@ check(
   }),
 );
 
-const tutorialSteps = readExportedData({ file: join(presentationDirectory, "tutorial.tsx"), declaration: "TUTORIAL_STEPS" }) as {
-  id: string;
-  label: { en: string; fr: string };
-  title: { en: string; fr: string };
-  body: ({ en: string; fr: string } | { code: string; title: { en: string; fr: string } })[];
-  go?: { layer: string; label: { en: string; fr: string } }[];
-}[];
-check(
-  "the tutorial keeps its eleven steps, from pbm to glossaire",
-  tutorialSteps.length === 11 &&
-    tutorialSteps.map((step) => step.id).join(",") ===
-      "pbm,idee,geologue,continuum,specification,regles,composer,travail,contrat,preuve,glossaire",
-);
-check(
-  "every tutorial step speaks bilingually: label, title, body blocks, go labels",
-  tutorialSteps.every((step) => {
-    const bodyBilingual = step.body.every((block) => {
-      const asBlock = block as { code?: string; title?: { en: string; fr: string }; en?: string; fr?: string };
-      if (asBlock.code !== undefined) return bilingualParityOf(asBlock.title as { en: string; fr: string });
-      return (asBlock.en ?? "").length > 0 && (asBlock.fr ?? "").length > 0;
-    });
-    const goBilingual = (step.go ?? []).every((entry) => entry.layer.length > 0 && entry.label.en.length > 0 && entry.label.fr.length > 0);
-    return bilingualParityOf(step.label) && bilingualParityOf(step.title) && bodyBilingual && goBilingual;
-  }),
-);
+// ---- the tutorial, a markdown pair ------------------------------------
+//
+// The tutorial is no longer a component: the prose lives in two
+// hand-editable files (tutorial.en.md, tutorial.fr.md) parsed by the
+// measured dialect, and its listings are resolved against the
+// tutorial corpus at run time — never a frozen copy.
 
-const tutorialSpine = readExportedData({ file: join(presentationDirectory, "tutorial.tsx"), declaration: "TUTORIAL_SPINE" }) as {
-  layer: string;
-  note: { en: string; fr: string };
-}[];
+const tutorialMarkdownSource = (language: string) =>
+  readFileSync(join(presentationDirectory, "tutorial." + language + ".md"), "utf8");
+const tutorialBlocks = (language: string) =>
+  parseTutorialMarkdown({ source: tutorialMarkdownSource(language) });
+const tutorialShape = (language: string) =>
+  tutorialBlocks(language).map((block) =>
+    block.kind === "heading" ? "h" + block.level : block.kind === "listing" ? "listing:" + block.layer : block.kind,
+  );
+
 check(
-  "the tutorial spine carries a bilingual note for each of its layers",
-  tutorialSpine.length > 0 && tutorialSpine.every((entry) => bilingualParityOf(entry.note)),
+  "the tutorial markdown pair parses — both tongues exist and non-empty",
+  tutorialMarkdownSource("en").length > 0 && tutorialMarkdownSource("fr").length > 0,
+);
+check(
+  "the tutorial walks the same route in both tongues — the block shapes agree, listing by listing",
+  tutorialShape("en").join("|") === tutorialShape("fr").join("|"),
+);
+check(
+  "every tutorial listing names a layer of the tutorial corpus, and every tutorial layer gets its listing",
+  listingLayersOf({ blocks: tutorialBlocks("en") }).every((layer) => TUTORIAL_LAYER_NAMES.includes(asLayerName(layer))) &&
+    [...TUTORIAL_LAYER_NAMES].sort().join(",") ===
+      [...new Set(listingLayersOf({ blocks: tutorialBlocks("en") }))].sort().join(","),
+);
+check(
+  "every ⟪…⟫ mark in the tutorial cites the glossary, in the tongue's own term",
+  ["en", "fr"].every((language) => {
+    const knownTerms = new Set<string>();
+    for (const id of glossaryIds) {
+      const entry = glossary[id];
+      knownTerms.add(id.toLowerCase());
+      knownTerms.add(entry.term.en.toLowerCase());
+      knownTerms.add(entry.term.fr.toLowerCase());
+    }
+    const marks = [...tutorialMarkdownSource(language).matchAll(/⟪([^⟫]+)⟫/g)].map((match) =>
+      match[1].trim().toLowerCase(),
+    );
+    return marks.length > 0 && marks.every((mark) => knownTerms.has(mark));
+  }),
 );
 
 const diagnosticLabels = readExportedData({ file: join(presentationDirectory, "diagnosticsPanel.tsx"), declaration: "DIAGNOSTIC_LABELS" }) as {
@@ -376,7 +391,7 @@ check(
   serverSource.includes("PEN_INSTRUCTIONS_EN") &&
     serverSource.includes("PEN_INSTRUCTIONS_FR") &&
     serverSource.includes('penInstructions("en")') &&
-    serverSource.includes("const VERSION = \"2.23.0\";"),
+    serverSource.includes("const VERSION = \"2.25.0\";"),
 );
 
 // =====================================================================

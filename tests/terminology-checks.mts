@@ -144,10 +144,10 @@ const glossary = readExportedData({ file: join(presentationDirectory, "notions.t
 };
 const glossaryIds = Object.keys(glossary);
 
-const tutorialSteps = readExportedData({ file: join(presentationDirectory, "tutorial.tsx"), declaration: "TUTORIAL_STEPS" }) as {
-  id: string;
-  label: { en: string; fr: string };
-}[];
+// The tutorial is a markdown pair now — the prose each tongue renders
+// is the file itself, read whole.
+const tutorialMarkdownSource = (language: string) =>
+  readFileSync(join(presentationDirectory, "tutorial." + language + ".md"), "utf8");
 
 // The per-tongue prose: every string a tongue renders, walked from
 // the parsed data — { en: … } values feed the English corpus, { fr: … }
@@ -175,9 +175,9 @@ function bilingualStringsOf(value: DataValue, tongue: string, into: string[]): v
 
 const englishProse: string[] = [];
 const frenchProse: string[] = [];
-bilingualStringsOf(tutorialSteps as unknown as DataValue, "en", englishProse);
+englishProse.push(tutorialMarkdownSource("en"));
+frenchProse.push(tutorialMarkdownSource("fr"));
 bilingualStringsOf(glossary as unknown as DataValue, "en", englishProse);
-bilingualStringsOf(tutorialSteps as unknown as DataValue, "fr", frenchProse);
 bilingualStringsOf(glossary as unknown as DataValue, "fr", frenchProse);
 
 // =====================================================================
@@ -238,6 +238,10 @@ const everyLiteral: string[] = [];
 for (const file of [...sourceFilesUnder(join(rootDirectory, "src")), join(rootDirectory, "server.ts")]) {
   everyLiteral.push(...stringLiteralsOf(readFileSync(file, "utf8")));
 }
+// the tutorial's markdown pair is narration too — each file is read
+// whole: the retired words stay out of the tongues' prose, not just
+// out of the code's strings
+everyLiteral.push(tutorialMarkdownSource("en"), tutorialMarkdownSource("fr"));
 
 check(
   "the retired story words appear in no string literal — the identifiers keep their names, the rendered text speaks the treaty",
@@ -310,13 +314,11 @@ check(
 );
 
 check(
-  "the tutorial's anchor speaks the field: the step id plume became geologue, and its label names the geologist in both tongues",
-  tutorialSteps.some(
-    (step) =>
-      step.id === "geologue" &&
-      step.label.en.toLowerCase().includes("geologist") &&
-      step.label.fr.toLowerCase().includes("géologue"),
-  ) && !tutorialSteps.some((step) => step.id === "plume"),
+  "the tutorial's anchor speaks the field: the geologist names the language in both tongues of the markdown pair",
+  tutorialMarkdownSource("fr").includes("géologue") &&
+    tutorialMarkdownSource("en").includes("geologist") &&
+    !tutorialMarkdownSource("fr").includes("plume") &&
+    !tutorialMarkdownSource("en").includes("plume"),
 );
 
 const serverSource = readFileSync(join(rootDirectory, "server.ts"), "utf8");
