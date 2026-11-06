@@ -1,5 +1,132 @@
 # Changelog
 
+## 2.25.0 — le tutoriel, en strates
+
+Le tutoriel se réécrit, la prose cède la place au code : deux
+fichiers Markdown éditables à la main (`tutorial.fr.md`,
+`tutorial.en.md` dans `src/presentation/`), lus par l'application,
+et un corpus dédié de dix couches, plus simple que le socle.
+
+- **la matière** (`formalisms/tutorial/`, dix couches) : deux
+  chaînes sur le même dîner — `graph` → `petrinet` → `philosophers`
+  → `philosophers-5` (le réseau et son modèle), et `graph` →
+  `automaton` → `state-space` → `philosophers-5-state-space`
+  (l'espace d'états du même dîner), sur le socle minimal de trois
+  couches (`record`, `collection`, `check-registry`). Assemblé
+  sans verdict : zéro conflit, sept tests rejoués, aucun trahi.
+- **la page** (`src/pages/TutorialPage.tsx`) : le dialecte
+  `ldflat:<couche>` dans les fences (`src/presentation/tutorialMarkdown.ts`)
+  — chaque listing est **calculé par aplatissement à l'affichage**,
+  jamais une copie figée ; la page rend titres, paragraphes, listes,
+  blocs de code et glossaire.
+- **les lignes se cliquent** (`src/presentation/TutorialListing.tsx`) :
+  chaque listing réutilise la carte cascade de l'atelier — cliquer
+  une ligne dit d'où vient la valeur (la gagnante et les sources
+  consultées) ou la chaîne des types raffinés ; le pliage de
+  `#formalism` s'applique aux deux gros modèles (plus de 250 lignes,
+  ils s'ouvrent replés), la clé spéciale `note` reste au fichier.
+- **les contrats suivent** : le harnais i18n épingle la paire de
+  fichiers (mêmes formes de blocs, les dix couches présentes,
+  chaque marqueur ⟪…⟫ résout au glossaire) ; le harnais terminology
+  scanne les deux Markdown ; `pages-checks` gagne une section sur
+  le corpus du tutoriel (assemblage propre, dîner mesuré — 15
+  places, 10 transitions, 25 arcs —, cardinalité, liaisons tardives,
+  accord des parties du listing aplati, seuils de pliage) —
+  **36 assertions**.
+- pièges mesurés en route : la cardinalité posée sur une union de
+  citations fait une déclaration-fantôme — elle se pose sur la
+  collection `philosophes` ; un `expect` d'état hérité du réseau
+  est trahi (les marquages non posés se lisent aux adresses du
+  dîner, pas de l'état).
+- VERSION 2.25.0 (`server.ts`, `package.json`, `index.html`) — le
+  harnais i18n suit (le pin VERSION est un contrat conscient).
+
+## 2.24.1 — les pages relues
+
+La revue d'usage des trois pages, correction par correction —
+le comportement mesuré ne change pas, la surface parle mieux.
+
+- **le DSL aplati se replie** (`#formalism/<couche>`) : la fermeture
+  du dîner sérialise à plus de 12 000 lignes — chaque partie
+  indentée est maintenant une section que l'on ouvre et referme
+  (« tout déplier » / « tout replier »), la ligne repliée compte
+  honnêtement ce qu'elle cache, et les numéros restent ceux du
+  texte complet (`src/application/flattenSource.ts` :
+  `writeFlattenedLayerSections`, `countFlattenedSectionLines`,
+  `serializeFlattenedLayerText` — le texte sérialisé reste octet
+  pour octet celui de `writeFlattenedLayerSource`, le harnais
+  épingle l'accord).
+- **les points de vue déménagent** : retirés de la page du
+  formalisme, ils vivent avec la hiérarchie — sous le graphe,
+  chaque point de vue nomme son modèle et sa lentille, tout est
+  cliquable (`src/pages/HierarchyPage.tsx`).
+- **le code d'accès entre dans la page création**
+  (`AccessCodeForm`) : le proxy qui porte le géologue est protégé —
+  sans code, « demander à l'IA » répond 401 et l'IA simulée parle
+  à sa place ; le formulaire posé sur la page permet de poser le
+  code une fois, gardé par le navigateur.
+- **le curseur dit ce qui se clique** : `button:not(:disabled)`
+  reprend la main (`src/index.css`) — Tailwind v4 laisse le bouton
+  au curseur par défaut, la main redevient la règle de l'atelier.
+- **la page d'accueil dit mieux** : « Définitions incrémentales »
+  (chaque notion est une petite couche, finement composable),
+  « La première définition l'emporte » (le terme de glossaire
+  « premier-gagné » reste défini dans l'atelier, la page d'accueil
+  parle en clair), « Un modèle, plusieurs formalismes » remplace
+  « Atelier mesuré » ; « Visualisez la hiérarchie », « Créez un
+  formalisme », « Étudiez et comprenez » ; la carte hiérarchie
+  va droit au but : « Cliquez sur une couche pour la comprendre » ;
+  « sa source telle qu'écrite ».
+- **le tutoriel respire** : la phrase d'introduction de la page et
+  celle de l'en-tête des onze étapes s'en vont — la colonne parle
+  d'elle-même.
+- `index.html` — le titre porte enfin sa version (il était resté à
+  2.23.0).
+- VERSION 2.24.1 (`server.ts`, `package.json`) — le harnais i18n
+  suit (le pin VERSION est un contrat conscient).
+
+## 2.24.0 — les pages de l'atelier
+
+Trois nouvelles surfaces lisibles sur le même corpus, sans nouvelle
+dépendance : l'algorithme de placement existant et du code mesuré
+suffisent.
+
+- `#hierarchy` — **la hiérarchie** : le graphe de raffinement
+  complet (`src/pages/HierarchyPage.tsx`), pleine page — le
+  barycentre déterministe de `workshopInventory` (`computeGraphLayout`),
+  zoom par boutons, défilement, recherche qui estompe, survol qui
+  met la fermeture et les descendants au premier plan, clic qui
+  ouvre la page du formalisme (`#formalism/<couche>`).
+- `#formalism/<couche>` — **comprendre un formalisme**
+  (`src/pages/FormalismPage.tsx`) : la source `.ld` telle
+  qu'écrite, **le DSL du formalisme complet aplati** (toute la
+  fermeture résolue en place par premier-gagné, la provenance en
+  commentaire — `src/application/flattenSource.ts`,
+  `writeFlattenedLayerSource`), et **les lentilles** : quelle
+  couche d'affichage habille le formalisme, le dessin, la
+  dégradation légale ; les points de vue qui le désignent comme
+  modèle.
+- `#creation` — **créer un formalisme assisté par l'IA**
+  (`src/pages/CreationPage.tsx`) : le protocole dit, le géologue
+  propose (proxy Mistral vérifié par la boucle de staging, IA
+  simulée déterministe sinon), le staging exige 0 verdict ; les
+  couches acceptées vivent dans **la session**
+  (`src/application/session.ts`) : un registre en mémoire
+  matérialisé de façon idempote dans le noyau de chaque page —
+  jamais posé deux fois.
+- `src/presentation/lensDrawing.ts` — extraction du mémo `look`
+  du panneau ④ (`buildWorkshopLook`) : l'atelier et la page
+  formalisme dessinent par la même lecture mesurée.
+- `src/components/Router.tsx` — le hash porte un paramètre
+  (`#formalism/wb1`) : l'adresse reste l'artefact.
+- `tests/pages-checks.mts` — huitième harnais : 23 assertions —
+  le DSL aplati (le diamant lu à plat, les slots abstraits, les
+  références), les lentilles (25/25 habillés sur le dîner, la
+  dégradation Kahn, le diamant pondéré), la session (idempotence,
+  rejeu déterministe, entrée dans le DAG), le layout déterministe.
+- VERSION 2.24.0 (`server.ts`, `package.json`) — le harnais i18n
+  suit (le pin VERSION est un contrat conscient).
+
 ## 2.23.0 — l'atelier bilingue
 
 L'atelier parle deux langues : **l'anglais par défaut, le français à
