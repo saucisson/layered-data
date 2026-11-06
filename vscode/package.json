@@ -1,8 +1,8 @@
 {
   "name": "layered-data",
   "displayName": "Layered Data",
-  "description": "Syntax highlighting for the .ld layer language: indentation blocks, refines acts, @layer/path addresses.",
-  "version": "0.1.0",
+  "description": "Syntax highlighting and corpus linting for the .ld layer language: indentation blocks, refines acts, @layer/path addresses.",
+  "version": "0.2.0",
   "publisher": "saucisson",
   "license": "MIT",
   "categories": [
@@ -11,6 +11,10 @@
   "engines": {
     "vscode": "^1.63.0"
   },
+  "main": "./extension.js",
+  "activationEvents": [
+    "onLanguage:layered-data"
+  ],
   "contributes": {
     "languages": [
       {
@@ -31,6 +35,31 @@
         "scopeName": "source.layered-data",
         "path": "./syntaxes/ld.tmLanguage.json"
       }
-    ]
+    ],
+    "commands": [
+      {
+        "command": "layered-data.lint",
+        "title": "Layered Data: Lint the corpus"
+      }
+    ],
+    "configuration": {
+      "title": "Layered Data",
+      "properties": {
+        "layered-data.nodePath": {
+          "type": "string",
+          "default": "node",
+          "description": "The Node binary that runs the linter (needs native type stripping, 22.18+) — the same runtime as the repo harnesses."
+        },
+        "layered-data.language": {
+          "type": "string",
+          "default": "fr",
+          "enum": [
+            "fr",
+            "en"
+          ],
+          "description": "The language of the verdict messages the linter renders."
+        }
+      }
+    }
   }
 }
