@@ -78,7 +78,7 @@ code --extensionDevelopmentPath=vscode
 cd vscode && npx @vscode/vsce package
 
 # installer (le .vsix pré-construit est fourni dans vscode/) :
-code --install-extension vscode/layered-data-0.1.0.vsix
+code --install-extension vscode/layered-data-0.2.0.vsix
 ```
 
 Après toute modification de la grammaire, re-générez le `.vsix` avant
