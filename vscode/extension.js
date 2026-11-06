@@ -46,7 +46,14 @@ function activate(context) {
     const token = ++runToken;
     const child = spawn(
       configuration().get("nodePath") || "node",
-      [linterScript, "--root", root, "--language", configuration().get("language") || "fr"],
+      [
+        linterScript,
+        "--root", root,
+        // the kernel sources: the workspace's src/ — the extension may
+        // be installed as a .vsix outside the repo, so ../src would miss
+        "--kernel", path.join(root, "src"),
+        "--language", configuration().get("language") || "fr",
+      ],
       { cwd: root },
     );
     let stdout = "";
