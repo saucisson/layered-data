@@ -60,4 +60,8 @@ Your report contains:
 - Add a dependency, change architecture, or touch security-relevant code
   without an approved escalation.
 - Weaken a test, a rule, or a threshold to make a check pass.
+- Rebase or force-push `daily` outside `make sync-daily`, or run the
+  sync unattended: rewriting the day's shared branch is exactly one
+  driver, never a hand command, and `main` is never rewritten at all
+  (ADR-0024).
 - Touch the corpus files under `formalisms/` - they are data, not code.
