@@ -24,6 +24,11 @@ If you are unsure which role this session assigns you, stop and ask.
   `fix/<issue>` from `daily`), pull requests under ~500 lines.
 - The morning directive (issue list) is set by the human and is **never
   edited by agents**.
+- `main` can move without `daily` (template sync, hotfix, release):
+  the day session reconciles early, right after `make day-start`, via
+  `make sync-daily` (rebase `daily` onto `origin/main`, push with
+  `--force-with-lease`, ADR-0024). A conflict escalates (`needs-human`);
+  unattended sessions never run it, and `main` is never rewritten.
 - End of day: freeze merges, `npm run verify`, `make smoke-test`;
   the human tests and merges `daily` into `main`.
 

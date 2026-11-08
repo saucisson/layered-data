@@ -1,7 +1,7 @@
 # Makefile for saucisson/layered-data
 # Provides convenience targets for common development operations
 
-.PHONY: help verify check typecheck test build lint format
+.PHONY: help verify check typecheck test build lint format sync-daily
 
 # Default target
 help:
@@ -14,6 +14,7 @@ help:
 	@echo "  format      - Format code with Prettier"
 	@echo "  verify-ci   - CI-specific verify (used in workflows)"
 	@echo "  day-start   - Tag daily branch for new day"
+	@echo "  sync-daily  - Rebase daily onto origin/main, push with lease (ADR-0024)"
 	@echo "  day-report  - Generate end-of-day report"
 	@echo "  smoke-test  - Run smoke tests"
 
@@ -61,6 +62,11 @@ day-start:
 	@echo "Tagging daily branch for new day"
 	git tag daily-$(date +%Y-%m-%d)
 	@echo "Daily branch tagged. Start work on issues from the morning directive."
+
+# Rebase daily onto origin/main when main moved without daily
+# (template sync, hotfix, release), early in the day (ADR-0024).
+sync-daily:
+	node scripts/cli.mjs sync-daily
 
 day-report:
 	@echo "=== End of Day Report ==="

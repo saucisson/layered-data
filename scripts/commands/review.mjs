@@ -18,7 +18,7 @@ import { execSync } from 'child_process';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(__dirname, '..');
+const repoRoot = path.resolve(__dirname, '..', '..');
 
 // Get GitHub context from environment variables
 const GITHUB_BASE_REF = process.env.GITHUB_BASE_REF || 'main';
@@ -529,11 +529,13 @@ function runReview() {
   }
 }
 
-// Run the review
-try {
-  runReview();
-} catch (e) {
-  error(`Protocol failure: ${e.message}`);
-  error(e.stack);
-  process.exit(2);
+/** Entry point of the `review` subcommand (ADR-0025). */
+export function run() {
+  try {
+    runReview();
+  } catch (e) {
+    error(`Protocol failure: ${e.message}`);
+    error(e.stack);
+    process.exit(2);
+  }
 }
