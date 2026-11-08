@@ -66,7 +66,7 @@ jobs:
 
       - name: Run the reviewer agent
         run: |
-          node scripts/agent-review.mjs
+          node scripts/cli.mjs review
 
       - name: Publish the review comment
         if: always()

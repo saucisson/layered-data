@@ -62,6 +62,8 @@ What this decision implies - good and bad.
 | [ADR-0021](adr-0021-mythologie.md) | The vocabulary's treaty - three strata, one story: informatics words stay, the language's words are marked code, the story lives in the geologist's field | accepted | 2026-11-05 |
 | [ADR-0022](adr-0022-checks-as-couples.md) | Checks as couples - the constraint's behavior written in the language, judged by the reading machine | accepted | 2026-11-05 |
 | [ADR-0023](adr-0023-two-regime-algebra.md) | The two-regime algebra - mask and assume retire, the guarantees become theorems | accepted | 2026-11-05 |
+| [ADR-0024](adr-0024-daily-integration-sync.md) | daily integrates main through a sync driver (`make sync-daily`) | proposed | 2026-11-08 |
+| [ADR-0025](adr-0025-scripts-cli-package.md) | Driver commands: one CLI package with subcommands, make/npm stay the agent surface | proposed | 2026-11-08 |
 
 ## Adding a new ADR
 
