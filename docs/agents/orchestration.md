@@ -9,6 +9,13 @@ The human sets the morning directive as a prioritized list of issues for
 the day. This list is **never edited by agents** - it is the single source
 of truth for the day's work.
 
+If `origin/main` has commits `daily` lacks (template sync, hotfix,
+release), the day session runs `make sync-daily` right after
+`make day-start` and before any work: the driver rebases `daily` onto
+`origin/main` and pushes with `--force-with-lease`; a conflict aborts
+and escalates (`needs-human`) - resolving accepted `main` content
+against accepted `daily` work is a human decision (ADR-0024).
+
 ## Triage gate
 
 Before starting any issue, the agent checks:
