@@ -9,8 +9,45 @@
 //   - the validator and the checks (walkAddresses).
 
 import { type LayerName, type LayerPath, asPathSegment } from "./identifiers.ts";
-import { type Address, AddressView, LayerReference, PathReference, type RawValue, addressesEqual, isDictionary,  } from "./addresses.ts";
+import { type Address, type RawTree, AddressView, LayerReference, PathReference, type RawValue, addressesEqual, isDictionary,  } from "./addresses.ts";
 import { Space } from "./space.ts";
+
+/** One walked address, observed ONCE: the address, its visible keys,
+ * its closure, and the raw node of every closure source (aligned by
+ * index — nodes[i] is the node of closure[i]). The validator's passes
+ * share this observation instead of re-walking and re-reading the
+ * same space four times: the walk is the expensive part of the
+ * validation, the passes only judge. */
+export interface WalkedAddress {
+  address: Address;
+  keys: string[];
+  closure: Address[];
+  nodes: (RawTree | null)[];
+}
+
+/** The observed walk of one layer: walkAddresses, plus the keys and
+ * the closure/nodes of every address, captured during the single
+ * walk. The address order is walkAddresses' order (byte-identical):
+ * the root first, children in stack order. */
+export function walkLayerObserved({ space, layer }: { space: Space; layer: LayerName }): WalkedAddress[] {
+  const output: WalkedAddress[] = [];
+  const stack: Address[] = [[layer, []]];
+  while (stack.length) {
+    const top = stack.pop()!;
+    const [walkLayer, walkPath] = top;
+    const nodes: (RawTree | null)[] = [];
+    const keys = space.keys({ layer: walkLayer, path: walkPath, nodes });
+    const closure = space.closure({ layer: walkLayer, path: walkPath });
+    output.push({ address: top, keys, closure, nodes });
+    for (const key of keys) {
+      const value = space.read({ layer: walkLayer, path: walkPath, key });
+      if (value instanceof AddressView && value.layer === walkLayer) {
+        stack.push([walkLayer, [...walkPath, asPathSegment(key)]]);
+      }
+    }
+  }
+  return output;
+}
 
 /** One lens drawing entry: where the template lives, and which types
  * it dresses (concrete closure sources — never the layer roots,
