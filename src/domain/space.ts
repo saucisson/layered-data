@@ -15,7 +15,7 @@
 // preserved) and the generic checks (containers, cardinality).
 // Out of scope: lens checks.
 
-import { type LayerName, type LayerPath, type PathSegment, asLayerPath } from "./identifiers.ts";
+import { type LayerName, type LayerPath, type PathSegment, asLayerName, asLayerPath } from "./identifiers.ts";
 import { fact, type MessageFact } from "./messages.ts";
 import { type Address, AddressView, LayerReference, PathReference, type RawTree, type RawValue, isDictionary,  } from "./addresses.ts";
 import { SPECIAL_KEYS } from "./specialKeys.ts";
@@ -50,15 +50,59 @@ export function formatEntryForTrace(entry: RawValue): any {
 // the touched path. On an immutable space no event is ever recorded:
 // the generation fast path validates everything in O(1).
 class ClosureFrame {
-  collectedDependencies = new Set<string>(); // dependencies collected (depKey)
+  collectedDependencies = new Set<number>(); // dependencies collected (interned address ids)
   tainted = false; // a cycle re-entry marked this frame
 }
 
 /** One memoized closure: the result, its dependencies, its generation. */
 export interface ClosureMemoEntry {
   list: Address[];
-  deps: Set<string>;
+  deps: Set<number>; // interned (layer, path) ids of the dependencies
   gen: number;
+}
+
+/** Public view of the closure memo. The kernel keys the memo by
+ * interned address ids (one number per (layer, path)); the outside
+ * world (tests, workbench) addresses entries by the "layer|a/b"
+ * string key. The view interns on the fly — a string key resolves
+ * to the same id the kernel used, so has/get/set stay correct. */
+class ClosureMemoView {
+  private space: Space;
+  constructor(space: Space) {
+    this.space = space;
+  }
+
+  get size(): number {
+    return this.space.memoMap.size;
+  }
+  has(key: number | string): boolean {
+    return this.space.memoMap.has(this.space.memoKeyToId(key));
+  }
+  get(key: number | string): ClosureMemoEntry | undefined {
+    return this.space.memoMap.get(this.space.memoKeyToId(key));
+  }
+  set(key: number | string, entry: ClosureMemoEntry): this {
+    this.space.memoMap.set(this.space.memoKeyToId(key), entry);
+    return this;
+  }
+  delete(key: number | string): boolean {
+    return this.space.memoMap.delete(this.space.memoKeyToId(key));
+  }
+  clear(): void {
+    this.space.memoMap.clear();
+  }
+  values(): IterableIterator<ClosureMemoEntry> {
+    return this.space.memoMap.values();
+  }
+  keys(): string[] {
+    return Array.from(this.space.memoMap.keys(), (id) => this.space.pathKeyOf(id));
+  }
+  entries(): Array<[string, ClosureMemoEntry]> {
+    return Array.from(this.space.memoMap, ([id, entry]) => [this.space.pathKeyOf(id), entry]);
+  }
+  forEach(fn: (entry: ClosureMemoEntry, key: string) => void): void {
+    for (const [id, entry] of this.space.memoMap) fn(entry, this.space.pathKeyOf(id));
+  }
 }
 
 /** What a read reports about one closure source (the flatten view and
@@ -78,22 +122,36 @@ export interface Diagnostic {
 
 export class Space {
   layers: Record<string, RawTree>;
-  frames = new Map<string, ClosureFrame>(); // closures in flight (cycle guard)
-  frameStack: string[] = [];
+  frames = new Map<number, ClosureFrame>(); // closures in flight (cycle guard, keyed by address id)
+  frameStack: number[] = [];
   // The closure memo. Without it, every read recomputed its whole
   // chain — and long chains cost seconds per render. Each entry
   // carries its dependencies and its generation: the memo can be
   // invalidated entry by entry, lazily, without a global flush.
-  closureMemo = new Map<string, ClosureMemoEntry>();
-  touched: string[] = []; // the touch journal (evKey per event)
+  // Hot side: keyed by interned address ids; `closureMemo` below is
+  // the string-keyed public view over this same table.
+  memoMap = new Map<number, ClosureMemoEntry>();
+  closureMemo = new ClosureMemoView(this);
+  touched: number[] = []; // the touch journal (interned event id per event)
   journalBase = 0; // events purged from the journal
+  // ---- address interning. Every (layer, path) becomes one number:
+  // a node of a global trie whose root is 0 and whose first level
+  // is the layers. Interning a child from its parent is O(1), a
+  // dependency is one integer, and the touch-prefix test becomes a
+  // parent-chain walk — no string is built on the hot paths anymore.
+  private segIds = new Map<string, number>(); // segment string -> sym
+  private segNames: string[] = []; // sym -> segment string
+  private nodeParent: number[] = [-1]; // trie node -> parent node (root = 0)
+  private nodeSeg: number[] = [-1]; // trie node -> segment sym (layer name for a layer node)
+  private nodeChild: Array<Map<number, number>> = [new Map()]; // trie node -> children (sym -> node)
+  private layerNodeIds = new Map<string, number>(); // layer name -> its trie node
   // The observation collector: while an observation is open, every
   // closure and raw read lands in the active dependency set — the
   // caller (the validation session) learns WHAT its observation
   // read, and can invalidate it against the touch journal with the
   // same event-covers-dependency rule the memo uses. Null when no
   // observation is open: the hot paths pay one property check.
-  private observationDeps: Set<string> | null = null;
+  private observationDeps: Set<number> | null = null;
   // The diagnostics channel. The kernel stays total — it never
   // throws — but every ignored event is recorded here: typed data,
   // deduplicated by (kind, address, fact), deterministic order.
@@ -109,8 +167,8 @@ export class Space {
    * watermark at the opening — isObservationStale answers whether
    * any event since covers any recorded dependency, exactly the
    * rule the memo applies to its own entries. */
-  beginObservation(): { deps: Set<string>; gen: number } {
-    this.observationDeps = new Set<string>();
+  beginObservation(): { deps: Set<number>; gen: number } {
+    this.observationDeps = new Set<number>();
     return { deps: this.observationDeps, gen: this.touched.length + this.journalBase };
   }
 
@@ -121,13 +179,12 @@ export class Space {
 
   /** Is an observation (its dependency set, its journal watermark)
    * stale? The same scan isMemoEntryValid applies to memo entries. */
-  isObservationStale({ deps, gen }: { deps: Set<string>; gen: number }): boolean {
+  isObservationStale({ deps, gen }: { deps: Set<number>; gen: number }): boolean {
     const eventCount = this.touched.length + this.journalBase;
     for (let eventIndex = Math.max(gen, this.journalBase); eventIndex < eventCount; eventIndex += 1) {
-      const event = this.touched[eventIndex - this.journalBase];
-      const eventPathLength = event.length - event.indexOf("\u0001") - 1;
+      const eventId = this.touched[eventIndex - this.journalBase];
       for (const dependency of deps) {
-        if (Space.eventCoversDependency({ event, eventPathLength, dependency })) {
+        if (this.eventCovers(eventId, dependency)) {
           return true;
         }
       }
@@ -146,6 +203,88 @@ export class Space {
 
   constructor(layers: Record<string, RawTree>) {
     this.layers = layers;
+  }
+
+  // --------------------------------------------- address interning
+  /** The sym (small integer) of one segment — or layer name. */
+  private internSeg(segment: string): number {
+    let sym = this.segIds.get(segment);
+    if (sym === undefined) {
+      sym = this.segNames.length;
+      this.segNames.push(segment);
+      this.segIds.set(segment, sym);
+    }
+    return sym;
+  }
+
+  /** The trie node of one (layer, path) — interning every node on
+   * the way down. The node IS the address: two equal addresses get
+   * the same number, forever. */
+  internPathId(layer: LayerName, path: LayerPath): number {
+    let node: number | undefined = this.layerNodeIds.get(layer);
+    if (node === undefined) {
+      const sym = this.internSeg(layer);
+      const rootChildren = this.nodeChild[0];
+      let layerNode: number | undefined = rootChildren.get(sym);
+      if (layerNode === undefined) {
+        layerNode = this.newTrieNode(0, sym);
+        rootChildren.set(sym, layerNode);
+      }
+      this.layerNodeIds.set(layer, layerNode);
+      node = layerNode;
+    }
+    let current: number = node;
+    for (let i = 0; i < path.length; i++) {
+      const children: Map<number, number> = this.nodeChild[current];
+      const sym = this.internSeg(path[i]);
+      let child: number | undefined = children.get(sym);
+      if (child === undefined) {
+        child = this.newTrieNode(current, sym);
+        children.set(sym, child);
+      }
+      current = child;
+    }
+    return current;
+  }
+
+  private newTrieNode(parent: number, sym: number): number {
+    const node = this.nodeParent.length;
+    this.nodeParent.push(parent);
+    this.nodeSeg.push(sym);
+    this.nodeChild.push(new Map());
+    return node;
+  }
+
+  /** A memo key — number (internal) or "layer|a/b" (external) — to
+   * its interned id. */
+  memoKeyToId(key: number | string): number {
+    if (typeof key === "number") return key;
+    const bar = key.indexOf("|");
+    const rest = key.slice(bar + 1);
+    return this.internPathId(asLayerName(key.slice(0, bar)), (rest === "" ? [] : rest.split("/")) as LayerPath);
+  }
+
+  /** The "layer|a/b" string of one interned id (addressKey format). */
+  pathKeyOf(id: number): string {
+    const syms: number[] = [];
+    for (let node = id; node !== 0; node = this.nodeParent[node]) syms.push(this.nodeSeg[node]);
+    syms.reverse();
+    if (syms.length === 1) return this.segNames[syms[0]] + "|";
+    let key = this.segNames[syms[0]] + "|";
+    for (let i = 1; i < syms.length; i++) key += (i > 1 ? "/" : "") + this.segNames[syms[i]];
+    return key;
+  }
+
+  /** Does the event (an interned touch prefix) cover the dependency
+   * (an interned address)? The exact-prefix test is a parent-chain
+   * walk: an empty-path event is the layer node, ancestor of every
+   * address of the layer; a path event covers its descendants only
+   * at segment boundaries — never "places" over "places2". */
+  private eventCovers(eventId: number, dependencyId: number): boolean {
+    for (let node = dependencyId; node !== 0; node = this.nodeParent[node]) {
+      if (node === eventId) return true;
+    }
+    return false;
   }
 
   static addressKey({ layer, path }: { layer: LayerName; path: LayerPath }): string {
@@ -177,12 +316,12 @@ export class Space {
   // are computed on demand); a removal or restructure declares the
   // parent; a value write declares the written node's path.
   touch({ layer, path = [] }: { layer: LayerName; path?: LayerPath }): void {
-    this.touched.push(Space.eventKey({ layer, path }));
+    this.touched.push(this.internPathId(layer, path));
     // Purge: events older than the oldest memo entry can never
     // invalidate anyone anymore.
-    if (this.closureMemo.size) {
+    if (this.memoMap.size) {
       let oldestGeneration = Infinity;
-      for (const entry of this.closureMemo.values()) {
+      for (const entry of this.memoMap.values()) {
         if (entry.gen < oldestGeneration) oldestGeneration = entry.gen;
       }
       if (oldestGeneration > this.journalBase) {
@@ -206,16 +345,9 @@ export class Space {
       eventIndex < eventCount;
       eventIndex++
     ) {
-      const event = this.touched[eventIndex - this.journalBase];
-      const eventPathLength = event.length - event.indexOf("\u0001") - 1;
+      const eventId = this.touched[eventIndex - this.journalBase];
       for (const dependency of entry.deps) {
-        if (
-          Space.eventCoversDependency({
-            event,
-            eventPathLength,
-            dependency,
-          })
-        ) {
+        if (this.eventCovers(eventId, dependency)) {
           return false;
         }
       }
@@ -228,8 +360,8 @@ export class Space {
   // their keys, in Map order.
   staleMemoKeys(): string[] {
     const keys: string[] = [];
-    for (const [key, entry] of this.closureMemo) {
-      if (!this.isMemoEntryValid(entry)) keys.push(key);
+    for (const [id, entry] of this.memoMap) {
+      if (!this.isMemoEntryValid(entry)) keys.push(this.pathKeyOf(id));
     }
     return keys;
   }
@@ -237,11 +369,11 @@ export class Space {
   raw({ layer, path }: { layer: LayerName; path: LayerPath }): RawTree | null {
     // Every raw read during a closure is a dependency (layer, path)
     // of the entry being computed — and of any open observation.
-    this.observationDeps?.add(Space.dependencyKey({ layer, path }));
+    this.observationDeps?.add(this.internPathId(layer, path));
     if (this.frameStack.length) {
       this.frames
         .get(this.frameStack[this.frameStack.length - 1])!
-        .collectedDependencies.add(Space.dependencyKey({ layer, path }));
+        .collectedDependencies.add(this.internPathId(layer, path));
     }
     let node: any = this.layers[layer];
     if (node === undefined) return null;
@@ -268,7 +400,7 @@ export class Space {
 
   // ---------------------------------------------------------- anchors
   anchorsAt({ layer, path, tracer }: { layer: LayerName; path: LayerPath; tracer: Tracer | null }): string[] {
-    const key = Space.addressKey({ layer, path });
+    const key = this.internPathId(layer, path);
     if (this.frames.has(key)) return []; // in flight: unknown, skip
     const anchors: string[] = [];
     for (const [sourceLayer, sourcePath] of this.closure({ layer, path, tracer })) {
@@ -293,10 +425,10 @@ export class Space {
     tracer?: Tracer | null;
     trace?: boolean;
   }): Address[] {
-    this.observationDeps?.add(Space.dependencyKey({ layer, path }));
-    const key = Space.addressKey({ layer, path });
+    this.observationDeps?.add(this.internPathId(layer, path));
+    const key = this.internPathId(layer, path);
     if (!trace) {
-      const entry = this.closureMemo.get(key);
+      const entry = this.memoMap.get(key);
       if (entry !== undefined && this.isMemoEntryValid(entry)) {
         // Composition: the parent inherits the dependencies of the
         // entry it reads — otherwise its own memo would be blind.
@@ -323,12 +455,12 @@ export class Space {
     if (tracer) tracer.depth++;
     const frame = new ClosureFrame();
     // The own raw node is always read: dependency on the own path.
-    frame.collectedDependencies.add(Space.dependencyKey({ layer, path }));
+    frame.collectedDependencies.add(this.internPathId(layer, path));
     this.frames.set(key, frame);
     this.frameStack.push(key);
     let result: Address[];
     try {
-      result = this.computeClosure({ layer, path, tracer });
+      result = this.computeClosure({ layer, path, id: key, tracer });
     } finally {
       this.frameStack.pop();
       this.frames.delete(key);
@@ -346,7 +478,7 @@ export class Space {
     // A tainted frame is not memoized (faithful port: a result born
     // from a cycle guard depends on the call order).
     if (!frame.tainted) {
-      this.closureMemo.set(key, {
+      this.memoMap.set(key, {
         list: result,
         deps: new Set(frame.collectedDependencies),
         gen: this.touched.length + this.journalBase,
@@ -363,7 +495,7 @@ export class Space {
     return [];
   }
 
-  private computeClosure({ layer, path, tracer }: { layer: LayerName; path: LayerPath; tracer: Tracer | null }): Address[] {
+  private computeClosure({ layer, path, id, tracer }: { layer: LayerName; path: LayerPath; id: number; tracer: Tracer | null }): Address[] {
     const currentAddress: Address = [layer, path];
     tracer?.record({ kind: "start", addr: currentAddress });
 
@@ -378,7 +510,7 @@ export class Space {
       })) {
         const candidate: Address = [parentLayer, [...parentPath, path[path.length - 1]]];
         if (
-          (parentLayer !== layer || parentPath.join("/") !== path.join("/")) &&
+          (parentLayer !== layer || this.internPathId(parentLayer, parentPath) !== id) &&
           this.raw({ layer: candidate[0], path: candidate[1] }) !== null
         ) {
           base.push(candidate);
@@ -421,7 +553,7 @@ export class Space {
     });
 
     const output: Address[] = [];
-    const seen = new Set<string>();
+    const seen = new Set<number>();
 
     const normalize = (targetAddress: Address): Address | null => {
       if (this.raw({ layer: targetAddress[0], path: targetAddress[1] }) === null) {
@@ -432,7 +564,7 @@ export class Space {
     };
 
     const pushTarget = (address: Address, viewAddress: Address) => {
-      const key = Space.addressKey({ layer: address[0], path: address[1] });
+      const key = this.internPathId(address[0], address[1]);
       if (seen.has(key)) return;
       seen.add(key);
       output.push(address);
@@ -440,7 +572,7 @@ export class Space {
       // Partial shadow of a union: every concrete source of the
       // designated view participates.
       for (const source of this.closure({ layer: viewAddress[0], path: viewAddress[1], tracer })) {
-        const sourceKey = Space.addressKey({ layer: source[0], path: source[1] });
+        const sourceKey = this.internPathId(source[0], source[1]);
         if (!seen.has(sourceKey)) {
           seen.add(sourceKey);
           output.push(source);
@@ -461,7 +593,7 @@ export class Space {
 
     // ---- 1) own node
     if (base.length) {
-      seen.add(Space.addressKey({ layer: base[0][0], path: base[0][1] }));
+      seen.add(this.internPathId(base[0][0], base[0][1]));
       output.push(base[0]);
       tracer?.record({ kind: "push", addr: base[0], via: "propre" });
     }
@@ -478,7 +610,7 @@ export class Space {
     }
     // ---- 3) the father's members, without re-expansion
     for (const baseAddress of base.slice(1)) {
-      const key = Space.addressKey({ layer: baseAddress[0], path: baseAddress[1] });
+      const key = this.internPathId(baseAddress[0], baseAddress[1]);
       if (!seen.has(key)) {
         seen.add(key);
         output.push(baseAddress);

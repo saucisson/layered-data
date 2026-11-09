@@ -31,7 +31,7 @@ import { walkLayerObserved, type WalkedAddress } from "../domain/views.ts";
  * observation recorded, and the journal watermark at its capture. */
 interface CachedWalk {
   walked: WalkedAddress[];
-  deps: Set<string>;
+  deps: Set<number>;
   gen: number;
 }
 
