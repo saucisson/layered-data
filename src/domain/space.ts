@@ -624,13 +624,29 @@ export class Space {
     return null;
   }
 
-  keys({ layer, path, tracer = null }: { layer: LayerName; path: LayerPath; tracer?: Tracer | null }): string[] {
+  // The optional nodes collector receives, in closure order, the raw
+  // node of each scanned source — one scan feeds the keys AND the
+  // caller (the observed walk), the node is never walked twice.
+  keys({
+    layer,
+    path,
+    tracer = null,
+    nodes = null,
+  }: {
+    layer: LayerName;
+    path: LayerPath;
+    tracer?: Tracer | null;
+    nodes?: (RawTree | null)[] | null;
+  }): string[] {
     const collected: string[] = [];
+    const seen = new Set<string>();
     for (const [sourceLayer, sourcePath] of this.closure({ layer, path, tracer })) {
       const node = this.raw({ layer: sourceLayer, path: sourcePath });
+      nodes?.push(node);
       if (isDictionary(node)) {
         for (const key of Object.keys(node)) {
-          if (!(SPECIAL_KEYS as readonly string[]).includes(key) && !collected.includes(key)) {
+          if (!(SPECIAL_KEYS as readonly string[]).includes(key) && !seen.has(key)) {
+            seen.add(key);
             collected.push(key);
           }
         }
