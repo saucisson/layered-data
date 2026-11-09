@@ -1,16 +1,16 @@
-// ---- la base des positions — positions-scheme. Des objets nommés
-//      reçoivent des coordonnées dans un système : la grille
-//      (positions-grid, axes cartésiens) ou le pôle (positions-polar,
-//      distance et angle). Les axes sont des slots abstraits posés
-//      au schéma : la dimension est une donnée — 1D : x seul ; 2D :
-//      x et y ; 3D : x, y, z (le pôle ajoute z au plan : le cylindre ;
-//      la sphère n'est pas posée). Une position peut être relative :
-//      relative_to cite une position amont et porte un décalage —
-//      la grille ajoute composante par composante, le pôle dit
-//      distance et direction depuis le point cité ; la chaîne se
-//      résout au premier point absolu et le repère ne tourne pas
-//      (la rotation resterait un axe à nommer). La donnée reste
-//      brute : la résolution vit au lecteur (posOf).
+// ---- the positions base — positions-scheme. Named objects receive
+//      coordinates in a system: the grid (positions-grid, Cartesian
+//      axes) or the pole (positions-polar, distance and angle). The
+//      axes are abstract slots posed at the scheme: dimension is
+//      data — 1D: x alone; 2D: x and y; 3D: x, y, z (the pole adds
+//      z to the plane: the cylinder; the sphere is not posed). A
+//      position may be relative: relative_to cites an upstream
+//      position and carries an offset — the grid adds component by
+//      component, the pole says distance and direction from the
+//      cited point; the chain resolves at the first absolute point
+//      and the frame does not rotate (rotation would be an axis to
+//      name). The datum stays raw: resolution lives in the reader
+//      (posOf).
 layer positions-scheme refines @record
   extend specification
     position_type refines @record

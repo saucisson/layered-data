@@ -1,4 +1,4 @@
-// lentille Kahn : même multi-LRef [générique, schéma de famille]
+// Kahn lens: same multi-LRef [generic, family scheme]
 layer kahn-display refines @graph-display then @kahn-scheme
   extend specification
     extend process_type

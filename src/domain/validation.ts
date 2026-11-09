@@ -60,6 +60,19 @@ export function checkSlotContractsOf(
   return Object.fromEntries(Object.entries(contracts).map(([tag, contract]) => [tag, slotReadingLevelsOf(contract)]));
 }
 
+/** Whether a layer carries an inline couple definition for a tag
+ * (ADR-0022/0027): the tag is known through its formula, not through
+ * a built-in contract. */
+function layerHasCoupleDefinition({ space, layer, tag }: { space: Space; layer: LayerName; tag: string }): boolean {
+  for (const [sourceLayer, sourcePath] of space.closure({ layer, path: [] })) {
+    const node = space.raw({ layer: sourceLayer, path: sourcePath });
+    if (isDictionary(node) && isDictionary(node["check-definitions"]) && tag in node["check-definitions"]) {
+      return true;
+    }
+  }
+  return false;
+}
+
 // The mode declared for (layer, path, key) — the shadow
 // confrontation reads this table. The declaration table arrives as a
 // parameter; the defaults are the loaded corpus.
@@ -271,16 +284,17 @@ export function validateSpace({
     } else stats.declOK++;
   }
 
-  // ---- the registry's contracts, read from the data (ADR-0019):
-  // existence in the data, slot reading levels derived — one
-  // source for (b), (b2) and (c)
-  const contracts = registryContractsOf({ space });
+  // ---- the contracts: built-in for the algorithmic tags (ADR-0027),
+  // inline couples for the first-order ones (ADR-0022). A tag is known
+  // if it has a built-in contract OR a readable couple definition.
+  const contracts = registryContractsOf();
   const slotContracts = checkSlotContractsOf(contracts);
 
-  // ---- (b) check tags against the registry
+  // ---- (b) check tags: known = built-in contract or inline couple
   for (const layer of layerNames) {
     for (const tag of labelsOf.get(layer)!) {
-      if (!contracts[tag]) {
+      const hasCouple = layerHasCoupleDefinition({ space, layer, tag });
+      if (!contracts[tag] && !hasCouple) {
         verdicts.push({ kind: "étiquette-inconnue", fact: fact("unknown-label", { layer, tag }) });
       } else stats.etiquettes++;
     }

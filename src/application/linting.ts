@@ -27,9 +27,9 @@
 
 import { type LayerName, asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import type { Diagnostic } from "../domain/space.ts";
-import { LayerReference, type Address, isDictionary } from "../domain/addresses.ts";
+import { AddressView, LayerReference, type Address, isDictionary } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
-import { REGISTRY_LAYER_NAME, registryAuditOf, registryContractsOf, vacantChecksOf } from "../domain/checks.ts";
+import { registryContractsOf, vacantChecksOf, checkDefinitionsOf } from "../domain/checks.ts";
 import { declaredModeOf } from "../domain/validation.ts";
 import { walkAddresses } from "../domain/views.ts";
 import type { CompiledLanguage } from "../domain/language/compiler.ts";
@@ -136,57 +136,27 @@ function lintShadow({ space, layerNames, compilation }: LintingTarget): void {
   }
 }
 
-/** A check tag absent from the registry is a check that will never
- * run — wanted but nonexistent. Existence is DATA since ADR-0019:
- * the contracts are read from the check-registry layer, the lint
- * never hardcodes the tag list. */
+/** A check tag with neither a built-in contract nor an inline couple
+ * definition (ADR-0027) is a check that will never run — wanted but
+ * nonexistent. */
 function lintTags({ space, layerNames }: LintingTarget): void {
-  const contracts = registryContractsOf({ space });
+  const contracts = registryContractsOf();
   for (const layerName of layerNames) {
     for (const address of walkAddresses({ space, layer: layerName })) {
       const [addressLayer, addressPath] = address;
+      const view = new AddressView(addressLayer, addressPath);
+      const definitions = checkDefinitionsOf({ space, view });
       for (const [sourceLayer, sourcePath] of space.closure({ layer: addressLayer, path: addressPath })) {
         const node = space.raw({ layer: sourceLayer, path: sourcePath });
         if (!isDictionary(node)) continue;
         for (const tag of (node["checks"] ?? []) as unknown[]) {
           if (typeof tag !== "string") continue;
-          if (!contracts[tag]) {
+          if (!contracts[tag] && !definitions[tag]) {
             space.recordDiagnostic({ kind: "étiquette-inconnue", address, fact: fact("label-unknown", { tag }) });
           }
         }
       }
     }
-  }
-}
-
-/** The registry's meta-audit (ADR-0019): the contracts live in the
- * data (the check-registry layer), the algorithms live in the
- * kernel — the seam can drift. A contract without an algorithm is a
- * promise the execution cannot keep; an algorithm without a
- * contract is a dead limb; an unreadable contract is a clause
- * written in a hand the kernel cannot parse. Measured on the
- * bedrock: 0/0/0. */
-function lintRegistry({ space }: LintingTarget): void {
-  for (const divergence of registryAuditOf({ space })) {
-    // the divergence's where is the registry address text
-    // (check-registry::specification/<tag>/…) — the diagnostic
-    // points at the very clause that could not be read
-    const address: Address = [
-      REGISTRY_LAYER_NAME,
-      asLayerPath((divergence.where ?? "check-registry::specification").split("::")[1].split("/")),
-    ];
-    space.recordDiagnostic({
-      kind: divergence.kind,
-      address,
-      fact: fact(
-        divergence.kind === "contrat-illisible"
-          ? "contract-unreadable"
-          : divergence.kind === "contrat-sans-algorithme"
-            ? "contract-without-algorithm"
-            : "algorithm-without-contract",
-        { tag: divergence.tag, where: divergence.where ?? "check-registry::specification/" + divergence.tag },
-      ),
-    });
   }
 }
 
@@ -268,7 +238,6 @@ export function runAllLints(target: LintingTarget): Diagnostic[] {
   lintRefinesOrder(target);
   lintShadow(target);
   lintTags(target);
-  lintRegistry(target);
   lintVacuousBounds(target);
   lintVacantChecks(target);
   lintOrderConflicts(target);

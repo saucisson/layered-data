@@ -1,6 +1,6 @@
-// ---- lentille générique : cercle et trait pour tout descendant du
-// digraphe — les gabarits vivent au même chemin que les types : le
-// trait est à la racine, comme l'arête de multidigraph
+// ---- generic lens: circle and line for every digraph descendant —
+//      the templates live at the same path as the types: the line is
+//      at the root, like multidigraph's edge
 layer graph-display refines @multidigraph
   extend specification
     extend vertex_type

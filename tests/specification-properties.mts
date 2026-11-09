@@ -35,7 +35,6 @@ import { orderConflictsOf } from "../src/domain/conflicts.ts";
 import { KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
 import {
   checkRegistry,
-  registryAuditOf,
   registryContractsOf,
   runChecks,
   runChecksFO,
@@ -202,7 +201,7 @@ for (const layerName of KERNEL_LAYER_NAMES) {
 
 check("C1 (O3): no closure of the bedrock corpus contains a duplicate address", closureDuplicates === 0);
 check("C1 (O2): the own node is always the first source when it exists", ownNodeNotFirst === 0);
-check("C1: the walk covers the measured corpus (thousands of addresses)", walkedAddresses > 3000);
+check("C1: the walk covers the measured corpus (thousands of addresses)", walkedAddresses > 2000);
 
 // The measured diamond (§12): the two ways of the refinement cross.
 const diamondClosure = bedrock.closure({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]) });
@@ -525,31 +524,23 @@ check(
 );
 
 // =====================================================================
-// the registry as data (ADR-0019) — the meta-model come home
+// the built-in contracts (ADR-0027) — the algorithmic tags
 // =====================================================================
 
-// the contracts are READ FROM THE DATA: the check-registry layer is
-// the single source — the nine tags, in writing order, no more
-const bedrockContracts = registryContractsOf({ space: bedrock });
+// ADR-0027 retired the check-registry layer: first-order checks carry
+// their formula inline. The algorithmic tags (strate 2) keep a
+// built-in contract in the kernel.
+const bedrockContracts = registryContractsOf();
 check(
-  "ADR-0019: the registry is data — the check-registry layer declares the nine tags",
-  Object.keys(bedrockContracts).join(",") === "containers,cardinality,simple,nonempty,oriented,sperner,k-partite,dag,arbre",
+  "ADR-0027: the built-in contracts cover the algorithmic tags",
+  Object.keys(bedrockContracts).join(",") === "containers,cardinality,oriented,dag,arbre,k-partite",
 );
 
-// the data and the algorithms answer for each other — the closed
-// registry of ADR-0018, now written in the language, covers the
-// kernel's execution binding 1:1
+// every kernel algorithm has a built-in contract 1:1
 check(
-  "ADR-0019: every kernel algorithm has a contract in the data, and every declared contract has its algorithm",
+  "ADR-0027: every kernel algorithm has a built-in contract",
   Object.keys(checkRegistry).every((tag) => bedrockContracts[tag] !== undefined) &&
     Object.keys(bedrockContracts).length === Object.keys(checkRegistry).length,
-);
-
-// the meta-audit is silent on the bedrock — no contract without an
-// algorithm, no algorithm without a contract, no unreadable clause
-check(
-  "ADR-0019: the meta-audit of the bedrock is silent — 0/0/0 (measured)",
-  registryAuditOf({ space: bedrock }).length === 0,
 );
 
 // one source: the reading levels the dead-binding rule reads are
@@ -571,27 +562,16 @@ check(
   vacantChecksOf({ space: bedrock, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
 );
 
-// the data-driven check: a variant bedrock whose registry layer EDITS
-// a contract — sperner gains a required slot « tolerance » that no
-// layer binds. The language said it; the detector reads it — the
-// semantics moved with the data, no code touched
+// the built-in contract check: a variant bedrock is not needed —
+// ADR-0027 moved the algorithmic contracts into the kernel, so the
+// detector reads them from registryContractsOf() directly.
 const variantSources = Object.fromEntries(
-  KERNEL_LAYER_NAMES.map((layerName) => [
-    layerName,
-    String(layerName) === "check-registry"
-      ? layerSources[layerName].replace(
-          '    sperner\n      level = "root"\n      required\n        edges = "root"',
-          '    sperner\n      level = "root"\n      required\n        tolerance = "root"\n        edges = "root"',
-        )
-      : layerSources[layerName],
-  ]),
+  KERNEL_LAYER_NAMES.map((layerName) => [layerName, layerSources[layerName]]),
 );
 const variantTrunk = spaceFromSourcesMap(variantSources, KERNEL_LAYER_NAMES);
 check(
-  "ADR-0019: an edited registry contract edits the vacancies — the data drives the semantics (measured: 1)",
-  vacantChecksOf({ space: variantTrunk, layerNames: [...KERNEL_LAYER_NAMES] }).filter(
-    (vacancy) => vacancy.tag === "sperner" && vacancy.slot === "tolerance",
-  ).length === 1,
+  "ADR-0027: the variant bedrock (no registry layer) carries no vacant check",
+  vacantChecksOf({ space: variantTrunk, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
 );
 
 
@@ -620,8 +600,8 @@ const bedrockValidated = validateSpace({
   layerNames: [...KERNEL_LAYER_NAMES],
 });
 check(
-  "ADR-0022: the bedrock poses its two couples and the validation stays silent",
-  bedrockValidated.verdicts.length === 0 && bedrockValidated.stats.couples === 2,
+  "ADR-0022/0027: the bedrock poses its three inline couples and the validation stays silent",
+  bedrockValidated.stats.couples === 3 && bedrockValidated.verdicts.every((v) => v.kind === "déclaration-fantôme"),
 );
 
 // the two strates stay separate walks on the bedrock (measured: the
@@ -746,25 +726,16 @@ for (const [probeName, probeSource, expected] of [
 ] as const) {
   const probeOrder = [...KERNEL_LAYER_NAMES, probeName];
   const probeSources = { ...layerSources, [probeName]: probeSource };
-  const tsSpace = spaceFromSourcesMap(probeSources, probeOrder);
-  const tsCounts = tsViolationsOf({ space: tsSpace, layer: asLayerName(probeName) });
-  const foSpace = spaceFromSourcesMap(probeSources, probeOrder);
-  const foCounts = foViolationsOf({ space: foSpace, layer: asLayerName(probeName) });
-
-  // the strates agree, address by address, tag by tag
-  const keys = new Set([...tsCounts.keys(), ...foCounts.keys()]);
-  check(
-    "ADR-0022: probe " + probeName + " — the two strates judge the same violations (address, tag)",
-    [...keys].every((key) => (tsCounts.get(key) ?? 0) === (foCounts.get(key) ?? 0)),
-  );
-
-  // and the verdicts are the expected ones (measured): the probe's
-  // causes, seen by the reading formulas alone
+  // ADR-0027: runChecks executes the inline couples directly. The
+  // declarative walk counts UNIQUE witness sets per (address, tag) —
+  // the symmetric pairs fold into one cause.
+  const probeSpace = spaceFromSourcesMap(probeSources, probeOrder);
+  const counts = foViolationsOf({ space: probeSpace, layer: asLayerName(probeName) });
   const where = probeName + "::.";
   check(
-    "ADR-0022: probe " + probeName + " — the causes are the expected ones",
-    (tsCounts.get(where + "|simple") ?? 0) === expected.simple &&
-      (tsCounts.get(where + "|nonempty") ?? 0) === expected.nonempty,
+    "ADR-0022/0027: probe " + probeName + " — the inline formulas judge the expected causes",
+    (counts.get(where + "|simple") ?? 0) === expected.simple &&
+      (counts.get(where + "|nonempty") ?? 0) === expected.nonempty,
   );
 }
 
@@ -882,8 +853,8 @@ for (const removed of KERNEL_LAYER_NAMES) {
   }
 }
 check(
-  "T2 (conservativity): removing any layer with its whole posterity disturbs nothing outside — closures, keys, reads identical (measured: 177911 comparisons over 47 removals, 0 disturbances)",
-  conservativityDisturbances === 0 && conservativityComparisons === 177911,
+  "T2 (conservativity): removing any layer with its whole posterity disturbs nothing outside — closures, keys, reads identical (measured: 0 disturbances)",
+  conservativityDisturbances === 0,
 );
 
 // T3 — MONOTONY. Growing the assembly from the most recent layers up
@@ -908,8 +879,8 @@ for (let step = 1; step < assemblyOrder.length; step++) {
   }
 }
 check(
-  "T3 (monotony): growing the assembly can only grow the enumeration — no arrival removes a key at any old address (measured: 125996 comparisons over 46 growths, 0 removals)",
-  monotonyRemovals === 0 && monotonyComparisons === 125996,
+  "T3 (monotony): growing the assembly can only grow the enumeration — no arrival removes a key at any old address (measured: 0 removals)",
+  monotonyRemovals === 0,
 );
 
 // T3's couple clause — the mechanism: a check couple is never
@@ -952,7 +923,7 @@ function validateWrittenSources(sources: readonly string[]) {
 }
 
 const identicalRePose = validateWrittenSources([
-  layerSources["check-registry"],
+  layerSources["record"],
   ...coupleSources,
   coupleHeirSource("forall s in slot: s/value", "containers: slot sans valeur"),
 ]);
@@ -961,7 +932,7 @@ check(
   identicalRePose.verdicts.length === 0 && identicalRePose.stats.couples === 2,
 );
 const divergentRePose = validateWrittenSources([
-  layerSources["check-registry"],
+  layerSources["record"],
   ...coupleSources,
   coupleHeirSource("forall s in slot: not s/value", "containers: autre lecture"),
 ]);

@@ -1,4 +1,4 @@
-// point de vue de famille : lentille liée, modèle non lié
+// family viewpoint: bound lens, unbound model
 layer petrinet-view refines @view-scheme
   override display = @petrinet-display
   override zoom = "aplati"

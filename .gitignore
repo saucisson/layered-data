@@ -5,3 +5,4 @@ dist/
 *.vsix
 formalisms/users/*
 !formalisms/users/.gitkeep
+public/locales/**/*_old.json

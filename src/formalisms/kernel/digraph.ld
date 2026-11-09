@@ -1,6 +1,6 @@
-// ---- digraph — arcs purs : l'orientation (multidigraph) croisée
-//      avec la pureté (hypergraph). Ni arcs parallèles ni
-//      boucles-arcs, 2-cycles légaux (le « simple digraph » de la
-//      théorie). Le check simple, hérité de hypergraph, y porte sur
-//      la paire ordonnée (multidigraph dans la chaîne). Diamant pur.
+// ---- digraph — pure arcs: orientation (multidigraph) crossed
+//      with purity (hypergraph). No parallel arcs, no arc loops,
+//      legal 2-cycles (the theory's "simple digraph"). The simple
+//      check, inherited from hypergraph, fires on the ordered pair
+//      (multidigraph in the chain). Pure diamond.
 layer digraph refines @multidigraph then @hypergraph

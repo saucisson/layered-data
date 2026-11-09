@@ -45,12 +45,9 @@ Four open ⟪slot⟫s (`type`, `container`, `minimum`, `maximum`): membership sp
 
 Click the `abstract minimum` line: the card says "declared by collection, provided by none" — an open slot stays readable; to lay nothing is to ⟪inherit⟫.
 
-### check-registry — the contracts of the checks
+### checks — inline formulas
 
-Since ADR-0019, the contract of a ⟪check⟫ tag is data: where it judges (`level`), which slots it must read to be able to. The tutorial's ⟪registry⟫ carries only the two generic tags the corpus poses.
-
-```ldflat:check-registry
-```
+Since ADR-0027, a ⟪check⟫ carries its formula inline: `check simple { level, judgment { formula, message } }` — the constraint's behavior is written in the language itself (ADR-0022). The tags that need transitive closure (`dag`, `arbre`) keep a built-in algorithm in the kernel until strate 2.
 
 ## graph — the base metamodel
 

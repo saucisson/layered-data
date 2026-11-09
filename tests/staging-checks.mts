@@ -282,11 +282,11 @@ check(
 // inventories the same vacancy as a diagnostic
 // =====================================================================
 
-// a layer poses the sperner constraint but binds nothing: the check
-// cannot judge — its contract requires the edges slot
+// a layer poses the k-partite constraint but binds nothing: the check
+// cannot judge — its built-in contract requires the vertices/edges slots
 const vacantDraft = [
   "layer demo-vacant refines @record",
-  "  check sperner",
+  "  check k-partite",
 ].join("\n");
 const refusedVacant = stage({ draftSource: vacantDraft });
 check(
@@ -295,10 +295,10 @@ check(
 );
 check(
   '(h) the vacant pose carries the "check-vacant" verdicts, one per required slot, naming the tag',
-  refusedVacant.verdicts.length === 3 &&
+  refusedVacant.verdicts.length === 4 &&
     refusedVacant.verdicts.every((verdict) => verdict.kind === "check-vacant") &&
     refusedVacant.verdicts.every((verdict) =>
-      JSON.stringify(verdict.fact.params).includes("sperner"),
+      JSON.stringify(verdict.fact.params).includes("k-partite"),
     ) &&
     refusedVacant.verdicts.some((verdict) =>
       JSON.stringify(verdict.fact.params).includes("edges"),

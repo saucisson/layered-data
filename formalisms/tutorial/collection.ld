@@ -1,7 +1,7 @@
-// ---- la collection à clés du tutoriel : quatre slots ouverts
-//      (type, container, minimum, maximum) — les membres sont des
-//      clés, le type dit ce qu'un membre doit raffiner, et les
-//      bornes nourrissent le check cardinality.
+// ---- the tutorial's keyed collection: four open slots
+//      (type, container, minimum, maximum) — members are keys, the
+//      type says what a member must refine, and the bounds feed the
+//      cardinality check.
 layer collection
   specification
     collection

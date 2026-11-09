@@ -1,6 +1,6 @@
-// point de vue concret : le dîner pn-philosophers-5 par la
-//      lentille Petri + positions — les cinq philosophes en
-//      colonnes, les fourchettes entre eux
+// concrete viewpoint: the pn-philosophers-5 dinner through the
+//      Petri lens + positions — the five philosophers in columns,
+//      the forks between them
 layer pn-philosophers-5-course refines @petrinet-view
   override model = @pn-philosophers-5
   override zoom = "mecanisme"

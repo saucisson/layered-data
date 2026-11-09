@@ -1,10 +1,10 @@
-// ---- axe attributs — weighted-hypergraph : un slot weight sur
-//      l'arête, avec défaut 1 (membre du père au même chemin). Le
-//      poids est un axe d'annotation, orthogonal à l'orientation :
-//      le slot vit sur son propre membre, aucune clé ne fuit vers
-//      les modèles. Le diamant en dépend : weighted-bipartite =
-//      [bipartite-digraph, weighted-hypergraph], le poids descend
-//      toujours par la seconde voie du diamant.
+// ---- attributes axis — weighted-hypergraph: a weight slot on
+//      the edge, with default 1 (parent member at the same path).
+//      Weight is an annotation axis, orthogonal to orientation:
+//      the slot lives on its own member, no key leaks to the
+//      models. The diamond depends on it: weighted-bipartite =
+//      [bipartite-digraph, weighted-hypergraph], the weight always
+//      descends through the diamond's second path.
 layer weighted-hypergraph refines @edge-annotated-hypergraph
   extend edge_type
     weight = 1

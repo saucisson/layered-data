@@ -1,25 +1,24 @@
-// ---- multidigraph : l'orientation est un renommage des points de
-//      connexion. Raffine named-ends-hypergraph (le tronc des
-//      extrémités nommées) et pair-graph (la cardinalité 2, sans
-//      rôles) : 2 flèches nommées source et target pointant les
-//      champs de l'arête elle-même. Le nom est mathématique : la
-//      base permet les arcs parallèles et les boucles, et ces deux
-//      parents vivent du côté multi — c'est un multidigraphe.
-//      Convention de nommage : arc (et le suffixe -digraph) à partir
-//      d'ici ; edge/arête au-dessus de l'orientation.
+// ---- multidigraph: orientation is a renaming of the connection
+//      points. Refines named-ends-hypergraph (the trunk of named
+//      ends) and pair-graph (cardinality 2, without roles): 2 named
+//      arrows source and target pointing the edge's own fields. The
+//      name is mathematical: the base allows parallel arcs and
+//      loops, and both parents live on the multi side — it is a
+//      multidigraph. Naming convention: arc (and the -digraph
+//      suffix) from here on; edge above orientation.
 layer multidigraph refines @named-ends-hypergraph then @pair-graph
-  // l'idiome ordonné se lie ici (premier-gagné par slot : plus
-  // spécifique que la base, il gagne dans toute la chaîne) — le
-  // registre lit la liaison « ordered », jamais le nom de la
-  // couche. Liaison de COUCHE : elle vit à la racine, où les
-  // checks de couche la lisent.
+  // the ordered idiom binds here (first-winner per slot: more
+  // specific than the base, it wins down the whole chain) — the
+  // checks read the "ordered" binding, never the layer name.
+  // LAYER-level binding: it lives at the root, where the layer
+  // checks read it.
   bind ordered -> true
   extend edge_type refines @multihypergraph/specification/edge_type
-    // même chemin que la racine : redéfinition de l'arête du graphe
-    // liaisons de TYPE : les checks d'arc (oriented, dag) et la
-    // paire ordonnée lisent à l'adresse de l'arc — le type est dans
-    // la fermeture de l'arc, la racine jamais. Les rôles
-    // source/target vivent donc ici, à portée de lecture réelle.
+    // same path as the root: redefinition of the graph's edge
+    // TYPE-level bindings: the arc checks (oriented, dag) and the
+    // ordered pair read at the arc's address — the type is in the
+    // arc's closure, the root never is. The source/target roles
+    // therefore live here, within actual reading range.
     bind end-source -> "source"
     bind end-target -> "target"
     extend specification

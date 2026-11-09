@@ -1,9 +1,9 @@
-// ---- l'espace d'états du tutoriel : un automate PARAMÉTRÉ par le
-//      réseau. Le slot net raffine la couche petrinet entière —
-//      personne ne le pose ici. Le type d'un état raffine le slot :
-//      l'état descend du réseau, chaque marquage du réseau se lit
-//      dans l'état. Le type d'une liaison (binding_type) pointe les
-//      transitions du réseau à travers le slot — résolu par la
+// ---- the tutorial's state space: an automaton PARAMETERIZED by the
+//      net. The net slot refines the whole petrinet layer — nobody
+//      poses it here. A state's type refines the slot: the state
+//      descends from the net, each of the net's markings reads in the
+//      state. A binding's type (binding_type) points the net's
+//      transitions through the slot — resolved by the
 //      couche lisante, jamais ici.
 layer state-space refines @automaton
   net refines @petrinet

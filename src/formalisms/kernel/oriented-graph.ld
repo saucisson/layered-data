@@ -1,7 +1,10 @@
-// ---- oriented-graph — le sens strict du mathématicien : un
-//      graphe orienté sans couple d'arcs opposés. À ne pas confondre
-//      avec multidigraph, qui porte la multiplicité de la base :
-//      l'orientation stricte est ici. Check par adresse d'arc.
+// ---- oriented-graph — the mathematician's strict sense: an oriented
+//      graph without opposite arc pairs. Not to be confused with
+//      multidigraph, which carries the base's multiplicity: strict
+//      orientation is here. Check per arc address.
+//      NOTE (ADR-0022 strate 2): the instance level is not yet judged
+//      by the declarative strate; the check stays algorithmic until
+//      then.
 layer oriented-graph refines @digraph
   extend edge_type
     check oriented
