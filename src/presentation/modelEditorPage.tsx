@@ -45,6 +45,7 @@ import {
   readMemberCitations,
   draftMemberInsertion,
   draftMemberRemoval,
+  draftMemberRemovalCascade,
   draftMemberFieldEdition,
   draftMemberPosition,
   arcContainerBetween,
@@ -141,6 +142,15 @@ export function ModelEditorPage({
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [gesture, setGesture] = useState<Gesture | null>(null);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  // ---- the undo journal: the model's block BEFORE each accepted
+  // edition — Ctrl+Z walks back, Ctrl+Shift+Z walks forward. A
+  // refused gesture never enters the journal. ----
+  interface BlockSnapshot {
+    model: string;
+    block: string;
+  }
+  const [history, setHistory] = useState<BlockSnapshot[]>([]);
+  const [future, setFuture] = useState<BlockSnapshot[]>([]);
 
   // ---- the derived reading -------------------------------------------
 
@@ -274,15 +284,27 @@ export function ModelEditorPage({
   /** One gesture of the canvas: draft the model's source, stage the
    * edition — on acceptance apply it, rewrite the kept addition,
    * count a re-read; on refusal the banner speaks and the space
-   * stays intact. Returns the verdict. */
-  function proposeEdition({ draftedSource }: { draftedSource: string }): boolean {
-    if (model === null) return false;
+   * stays intact. Returns the verdict. When `journal` is true (a
+   * user gesture), the accepted write pushes the pre-gesture block
+   * onto the undo stack; undo/redo pass false to avoid journaling
+   * themselves. */
+  function proposeEdition({
+    draftedSource,
+    journal = true,
+    modelName,
+  }: {
+    draftedSource: string;
+    journal?: boolean;
+    modelName?: string;
+  }): boolean {
+    const targetModel = modelName ?? model;
+    if (targetModel === null) return false;
     const outcome = stageLayerEdition({
       languageSource: KERNEL.languageSource,
       livingAdditions: additions,
       livingLayerNames,
       readonlyLayerNames: KERNEL.layerNames,
-      layerName: asLayerName(model),
+      layerName: asLayerName(targetModel),
       editedSource: draftedSource,
       language,
     });
@@ -292,16 +314,22 @@ export function ModelEditorPage({
     }
     const edition = applyStagedEdition({
       space: KERNEL.space,
-      layerName: asLayerName(model),
+      layerName: asLayerName(targetModel),
       staging: outcome.staging,
       readonlyLayerNames: KERNEL.layerNames,
     });
+    if (journal && model !== null) {
+      // the accepted write enters the undo journal: the model's block
+      // BEFORE the gesture, and the redo stack is cleared
+      setHistory((previous) => [...previous, { model, block: modelSource }]);
+      setFuture([]);
+    }
     setAdditions(
       additions.map((addition) =>
-        rewriteLivingAddition({ addition, layerName: asLayerName(model), block: edition.block }),
+        rewriteLivingAddition({ addition, layerName: asLayerName(targetModel), block: edition.block }),
       ),
     );
-    setAddedLayerBlocks({ ...addedLayerBlocks, [model]: edition.block });
+    setAddedLayerBlocks({ ...addedLayerBlocks, [targetModel]: edition.block });
     setSpaceVersion(spaceVersion + 1);
     setBanner({
       tone: "written",
@@ -312,6 +340,42 @@ export function ModelEditorPage({
       }),
     });
     return true;
+  }
+
+  /** Walk the journal back: the last snapshot is restored THROUGH the
+   * staging (the space is mutated in place, so the restore is an
+   * edition of the snapshot's block on its model), and the current
+   * block moves onto the redo stack. */
+  function undo() {
+    if (history.length === 0 || model === null) return;
+    const snapshot = history[history.length - 1];
+    const accepted = proposeEdition({
+      draftedSource: snapshot.block,
+      journal: false,
+      modelName: snapshot.model,
+    });
+    if (!accepted) return;
+    setHistory((previous) => previous.slice(0, -1));
+    setFuture((previous) => [...previous, { model, block: modelSource }]);
+    setSelected(null);
+    setFieldDrafts({});
+  }
+
+  /** Walk the journal forward: restore the next redo snapshot the
+   * same way. */
+  function redo() {
+    if (future.length === 0 || model === null) return;
+    const snapshot = future[0];
+    const accepted = proposeEdition({
+      draftedSource: snapshot.block,
+      journal: false,
+      modelName: snapshot.model,
+    });
+    if (!accepted) return;
+    setFuture((previous) => previous.slice(1));
+    setHistory((previous) => [...previous, { model, block: modelSource }]);
+    setSelected(null);
+    setFieldDrafts({});
   }
 
   /** The container declaration of one name, or null. */
@@ -545,10 +609,11 @@ export function ModelEditorPage({
       return;
     }
     const accepted = proposeEdition({
-      draftedSource: draftMemberRemoval({
+      draftedSource: draftMemberRemovalCascade({
         block: modelSource,
         container: selected.container,
         name: selected.name,
+        positionContainer: positionContainer?.name ?? null,
       }),
     });
     if (accepted) {
@@ -578,12 +643,59 @@ export function ModelEditorPage({
     setFieldDrafts({});
   }
 
-  // the keyboard: Suppr deletes the selected member, Escape lays the
-  // tool down — never while a text input holds the focus
+  /** Nudge the selected member by (dx, dy) · step on the canvas —
+   * the arrow keys move a vertex, Shift steps ten. Drafts the new
+   * position through the staging like any gesture. */
+  function nudgeSelected({ dx, dy, step }: { dx: number; dy: number; step: number }) {
+    if (selected === null || model === null || positionContainer === null) return;
+    const current = readMemberPosition({
+      space: KERNEL.space,
+      model,
+      positionContainer: positionContainer.name,
+      name: selected.name,
+      visited: new Set<string>(),
+    });
+    if (current === null) return;
+    proposeEdition({
+      draftedSource: draftMemberPosition({
+        block: modelSource,
+        positionContainer: positionContainer.name,
+        name: selected.name,
+        x: current.x + dx * step,
+        y: current.y + dy * step,
+        typeReference: typeReferenceText({ address: positionContainer.memberType }),
+      }),
+    });
+  }
+
+  // the keyboard: Suppr deletes, Escape lays down, Ctrl+Z / Ctrl+Shift+Z
+  // walk the undo journal, the arrows nudge the selected vertex — never
+  // while a text input holds the focus. The handlers live in a ref so
+  // the listener subscribes once and always calls the latest closure.
+  const handlersRef = useRef({ deleteSelectedMember, undo, redo, nudgeSelected });
+  handlersRef.current = { deleteSelectedMember, undo, redo, nudgeSelected };
   useEffect(() => {
+    const ARROWS: Record<string, { dx: number; dy: number }> = {
+      ArrowLeft: { dx: -1, dy: 0 },
+      ArrowRight: { dx: 1, dy: 0 },
+      ArrowUp: { dx: 0, dy: -1 },
+      ArrowDown: { dx: 0, dy: 1 },
+    };
     function handleKeyDown(event: KeyboardEvent) {
       const target = event.target;
       if (target instanceof HTMLInputElement || target instanceof HTMLTextAreaElement) return;
+      const handlers = handlersRef.current;
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        if (event.shiftKey) handlers.redo();
+        else handlers.undo();
+        return;
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") {
+        event.preventDefault();
+        handlers.redo();
+        return;
+      }
       if (event.key === "Escape") {
         setTool({ kind: "select" });
         setSelected(null);
@@ -593,15 +705,22 @@ export function ModelEditorPage({
       }
       if ((event.key === "Delete" || event.key === "Backspace") && selected !== null) {
         event.preventDefault();
-        deleteSelectedMember();
+        handlers.deleteSelectedMember();
+        return;
+      }
+      const arrow = ARROWS[event.key];
+      if (arrow !== undefined && selected !== null) {
+        event.preventDefault();
+        handlers.nudgeSelected({ ...arrow, step: event.shiftKey ? 10 : 1 });
       }
     }
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  });
+  }, [selected]);
 
   // the wheel zooms around the cursor — a native listener, the
-  // wheel is not passive here
+  // wheel is not passive here; subscribed once, the view is read
+  // through the functional update
   useEffect(() => {
     const svgElement = svgRef.current;
     if (svgElement === null) return;
@@ -609,19 +728,21 @@ export function ModelEditorPage({
     function handleWheel(event: WheelEvent) {
       event.preventDefault();
       const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
-      const nextScale = Math.min(MAXIMUM_SCALE, Math.max(MINIMUM_SCALE, view.scale * factor));
       const rectangle = svg.getBoundingClientRect();
       const baseX = (CANVAS_WIDTH * (event.clientX - rectangle.left)) / rectangle.width;
       const baseY = (CANVAS_HEIGHT * (event.clientY - rectangle.top)) / rectangle.height;
-      setView({
-        scale: nextScale,
-        x: baseX - ((baseX - view.x) * nextScale) / view.scale,
-        y: baseY - ((baseY - view.y) * nextScale) / view.scale,
+      setView((previous) => {
+        const nextScale = Math.min(MAXIMUM_SCALE, Math.max(MINIMUM_SCALE, previous.scale * factor));
+        return {
+          scale: nextScale,
+          x: baseX - ((baseX - previous.x) * nextScale) / previous.scale,
+          y: baseY - ((baseY - previous.y) * nextScale) / previous.scale,
+        };
       });
     }
     svg.addEventListener("wheel", handleWheel, { passive: false });
     return () => svg.removeEventListener("wheel", handleWheel);
-  }, [view]);
+  }, []);
 
   // ---- the model creation ---------------------------------------------
 
@@ -713,6 +834,22 @@ export function ModelEditorPage({
           className="rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500"
         >
           {say({ language, en: "+ new model", fr: "+ nouveau modèle" })}
+        </button>
+        <button
+          onClick={undo}
+          disabled={history.length === 0}
+          title={say({ language, en: "undo (Ctrl+Z)", fr: "annuler (Ctrl+Z)" })}
+          className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+        >
+          ↶
+        </button>
+        <button
+          onClick={redo}
+          disabled={future.length === 0}
+          title={say({ language, en: "redo (Ctrl+Shift+Z)", fr: "rétablir (Ctrl+Maj+Z)" })}
+          className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+        >
+          ↷
         </button>
         <button
           onClick={() => onChooseLanguage(language === "fr" ? "en" : "fr")}
@@ -820,9 +957,16 @@ export function ModelEditorPage({
           <svg
             ref={svgRef}
             viewBox={"0 0 " + CANVAS_WIDTH + " " + CANVAS_HEIGHT}
+            role="application"
+            aria-label={say({
+              language,
+              en: "model canvas — drag vertices to move them, pull an arc from a vertex to another",
+              fr: "canevas du modèle — glissez les sommets pour les déplacer, tirez un arc d'un sommet à un autre",
+            })}
             className="w-full touch-none select-none rounded-lg border border-slate-200 bg-white"
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
+            onPointerCancel={() => setGesture(null)}
           >
             <defs>
               <pattern id="editor-grid" width="20" height="20" patternUnits="userSpaceOnUse">
@@ -930,25 +1074,36 @@ export function ModelEditorPage({
               <div className="mb-1 font-mono text-[11px] font-semibold text-slate-700">
                 {selected.container + "/" + selected.name}
               </div>
-              {selectedDeclaration.kind === "arc" && (
-                <div className="mb-1 font-mono text-[10px] text-slate-400">
-                  {["source", "target"].map((key) => {
-                    const reference = KERNEL.space.read({
-                      layer: asLayerName(model),
-                      path: asLayerPath([selected.container, selected.name]),
-                      key,
-                    });
-                    return (
-                      <div key={key}>
-                        {key + " = "}
-                        {reference instanceof AddressView && reference.path.length === 2
-                          ? "@" + reference.layer + "/" + reference.path.join("/")
-                          : "?"}
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
+              {/* the arc's ends are editable references: type
+                  `@model/container/member` — the staging judges it */}
+              {selectedDeclaration.kind === "arc" &&
+                (["source", "target"] as const).map((key) => {
+                  const reference = KERNEL.space.read({
+                    layer: asLayerName(model),
+                    path: asLayerPath([selected.container, selected.name]),
+                    key,
+                  });
+                  const shown =
+                    fieldDrafts[key] ??
+                    (reference instanceof AddressView
+                      ? "@" + reference.layer + "/" + reference.path.join("/")
+                      : "");
+                  return (
+                    <label key={key} className="mb-1 flex items-center gap-1 text-[11px] text-slate-600">
+                      <span className="w-20 shrink-0 font-mono text-slate-400">{key}</span>
+                      <input
+                        value={shown}
+                        spellCheck={false}
+                        onChange={(event) => setFieldDrafts({ ...fieldDrafts, [key]: event.target.value })}
+                        onBlur={(event) => commitField({ key, text: event.target.value })}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter") commitField({ key, text: event.currentTarget.value });
+                        }}
+                        className="w-40 rounded border border-slate-200 px-1 py-0.5 font-mono text-[11px]"
+                      />
+                    </label>
+                  );
+                })}
               {selectedDeclaration.annotationKeys.map((key) => {
                 const value = KERNEL.space.read({
                   layer: asLayerName(model),
