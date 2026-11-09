@@ -22,7 +22,13 @@ import { LayerReference, type RawValue } from "../domain/addresses.ts";
 import { Space } from "../domain/space.ts";
 import { type ParsedLanguage, parseLanguage } from "../domain/language/parser.ts";
 import { type CompiledLanguage, compileLanguage } from "../domain/language/compiler.ts";
-import { type ValidationOutcome, validateSpace } from "../domain/validation.ts";
+import {
+  collectValidation,
+  streamValidation,
+  type ValidationChunk,
+  type ValidationOutcome,
+} from "../domain/validation.ts";
+import { scheduleValidation } from "./validationStream.ts";
 import { formatAddress, orderConflictsOf } from "../domain/conflicts.ts";
 import { runChecks } from "../domain/checks.ts";
 import { DEFAULT_LANGUAGE, fact, parseText, type Language } from "../domain/messages.ts";
@@ -95,16 +101,7 @@ export function extractLayerBlock({ name, source }: { name: string; source: stri
  * composes with the staging at last — bounded to the candidate:
  * the workshop stays immutable, the frozen corpus is never
  * re-executed. */
-export function stageLayerAddition({
-  languageSource,
-  previousAdditionSources,
-  draftSource,
-  livingLayerNames,
-  readonlyLayerNames,
-  language = DEFAULT_LANGUAGE,
-  strictConflicts = false,
-  strictChecks = false,
-}: {
+export interface StageLayerAdditionInput {
   languageSource: string;
   previousAdditionSources: string[];
   draftSource: string;
@@ -126,7 +123,38 @@ export function stageLayerAddition({
    * their errors as « check-trahi » (ADR-0018) — instead of
    * leaving the constraints decorative */
   strictChecks?: boolean;
-}): StagingOutcome {
+}
+
+/** What the validation step needs once the cheap steps (syntax,
+ * bedrock signature) have passed. */
+interface StagingContext {
+  parsed: ParsedLanguage;
+  compiledLanguage: CompiledLanguage;
+  layerNames: LayerName[];
+  draftText: string;
+  blocks: Record<string, string>;
+  orphanVerdicts: ValidationOutcome["verdicts"];
+  space: Space;
+  livingLayerNames: readonly string[];
+  strictConflicts: boolean;
+  strictChecks: boolean;
+}
+
+type StagingPreparation = { early: StagingOutcome } | { context: StagingContext };
+
+/** The cheap steps of the staging: syntax, then the bedrock's
+ * signature. Either an early refusal, or the context the validation
+ * step judges. */
+function prepareStaging({
+  languageSource,
+  previousAdditionSources,
+  draftSource,
+  livingLayerNames,
+  readonlyLayerNames,
+  language = DEFAULT_LANGUAGE,
+  strictConflicts = false,
+  strictChecks = false,
+}: StageLayerAdditionInput): StagingPreparation {
   const source = [languageSource, ...previousAdditionSources, draftSource.trim()].join("\n") + "\n";
 
   // ---- syntax step ----
@@ -136,24 +164,28 @@ export function stageLayerAddition({
   } catch (error) {
     const message = (error && (error as Error).message) || String(error);
     return {
-      ok: false,
-      step: "syntaxe",
-      errors: [parseText({ language, en: "syntax: " + message, fr: "syntaxe : " + message })],
-      verdicts: [],
-      layerNames: [],
-      compiledLanguage: null,
-      blocks: {},
+      early: {
+        ok: false,
+        step: "syntaxe",
+        errors: [parseText({ language, en: "syntax: " + message, fr: "syntaxe : " + message })],
+        verdicts: [],
+        layerNames: [],
+        compiledLanguage: null,
+        blocks: {},
+      },
     };
   }
   if (parsed.errors.length > 0) {
     return {
-      ok: false,
-      step: "syntaxe",
-      errors: parsed.errors,
-      verdicts: [],
-      layerNames: [],
-      compiledLanguage: null,
-      blocks: {},
+      early: {
+        ok: false,
+        step: "syntaxe",
+        errors: parsed.errors,
+        verdicts: [],
+        layerNames: [],
+        compiledLanguage: null,
+        blocks: {},
+      },
     };
   }
 
@@ -177,16 +209,18 @@ export function stageLayerAddition({
   }
   if (claimedBedrockNames.length > 0) {
     return {
-      ok: false,
-      step: "validation" as const,
-      errors: [],
-      verdicts: claimedBedrockNames.map((claimedName) => ({
-        kind: "socle-occupé" as const,
-        fact: fact("bedrock-occupied", { layer: claimedName }),
-      })),
-      layerNames: parsed.layers.map((parsedLayer) => asLayerName(parsedLayer.name)),
-      compiledLanguage: null,
-      blocks: {},
+      early: {
+        ok: false,
+        step: "validation" as const,
+        errors: [],
+        verdicts: claimedBedrockNames.map((claimedName) => ({
+          kind: "socle-occupé" as const,
+          fact: fact("bedrock-occupied", { layer: claimedName }),
+        })),
+        layerNames: parsed.layers.map((parsedLayer) => asLayerName(parsedLayer.name)),
+        compiledLanguage: null,
+        blocks: {},
+      },
     };
   }
 
@@ -218,13 +252,32 @@ export function stageLayerAddition({
   }
 
   const space = new Space(compiledLanguage.layers);
-  const validation = validateSpace({
-    space,
-    parse: parsed,
-    compilation: compiledLanguage,
-    layerNames,
-  });
-  const verdicts = [...validation.verdicts, ...orphanVerdicts];
+  return {
+    context: {
+      parsed,
+      compiledLanguage,
+      layerNames,
+      draftText,
+      blocks,
+      orphanVerdicts,
+      space,
+      livingLayerNames,
+      strictConflicts,
+      strictChecks,
+    },
+  };
+}
+
+/** The judging step: the validation's verdicts (plus the orphan
+ * targets), then the optional strict conflicts and strict checks. */
+function concludeStaging({
+  context,
+  validation,
+}: {
+  context: StagingContext;
+  validation: ValidationOutcome;
+}): StagingOutcome {
+  const verdicts = [...validation.verdicts, ...context.orphanVerdicts];
 
   // ---- strict conflicts: the order conflicts of the judged layers
   // become verdicts — the convention, made contractual (ADR-0017,
@@ -233,9 +286,9 @@ export function stageLayerAddition({
   // are walked: the loaded corpus keeps its own frozen verdicts,
   // and a draft layer can only create conflicts at its own
   // addresses — nothing living refines a candidate.
-  if (strictConflicts) {
-    const judgedLayerNames = layerNames.filter((name) => !livingLayerNames.includes(name));
-    for (const conflict of orderConflictsOf({ space, layerNames: judgedLayerNames })) {
+  if (context.strictConflicts) {
+    const judgedLayerNames = context.layerNames.filter((name) => !context.livingLayerNames.includes(name));
+    for (const conflict of orderConflictsOf({ space: context.space, layerNames: judgedLayerNames })) {
       verdicts.push({
         kind: "conflit-d'ordre",
         fact: fact("order-conflict", {
@@ -257,10 +310,10 @@ export function stageLayerAddition({
   // « check-trahi » verdicts; off by default, the workshop stays
   // immutable — the frozen corpus is never re-executed, only the
   // candidate is judged, and its cost is the candidate's size.
-  if (strictChecks) {
-    const judgedLayerNames = layerNames.filter((name) => !livingLayerNames.includes(name));
+  if (context.strictChecks) {
+    const judgedLayerNames = context.layerNames.filter((name) => !context.livingLayerNames.includes(name));
     for (const judgedLayerName of judgedLayerNames) {
-      for (const error of runChecks({ space, layer: judgedLayerName })) {
+      for (const error of runChecks({ space: context.space, layer: judgedLayerName })) {
         const separator = error.indexOf(" — ");
         const where = separator >= 0 ? error.slice(0, separator) : judgedLayerName;
         const message = separator >= 0 ? error.slice(separator + 3) : error;
@@ -277,10 +330,72 @@ export function stageLayerAddition({
     step: "validation",
     errors: [],
     verdicts,
-    layerNames,
-    compiledLanguage,
-    blocks,
+    layerNames: context.layerNames,
+    compiledLanguage: context.compiledLanguage,
+    blocks: context.blocks,
   };
+}
+
+/** Stage a draft layer: analyze + compile + one token space over
+ * corpus + previous additions + draft; any verdict anywhere refuses.
+ * The parser exception becomes a readable refusal — the composer
+ * never dies of a typo (same discipline as the kernel: total, never
+ * an exception towards the UI).
+ *
+ * `strictConflicts` (off by default) promotes the order conflicts —
+ * the diamond's convention (ADR-0017, retired as a semantics by
+ * ADR-0023) — from a lint diagnostic to a staging verdict: a
+ * candidate that lets the refines ORDER decide a leaf value between
+ * incomparable sources is refused as « conflit-d'ordre », without
+ * exception — to resolve one is to RESTRUCTURE (make the providers
+ * comparable, or diverge them into different addresses), never to
+ * sign. The judge is the same detector the lint inventories the
+ * workshop with; only the strict spaces make the convention
+ * contractual.
+ *
+ * `strictChecks` (off by default) makes the carried constraints
+ * EXECUTE (ADR-0018): runChecks over the layers under judgment,
+ * their errors refused as « check-trahi ». The constraint semantics
+ * composes with the staging at last — bounded to the candidate:
+ * the workshop stays immutable, the frozen corpus is never
+ * re-executed. */
+export function stageLayerAddition(input: StageLayerAdditionInput): StagingOutcome {
+  const preparation = prepareStaging(input);
+  if ("early" in preparation) return preparation.early;
+  const context = preparation.context;
+  const validation = collectValidation(
+    streamValidation({
+      space: context.space,
+      parse: context.parsed,
+      compilation: context.compiledLanguage,
+      layerNames: context.layerNames,
+    }),
+  );
+  return concludeStaging({ context, validation });
+}
+
+/** The streamed staging (ADR-0026): the same judgement as
+ * stageLayerAddition, but the validation runs chunk by chunk on the
+ * event loop — onChunk sees each chunk's progress, the interface
+ * stays responsive, and the resolved outcome is identical to the
+ * synchronous staging's, by construction (same stream, drained). */
+export function streamStageLayerAddition(
+  input: StageLayerAdditionInput,
+  { onChunk }: { onChunk?: (chunk: ValidationChunk) => void },
+): Promise<StagingOutcome> {
+  const preparation = prepareStaging(input);
+  if ("early" in preparation) return Promise.resolve(preparation.early);
+  const context = preparation.context;
+  const scheduled = scheduleValidation({
+    stream: streamValidation({
+      space: context.space,
+      parse: context.parsed,
+      compilation: context.compiledLanguage,
+      layerNames: context.layerNames,
+    }),
+    onChunk,
+  });
+  return scheduled.promise.then((validation) => concludeStaging({ context, validation }));
 }
 
 /** What the workshop must know about the layers that just entered
