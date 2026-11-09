@@ -36,7 +36,8 @@ import { drawnShape, type DrawnShape } from "../domain/views.ts";
 import { expectationsOf, formatExpectation, readMatchesExpectation } from "../domain/validation.ts";
 import { circlePosition, LENS_LAYERS } from "./viewTree.ts";
 import { EdgeGlyph } from "./glyphs.tsx";
-import { editionRefusalLabel, labelOf, say } from "./i18n.ts";
+import { editionRefusalLabel, labelOf } from "./i18n.ts";
+import { t } from "../infrastructure/i18n.ts";
 import {
   readMemberContainers,
   positionContainerOf,
@@ -368,11 +369,7 @@ export function ModelEditorPage({
     setSpaceVersion(spaceVersion + 1);
     setBanner({
       tone: "written",
-      text: say({
-        language,
-        en: "staging: 0 verdict — the layer is rewritten, the write is declared, the canvas re-reads the space",
-        fr: "staging : 0 verdict — la couche est réécrite, l'écriture est déclarée, le canevas relit l'espace",
-      }),
+      text: t("staging: 0 verdict — the layer is rewritten, the write is declared, the canvas re-reads the space"),
     });
     return true;
   }
@@ -555,21 +552,10 @@ export function ModelEditorPage({
       if (arcContainer === null) {
         setBanner({
           tone: "refused",
-          text: say({
-            language,
-            en:
-              "the formalism declares no arc from « " +
-              gesture.fromContainer +
-              " » to « " +
-              hit.container +
-              " » — the direction is the formalism's to decide",
-            fr:
-              "le formalisme ne déclare aucun arc de « " +
-              gesture.fromContainer +
-              " » vers « " +
-              hit.container +
-              " » — la direction, c'est à lui de la décider",
-          }),
+          text: t(
+            "the formalism declares no arc from « {{fromContainer}} » to « {{toContainer}} » — the direction is the formalism's to decide",
+            { fromContainer: gesture.fromContainer, toContainer: hit.container },
+          ),
         });
       } else {
         const arcName = nextMemberName({ space: KERNEL.space, model, container: arcContainer.name });
@@ -632,14 +618,11 @@ export function ModelEditorPage({
     if (citations.length > 0) {
       setBanner({
         tone: "refused",
-        text:
-          say({
-            language,
-            en: "the member is cited — delete the citing arcs first:",
-            fr: "le membre est cité — supprimez d'abord les arcs qui le citent :",
-          }) +
-          " " +
-          citations.map((citation) => citation.container + "/" + citation.name + " (" + citation.via + ")").join(", "),
+        text: t("the member is cited — delete the citing arcs first: {{citations}}", {
+          citations: citations
+            .map((citation) => citation.container + "/" + citation.name + " (" + citation.via + ")")
+            .join(", "),
+        }),
       });
       return;
     }
@@ -829,11 +812,7 @@ export function ModelEditorPage({
       if (applied.newLayerNames.length > 0) setModel(applied.newLayerNames[0]);
       setBanner({
         tone: "written",
-        text: say({
-          language,
-          en: "the imported draft entered the space — the staging accepted it",
-          fr: "le brouillon importé est entré dans l'espace — le staging l'a accepté",
-        }),
+        text: t("the imported draft entered the space — the staging accepted it"),
       });
     });
   }
@@ -874,11 +853,7 @@ export function ModelEditorPage({
     setCreationOpen(false);
     setBanner({
       tone: "written",
-      text: say({
-        language,
-        en: "the model enters the space — its palette is read from its formalism",
-        fr: "le modèle entre dans l'espace — sa palette se lit dans son formalisme",
-      }),
+      text: t("the model enters the space — its palette is read from its formalism"),
     });
   }
 
@@ -892,7 +867,7 @@ export function ModelEditorPage({
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[11px] font-bold text-white">✎</span>
         <span className="text-sm font-semibold text-slate-700">
-          {say({ language, en: "the graphical model editor", fr: "l'éditeur graphique de modèles" })}
+          {t("the graphical model editor")}
         </span>
         <select
           value={model ?? ""}
@@ -905,7 +880,7 @@ export function ModelEditorPage({
           }}
           className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
         >
-          <option value="">{say({ language, en: "no model", fr: "aucun modèle" })}</option>
+          <option value="">{t("no model")}</option>
           {editableModels.map((name) => (
             <option key={name} value={name}>
               {name}
@@ -927,12 +902,12 @@ export function ModelEditorPage({
           onClick={() => setCreationOpen(!creationOpen)}
           className="rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500"
         >
-          {say({ language, en: "+ new model", fr: "+ nouveau modèle" })}
+          {t("+ new model")}
         </button>
         <button
           onClick={undo}
           disabled={history.length === 0}
-          title={say({ language, en: "undo (Ctrl+Z)", fr: "annuler (Ctrl+Z)" })}
+          title={t("undo (Ctrl+Z)")}
           className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
         >
           ↶
@@ -940,7 +915,7 @@ export function ModelEditorPage({
         <button
           onClick={redo}
           disabled={future.length === 0}
-          title={say({ language, en: "redo (Ctrl+Shift+Z)", fr: "rétablir (Ctrl+Maj+Z)" })}
+          title={t("redo (Ctrl+Shift+Z)")}
           className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
         >
           ↷
@@ -948,25 +923,25 @@ export function ModelEditorPage({
         <button
           onClick={() => setShowSource((previous) => !previous)}
           disabled={model === null}
-          title={say({ language, en: "show the model's source block", fr: "afficher le bloc source du modèle" })}
+          title={t("show the model's source block")}
           className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
         >
-          {say({ language, en: "source", fr: "source" })}
+          {t("source")}
         </button>
         <button
           onClick={exportModel}
           disabled={model === null}
-          title={say({ language, en: "download the model as .ld", fr: "télécharger le modèle en .ld" })}
+          title={t("download the model as .ld")}
           className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
         >
-          {say({ language, en: "export .ld", fr: "exporter .ld" })}
+          {t("export .ld")}
         </button>
         <button
           onClick={() => importInputRef.current?.click()}
-          title={say({ language, en: "import a .ld draft — judged by the staging", fr: "importer un brouillon .ld — jugé par le staging" })}
+          title={t("import a .ld draft — judged by the staging")}
           className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
         >
-          {say({ language, en: "import .ld", fr: "importer .ld" })}
+          {t("import .ld")}
         </button>
         <input
           ref={importInputRef}
@@ -986,17 +961,15 @@ export function ModelEditorPage({
       {creationOpen && (
         <div className="mb-4 rounded-lg border border-sky-200 bg-sky-50/40 p-3">
           <p className="mb-2 text-[11px] leading-4 text-slate-500">
-            {say({
-              language,
-              en: "a model is a layer that refines a formalism — the staging judges the draft, the palette is read from what it refines",
-              fr: "un modèle est une couche qui raffine un formalisme — le staging juge le brouillon, la palette se lit dans ce qu'il raffine",
-            })}
+            {t(
+              "a model is a layer that refines a formalism — the staging judges the draft, the palette is read from what it refines",
+            )}
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <input
               value={creationName}
               onChange={(event) => setCreationName(event.target.value)}
-              placeholder={say({ language, en: "model name", fr: "nom du modèle" })}
+              placeholder={t("model name")}
               className="rounded border border-slate-300 px-2 py-1 text-xs"
             />
             <span className="text-xs text-slate-400">refines</span>
@@ -1011,7 +984,7 @@ export function ModelEditorPage({
               disabled={creationName.trim().length === 0}
               className="rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
             >
-              {say({ language, en: "staging — create the model", fr: "staging — créer le modèle" })}
+              {t("staging — create the model")}
             </button>
           </div>
         </div>
@@ -1021,15 +994,11 @@ export function ModelEditorPage({
         {/* the palette: read from the formalism, never hardcoded */}
         <div className="col-span-2 rounded-lg border border-slate-200 bg-white p-2">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-            {say({ language, en: "palette", fr: "palette" })}
+            {t("palette")}
           </div>
           {model === null && (
             <p className="text-[11px] leading-4 text-slate-400">
-              {say({
-                language,
-                en: "no model — create or pick one, the palette follows its formalism",
-                fr: "aucun modèle — créez-en ou choisissez-en un, la palette suit son formalisme",
-              })}
+              {t("no model — create or pick one, the palette follows its formalism")}
             </p>
           )}
           <div className="flex flex-col gap-1">
@@ -1040,7 +1009,7 @@ export function ModelEditorPage({
                 (tool.kind === "select" ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")
               }
             >
-              {say({ language, en: "pointer", fr: "pointeur" })}
+              {t("pointer")}
             </button>
             {vertexContainers.map((container) => (
               <button
@@ -1064,13 +1033,9 @@ export function ModelEditorPage({
                   "rounded px-2 py-1 text-left text-[11px] " +
                   (tool.kind === "arc" ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")
                 }
-                title={say({
-                  language,
-                  en: "drag from a vertex to another — pre or post, the formalism's rules decide",
-                  fr: "tirez d'un sommet vers un autre — pré ou post, les règles du formalisme décident",
-                })}
+                title={t("drag from a vertex to another — pre or post, the formalism's rules decide")}
               >
-                {say({ language, en: "arc", fr: "arc" })}
+                {t("arc")}
               </button>
             )}
           </div>
@@ -1082,11 +1047,9 @@ export function ModelEditorPage({
             ref={svgRef}
             viewBox={"0 0 " + CANVAS_WIDTH + " " + CANVAS_HEIGHT}
             role="application"
-            aria-label={say({
-              language,
-              en: "model canvas — drag vertices to move them, pull an arc from a vertex to another",
-              fr: "canevas du modèle — glissez les sommets pour les déplacer, tirez un arc d'un sommet à un autre",
-            })}
+            aria-label={t(
+              "model canvas — drag vertices to move them, pull an arc from a vertex to another",
+            )}
             className="w-full touch-none select-none rounded-lg border border-slate-200 bg-white"
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
@@ -1177,7 +1140,7 @@ export function ModelEditorPage({
         {showSource && model !== null && (
           <div className="col-span-2 rounded-lg border border-slate-200 bg-white p-2">
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-              {say({ language, en: "source — the only truth", fr: "source — la seule vérité" })}
+              {t("source — the only truth")}
             </div>
             <pre className="max-h-[540px] overflow-auto whitespace-pre-wrap font-mono text-[10px] leading-4 text-slate-600">
               {modelSource}
@@ -1188,15 +1151,13 @@ export function ModelEditorPage({
         {/* the inspector: the selected member and its declared keys */}
         <div className="col-span-3 rounded-lg border border-slate-200 bg-white p-2">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-            {say({ language, en: "inspector", fr: "inspecteur" })}
+            {t("inspector")}
           </div>
           {selected === null || selectedDeclaration === null || model === null ? (
             <p className="text-[11px] leading-4 text-slate-400">
-              {say({
-                language,
-                en: "pick a member on the canvas — its declared keys open here, every edition goes through the staging",
-                fr: "choisissez un membre sur le canevas — ses clés déclarées s'ouvrent ici, chaque édition passe par le staging",
-              })}
+              {t(
+                "pick a member on the canvas — its declared keys open here, every edition goes through the staging",
+              )}
             </p>
           ) : (
             <div>
@@ -1262,14 +1223,14 @@ export function ModelEditorPage({
                 onClick={deleteSelectedMember}
                 className="mt-1 rounded border border-red-200 px-2 py-1 text-[11px] text-red-600 hover:bg-red-50"
               >
-                {say({ language, en: "delete (Suppr)", fr: "supprimer (Suppr)" })}
+                {t("delete (Suppr)")}
               </button>
             </div>
           )}
           {model !== null && expectations.length > 0 && (
             <div className="mt-2 border-t border-slate-100 pt-2">
               <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                {say({ language, en: "declared expectations", fr: "attentes déclarées" })}
+                {t("declared expectations")}
               </div>
               {expectations.map((expectation) => (
                 <div
