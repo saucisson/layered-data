@@ -183,6 +183,12 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
           >
             {say({ language, en: "Workshop →", fr: "Atelier →" })}
           </button>
+          <button
+            onClick={() => navigate("editor")}
+            className="rounded-lg border-2 border-emerald-600 px-6 py-3 text-emerald-600 font-semibold hover:bg-emerald-50 transition-colors"
+          >
+            {say({ language, en: "Model editor →", fr: "Éditeur de modèles →" })}
+          </button>
         </section>
 
         <footer className="mt-16 pt-6 border-t border-slate-200 text-center text-xs text-slate-400">

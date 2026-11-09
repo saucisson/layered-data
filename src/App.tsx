@@ -1,6 +1,6 @@
 // Layered Data — Main application with routing
 // Routes: #landing, #tutorial, #filiation, #workshop,
-// #hierarchy, #creation, #formalism/<layer>
+// #hierarchy, #creation, #formalism/<layer>, #editor
 
 import React, { useState } from "react";
 import { RouterProvider, useRouter } from "./components/Router";
@@ -11,6 +11,7 @@ import { WorkshopPage } from "./WorkshopContainer";
 import { HierarchyPage } from "./pages/HierarchyPage";
 import { CreationPage } from "./pages/CreationPage";
 import { FormalismPage } from "./pages/FormalismPage";
+import { ModelEditorPage } from "./presentation/modelEditorPage";
 import { readWorkshopLanguage, writeWorkshopLanguage } from "./infrastructure/browserLanguage";
 import type { Language } from "./domain/messages";
 
@@ -30,6 +31,8 @@ function AppContent() {
       return <FiliationPage language={language} onChooseLanguage={handleChooseLanguage} />;
     case "workshop":
       return <WorkshopPage language={language} onChooseLanguage={handleChooseLanguage} />;
+    case "editor":
+      return <ModelEditorPage language={language} onChooseLanguage={handleChooseLanguage} />;
     case "hierarchy":
       return <HierarchyPage language={language} onChooseLanguage={handleChooseLanguage} />;
     case "creation":
