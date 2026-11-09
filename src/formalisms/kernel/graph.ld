@@ -1,6 +1,6 @@
-// ---- le graphe simple du mathématicien — graph : la composition
-//      de la paire (pair-graph) et de la pureté (hypergraph) — un
-//      hypergraphe 2-uniforme. Diamant pur : rien en propre, juste
-//      les deux parents. L'orientation ne vit pas ici : elle est
-//      dans multidigraph.
+// ---- the mathematician's simple graph — graph: the composition
+//      of the pair (pair-graph) and purity (hypergraph) — a
+//      2-uniform hypergraph. Pure diamond: nothing of its own, just
+//      the two parents. Orientation does not live here: it is in
+//      multidigraph.
 layer graph refines @pair-graph then @hypergraph

@@ -1,19 +1,19 @@
-// ---- le dîner — pn-philosophers-5 : CINQ philosophes, cinq
-//      CITATIONS du template pn-philosophers-1. La collection
-//      philosophes (jointe à collection) porte une citation par
-//      philosophe — lref du template, identifier posé ; les QUATRE
-//      conteneurs portent chacun une ÉQUATION D'UNION AU PARENT :
-//      leur refines cite les cinq fenêtres (philosophes, philoN,
-//      conteneur) — le lecteur du moteur (expandCitations) développe
-//      chaque citation : les membres du template atterrissent
-//      QUALIFIÉS (philoN.think1…), chaque membre généré raffine le
-//      membre cité PAR SON CHEMIN (la donnée reste dans le
-//      template ; marking, identifier et types descendent par la
-//      fermeture) et les Ref internes du membre cité atterrissent
-//      ancrés sur le dîner, clé désignée qualifiée. Connexions
-//      d'anneau authorées : fork_i est prise par le take du
-//      philosophe i+1 (arc pré fk_i) et rendue par son release (arc
-//      post rf_i), modulo 5 — le dîner est complètement câblé :
+// ---- the dinner — pn-philosophers-5: FIVE philosophers, five
+//      CITATIONS of the pn-philosophers-1 template. The philosophers
+//      collection (joined to collection) carries one citation per
+//      philosopher — lref of the template, identifier posed; the FOUR
+//      containers each carry a UNION EQUATION TO THE PARENT:
+//      their refines cites the five windows (philosophers, philoN,
+//      container) — the engine's reader (expandCitations) expands
+//      each citation: the template's members land QUALIFIED
+//      (philoN.think1…), each generated member refines the cited
+//      member BY ITS PATH (the datum stays in the template; marking,
+//      identifier and types descend through the closure) and the cited
+//      member's internal Refs land
+//      anchored on the dinner, designated key qualified. Ring
+//      connections authorized: fork_i is taken by the take of
+//      philosopher i+1 (pre arc fk_i) and released by its release (post
+//      arc rf_i), modulo 5 — the dinner is fully wired:
 //      15 places, 10 transitions, 25 arcs, weight 1 partout.
 layer pn-philosophers-5 refines @pn-philosophers then @positions-grid
   philosophes refines @collection
@@ -61,12 +61,12 @@ layer pn-philosophers-5 refines @pn-philosophers then @positions-grid
     rf5 refines @petrinet-scheme/specification/post_arc_type
       source = @pn-philosophers-5/transitions/philo1.release1
       target = @pn-philosophers-5/places/philo5.fork1
-  // les positions du dîner : une équation
+  // the dinner's positions: one equation
   // d'union comme les quatre autres conteneurs — les cinq
-  // fenêtres du template y développent leurs positions locales
-  // qualifiées (philoN.think1… cite le siège philoN, re-ancré
-  // par la citation) ; le dîner ne pose que la table et les
-  // cinq sièges : la table au centre, chaque siège la cite en
+  // template windows expand their local positions there
+  // qualified (philoN.think1… cites seat philoN, re-anchored
+  // by the citation); the dinner poses only the table and the
+  // five seats: the table at the center, each seat cites it in
   // polaire — distance 190, angle k·72° — et tout le reste
   // descend du template
   extend positions refines @pn-philosophers-5/philosophes/philo1/positions then @pn-philosophers-5/philosophes/philo2/positions then @pn-philosophers-5/philosophes/philo3/positions then @pn-philosophers-5/philosophes/philo4/positions then @pn-philosophers-5/philosophes/philo5/positions
@@ -108,7 +108,7 @@ layer pn-philosophers-5 refines @pn-philosophers then @positions-grid
       relative_to = @pn-philosophers-5/positions/table
       r = 190
       theta = 288
-  // le contrat du dîner — la scène porte ses attendus, la
+  // the dinner's contract — the scene carries its expectations, the
   // validation les rejoue. Un
   tests
     expect places/philo1.think1/marking = 1

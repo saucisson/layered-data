@@ -1,9 +1,9 @@
-// ---- axe arité généralisé — uniform-hypergraph : l'arité est une
-//      donnée liable : les bornes de la collection des flèches
-//      deviennent un slot non lié — le raffinement k-uniforme liera
-//      les deux à k. Le 2-uniforme est pair-graph (cas particulier) :
-//      pair-graph raffine la base directement, passer par l'uniforme
-//      ferait descendre une clé d'arité vers tous les descendants.
+// ---- generalized-arity axis — uniform-hypergraph: arity is a
+//      bindable datum: the bounds of the arrows collection become
+//      an unbound slot — the k-uniform refinement will bind both to
+//      k. The 2-uniform is pair-graph (special case): pair-graph
+//      refines the base directly, going through the uniform would
+//      descend an arity key to all descendants.
 layer uniform-hypergraph refines @multihypergraph
   edge_type refines @multihypergraph/specification/edge_type
     extend arrows

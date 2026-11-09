@@ -1,10 +1,9 @@
-// ---- le réseau de Petri du tutoriel : raffine le graphe, renomme
-//      les strates. Sommets → places et transitions (deux
-//      collections), arcs → arcs : le type d'une place porte un
-//      marking (marquage, un nombre de jetons), le type d'un arc
-//      porte un weight (poids, encore abstrait — le template le
-//      posera). Les alias : vertices = places ∪ transitions,
-//      edges = arcs — les checks du graphe continuent de juger.
+// ---- the tutorial's Petri net: refines the graph, renames the
+//      strata. Vertices → places and transitions (two collections),
+//      arcs → arcs: a place's type carries a marking (a token count),
+//      an arc's type carries a weight (still abstract — the template
+//      will pose it). The aliases: vertices = places ∪ transitions,
+//      edges = arcs — the graph's checks keep judging.
 layer petrinet refines @graph
   extend specification
     place_type refines @petrinet/specification/vertex_type

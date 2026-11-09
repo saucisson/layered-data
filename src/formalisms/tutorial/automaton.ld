@@ -1,9 +1,8 @@
-// ---- l'automate du tutoriel : l'autre lecture du graphe. Un graphe
-//      dont les sommets sont des états, plus un alphabet (une
-//      collection de symboles). Rien de neuf sur les arcs : les
-//      transitions SONT les arêtes du graphe — les alias suffisent
-//      (vertices = states, edges = transitions), les checks du
-//      graphe jugent l'automate sans savoir qu'il en est un.
+// ---- the tutorial's automaton: the graph's other reading. A graph
+//      whose vertices are states, plus an alphabet (a collection of
+//      symbols). Nothing new on the arcs: transitions ARE the graph's
+//      edges — aliases suffice (vertices = states, edges = transitions),
+//      the graph's checks judge the automaton without knowing it is one.
 layer automaton refines @graph
   alphabet refines @collection
     extend specification

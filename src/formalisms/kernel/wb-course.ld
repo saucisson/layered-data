@@ -1,7 +1,7 @@
-// point de vue sur le diamant — wb1 par la lentille générique,
-// mêmes idiomes que pn-philosophers-5-course (positions = décisions
-// du point de vue). Les poids y sont lus à travers le diamant (e1
-// porte 3, e2 hérite 1).
+// viewpoint on the diamond — wb1 through the generic lens, same
+// idioms as pn-philosophers-5-course (positions = the viewpoint's
+// decisions). Weights are read through the diamond (e1 carries 3,
+// e2 inherits 1).
 layer wb-course refines @view-scheme
   override model = @wb1
   override display = @graph-display

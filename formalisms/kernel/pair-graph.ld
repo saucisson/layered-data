@@ -1,11 +1,11 @@
-// ---- axe arité borné — pair-graph : exactement 2 flèches par
-//      arête, sans rôles : un graphe non orienté (une paire).
-//      Raffine la base directement. L'orientation vit dans
+// ---- bounded-arity axis — pair-graph: exactly 2 arrows per
+//      edge, without roles: an undirected graph (a pair).
+//      Refines the base directly. Orientation lives in
 //      multidigraph.
 layer pair-graph refines @multihypergraph
   edge_type refines @multihypergraph/specification/edge_type
-    // croisement direct comme le graph publié (même chemin que la
-    // racine : redéfinition de l'arête)
+    // direct crossing as the published graph (same path as the
+    // root: edge redefinition)
     extend arrows
       extend specification
         extend collection

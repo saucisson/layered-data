@@ -1,10 +1,10 @@
-// ---- axe annotation (arêtes) — edge-annotated-hypergraph :
-//      même idiome que vertex-annotated sur l'arête (racine, même
-//      chemin que multidigraph :: edge_type — sans y fusionner : la
-//      couche vit du côté non orienté ; un arc est une arête
-//      orientée, au-dessus de l'orientation le mot est edge).
-//      weighted-hypergraph ci-dessous en est le cas lié : weight est
-//      une annotation dont le type est fixé (défaut 1).
+// ---- annotation axis (edges) — edge-annotated-hypergraph: same
+//      idiom as vertex-annotated on the edge (root, same path as
+//      multidigraph :: edge_type — without merging into it: the
+//      layer lives on the undirected side; an arc is an oriented
+//      edge, above orientation the word is edge).
+//      weighted-hypergraph below is the bound case: weight is an
+//      annotation whose type is fixed (default 1).
 layer edge-annotated-hypergraph refines @multihypergraph
   edge_type
     specification

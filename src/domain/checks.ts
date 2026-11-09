@@ -586,149 +586,34 @@ export interface CheckContract {
   };
 }
 
-// ---- the registry as data (ADR-0019) -----------------------------------
+// ---- the built-in contracts (ADR-0027) ---------------------------------
+//
+// ADR-0027 retired the check-registry layer: first-order checks carry
+// their formula inline (the couple, ADR-0022). The tags that still
+// need an algorithm (dag, arbre, k-partite — transitive closure or
+// class comparison, strate 2) keep a built-in contract here, in the
+// kernel, until strate 2 expresses them as formulas.
 
-/** The nominal anchor of the registry: the kernel layer that
- * carries the checks' contracts, written in the language itself
- * (`formalisms/kernel/check-registry.ld`). The name is kernel
- * behavior — like the special keys, like the tag strings. */
-export const REGISTRY_LAYER_NAME = asLayerName("check-registry");
+/** The built-in contracts of the algorithmic tags. */
+const BUILTIN_CONTRACTS: Record<string, CheckContract> = {
+  containers: { level: "root", required: {} },
+  cardinality: { level: "root", required: {} },
+  oriented: { level: "instance", required: { "end-source": "instance", "end-target": "instance" } },
+  dag: { level: "instance", required: { "end-source": "instance", "end-target": "instance" } },
+  arbre: { level: "root", required: { vertices: "root", edges: "root" } },
+  "k-partite": {
+    level: "root",
+    required: { vertices: "root", edges: "root", arrows: "root", "arrow-vertex": "root" },
+  },
+};
 
-/** One slot-levels record of a contract — required, optional, or a
- * conditional branch. The note keys stay out (they are data too);
- * a level that reads as neither root nor instance stays out of the
- * contract — the meta-audit inventories it, the kernel stays
- * total, never an exception. */
-function slotLevelsOf(node: unknown): Record<string, "root" | "instance"> {
-  const levels: Record<string, "root" | "instance"> = {};
-  if (!isDictionary(node)) return levels;
-  for (const slot of Object.keys(node)) {
-    if (slot.startsWith("__note:")) continue;
-    const level = node[slot];
-    if (level === "root" || level === "instance") levels[slot] = level;
-  }
-  return levels;
-}
-
-/** The conditional group of a contract, read from the data: the
- * condition's slot, the operand view its instance slots are read
- * at, and the two branches. A conditional without a readable
- * condition slot is not a group. */
-function conditionalOf(node: unknown): NonNullable<CheckContract["conditional"]> | null {
-  if (!isDictionary(node)) return null;
-  const slot = node["slot"];
-  if (typeof slot !== "string") return null;
-  const conditional: NonNullable<CheckContract["conditional"]> = {
-    slot,
-    "true": slotLevelsOf(node["true"]),
-    "false": slotLevelsOf(node["false"]),
-  };
-  const operand = node["operand"];
-  if (typeof operand === "string") conditional.operand = operand;
-  return conditional;
-}
-
-/** The contracts of every declared tag, READ FROM THE DATA
- * (ADR-0019): the single source is the `check-registry` layer of
- * the space — @check-registry/specification/<tag> holds each tag's
- * level, required, optional and conditional slots, declared in the
- * language. The reader trusts the kernel's own anchor (a raw read:
- * the registry is kernel-owned; a refinement extending it stays
- * below the anchor, out of the resolution — that boundary is
- * ADR-0019's). A space without the registry layer reads an empty
- * registry: every posed tag is étiquette-inconnue — existence
- * comes from the data, nowhere else. */
-export function registryContractsOf({ space }: { space: Space }): Record<string, CheckContract> {
-  const contracts: Record<string, CheckContract> = {};
-  const layerTree = space.raw({ layer: REGISTRY_LAYER_NAME, path: [] });
-  if (!isDictionary(layerTree)) return contracts;
-  const specification = layerTree["specification"];
-  if (!isDictionary(specification)) return contracts;
-  for (const tag of Object.keys(specification)) {
-    if (tag.startsWith("__note:")) continue;
-    const record = specification[tag];
-    if (!isDictionary(record)) continue;
-    const level = record["level"];
-    if (level !== "root" && level !== "instance") continue;
-    const contract: CheckContract = { level, required: slotLevelsOf(record["required"]) };
-    const optional = slotLevelsOf(record["optional"]);
-    if (Object.keys(optional).length > 0) contract.optional = optional;
-    const conditional = conditionalOf(record["conditional"]);
-    if (conditional) contract.conditional = conditional;
-    contracts[tag] = contract;
-  }
-  return contracts;
-}
-
-/** The meta-model's audit (ADR-0019): the registry data and the
- * kernel's algorithm table answer for each other — and the fields
- * the reader cannot interpret are inventoried, never guessed.
- *
- *   - contrat-sans-algorithme: a tag declared in the language but
- *     bound to no kernel algorithm — its contract judges (the
- *     vacancy verdicts work), but it never executes;
- *   - algorithme-sans-contrat: a kernel algorithm answering to no
- *     declared contract — it would execute with no one vouching
- *     for its slots, the ADR-0018 guarantees void;
- *   - contrat-illisible: a contract field the reader skips (a
- *     level that is neither root nor instance, a condition slot
- *     that is not a string, an operand that is not a string).
- *
- * Measured on the bedrock: 0, 0, 0. */
-export interface RegistryDivergence {
-  kind: "contrat-sans-algorithme" | "algorithme-sans-contrat" | "contrat-illisible";
-  tag: string;
-  /** the registry address of the unreadable field, when there is one */
-  where?: string;
-}
-
-export function registryAuditOf({ space }: { space: Space }): RegistryDivergence[] {
-  const divergences: RegistryDivergence[] = [];
-  const contracts = registryContractsOf({ space });
-  for (const tag of Object.keys(contracts)) {
-    if (!checkRegistry[tag]) divergences.push({ kind: "contrat-sans-algorithme", tag });
-  }
-  for (const tag of Object.keys(checkRegistry)) {
-    if (!contracts[tag]) divergences.push({ kind: "algorithme-sans-contrat", tag });
-  }
-  const layerTree = space.raw({ layer: REGISTRY_LAYER_NAME, path: [] });
-  const specification = isDictionary(layerTree) && isDictionary(layerTree["specification"])
-    ? layerTree["specification"]
-    : null;
-  if (!specification) return divergences;
-  for (const tag of Object.keys(specification)) {
-    if (tag.startsWith("__note:") || !isDictionary(specification[tag])) continue;
-    const record = specification[tag];
-    const where = "check-registry::specification/" + tag;
-    if (record["level"] !== "root" && record["level"] !== "instance") {
-      divergences.push({ kind: "contrat-illisible", tag, where });
-      continue;
-    }
-    const lintLevels = (node: unknown, label: string): void => {
-      if (!isDictionary(node)) return;
-      for (const slot of Object.keys(node)) {
-        if (slot.startsWith("__note:")) continue;
-        const level = node[slot];
-        if (level !== "root" && level !== "instance") {
-          divergences.push({ kind: "contrat-illisible", tag, where: where + "/" + label + "/" + slot });
-        }
-      }
-    };
-    lintLevels(record["required"], "required");
-    lintLevels(record["optional"], "optional");
-    if (isDictionary(record["conditional"])) {
-      if (typeof record["conditional"]["slot"] !== "string") {
-        divergences.push({ kind: "contrat-illisible", tag, where: where + "/conditional/slot" });
-      }
-      const operand = record["conditional"]["operand"];
-      if (operand !== undefined && typeof operand !== "string") {
-        divergences.push({ kind: "contrat-illisible", tag, where: where + "/conditional/operand" });
-      }
-      lintLevels(record["conditional"]["true"], "conditional/true");
-      lintLevels(record["conditional"]["false"], "conditional/false");
-    }
-  }
-  return divergences;
+/** The contracts of every known tag. First-order tags are defined by
+ * their inline couple (ADR-0022/0027) — their contract is the formula
+ * itself. The algorithmic tags (strate 2) read their built-in contract
+ * here. A tag with neither a couple nor a built-in contract is
+ * unknown (« étiquette-inconnue »). */
+export function registryContractsOf(): Record<string, CheckContract> {
+  return BUILTIN_CONTRACTS;
 }
 
 /** The reading level of every slot a check may read — required,
@@ -797,7 +682,7 @@ export function vacantChecksOf({
   walkedOf?: (layer: LayerName) => WalkedAddress[];
 }): VacantCheck[] {
   const vacancies: VacantCheck[] = [];
-  const ownContracts = contracts ?? registryContractsOf({ space });
+  const ownContracts = contracts ?? registryContractsOf();
   const ownWalkedOf =
     walkedOf ??
     ((layerName: LayerName): WalkedAddress[] =>
@@ -894,13 +779,14 @@ export type CheckFunction = (parameters: { space: Space; view: AddressView }) =>
 // behavior, they stay as they are. The data declares what a check
 // means, this table says how it runs — and the meta-audit
 // (`registryAuditOf`) holds the two answer for each other.
+// ADR-0027: the first-order tags (simple, nonempty, oriented, sperner)
+// are defined by their inline couple — no algorithm here. Only the
+// strate-2 tags (transitive closure, class comparison) keep an
+// algorithm until strate 2 expresses them as formulas.
 export const checkRegistry: Record<string, CheckFunction> = {
   containers: checkContainers,
   cardinality: checkCardinality,
-  simple: checkSimple,
-  nonempty: checkNonempty,
   oriented: checkOriented,
-  sperner: checkSperner,
   "k-partite": checkKPartite,
   dag: checkAcyclic,
   arbre: checkConnected,
@@ -914,10 +800,11 @@ export const checkRegistry: Record<string, CheckFunction> = {
 // declares, the algorithm table binds.
 export function runChecks({ space, layer }: { space: Space; layer: LayerName }): string[] {
   const errors: string[] = [];
-  const contracts = registryContractsOf({ space });
+  const contracts = registryContractsOf();
   const seen = new Set<string>();
   for (const address of walkAddresses({ space, layer })) {
     const view = new AddressView(address[0], address[1]);
+    const definitions = checkDefinitionsOf({ space, view });
     for (const [sourceLayer, sourcePath] of space.closure({ layer: address[0], path: address[1] })) {
       const node = space.raw({ layer: sourceLayer, path: sourcePath });
       if (!isDictionary(node)) continue;
@@ -925,29 +812,70 @@ export function runChecks({ space, layer }: { space: Space; layer: LayerName }):
       if (!Array.isArray(tags)) continue;
       for (const tag of tags) {
         if (typeof tag !== "string") continue;
-        // Existence comes from the data (ADR-0019): a tag the
-        // registry layer does not declare is ignored — and recorded.
-        const contract = contracts[tag];
-        if (!contract) {
-          space.recordDiagnostic({ kind: "étiquette-inconnue", address: [address[0], address[1]], fact: fact("label-unknown", { tag }) });
-          continue;
-        }
-        // A declared tag without an algorithm is refused — the
-        // contract judges (its vacancy is a verdict), the
-        // execution cannot.
-        const checkFunction = checkRegistry[tag];
-        if (!checkFunction) {
-          space.recordDiagnostic({ kind: "algorithme-absent", address: [address[0], address[1]], fact: fact("algorithm-missing", { tag }) });
-          continue;
-        }
         // Deduplication by (address, check) — the tag string is the
         // identity of the judgment.
         const deduplicationKey = address[0] + "|" + address[1].join("/") + "|" + tag;
         if (seen.has(deduplicationKey)) continue;
         seen.add(deduplicationKey);
+        // ADR-0027: a tag with an inline couple is judged by its
+        // formula; a tag with a built-in algorithm runs it; a tag
+        // with neither is unknown.
+        const couple = definitions[tag];
+        if (couple !== undefined) {
+          for (const error of runCoupleAt({ space, view, tag, couple })) {
+            errors.push(address[0] + "::" + (address[1].join("/") || ".") + " — " + error);
+          }
+          continue;
+        }
+        const contract = contracts[tag];
+        if (!contract) {
+          space.recordDiagnostic({ kind: "étiquette-inconnue", address: [address[0], address[1]], fact: fact("label-unknown", { tag }) });
+          continue;
+        }
+        const checkFunction = checkRegistry[tag];
+        if (!checkFunction) {
+          space.recordDiagnostic({ kind: "algorithme-absent", address: [address[0], address[1]], fact: fact("algorithm-missing", { tag }) });
+          continue;
+        }
         for (const error of checkFunction({ space, view }) ?? []) {
           errors.push(address[0] + "::" + (address[1].join("/") || ".") + " — " + error);
         }
+      }
+    }
+  }
+  return errors;
+}
+
+/** Execute one inline couple at an address: each judgment whose `when`
+ * branch matches the condition is evaluated; a falsified sentence
+ * ships its witnesses rendered on the message template. */
+function runCoupleAt({ space, view, tag, couple }: { space: Space; view: AddressView; tag: string; couple: CheckCouple }): string[] {
+  const errors: string[] = [];
+  const conditionTrue =
+    couple.condition !== null && boundSlotValue({ space, view, slot: couple.condition }) === true;
+  for (const judgment of couple.judgments) {
+    if (judgment.when !== null && (judgment.when === "true") !== conditionTrue) continue;
+    const parsed = tryParseFormula(judgment.formula);
+    if (!("formula" in parsed)) {
+      space.recordDiagnostic({
+        kind: "formule-illisible",
+        address: [view.layer, view.path],
+        fact: fact("unreadable-formula", { tag, detail: parsed.error }),
+      });
+      continue;
+    }
+    const evaluation = evaluateFormula({ space, view, formula: parsed.formula });
+    if (evaluation.exhausted) {
+      space.recordDiagnostic({
+        kind: "formule-épuisée",
+        address: [view.layer, view.path],
+        fact: fact("exhausted-formula", { tag, steps: String(evaluation.steps) }),
+      });
+      continue;
+    }
+    if (!evaluation.ok) {
+      for (const failure of evaluation.failures) {
+        errors.push(renderJudgmentMessage({ space, view, message: judgment.message, assignment: failure }));
       }
     }
   }

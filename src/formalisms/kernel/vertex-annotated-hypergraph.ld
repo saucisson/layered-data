@@ -1,10 +1,10 @@
-// ---- axe annotation (sommets) — vertex-annotated-hypergraph :
-//      un slot générique « annotation » sur le vertex_type, type non
-//      lié — chaque famille le fixera dans son raffinement (le
-//      marking des réseaux de Petri en est l'exemple). Membre du
-//      père au même chemin : pas de refines, la fermeture du père
-//      fusionne avec la base :: specification/vertex_type. Hoisé
-//      directement sous la base : annoter n'oriente pas.
+// ---- annotation axis (vertices) — vertex-annotated-hypergraph:
+//      a generic "annotation" slot on vertex_type, unbound type —
+//      each family will fix it in its refinement (Petri net marking
+//      is the example). Member of the parent at the same path: no
+//      refines, the parent's closure merges with the base ::
+//      specification/vertex_type. Hoisted directly under the base:
+//      annotating does not orient.
 layer vertex-annotated-hypergraph refines @multihypergraph
   extend specification
     extend vertex_type

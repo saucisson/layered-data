@@ -1,6 +1,6 @@
-// famille Kahn : raffine bipartite-digraph, et les types d'arcs
-// ont deux parents (l'arête à la racine de kahn + l'arc croisé de
-// l'axe partition)
+// Kahn family: refines bipartite-digraph, and the arc types have
+// two parents (the edge at kahn's root + the crossed arc of the
+// partition axis)
 layer kahn-scheme refines @bipartite-digraph
   extend specification
     process_type refines @kahn-scheme/specification/vertex_type
@@ -12,9 +12,9 @@ layer kahn-scheme refines @bipartite-digraph
         extend record
           override abstract identifier
           abstract capacity
-    // deux parents : l'arête à la racine de kahn-scheme (résolue
-    // vers multidigraph::edge_type orienté) et l'arc croisé de
-    // bipartite-digraph
+    // two parents: the edge at kahn-scheme's root (resolved
+    // towards multidigraph's oriented edge_type) and the crossed
+    // arc of bipartite-digraph
     write_type refines @kahn-scheme/edge_type then @bipartite-digraph/specification/arcAB_type
       extend specification
         extend record
