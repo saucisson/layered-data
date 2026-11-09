@@ -2,5 +2,6 @@ node_modules/
 dist/
 .env
 .review/
+*.vsix
 formalisms/users/*
 !formalisms/users/.gitkeep
