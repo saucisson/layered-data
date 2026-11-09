@@ -52,6 +52,8 @@ import {
   draftMemberFieldEdition,
   draftMemberPosition,
   arcContainerBetween,
+  arcLabelKeyOf,
+  suggestModelRefines,
   memberReferenceText,
   typeReferenceText,
   type MemberContainer,
@@ -676,6 +678,47 @@ check(
     .some((citation) => citation.name === postName && citation.via === "target") &&
     readMemberCitations({ space: kernel.space, model: MODEL, containers, container: "places", name: otherPlace })
       .every((citation) => citation.name !== postName),
+);
+
+// =====================================================================
+// (o) the creation form's default refines is SUGGESTED from the
+//     corpus — the first container-bearing layer plus the first
+//     position-bearing layer, never a hardcoded name
+// =====================================================================
+
+const suggestion = suggestModelRefines({ space: kernel.space, layerNames: [...KERNEL_LAYER_NAMES] });
+check(
+  "(o) the suggestion names a container-bearing layer and a position layer",
+  suggestion.startsWith("@") && suggestion.includes(" then @"),
+);
+check(
+  "(o) the suggested base declares member containers",
+  readMemberContainers({ space: kernel.space, model: suggestion.split(" ")[0].slice(1) }).length > 0,
+);
+
+// =====================================================================
+// (p) the arc label key is read from the arc's declared annotations —
+//     the first annotation key reading a number, never "weight" in
+//     the code
+// =====================================================================
+
+const labeledArc = containerOf("pre_arcs");
+const labeledArcName = nextMemberName({ space: kernel.space, model: MODEL, container: labeledArc.name });
+const withLabeledArc = draftMemberInsertion({
+  block: sourceOf({ layerName: MODEL }),
+  container: labeledArc.name,
+  name: labeledArcName,
+  typeReference: typeReferenceText({ address: labeledArc.memberType }),
+  fields: {
+    source: memberReferenceText({ model: MODEL, container: "places", member: seatName }),
+    target: memberReferenceText({ model: MODEL, container: "transitions", member: transitionName2 }),
+    weight: 3,
+  },
+});
+check("(p) the weighted arc is accepted", gesture({ layerName: MODEL, draftedSource: withLabeledArc }).ok === true);
+check(
+  "(p) the label key is found among the declared annotations",
+  arcLabelKeyOf({ space: kernel.space, model: MODEL, arcContainer: labeledArc, arcName: labeledArcName }) === "weight",
 );
 
 // =====================================================================
