@@ -23,8 +23,15 @@ Depuis la racine du dépôt :
 
 ## Installer
 
-Empaquetage en `.vsix` (nécessite `vsce`, via `npx` sans installation
-préalable) puis `code --install-extension layered-data-0.2.0.vsix`.
+Depuis la racine du dépôt :
+
+    make vscode-install
+
+La cible empaquette le `.vsix` (nécessite `vsce`, récupéré via `npx`
+sans installation préalable ; le nom du fichier reprend la version
+du manifeste, ex. `layered-data-0.3.0.vsix`) puis l'installe :
+`code --install-extension vscode/layered-data-<version>.vsix`.
+Équivalent manuel : `cd vscode && npx --yes @vscode/vsce package`.
 
 ## Vérifier
 
@@ -74,6 +81,35 @@ harnais du dépôt. Les messages de syntaxe viennent du tokenizer du
 noyau, les verdicts sont rendus dans la langue du réglage
 `layered-data.language` (défaut `fr`). La commande
 `Layered Data: Lint the corpus` relance à la demande.
+
+## L'autocomplétion
+
+L'extension enregistre un fournisseur de complétion sur le langage
+`layered-data` (déclencheurs `@` et `/`). Il lance le CLI
+`vscode/completion.mts` — même noyau, même `--kernel` que le linter —
+avec le **texte du document sur stdin** (les frappes non enregistrées
+comptent) et la position du curseur en arguments :
+
+    node vscode/completion.mts --root . --line <n> --character <c> [--language fr] [--kernel <src>] < source.ld
+
+Le CLI assemble le corpus noyau pour obtenir l'espace, puis appelle
+`completeLanguage` (`src/domain/language/completion.ts`) et répond en
+JSON : `{ version, language, completions: [{ label, kind, detail }] }`,
+`kind` parmi `act`, `layer`, `key`. Quatre contextes, lus dans le
+texte avant le curseur :
+
+1. `@…` — les noms de couches après `@`, les segments de chemin
+   après `@couche/…` (lus dans les clés de l'espace à cette adresse) ;
+2. `refines` / `then` — les noms de couches (y compris celles que le
+   document édité déclare lui-même) ;
+3. `expect …` — les clés de la couche courante au chemin tapé ;
+4. ailleurs — les actes du bloc courant (`layer` à la marge, les
+   actes membres et les clés spéciales plus profond).
+
+Un corpus qui n'assemble pas dégrade la complétion (actes et couches
+seuls) sans jamais échouer : la complétion ne juge pas, c'est le
+linter qui rapporte. L'extension mappe les kinds en `Keyword`,
+`Module` et `Field`, et reste silencieuse si le CLI échoue.
 
 ## L'analyse statique, ensuite
 
