@@ -48,6 +48,7 @@ import {
   readMemberCitations,
   draftMemberInsertion,
   draftMemberRemoval,
+  draftMemberRemovalCascade,
   draftMemberFieldEdition,
   draftMemberPosition,
   arcContainerBetween,
@@ -588,6 +589,93 @@ check(
     path: asLayerPath([positionContainer2.name, seatName]),
     key: "system",
   }) === "polar",
+);
+
+// =====================================================================
+// (m) deleting a member also removes its own position entry — no
+//     orphan `positions/<name>` lingers in the block (the cascade)
+// =====================================================================
+
+const cascadeName = nextMemberName({ space: kernel.space, model: MODEL, container: "places" });
+const withCascadeMember = draftMemberInsertion({
+  block: sourceOf({ layerName: MODEL }),
+  container: "places",
+  name: cascadeName,
+  typeReference: typeReferenceText({ address: containerOf("places").memberType }),
+  fields: {},
+});
+check("(m) the member is accepted", gesture({ layerName: MODEL, draftedSource: withCascadeMember }).ok === true);
+const withCascadePosition = draftMemberPosition({
+  block: sourceOf({ layerName: MODEL }),
+  positionContainer: positionContainer2.name,
+  name: cascadeName,
+  x: 300,
+  y: 300,
+  typeReference: typeReferenceText({ address: positionContainer2.memberType }),
+});
+check("(m) its position is accepted", gesture({ layerName: MODEL, draftedSource: withCascadePosition }).ok === true);
+const cascadeDraft = draftMemberRemovalCascade({
+  block: sourceOf({ layerName: MODEL }),
+  container: "places",
+  name: cascadeName,
+  positionContainer: positionContainer2.name,
+});
+check(
+  "(m) the cascade draft removes BOTH the member and its position entry",
+  !cascadeDraft.includes("    " + cascadeName + " refines"),
+);
+check("(m) the cascade deletion is accepted", gesture({ layerName: MODEL, draftedSource: cascadeDraft }).ok === true);
+check(
+  "(m) no orphan position lingers — the block holds no trace of the member",
+  !sourceOf({ layerName: MODEL }).includes(cascadeName),
+);
+
+// =====================================================================
+// (n) an arc's end is re-targeted by a field edition drafting a bare
+//     reference — the citation moves to the new member
+// =====================================================================
+
+const otherPlace = nextMemberName({ space: kernel.space, model: MODEL, container: "places" });
+const withOtherPlace = draftMemberInsertion({
+  block: sourceOf({ layerName: MODEL }),
+  container: "places",
+  name: otherPlace,
+  typeReference: typeReferenceText({ address: containerOf("places").memberType }),
+  fields: {},
+});
+check("(n) the second place is accepted", gesture({ layerName: MODEL, draftedSource: withOtherPlace }).ok === true);
+// a fresh arc between the transition and the new place (post direction)
+const postContainer = containerOf("post_arcs");
+const postName = nextMemberName({ space: kernel.space, model: MODEL, container: postContainer.name });
+const withPostArc = draftMemberInsertion({
+  block: sourceOf({ layerName: MODEL }),
+  container: postContainer.name,
+  name: postName,
+  typeReference: typeReferenceText({ address: postContainer.memberType }),
+  fields: {
+    source: memberReferenceText({ model: MODEL, container: "transitions", member: transitionName2 }),
+    target: memberReferenceText({ model: MODEL, container: "places", member: otherPlace }),
+  },
+});
+check("(n) the post arc is accepted", gesture({ layerName: MODEL, draftedSource: withPostArc }).ok === true);
+const retargeted = draftMemberFieldEdition({
+  block: sourceOf({ layerName: MODEL }),
+  container: postContainer.name,
+  name: postName,
+  fields: { target: memberReferenceText({ model: MODEL, container: "places", member: seatName }) },
+});
+check(
+  "(n) the re-target drafts a BARE reference (not a quoted string)",
+  retargeted.includes("      target = @" + MODEL + "/places/" + seatName) &&
+    !retargeted.includes('target = "@'),
+);
+check("(n) the re-targeted arc is accepted", gesture({ layerName: MODEL, draftedSource: retargeted }).ok === true);
+check(
+  "(n) the citation moved: the new target is cited, the old one is not",
+  readMemberCitations({ space: kernel.space, model: MODEL, containers, container: "places", name: seatName })
+    .some((citation) => citation.name === postName && citation.via === "target") &&
+    readMemberCitations({ space: kernel.space, model: MODEL, containers, container: "places", name: otherPlace })
+      .every((citation) => citation.name !== postName),
 );
 
 // =====================================================================

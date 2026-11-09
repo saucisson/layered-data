@@ -401,6 +401,28 @@ export function draftMemberRemoval({
   return drafted.join("\n") + "\n";
 }
 
+/** Draft a block with one member removed AND its own position entry
+ * removed too: deleting `places/p1` also drops `positions/p1`, so no
+ * orphan position lingers in the block. The position container is
+ * optional — a model without positions drafts the plain removal. */
+export function draftMemberRemovalCascade({
+  block,
+  container,
+  name,
+  positionContainer,
+}: {
+  block: string;
+  container: string;
+  name: string;
+  positionContainer: string | null;
+}): string {
+  let drafted = draftMemberRemoval({ block, container, name });
+  if (positionContainer !== null && positionContainer !== container) {
+    drafted = draftMemberRemoval({ block: drafted, container: positionContainer, name });
+  }
+  return drafted;
+}
+
 /** Draft a block with a member's fields set: an existing field line
  * is rewritten in place, a missing one is inserted under the member
  * header. The other fields of the member stay untouched. */
