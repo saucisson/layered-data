@@ -1,7 +1,12 @@
 # Makefile for saucisson/layered-data
 # Provides convenience targets for common development operations
 
-.PHONY: help verify check typecheck test build lint format sync-daily
+.PHONY: help verify check typecheck test build lint format sync-daily vscode-install
+
+# The VS Code extension version, read from its manifest — the .vsix
+# is named after it.
+VERSION := $(shell node -p "require('./vscode/package.json').version")
+VSIX := vscode/layered-data-$(VERSION).vsix
 
 # Default target
 help:
@@ -17,6 +22,7 @@ help:
 	@echo "  sync-daily  - Rebase daily onto origin/main, push with lease (ADR-0024)"
 	@echo "  day-report  - Generate end-of-day report"
 	@echo "  smoke-test  - Run smoke tests"
+	@echo "  vscode-install - Package the VS Code extension (.vsix via vsce/npx) and install it locally"
 
 # Quality gates (ADR-0008)
 verify: typecheck test build
@@ -56,6 +62,16 @@ lint:
 format:
 	# Prettier not yet configured, placeholder
 	echo "Formatting not yet configured"
+
+# VS Code extension (vscode/): package the .vsix with vsce — fetched by
+# npx on the fly, no prior install, as documented in vscode/README.md —
+# then install it into the local VS Code. The .vsix rebuilds when the
+# extension sources change.
+vscode-install: $(VSIX)
+	code --install-extension $(VSIX)
+
+$(VSIX): vscode/package.json vscode/extension.js vscode/linter.mts vscode/completion.mts vscode/language-configuration.json vscode/syntaxes/ld.tmLanguage.json
+	cd vscode && npx --yes @vscode/vsce package --out layered-data-$(VERSION).vsix
 
 # Day cycle operations (ADR-0010, docs/branching.md)
 day-start:
