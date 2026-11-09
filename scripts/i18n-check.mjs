@@ -21,14 +21,20 @@ function readJson(path) {
 function collectSourceKeys() {
   const keys = new Set();
   const messagePattern = /message\s*=\s*"((?:[^"\\]|\\.)*)"/g;
-  const tPattern = /\bt\(\s*["'`]((?:[^"'`\\]|\\.)*)["'`]/g;
+  // One pattern per quote style: an apostrophe inside a double-quoted
+  // key must not terminate the match.
+  const tPatterns = [
+    /\bt\(\s*"((?:[^"\\]|\\.)*)"/g,
+    /\bt\(\s*'((?:[^'\\]|\\.)*)'/g,
+    /\bt\(\s*`((?:[^`\\]|\\.)*)`/g,
+  ];
   const walk = (dir) => {
     for (const entry of readdirSync(dir)) {
       const full = join(dir, entry);
       if (statSync(full).isDirectory()) { walk(full); continue; }
       if (!/\.(ts|tsx|ld)$/.test(entry)) continue;
       const content = readFileSync(full, "utf8");
-      for (const pattern of [messagePattern, tPattern]) {
+      for (const pattern of [messagePattern, ...tPatterns]) {
         let match;
         while ((match = pattern.exec(content)) !== null) {
           if (match[1].length > 0) keys.add(match[1]);

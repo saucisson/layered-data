@@ -35,3 +35,8 @@ export function initI18n({ language = DEFAULT_LANGUAGE }: { language?: Language 
 export function t(key: string, params?: Record<string, string | number>): string {
   return params === undefined ? i18next.t(key) : i18next.t(key, params);
 }
+
+/** Switch the active language at runtime (the workshop language picker). */
+export function setI18nLanguage({ language }: { language: Language }): void {
+  void i18next.changeLanguage(language);
+}

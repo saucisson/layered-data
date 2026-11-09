@@ -13,6 +13,7 @@ import { CreationPage } from "./pages/CreationPage";
 import { FormalismPage } from "./pages/FormalismPage";
 import { ModelEditorPage } from "./presentation/modelEditorPage";
 import { readWorkshopLanguage, writeWorkshopLanguage } from "./infrastructure/browserLanguage";
+import { setI18nLanguage } from "./infrastructure/i18n";
 import type { Language } from "./domain/messages";
 
 function AppContent() {
@@ -22,6 +23,7 @@ function AppContent() {
   const handleChooseLanguage = (next: Language) => {
     setLanguage(next);
     writeWorkshopLanguage({ language: next });
+    setI18nLanguage({ language: next });
   };
 
   switch (page) {
