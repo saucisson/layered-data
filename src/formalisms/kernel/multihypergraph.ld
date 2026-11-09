@@ -1,20 +1,19 @@
-// ---- la base — multihypergraph : les formalismes se définissent
-//      par restriction d'un formalisme plus général — la généralité
-//      est la base. Des sommets et des arêtes, typés (identifier) et
-//      stockés dans deux collections à clés ; l'incidence est
-//      portée : chaque arête pointe ses sommets par des flèches
-//      (arrow_type), en nombre quelconque — l'arité libre est la loi
-//      de la base. La multiplicité est la normalité non marquée du
-//      mécanisme : les arêtes sont identifiées par clé, pas par
-//      leurs extrémités, et le même ensemble d'extrémités peut être
-//      relié plusieurs fois. Une permission par défaut ne porte pas
-//      de nom ; seul son contraire restreint en aura un
-//      (hypergraph, ci-dessous).
+// ---- the base — multihypergraph: formalisms are defined by
+//      restricting a more general formalism — generality is the
+//      base. Vertices and edges, typed (identifier) and stored in
+//      two keyed collections; incidence is carried: each edge
+//      points its vertices through arrows (arrow_type), any number
+//      — free arity is the base's law. Multiplicity is the
+//      unmarked normal of the mechanism: edges are identified by
+//      key, not by their ends, and the same set of ends may be
+//      linked several times. A default permission carries no name;
+//      only its restricting opposite gets one (hypergraph, below).
 layer multihypergraph refines @record
-  // le vocabulaire de la base est une liaison de données (clé
-  // spéciale « bindings ») : les checks génériques ne lisent pas
-  // ces noms en dur, ils lisent les slots — la base les lie. Un
-  // raffinement qui renomme re-lie le slot, le check suit la vue.
+  // the base's vocabulary is a data binding (special key
+  // "bindings"): the generic checks do not read these names
+  // hardcoded, they read the slots — the base binds them. A
+  // refinement that renames re-binds the slot, the check follows
+  // the view.
   bind vertices -> "vertices"
   bind edges -> "edges"
   bind ordered -> false
@@ -29,7 +28,7 @@ layer multihypergraph refines @record
       extend specification
         extend record
           abstract identifier
-      // une flèche pointe un sommet de la base
+      // an arrow points a vertex of the base
       arrow_type refines @record
         extend specification
           extend record

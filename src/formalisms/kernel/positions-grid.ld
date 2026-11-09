@@ -1,6 +1,6 @@
-// ---- la grille — positions-grid : le système par
-//      défaut, axes cartésiens ; la dimension se pose par
-//      données (x seul, x et y, ou x, y et z)
+// ---- the grid — positions-grid: the default system, Cartesian
+//      axes; dimension is posed by data (x alone, x and y, or x, y
+//      and z)
 layer positions-grid refines @positions-scheme
   extend specification
     extend position_type

@@ -223,8 +223,8 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   registre: {
     term: { en: "registry", fr: "registre" },
     definition: {
-      en: "the nominal table of the checks: each tag declares its contract — where it judges, and which slots it must read to be able to (ADR-0018); a check carried but unable to judge is refused as check vacant. Since ADR-0019 the table is carried by the language itself: the layer check-registry declares the contracts, and existence in the registry is existence in the data.",
-      fr: "la table nominale des checks : chaque étiquette y déclare son contrat — où elle juge, et quels slots il lui faut lire pour pouvoir (ADR-0018) ; un check porté mais incapable de juger est refusé comme check vacant. Depuis l'ADR-0019, la table est portée par le langage lui-même : la couche check-registry déclare les contrats, et exister dans le registre, c'est exister dans les données.",
+      en: "the checks' contracts: since ADR-0027 the first-order checks carry their formula inline in the language (ADR-0022); the algorithmic tags keep a built-in contract in the kernel. A check carried but unable to judge is refused as check vacant (ADR-0018).",
+      fr: "les contrats des checks : depuis l'ADR-0027, les checks du premier ordre portent leur formule inline dans le langage (ADR-0022) ; les étiquettes algorithmiques gardent un contrat intégré au noyau. Un check porté mais incapable de juger est refusé comme check vacant (ADR-0018).",
     },
   },
   specification: {

@@ -1,6 +1,6 @@
-// ---- bornes du dîner — pn-philosophers-5-bounds : le champ bound
-//      posé sur le type des places du dîner — la contrainte
-//      descend jusqu'aux cinq citations du template.
+// ---- the dinner's bounds — pn-philosophers-5-bounds: the bound
+//      field posed on the dinner's place type — the constraint
+//      descends to the template's five citations.
 layer pn-philosophers-5-bounds refines @pn-philosophers-5
   extend specification
     extend place_type

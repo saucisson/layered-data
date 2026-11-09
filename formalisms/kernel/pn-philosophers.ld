@@ -5,7 +5,7 @@ layer pn-philosophers refines @petrinet-scheme
     fork refines @pn-philosophers/specification/place_type
     take refines @pn-philosophers/specification/transition_type
     release refines @pn-philosophers/specification/transition_type
-    // même chemin que le père : membre du père, pas de refines (idiome de fusion)
+    // same path as the parent: member of the parent, no refines (merge idiom)
     extend arc_type
       weight = 1
       extend specification
