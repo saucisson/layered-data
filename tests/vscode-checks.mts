@@ -1,7 +1,8 @@
 // The VS Code extension checks: the .ld grammar is declared, sound,
 // and complete — every act, special key, address, path, string and
 // number of the surface language carries a scope, and every code
-// character the corpus actually writes is covered.
+// character the corpus actually writes is covered. The linter and
+// the completion CLI are pinned on real corpora and real shapes.
 //
 // The grammar is flat (no begin/end context): vscode-textmate's
 // matching then reduces to one rule — at each position, the first
@@ -349,6 +350,110 @@ check(
     extensionSource.includes('"--kernel"') &&
     manifest.main === "./extension.js" &&
     manifest.contributes.commands.some((command: { command: string }) => command.command === "layered-data.lint"),
+);
+
+// (g) the completion CLI: the kernel answers in JSON with useful
+//     suggestions on the canonical shapes — acts, layers, keys
+
+interface CompletionAnswer {
+  version: number;
+  language: string;
+  completions: { label: string; kind: string; detail: string }[];
+}
+
+const runCompletion = ({
+  source,
+  line,
+  character,
+  root = rootDirectory,
+  kernel,
+}: {
+  source: string;
+  line: number;
+  character: number;
+  root?: string;
+  kernel?: string;
+}): CompletionAnswer => {
+  const args = [
+    join(extensionDirectory, "completion.mts"),
+    "--root", root,
+    "--line", String(line),
+    "--character", String(character),
+  ];
+  if (kernel !== undefined) args.push("--kernel", kernel);
+  const run = spawnSync(process.execPath, args, { input: source, encoding: "utf8" });
+  if (run.status !== 0 || run.stdout === "") {
+    throw new Error("completion run failed: " + String(run.stderr));
+  }
+  return JSON.parse(run.stdout) as CompletionAnswer;
+};
+
+const labelsOf = (answer: CompletionAnswer): string[] => answer.completions.map((entry) => entry.label);
+
+const topLevelAnswer = runCompletion({ source: "", line: 1, character: 0 });
+check(
+  "at the margin the completion proposes the layer act",
+  topLevelAnswer.version === 1 && labelsOf(topLevelAnswer).includes("layer") &&
+    topLevelAnswer.completions.some((entry) => entry.label === "layer" && entry.kind === "act"),
+);
+
+const blockAnswer = runCompletion({ source: "layer record\n  ", line: 2, character: 2 });
+check(
+  "inside a layer block the completion proposes the member acts and the special keys",
+  ["extend", "override", "abstract", "bind", "check", "expect"].every((label) => labelsOf(blockAnswer).includes(label)) &&
+    blockAnswer.completions.some((entry) => entry.label === "specification" && entry.kind === "key"),
+);
+
+const partialAnswer = runCompletion({ source: "layer record\n  exp", line: 2, character: 5 });
+check(
+  "a partial word filters the suggestions (exp → expect, nothing else)",
+  labelsOf(partialAnswer).length > 0 &&
+    labelsOf(partialAnswer).every((label) => label.startsWith("exp")) &&
+    labelsOf(partialAnswer).includes("expect"),
+);
+
+const refinesAnswer = runCompletion({ source: "layer graph refines @pa", line: 1, character: 23 });
+check(
+  "after refines @ the completion proposes the kernel layers matching the prefix",
+  refinesAnswer.completions.some((entry) => entry.label === "pair-graph" && entry.kind === "layer") &&
+    refinesAnswer.completions.every((entry) => entry.kind === "layer" && entry.label.startsWith("pa")),
+);
+
+const draftAnswer = runCompletion({ source: "layer my-draft refines @", line: 1, character: 24 });
+check(
+  "a layer declared by the edited source itself is proposed too",
+  labelsOf(draftAnswer).includes("my-draft") && labelsOf(draftAnswer).includes("record"),
+);
+
+const pathAnswer = runCompletion({ source: "layer graph refines @pair-graph/", line: 1, character: 32 });
+check(
+  "after @layer/ the completion proposes the keys of that layer in the space",
+  pathAnswer.completions.some((entry) => entry.label === "edge_type" && entry.kind === "key"),
+);
+
+const expectAnswer = runCompletion({ source: "layer pair-graph\n  expect ", line: 2, character: 9 });
+check(
+  "after expect the completion proposes the keys of the current layer",
+  labelsOf(expectAnswer).includes("edge_type"),
+);
+
+const explicitKernelCompletion = runCompletion({
+  source: "layer graph refines @pa",
+  line: 1,
+  character: 23,
+  kernel: join(rootDirectory, "src"),
+});
+check(
+  "the completion CLI addresses the kernel with --kernel, like the linter",
+  explicitKernelCompletion.version === 1 && labelsOf(explicitKernelCompletion).includes("pair-graph"),
+);
+
+check(
+  "the extension glue wires the completion provider: it spawns completion.mts with the document on stdin and registers the provider on @ and /",
+  extensionSyntax.status === 0 &&
+    extensionSource.includes("registerCompletionItemProvider") &&
+    extensionSource.includes("completion.mts") &&
+    extensionSource.includes("child.stdin.write(document.getText())"),
 );
 
 // =====================================================================

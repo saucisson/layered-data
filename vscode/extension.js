@@ -21,6 +21,7 @@ let debounceTimer = undefined;
 function activate(context) {
   const collection = vscode.languages.createDiagnosticCollection("layered-data");
   const linterScript = path.join(context.extensionPath, "linter.mts");
+  const completionScript = path.join(context.extensionPath, "completion.mts");
   const configuration = () => vscode.workspace.getConfiguration("layered-data");
 
   const rootPath = () => {
@@ -98,6 +99,63 @@ function activate(context) {
     debounceTimer = setTimeout(lint, DEBOUNCE_MILLISECONDS);
   };
 
+  // The completion CLI: the document text goes on stdin (unsaved
+  // keystrokes included), the cursor as arguments; the JSON answer
+  // maps to completion items. Completion stays silent on failure —
+  // unlike the linter, a missing suggestion is not an error to show.
+  const completionKindOf = (kind) =>
+    kind === "layer"
+      ? vscode.CompletionItemKind.Module
+      : kind === "key"
+        ? vscode.CompletionItemKind.Field
+        : vscode.CompletionItemKind.Keyword;
+
+  const complete = (document, position) =>
+    new Promise((resolve) => {
+      const root = rootPath();
+      if (root === undefined) {
+        resolve([]);
+        return;
+      }
+      const child = spawn(
+        configuration().get("nodePath") || "node",
+        [
+          completionScript,
+          "--root", root,
+          "--kernel", path.join(root, "src"),
+          "--language", configuration().get("language") || "fr",
+          "--line", String(position.line + 1),
+          "--character", String(position.character),
+        ],
+        { cwd: root },
+      );
+      let stdout = "";
+      child.stdout.on("data", (chunk) => {
+        stdout += chunk;
+      });
+      child.on("error", () => resolve([]));
+      child.on("close", (code) => {
+        if (code !== 0) {
+          resolve([]);
+          return;
+        }
+        try {
+          const answer = JSON.parse(stdout);
+          resolve(
+            answer.completions.map((entry) => {
+              const item = new vscode.CompletionItem(entry.label, completionKindOf(entry.kind));
+              item.detail = entry.detail;
+              return item;
+            }),
+          );
+        } catch {
+          resolve([]);
+        }
+      });
+      child.stdin.write(document.getText());
+      child.stdin.end();
+    });
+
   const isLayerDocument = (document) => document.languageId === "layered-data";
 
   context.subscriptions.push(
@@ -111,6 +169,12 @@ function activate(context) {
       if (isLayerDocument(document)) lint();
     }),
     vscode.commands.registerCommand("layered-data.lint", lint),
+    vscode.languages.registerCompletionItemProvider(
+      { language: "layered-data" },
+      { provideCompletionItems: (document, position) => complete(document, position) },
+      "@",
+      "/",
+    ),
     collection,
   );
   lint();
