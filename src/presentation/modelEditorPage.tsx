@@ -33,6 +33,7 @@ import {
   type LivingAddition,
 } from "../application/edition.ts";
 import { drawnShape, type DrawnShape } from "../domain/views.ts";
+import { expectationsOf, formatExpectation, readMatchesExpectation } from "../domain/validation.ts";
 import { circlePosition, LENS_LAYERS } from "./viewTree.ts";
 import { EdgeGlyph } from "./glyphs.tsx";
 import { editionRefusalLabel, labelOf, say } from "./i18n.ts";
@@ -49,6 +50,8 @@ import {
   draftMemberFieldEdition,
   draftMemberPosition,
   arcContainerBetween,
+  arcLabelKeyOf,
+  suggestModelRefines,
   memberReferenceText,
   typeReferenceText,
   type MemberContainer,
@@ -137,11 +140,15 @@ export function ModelEditorPage({
   // ---- the model creation form -------------------------------------
   const [creationOpen, setCreationOpen] = useState(false);
   const [creationName, setCreationName] = useState("");
-  const [creationRefines, setCreationRefines] = useState("@petrinet-scheme then @positions-grid");
+  const [creationRefines, setCreationRefines] = useState(() =>
+    suggestModelRefines({ space: KERNEL.space, layerNames: KERNEL.layerNames }),
+  );
   // ---- the canvas in motion ----------------------------------------
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [gesture, setGesture] = useState<Gesture | null>(null);
+  const [showSource, setShowSource] = useState(false);
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const importInputRef = useRef<HTMLInputElement | null>(null);
   // ---- the undo journal: the model's block BEFORE each accepted
   // edition — Ctrl+Z walks back, Ctrl+Shift+Z walks forward. A
   // refused gesture never enters the journal. ----
@@ -168,6 +175,30 @@ export function ModelEditorPage({
   }, [model, spaceVersion]);
 
   const positionContainer = useMemo(() => positionContainerOf({ containers }), [containers]);
+
+  /** The model's declared expectations (`expect` lines), re-read live:
+   * each shows its current value and whether it still holds. */
+  const expectations = useMemo(() => {
+    if (model === null) return [] as { address: string; expected: string; holds: boolean }[];
+    const layerNode = KERNEL.compiledLanguage.layers[asLayerName(model)];
+    return expectationsOf(layerNode).map((expectation) => {
+      let read: unknown;
+      try {
+        read = KERNEL.space.read({
+          layer: asLayerName(model),
+          path: asLayerPath(expectation.path),
+          key: expectation.key,
+        });
+      } catch {
+        read = undefined;
+      }
+      return {
+        address: expectation.address,
+        expected: formatExpectation(expectation.expectation),
+        holds: readMatchesExpectation(read, expectation.expectation),
+      };
+    });
+  }, [model, spaceVersion]);
   const vertexContainers = useMemo(() => {
     return containers.filter(
       (container) => container.kind === "sommet" && container.name !== positionContainer?.name,
@@ -238,10 +269,14 @@ export function ModelEditorPage({
           layer: asLayerName(model),
           path: asLayerPath([container.name, arcName]),
         });
-        const weight = KERNEL.space.read({
+        // the arc's label: the first declared annotation key that
+        // reads a number — the formalism's data names it, never a
+        // hardcoded key
+        const labelKey = arcLabelKeyOf({ space: KERNEL.space, model, arcContainer: container, arcName });
+        const label = labelKey === null ? null : KERNEL.space.read({
           layer: asLayerName(model),
           path: asLayerPath([container.name, arcName]),
-          key: "weight",
+          key: labelKey,
         });
         arcs.push({
           container: container.name,
@@ -253,7 +288,7 @@ export function ModelEditorPage({
             KERNEL.space.read({ layer: asLayerName(model), path: asLayerPath([container.name, arcName]), key: "target" }),
           ),
           spec: shape?.spec ?? null,
-          weight: typeof weight === "number" ? weight : null,
+          weight: typeof label === "number" ? label : null,
         });
       }
     }
@@ -744,6 +779,65 @@ export function ModelEditorPage({
     return () => svg.removeEventListener("wheel", handleWheel);
   }, []);
 
+  // ---- export / import (client-side, no server) ----------------------
+
+  /** Download the current model's block as a .ld file. */
+  function exportModel() {
+    if (model === null) return;
+    const blob = new Blob([modelSource], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = model + ".ld";
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  /** Import a .ld file: the whole text is a draft addition, judged by
+   * the staging exactly like the creation form. */
+  function handleImportFile(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (file === undefined) return;
+    void file.text().then((text) => {
+      const staging = stageLayerAddition({
+        languageSource: KERNEL.languageSource,
+        previousAdditionSources: additions.map((addition) => addition.source),
+        draftSource: text,
+        livingLayerNames,
+        readonlyLayerNames: KERNEL.layerNames,
+        language,
+      });
+      if (!staging.ok) {
+        setBanner({ tone: "refused", text: stagingRefusalText({ staging }) });
+        return;
+      }
+      const applied = applyStagedAddition({
+        space: KERNEL.space,
+        staging,
+        knownLayerNames: livingLayerNames,
+        readonlyLayerNames: KERNEL.layerNames,
+      });
+      setAdditions([...additions, { source: text.trim(), layerNames: [...applied.newLayerNames] }]);
+      const nextBlocks = { ...addedLayerBlocks };
+      for (const layerName of applied.newLayerNames) {
+        const block = staging.blocks[layerName];
+        if (block !== undefined) nextBlocks[layerName] = block;
+      }
+      setAddedLayerBlocks(nextBlocks);
+      setSpaceVersion(spaceVersion + 1);
+      if (applied.newLayerNames.length > 0) setModel(applied.newLayerNames[0]);
+      setBanner({
+        tone: "written",
+        text: say({
+          language,
+          en: "the imported draft entered the space — the staging accepted it",
+          fr: "le brouillon importé est entré dans l'espace — le staging l'a accepté",
+        }),
+      });
+    });
+  }
+
   // ---- the model creation ---------------------------------------------
 
   function handleCreateModel() {
@@ -852,6 +946,36 @@ export function ModelEditorPage({
           ↷
         </button>
         <button
+          onClick={() => setShowSource((previous) => !previous)}
+          disabled={model === null}
+          title={say({ language, en: "show the model's source block", fr: "afficher le bloc source du modèle" })}
+          className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+        >
+          {say({ language, en: "source", fr: "source" })}
+        </button>
+        <button
+          onClick={exportModel}
+          disabled={model === null}
+          title={say({ language, en: "download the model as .ld", fr: "télécharger le modèle en .ld" })}
+          className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+        >
+          {say({ language, en: "export .ld", fr: "exporter .ld" })}
+        </button>
+        <button
+          onClick={() => importInputRef.current?.click()}
+          title={say({ language, en: "import a .ld draft — judged by the staging", fr: "importer un brouillon .ld — jugé par le staging" })}
+          className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+        >
+          {say({ language, en: "import .ld", fr: "importer .ld" })}
+        </button>
+        <input
+          ref={importInputRef}
+          type="file"
+          accept=".ld,.txt"
+          className="hidden"
+          onChange={handleImportFile}
+        />
+        <button
           onClick={() => onChooseLanguage(language === "fr" ? "en" : "fr")}
           className="ml-auto rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
         >
@@ -953,7 +1077,7 @@ export function ModelEditorPage({
         </div>
 
         {/* the canvas: a reading of the model's truth */}
-        <div className="col-span-7">
+        <div className={showSource ? "col-span-5" : "col-span-7"}>
           <svg
             ref={svgRef}
             viewBox={"0 0 " + CANVAS_WIDTH + " " + CANVAS_HEIGHT}
@@ -1046,15 +1170,20 @@ export function ModelEditorPage({
               {banner.text}
             </div>
           )}
-          {model !== null && (
-            <details className="mt-2 rounded-md border border-slate-200 px-2 py-1.5">
-              <summary className="cursor-pointer text-[11px] font-semibold text-slate-500">
-                {say({ language, en: "the layer's source — the only truth", fr: "la source de la couche — la seule vérité" })}
-              </summary>
-              <pre className="mt-1 overflow-x-auto font-mono text-[10px] leading-4 text-slate-600">{modelSource}</pre>
-            </details>
-          )}
         </div>
+
+        {/* the source panel: the block the canvas reads — shown beside
+            the canvas on demand, the only truth made visible */}
+        {showSource && model !== null && (
+          <div className="col-span-2 rounded-lg border border-slate-200 bg-white p-2">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+              {say({ language, en: "source — the only truth", fr: "source — la seule vérité" })}
+            </div>
+            <pre className="max-h-[540px] overflow-auto whitespace-pre-wrap font-mono text-[10px] leading-4 text-slate-600">
+              {modelSource}
+            </pre>
+          </div>
+        )}
 
         {/* the inspector: the selected member and its declared keys */}
         <div className="col-span-3 rounded-lg border border-slate-200 bg-white p-2">
@@ -1135,6 +1264,25 @@ export function ModelEditorPage({
               >
                 {say({ language, en: "delete (Suppr)", fr: "supprimer (Suppr)" })}
               </button>
+            </div>
+          )}
+          {model !== null && expectations.length > 0 && (
+            <div className="mt-2 border-t border-slate-100 pt-2">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+                {say({ language, en: "declared expectations", fr: "attentes déclarées" })}
+              </div>
+              {expectations.map((expectation) => (
+                <div
+                  key={expectation.address}
+                  className={
+                    "mb-0.5 font-mono text-[10px] leading-4 " +
+                    (expectation.holds ? "text-emerald-600" : "text-red-600")
+                  }
+                >
+                  {expectation.address} = {expectation.expected}
+                  {expectation.holds ? "" : " ✕"}
+                </div>
+              ))}
             </div>
           )}
         </div>

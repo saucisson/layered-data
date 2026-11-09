@@ -8,6 +8,7 @@ import { type LayerName, asLayerName, asLayerPath } from "../domain/identifiers.
 import { AddressView, LayerReference, PathReference } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
 import type { Language } from "../domain/messages.ts";
+import { resolvePositionAt } from "../application/positions.ts";
 import { say } from "./i18n.ts";
 import type { BilingualText } from "./i18n.ts";
 
@@ -132,37 +133,9 @@ export function resolvedPosition({
   path: string[];
   visited: Set<string>;
 }): { x: number; y: number } | null {
-  const visitKey = layer + "::" + path.join("/");
-  if (visited.has(visitKey)) return null;
-  visited.add(visitKey);
-
-  let baseX = 0;
-  let baseY = 0;
-  const readAt = (key: string) => space.read({ layer: asLayerName(layer), path: asLayerPath(path), key });
-  const relativeTo = readAt("relative_to");
-  if (relativeTo instanceof AddressView) {
-    const upstream = resolvedPosition({
-      space,
-      layer: relativeTo.layer,
-      path: relativeTo.path,
-      visited,
-    });
-    if (upstream === null) return null;
-    baseX = upstream.x;
-    baseY = upstream.y;
-  }
-  const system = readAt("system");
-  if (system === "polar") {
-    const radius = readAt("r");
-    const theta = readAt("theta");
-    if (typeof radius !== "number" || typeof theta !== "number") return null;
-    const angle = (theta * Math.PI) / 180;
-    return { x: baseX + radius * Math.cos(angle), y: baseY + radius * Math.sin(angle) };
-  }
-  const x = readAt("x");
-  const y = readAt("y");
-  if (typeof x !== "number") return null;
-  return { x: baseX + x, y: baseY + (typeof y === "number" ? y : 0) };
+  // one resolution for the workshop and the editor — the shared core
+  // lives in the application layer
+  return resolvePositionAt({ space, layer, path, visited });
 }
 
 /** The resolved position of a named object within one source
