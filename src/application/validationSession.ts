@@ -20,8 +20,10 @@
 import { asLayerPath, type LayerName } from "../domain/identifiers.ts";
 import { Space } from "../domain/space.ts";
 import {
+  collectValidation,
+  streamValidation,
+  type ValidationChunk,
   type ValidationOutcome,
-  validateSpace,
 } from "../domain/validation.ts";
 import type { ParsedLanguage } from "../domain/language/parser.ts";
 import type { CompiledLanguage } from "../domain/language/compiler.ts";
@@ -56,6 +58,11 @@ export interface ValidationSession {
   }): ValidationOutcome;
   /** The validation of the current state, without edition. */
   outcome(): ValidationOutcome;
+  /** The same validation as a stream (ADR-0026): one chunk per judged
+   * unit, the return value is the full outcome — drain it with
+   * collectValidation for the synchronous form, or pace it with
+   * scheduleValidation for a non-blocking one. */
+  outcomeStream(): Generator<ValidationChunk, ValidationOutcome, void>;
   /** How many walks the last validation rebuilt — the session's
    * observable economy (the harnesses assert it: an edition that
    * touches one layer rebuilds a handful of walks, not the whole
@@ -113,8 +120,11 @@ export function createValidationSession({
       return session.outcome();
     },
     outcome() {
+      return collectValidation(session.outcomeStream());
+    },
+    outcomeStream() {
       rebuilt = 0;
-      return validateSpace({
+      return streamValidation({
         space,
         parse: currentParse,
         compilation: currentCompilation,
