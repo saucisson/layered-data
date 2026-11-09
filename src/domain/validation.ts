@@ -33,7 +33,7 @@ import {
   vacantChecksOf,
 } from "./checks.ts";
 import { quantifiedVariablesOf, templateTermsOf, tryParseFormula } from "./formulas.ts";
-import { walkAddresses } from "./views.ts";
+import { walkLayerObserved, type WalkedAddress } from "./views.ts";
 import { type CompiledLanguage, type Declaration } from "./language/compiler.ts";
 import { type ParsedLanguage } from "./language/parser.ts";
 import { fact, type MessageFact } from "./messages.ts";
@@ -197,6 +197,25 @@ export function validateSpace({
     labelsOf.set(layer, new Set());
     ancestorsOf.set(layer, new Set());
   }
+
+  // ---- the shared observed walk: one materialization per layer,
+  // consumed by the labels pass, the vacant checks, the shadow
+  // confrontation and the check couples. The passes judge the same
+  // space — they share one observation of it, the walk (the
+  // expensive part) is never repeated.
+  const walkedLayerTable = new Map<LayerName, WalkedAddress[]>();
+  const walkedLayerOf = (layer: LayerName): WalkedAddress[] => {
+    let walked = walkedLayerTable.get(layer);
+    if (walked === undefined) {
+      walked = walkLayerObserved({ space, layer });
+      walkedLayerTable.set(layer, walked);
+    }
+    return walked;
+  };
+  // The labels pass reads the root closures DIRECTLY (never through
+  // the shared walk): the first closure computation of a layer is
+  // observable — it records the resolution diagnostics — and the
+  // recorded order is part of the audit's byte-identical dump.
   for (const layer of layerNames) {
     for (const [sourceLayer, sourcePath] of space.closure({ layer, path: [] })) {
       if (sourcePath.length === 0) ancestorsOf.get(layer)!.add(sourceLayer);
@@ -265,7 +284,7 @@ export function validateSpace({
   // slots of the layer checks a layer's root carries. The instance
   // slots of an inherited check are the lint's inventory: the type
   // binds them, the root never sees it.
-  for (const vacancy of vacantChecksOf({ space, layerNames })) {
+  for (const vacancy of vacantChecksOf({ space, layerNames, contracts, walkedOf: walkedLayerOf })) {
     if (!vacancy.posed && !(vacancy.level === "root" && vacancy.address[1].length === 0)) continue;
     const where = vacancy.address[0] + "::" + (vacancy.address[1].join("/") || ".");
     verdicts.push({
@@ -299,13 +318,14 @@ export function validateSpace({
   // ---- (d) shadows against declarations — the same walk as the
   // diagnostics fallback, but judging
   for (const layer of layerNames) {
-    for (const address of walkAddresses({ space, layer })) {
-      const [addressLayer, addressPath] = address;
-      for (const key of space.keys({ layer: addressLayer, path: addressPath })) {
+    for (const entry of walkedLayerOf(layer)) {
+      const [addressLayer, addressPath] = entry.address;
+      for (const key of entry.keys) {
         let winner: [string, string[]] | null = null;
         let providers = 0;
-        for (const [sourceLayer, sourcePath] of space.closure({ layer: addressLayer, path: addressPath })) {
-          const node = space.raw({ layer: sourceLayer, path: sourcePath });
+        for (let index = 0; index < entry.closure.length; index += 1) {
+          const [sourceLayer, sourcePath] = entry.closure[index];
+          const node = entry.nodes[index];
           if (isDictionary(node) && key in node && node[key] !== null) {
             providers += 1;
             if (winner === null) winner = [sourceLayer, sourcePath];
@@ -385,14 +405,15 @@ export function validateSpace({
   // is refused HERE, the execution never meets it.
   const redefinitions = new Set<string>(); // name|first|second — one verdict per confrontation, not per address
   for (const layer of layerNames) {
-    for (const address of walkAddresses({ space, layer })) {
-      const [addressLayer, addressPath] = address;
+    for (const entry of walkedLayerOf(layer)) {
+      const [addressLayer, addressPath] = entry.address;
       // per-address: only poses CO-VISIBLE at this address confront
       // each other — two sibling branches never meet (the geometry
       // of the refinement, the same the first-winner reads with)
       const firstPoseOf = new Map<string, { pose: string; canonical: string }>();
-      for (const [sourceLayer, sourcePath] of space.closure({ layer: addressLayer, path: addressPath })) {
-        const node = space.raw({ layer: sourceLayer, path: sourcePath });
+      for (let index = 0; index < entry.closure.length; index += 1) {
+        const [sourceLayer, sourcePath] = entry.closure[index];
+        const node = entry.nodes[index];
         if (!isDictionary(node) || !isDictionary(node["check-definitions"])) continue;
         for (const name of Object.keys(node["check-definitions"])) {
           if (name.startsWith("__note:")) continue;
@@ -430,10 +451,11 @@ export function validateSpace({
   // name)) — the winner anywhere is judged exactly once
   const judgedPoses = new Set<string>();
   for (const layer of layerNames) {
-    for (const address of walkAddresses({ space, layer })) {
-      const [addressLayer, addressPath] = address;
-      for (const [sourceLayer, sourcePath] of space.closure({ layer: addressLayer, path: addressPath })) {
-        const node = space.raw({ layer: sourceLayer, path: sourcePath });
+    for (const entry of walkedLayerOf(layer)) {
+      const [addressLayer, addressPath] = entry.address;
+      for (let index = 0; index < entry.closure.length; index += 1) {
+        const [sourceLayer, sourcePath] = entry.closure[index];
+        const node = entry.nodes[index];
         if (!isDictionary(node) || !isDictionary(node["check-definitions"])) continue;
         for (const name of Object.keys(node["check-definitions"])) {
           if (name.startsWith("__note:")) continue;

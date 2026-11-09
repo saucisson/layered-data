@@ -44,7 +44,7 @@ import { type Address, AddressView, type RawValue, addressesEqual, isDictionary,
 import { Space } from "./space.ts";
 import { designatedAddress } from "./desugaring.ts";
 import { canonicalFormula, evaluateFormula, renderJudgmentMessage, tryParseFormula } from "./formulas.ts";
-import { walkAddresses } from "./views.ts";
+import { walkAddresses, walkLayerObserved, type WalkedAddress } from "./views.ts";
 import { fact } from "./messages.ts";
 
 // ---- address algebra (shared vocabulary of the checks) --------------
@@ -780,9 +780,36 @@ function pathsEqual(first: string[], second: string[]): boolean {
  * are judged at the addresses of the operand view (the `edges`); a
  * missing operand leaves the group dormant — nothing to judge.
  * Measured on the bedrock: 79 judgments, 0 vacancies. */
-export function vacantChecksOf({ space, layerNames }: { space: Space; layerNames: readonly LayerName[] }): VacantCheck[] {
+export function vacantChecksOf({
+  space,
+  layerNames,
+  contracts = undefined,
+  walkedOf = undefined,
+}: {
+  space: Space;
+  layerNames: readonly LayerName[];
+  /** the registry contracts, when the caller already read them — the
+   * validator reads them once for its own passes and hands them
+   * over, the registry is never re-read */
+  contracts?: Record<string, CheckContract>;
+  /** the observed walks, shared with the validator's passes — when
+   * absent, the walk is the caller's own (byte-identical scan) */
+  walkedOf?: (layer: LayerName) => WalkedAddress[];
+}): VacantCheck[] {
   const vacancies: VacantCheck[] = [];
-  const contracts = registryContractsOf({ space });
+  const ownContracts = contracts ?? registryContractsOf({ space });
+  const ownWalkedOf =
+    walkedOf ??
+    ((layerName: LayerName): WalkedAddress[] =>
+      walkAddresses({ space, layer: layerName }).map((address) => {
+        const closure = space.closure({ layer: address[0], path: address[1] });
+        return {
+          address,
+          keys: [],
+          closure,
+          nodes: closure.map(([sourceLayer, sourcePath]) => space.raw({ layer: sourceLayer, path: sourcePath })),
+        };
+      }));
   const recordAt = (
     address: Address,
     tag: string,
@@ -826,22 +853,24 @@ export function vacantChecksOf({ space, layerNames }: { space: Space; layerNames
     }
   };
   for (const layerName of layerNames) {
-    for (const address of walkAddresses({ space, layer: layerName })) {
+    for (const entry of ownWalkedOf(layerName)) {
+      const address = entry.address;
       const [layer, path] = address;
       let posed = false;
       const tags = new Set<string>();
-      for (const [sourceLayer, sourcePath] of space.closure({ layer, path })) {
-        const node = space.raw({ layer: sourceLayer, path: sourcePath });
+      for (let index = 0; index < entry.closure.length; index += 1) {
+        const [sourceLayer, sourcePath] = entry.closure[index];
+        const node = entry.nodes[index];
         if (!isDictionary(node)) continue;
         if (sourceLayer === layer && pathsEqual(sourcePath, path) && Array.isArray(node["checks"])) {
           posed = true;
         }
         for (const tag of (node["checks"] ?? []) as unknown[]) {
-          if (typeof tag === "string" && contracts[tag]) tags.add(tag);
+          if (typeof tag === "string" && ownContracts[tag]) tags.add(tag);
         }
       }
       for (const tag of tags) {
-        const contract = contracts[tag];
+        const contract = ownContracts[tag];
         if (posed) {
           recordContractAt(address, tag, contract, true);
         } else if (contract.level === "root" && path.length === 0) {
