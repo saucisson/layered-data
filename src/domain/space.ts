@@ -87,6 +87,13 @@ export class Space {
   closureMemo = new Map<string, ClosureMemoEntry>();
   touched: string[] = []; // the touch journal (evKey per event)
   journalBase = 0; // events purged from the journal
+  // The observation collector: while an observation is open, every
+  // closure and raw read lands in the active dependency set — the
+  // caller (the validation session) learns WHAT its observation
+  // read, and can invalidate it against the touch journal with the
+  // same event-covers-dependency rule the memo uses. Null when no
+  // observation is open: the hot paths pay one property check.
+  private observationDeps: Set<string> | null = null;
   // The diagnostics channel. The kernel stays total — it never
   // throws — but every ignored event is recorded here: typed data,
   // deduplicated by (kind, address, fact), deterministic order.
@@ -95,6 +102,38 @@ export class Space {
   // the workbench, never of the kernel.
   diagnostics: Diagnostic[] = [];
   private seenDiagnostics = new Set<string>();
+
+  /** Open a dependency observation. Every closure and raw read
+   * until the matching endObservation is recorded as a dependency
+   * key in the returned set; the generation is the journal's
+   * watermark at the opening — isObservationStale answers whether
+   * any event since covers any recorded dependency, exactly the
+   * rule the memo applies to its own entries. */
+  beginObservation(): { deps: Set<string>; gen: number } {
+    this.observationDeps = new Set<string>();
+    return { deps: this.observationDeps, gen: this.touched.length + this.journalBase };
+  }
+
+  /** Close the observation (the set keeps what was read). */
+  endObservation(): void {
+    this.observationDeps = null;
+  }
+
+  /** Is an observation (its dependency set, its journal watermark)
+   * stale? The same scan isMemoEntryValid applies to memo entries. */
+  isObservationStale({ deps, gen }: { deps: Set<string>; gen: number }): boolean {
+    const eventCount = this.touched.length + this.journalBase;
+    for (let eventIndex = Math.max(gen, this.journalBase); eventIndex < eventCount; eventIndex += 1) {
+      const event = this.touched[eventIndex - this.journalBase];
+      const eventPathLength = event.length - event.indexOf("\u0001") - 1;
+      for (const dependency of deps) {
+        if (Space.eventCoversDependency({ event, eventPathLength, dependency })) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
 
   recordDiagnostic({ kind, address, fact }: { kind: string; address: Address; fact: MessageFact }): void {
     const factKey = fact.code + "\u0001" + (fact.params === undefined ? "" : JSON.stringify(fact.params));
@@ -197,7 +236,8 @@ export class Space {
 
   raw({ layer, path }: { layer: LayerName; path: LayerPath }): RawTree | null {
     // Every raw read during a closure is a dependency (layer, path)
-    // of the entry being computed.
+    // of the entry being computed — and of any open observation.
+    this.observationDeps?.add(Space.dependencyKey({ layer, path }));
     if (this.frameStack.length) {
       this.frames
         .get(this.frameStack[this.frameStack.length - 1])!
@@ -253,6 +293,7 @@ export class Space {
     tracer?: Tracer | null;
     trace?: boolean;
   }): Address[] {
+    this.observationDeps?.add(Space.dependencyKey({ layer, path }));
     const key = Space.addressKey({ layer, path });
     if (!trace) {
       const entry = this.closureMemo.get(key);
