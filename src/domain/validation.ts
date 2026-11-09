@@ -158,11 +158,19 @@ export function validateSpace({
   parse,
   compilation,
   layerNames,
+  walkedOf = undefined,
 }: {
   space: Space;
   parse: ParsedLanguage;
   compilation: CompiledLanguage;
   layerNames: LayerName[];
+  /** A persistent walk provider (a validation session): when given,
+   * the observed walks come from the caller's cache — invalidation
+   * is the CALLER's contract (space.isObservationStale). When
+   * absent, one table is built for this validation only. The
+   * verdicts and the stats are identical either way: the walks are
+   * a pure observation of the space. */
+  walkedOf?: (layer: LayerName) => WalkedAddress[];
 }): ValidationOutcome {
   const verdicts: Verdict[] = [];
   const stats: Record<string, number> = {
@@ -202,9 +210,11 @@ export function validateSpace({
   // consumed by the labels pass, the vacant checks, the shadow
   // confrontation and the check couples. The passes judge the same
   // space — they share one observation of it, the walk (the
-  // expensive part) is never repeated.
+  // expensive part) is never repeated. A session may provide its
+  // own persistent walks; the local table is the session-less
+  // default.
   const walkedLayerTable = new Map<LayerName, WalkedAddress[]>();
-  const walkedLayerOf = (layer: LayerName): WalkedAddress[] => {
+  const localWalkedLayerOf = (layer: LayerName): WalkedAddress[] => {
     let walked = walkedLayerTable.get(layer);
     if (walked === undefined) {
       walked = walkLayerObserved({ space, layer });
@@ -212,6 +222,7 @@ export function validateSpace({
     }
     return walked;
   };
+  const walkedLayerOf = walkedOf ?? localWalkedLayerOf;
   // The labels pass reads the root closures DIRECTLY (never through
   // the shared walk): the first closure computation of a layer is
   // observable — it records the resolution diagnostics — and the
