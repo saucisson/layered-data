@@ -16,7 +16,13 @@
 import { type LayerName, asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { LayerReference, type RawValue } from "../domain/addresses.ts";
 import { type Space } from "../domain/space.ts";
-import { extractLayerBlock, stageLayerAddition, type StagingOutcome } from "./staging.ts";
+import {
+  extractLayerBlock,
+  stageLayerAddition,
+  streamStageLayerAddition,
+  type StagingOutcome,
+} from "./staging.ts";
+import type { ValidationChunk } from "../domain/validation.ts";
 import { DEFAULT_LANGUAGE, type Language } from "../domain/messages.ts";
 
 /** One living addition as the edition sees it: the source text of an
@@ -77,15 +83,7 @@ function additionSourceWithoutLayer({
  * refused), and it must declare it alone (a layer smuggled
  * alongside the edition is refused — an edition edits, it never
  * adds nor renames). */
-export function stageLayerEdition({
-  languageSource,
-  livingAdditions,
-  livingLayerNames,
-  readonlyLayerNames,
-  layerName,
-  editedSource,
-  language = DEFAULT_LANGUAGE,
-}: {
+export interface StageLayerEditionInput {
   languageSource: string;
   livingAdditions: readonly LivingAddition[];
   livingLayerNames: readonly string[];
@@ -100,49 +98,63 @@ export function stageLayerEdition({
   editedSource: string;
   /** the workshop language — the syntax errors of the refusal speak it */
   language?: Language;
-}): EditionOutcome {
-  // ---- the bedrock guard (ADR-0020): the refusal speaks before the
-  // staging is convened — a bedrock layer never re-enters it, the
-  // frozen verdicts of the corpus stay true
-  if (readonlyLayerNames.includes(layerName)) {
-    return {
+}
+
+/** The bedrock guard's refusal, as an outcome. */
+function bedrockEditionRefusal({ layerName }: { layerName: LayerName }): EditionOutcome {
+  return {
+    ok: false,
+    staging: {
       ok: false,
-      staging: {
-        ok: false,
-        step: "validation",
-        errors: [],
-        verdicts: [],
-        layerNames: [layerName],
-        compiledLanguage: null,
-        blocks: {},
-      },
-      refusals: ["socle-édité"],
-    };
-  }
-  // the staging context: every living addition keeps its place,
-  // except the edited layer — it leaves its own addition's source
-  // and the living names, the staging judges it again
+      step: "validation",
+      errors: [],
+      verdicts: [],
+      layerNames: [layerName],
+      compiledLanguage: null,
+      blocks: {},
+    },
+    refusals: ["socle-édité"],
+  };
+}
+
+/** The staging context of an edition: every living addition keeps
+ * its place, except the edited layer — it leaves its own addition's
+ * source and the living names, the staging judges it again. */
+function editionStagingContext({
+  livingAdditions,
+  livingLayerNames,
+  layerName,
+  editedSource,
+}: {
+  livingAdditions: readonly LivingAddition[];
+  livingLayerNames: readonly string[];
+  layerName: LayerName;
+  editedSource: string;
+}): { previousAdditionSources: string[]; contextLayerNames: string[]; draftSource: string } {
   const previousAdditionSources = livingAdditions.map((addition) =>
     addition.layerNames.includes(layerName)
       ? additionSourceWithoutLayer({ addition, layerName })
       : addition.source,
   );
   const contextLayerNames = livingLayerNames.filter((name) => name !== layerName);
-  const staging = stageLayerAddition({
-    languageSource,
-    previousAdditionSources,
-    draftSource: editedSource.trim(),
-    livingLayerNames: contextLayerNames,
-    readonlyLayerNames,
-    language,
-  });
+  return { previousAdditionSources, contextLayerNames, draftSource: editedSource.trim() };
+}
 
-  // ---- the edition guards ----
-  // The guards read the declared layer names — they speak only
-  // when the syntax step passed (on a syntax refusal, the parser
-  // never names layers, the errors speak alone). The layers under
-  // judgment are the ones the living context does not hold:
-  // exactly the edited one must appear there, alone.
+/** The edition guards: an edition edits, it never renames a layer
+ * nor adds one alongside. The guards read the declared layer names —
+ * they speak only when the syntax step passed (on a syntax refusal,
+ * the parser never names layers, the errors speak alone). The layers
+ * under judgment are the ones the living context does not hold:
+ * exactly the edited one must appear there, alone. */
+function editionGuardsOf({
+  staging,
+  contextLayerNames,
+  layerName,
+}: {
+  staging: StagingOutcome;
+  contextLayerNames: readonly string[];
+  layerName: LayerName;
+}): EditionRefusalCode[] {
   const refusals: EditionRefusalCode[] = [];
   if (staging.compiledLanguage !== null) {
     const judgedLayerNames = staging.layerNames.filter(
@@ -155,7 +167,81 @@ export function stageLayerEdition({
       refusals.push("couche-glissée");
     }
   }
+  return refusals;
+}
+
+export function stageLayerEdition({
+  languageSource,
+  livingAdditions,
+  livingLayerNames,
+  readonlyLayerNames,
+  layerName,
+  editedSource,
+  language = DEFAULT_LANGUAGE,
+}: StageLayerEditionInput): EditionOutcome {
+  // ---- the bedrock guard (ADR-0020): the refusal speaks before the
+  // staging is convened — a bedrock layer never re-enters it, the
+  // frozen verdicts of the corpus stay true
+  if (readonlyLayerNames.includes(layerName)) {
+    return bedrockEditionRefusal({ layerName });
+  }
+  const { previousAdditionSources, contextLayerNames, draftSource } = editionStagingContext({
+    livingAdditions,
+    livingLayerNames,
+    layerName,
+    editedSource,
+  });
+  const staging = stageLayerAddition({
+    languageSource,
+    previousAdditionSources,
+    draftSource,
+    livingLayerNames: contextLayerNames,
+    readonlyLayerNames,
+    language,
+  });
+  const refusals = editionGuardsOf({ staging, contextLayerNames, layerName });
   return { ok: staging.ok && refusals.length === 0, staging, refusals };
+}
+
+/** The streamed edition (ADR-0026): the same judgement as
+ * stageLayerEdition, with the staging's validation paced chunk by
+ * chunk on the event loop — onChunk sees the progress, the resolved
+ * outcome is identical to the synchronous one. */
+export function streamStageLayerEdition(
+  {
+    languageSource,
+    livingAdditions,
+    livingLayerNames,
+    readonlyLayerNames,
+    layerName,
+    editedSource,
+    language = DEFAULT_LANGUAGE,
+  }: StageLayerEditionInput,
+  { onChunk }: { onChunk?: (chunk: ValidationChunk) => void },
+): Promise<EditionOutcome> {
+  if (readonlyLayerNames.includes(layerName)) {
+    return Promise.resolve(bedrockEditionRefusal({ layerName }));
+  }
+  const { previousAdditionSources, contextLayerNames, draftSource } = editionStagingContext({
+    livingAdditions,
+    livingLayerNames,
+    layerName,
+    editedSource,
+  });
+  return streamStageLayerAddition(
+    {
+      languageSource,
+      previousAdditionSources,
+      draftSource,
+      livingLayerNames: contextLayerNames,
+      readonlyLayerNames,
+      language,
+    },
+    { onChunk },
+  ).then((staging) => {
+    const refusals = editionGuardsOf({ staging, contextLayerNames, layerName });
+    return { ok: staging.ok && refusals.length === 0, staging, refusals };
+  });
 }
 
 /** The act of edition: the staged tree replaces the layer's tree in
