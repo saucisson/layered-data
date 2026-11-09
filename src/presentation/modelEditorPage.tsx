@@ -38,6 +38,7 @@ import { circlePosition, LENS_LAYERS } from "./viewTree.ts";
 import { EdgeGlyph } from "./glyphs.tsx";
 import { editionRefusalLabel, labelOf } from "./i18n.ts";
 import { t } from "../infrastructure/i18n.ts";
+import { connectEditorSync, type EditorSyncHandle, type SessionSnapshot } from "../infrastructure/editorSync.ts";
 import {
   readMemberContainers,
   positionContainerOf,
@@ -57,12 +58,6 @@ import {
   typeReferenceText,
   type MemberContainer,
 } from "../application/modelEditing.ts";
-
-// ---- the kernel, the frame ------------------------------------------
-// Assembled once from the corpus files — the same single source the
-// workshop reads; the editor keeps its own living additions.
-
-const KERNEL = assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() });
 
 const CANVAS_WIDTH = 960;
 const CANVAS_HEIGHT = 540;
@@ -127,10 +122,24 @@ export function ModelEditorPage({
   language: Language;
   onChooseLanguage: (language: Language) => void;
 }) {
+  // ---- the kernel, the frame -----------------------------------------
+  // Assembled from the corpus files — the same single source the
+  // workshop reads. In shared mode (ADR-0028) the kernel is REPLACED
+  // by a fresh assembly + the server's additions on every state
+  // event, so the server stays the single writer; locally the space
+  // is mutated in place by each accepted gesture.
+  const [KERNEL, setKERNEL] = useState(() => assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() }));
+
   // ---- the living workshop -----------------------------------------
   const [additions, setAdditions] = useState<LivingAddition[]>([]);
   const [addedLayerBlocks, setAddedLayerBlocks] = useState<Record<string, string>>({});
   const [spaceVersion, setSpaceVersion] = useState(0);
+  // ---- the shared session (ADR-0028): connected to the server's
+  // SSE stream, or local when the server is absent ----
+  const [shared, setShared] = useState(false);
+  const [presence, setPresence] = useState<{ id: string; focus: string | null }[]>([]);
+  const syncRef = useRef<EditorSyncHandle | null>(null);
+  const serverVersionRef = useRef(0);
   // ---- the editor's own choices ------------------------------------
   const [model, setModel] = useState<string | null>(null);
   const [lens, setLens] = useState<string>(LENS_LAYERS[0]);
@@ -296,6 +305,103 @@ export function ModelEditorPage({
     return { vertices, arcs };
   }, [model, lens, spaceVersion, vertexContainers, arcContainers, positionContainer]);
 
+  // ---- the shared session (ADR-0028) ----------------------------------
+
+  /** Rebuild the kernel from the corpus and re-apply the given
+   * additions in order — the server's snapshot becomes the local
+   * truth. Used on every state event in shared mode. */
+  function rematerialize({ snapshot }: { snapshot: SessionSnapshot }): void {
+    const kernel = assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() });
+    const livingLayerNames: string[] = [...kernel.layerNames];
+    const previousAdditionSources: string[] = [];
+    for (const entry of snapshot.additions) {
+      const staging = stageLayerAddition({
+        languageSource: kernel.languageSource,
+        previousAdditionSources,
+        draftSource: entry.source,
+        livingLayerNames,
+        readonlyLayerNames: [...kernel.layerNames],
+      });
+      if (!staging.ok) continue;
+      const applied = applyStagedAddition({
+        space: kernel.space,
+        staging,
+        knownLayerNames: [...livingLayerNames],
+        readonlyLayerNames: [...kernel.layerNames],
+      });
+      livingLayerNames.push(...applied.newLayerNames);
+      previousAdditionSources.push(entry.source);
+    }
+    serverVersionRef.current = snapshot.version;
+    setKERNEL(kernel);
+    setAdditions(snapshot.additions.map((entry) => ({ source: entry.source, layerNames: [entry.name] })));
+    setAddedLayerBlocks(Object.fromEntries(snapshot.additions.map((entry) => [entry.name, entry.source])));
+    setSpaceVersion((version) => version + 1);
+  }
+
+  /** Connect to the server's session stream on mount; stay local when
+   * the server is absent or refuses the access code. */
+  useEffect(() => {
+    let cancelled = false;
+    void connectEditorSync({
+      onState: (snapshot) => {
+        if (cancelled) return;
+        setShared(true);
+        rematerialize({ snapshot });
+      },
+      onPresence: (list) => {
+        if (cancelled) return;
+        setPresence(list.filter((entry) => entry.id !== syncRef.current?.clientId));
+      },
+      onEnd: () => {
+        if (cancelled) return;
+        setShared(false);
+        setPresence([]);
+      },
+    }).then((handle) => {
+      if (cancelled) {
+        handle?.close();
+        return;
+      }
+      syncRef.current = handle;
+    });
+    return () => {
+      cancelled = true;
+      syncRef.current?.close();
+      syncRef.current = null;
+    };
+    // the connection lives for the page's lifetime — no dep array
+  }, []);
+
+  /** Report the edited model as this editor's focus. */
+  useEffect(() => {
+    syncRef.current?.setFocus({ focus: model });
+  }, [model, shared]);
+
+  /** Send one accepted gesture to the shared session. The local write
+   * already happened; the server's answer only moves the version, or
+   * speaks on conflict/refusal — the next state event re-syncs. */
+  function sendSharedGesture({ source }: { source: string }): void {
+    const sync = syncRef.current;
+    if (sync === null) return;
+    void sync
+      .sendGesture({ source, baseVersion: serverVersionRef.current })
+      .then((result) => {
+        if (result.status === 200) {
+          serverVersionRef.current = result.body.version;
+        } else if (result.status === 409) {
+          serverVersionRef.current = result.body.version;
+          setBanner({ tone: "refused", text: t("another editor wrote first — the shared state was reloaded, replay your gesture") });
+        } else if (result.status === 422) {
+          serverVersionRef.current = result.body.version;
+          setBanner({ tone: "refused", text: t("the server's staging refused the gesture — the shared state was reloaded") });
+        }
+      })
+      .catch(() => {
+        // the stream is gone: the onEnd callback falls the editor back to local
+      });
+  }
+
   // ---- the tribunal ---------------------------------------------------
 
   /** Render a staging outcome's refusal as one readable text. */
@@ -367,6 +473,7 @@ export function ModelEditorPage({
     );
     setAddedLayerBlocks({ ...addedLayerBlocks, [targetModel]: edition.block });
     setSpaceVersion(spaceVersion + 1);
+    sendSharedGesture({ source: draftedSource });
     setBanner({
       tone: "written",
       text: t("staging: 0 verdict — the layer is rewritten, the write is declared, the canvas re-reads the space"),
@@ -810,6 +917,7 @@ export function ModelEditorPage({
       setAddedLayerBlocks(nextBlocks);
       setSpaceVersion(spaceVersion + 1);
       if (applied.newLayerNames.length > 0) setModel(applied.newLayerNames[0]);
+      sendSharedGesture({ source: text });
       setBanner({
         tone: "written",
         text: t("the imported draft entered the space — the staging accepted it"),
@@ -851,6 +959,7 @@ export function ModelEditorPage({
     setSelected(null);
     setTool({ kind: "select" });
     setCreationOpen(false);
+    sendSharedGesture({ source: draftSource });
     setBanner({
       tone: "written",
       text: t("the model enters the space — its palette is read from its formalism"),
@@ -869,6 +978,18 @@ export function ModelEditorPage({
         <span className="text-sm font-semibold text-slate-700">
           {t("the graphical model editor")}
         </span>
+        {shared ? (
+          <span
+            className="rounded border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[11px] text-emerald-700"
+            title={presence.map((entry) => entry.focus ?? "…").join(", ")}
+          >
+            {t("shared — {{editors}} other editor(s) online", { editors: presence.length })}
+          </span>
+        ) : (
+          <span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] text-slate-500">
+            {t("local — no shared session")}
+          </span>
+        )}
         <select
           value={model ?? ""}
           onChange={(event) => {

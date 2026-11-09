@@ -1,6 +1,7 @@
 {
   "+ new model": "+ nouveau modèle",
   "a model is a layer that refines a formalism — the staging judges the draft, the palette is read from what it refines": "un modèle est une couche qui raffine un formalisme — le staging juge le brouillon, la palette se lit dans ce qu'il raffine",
+  "another editor wrote first — the shared state was reloaded, replay your gesture": "un autre éditeur a écrit avant vous — l’état partagé a été rechargé, rejouez votre geste",
   "arc": "arc",
   "declared expectations": "attentes déclarées",
   "delete (Suppr)": "supprimer (Suppr)",
@@ -10,6 +11,7 @@
   "import .ld": "importer .ld",
   "import a .ld draft — judged by the staging": "importer un brouillon .ld — jugé par le staging",
   "inspector": "inspecteur",
+  "local — no shared session": "local — aucune session partagée",
   "model canvas — drag vertices to move them, pull an arc from a vertex to another": "canevas du modèle — glissez les sommets pour les déplacer, tirez un arc d'un sommet à un autre",
   "model name": "nom du modèle",
   "no model": "aucun modèle",
@@ -19,6 +21,7 @@
   "pick a member on the canvas — its declared keys open here, every edition goes through the staging": "choisissez un membre sur le canevas — ses clés déclarées s'ouvrent ici, chaque édition passe par le staging",
   "pointer": "pointeur",
   "redo (Ctrl+Shift+Z)": "rétablir (Ctrl+Maj+Z)",
+  "shared — {{editors}} other editor(s) online": "partagé — {{editors}} autre(s) éditeur(s) en ligne",
   "show the model's source block": "afficher le bloc source du modèle",
   "simple: loop ({e} : {e/source*})": "simple : boucle ({e} : {e/source*})",
   "simple: multiple edge ({e1} == {e2} : ({e1/source*}, {e2/target*}))": "simple : arête multiple ({e1} == {e2} : ({e1/source*}, {e2/target*}))",
@@ -34,5 +37,6 @@
   "the imported draft entered the space — the staging accepted it": "le brouillon importé est entré dans l'espace — le staging l'a accepté",
   "the member is cited — delete the citing arcs first: {{citations}}": "le membre est cité — supprimez d'abord les arcs qui le citent : {{citations}}",
   "the model enters the space — its palette is read from its formalism": "le modèle entre dans l'espace — sa palette se lit dans son formalisme",
+  "the server's staging refused the gesture — the shared state was reloaded": "le staging du serveur a refusé le geste — l’état partagé a été rechargé",
   "undo (Ctrl+Z)": "annuler (Ctrl+Z)"
 }

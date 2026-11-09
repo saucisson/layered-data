@@ -1,6 +1,7 @@
 {
   "+ new model": "+ new model",
   "a model is a layer that refines a formalism — the staging judges the draft, the palette is read from what it refines": "a model is a layer that refines a formalism — the staging judges the draft, the palette is read from what it refines",
+  "another editor wrote first — the shared state was reloaded, replay your gesture": "another editor wrote first — the shared state was reloaded, replay your gesture",
   "arc": "arc",
   "declared expectations": "declared expectations",
   "delete (Suppr)": "delete (Suppr)",
@@ -10,6 +11,7 @@
   "import .ld": "import .ld",
   "import a .ld draft — judged by the staging": "import a .ld draft — judged by the staging",
   "inspector": "inspector",
+  "local — no shared session": "local — no shared session",
   "model canvas — drag vertices to move them, pull an arc from a vertex to another": "model canvas — drag vertices to move them, pull an arc from a vertex to another",
   "model name": "model name",
   "no model": "no model",
@@ -19,6 +21,7 @@
   "pick a member on the canvas — its declared keys open here, every edition goes through the staging": "pick a member on the canvas — its declared keys open here, every edition goes through the staging",
   "pointer": "pointer",
   "redo (Ctrl+Shift+Z)": "redo (Ctrl+Shift+Z)",
+  "shared — {{editors}} other editor(s) online": "shared — {{editors}} other editor(s) online",
   "show the model's source block": "show the model's source block",
   "simple: loop ({e} : {e/source*})": "simple: loop ({e} : {e/source*})",
   "simple: multiple edge ({e1} == {e2} : ({e1/source*}, {e2/target*}))": "simple: multiple edge ({e1} == {e2} : ({e1/source*}, {e2/target*}))",
@@ -34,5 +37,6 @@
   "the imported draft entered the space — the staging accepted it": "the imported draft entered the space — the staging accepted it",
   "the member is cited — delete the citing arcs first: {{citations}}": "the member is cited — delete the citing arcs first: {{citations}}",
   "the model enters the space — its palette is read from its formalism": "the model enters the space — its palette is read from its formalism",
+  "the server's staging refused the gesture — the shared state was reloaded": "the server's staging refused the gesture — the shared state was reloaded",
   "undo (Ctrl+Z)": "undo (Ctrl+Z)"
 }
