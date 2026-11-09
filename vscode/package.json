@@ -1,8 +1,8 @@
 {
   "name": "layered-data",
   "displayName": "Layered Data",
-  "description": "Syntax highlighting and corpus linting for the .ld layer language: indentation blocks, refines acts, @layer/path addresses.",
-  "version": "0.2.0",
+  "description": "Syntax highlighting, corpus linting and autocompletion for the .ld layer language: indentation blocks, refines acts, @layer/path addresses.",
+  "version": "0.3.0",
   "publisher": "saucisson",
   "license": "MIT",
   "categories": [
