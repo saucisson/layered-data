@@ -1,7 +1,7 @@
-// ---- modèle du diamant : un graphe biparti pondéré. e1 porte son
-//      weight (3) ; e2 non — le sien descend du diamant
-//      (weighted-hypergraph, défaut 1). Refines explicites : le
-//      désucrage est ici sans objet.
+// ---- the diamond model: a weighted bipartite graph. e1 carries its
+//      weight (3); e2 does not — its descends from the diamond
+//      (weighted-hypergraph, default 1). Explicit refines: desugaring
+//      is moot here.
 layer wb1 refines @weighted-bipartite
   extend left
     a1 refines @wb1/specification/left_type

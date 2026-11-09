@@ -1,6 +1,6 @@
-// ---- l'espace d'états du dîner — ss-pn-philosophers-5 :
-//      paramétré — le slot petrinet posé à pn-philosophers-5 (LRef
-//      en valeur, pas un refines) : tout lecteur, au-dessus ou en
-//      dessous, le résoudra tard.
+// ---- the dinner's state space — ss-pn-philosophers-5:
+//      parameterized — the petrinet slot posed to pn-philosophers-5
+//      (LRef as value, not a refines): any reader, above or below,
+//      will resolve it late.
 layer ss-pn-philosophers-5 refines @petrinet-statespace
   override petrinet = @pn-philosophers-5

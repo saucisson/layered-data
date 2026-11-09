@@ -318,8 +318,8 @@ const tutorialLayerSources = Object.fromEntries(
 );
 const tutorial = assembleTutorialKernel({ layerSources: tutorialLayerSources });
 check(
-  "(e) the tutorial corpus assembles clean — ten layers, no verdict, its tests replayed",
-  TUTORIAL_LAYER_NAMES.length === 10 &&
+  "(e) the tutorial corpus assembles clean — nine layers, no verdict, its tests replayed",
+  TUTORIAL_LAYER_NAMES.length === 9 &&
     tutorial.validation.verdicts.length === 0 &&
     tutorial.validation.stats.tests === 7 &&
     tutorial.validation.stats.trahis === 0,

@@ -1,4 +1,4 @@
-// lentille Petri : MULTI-LRef [lentille générique, schéma]
+// Petri lens: MULTI-LRef [generic lens, scheme]
 layer petrinet-display refines @graph-display then @petrinet-scheme
   extend specification
     extend place_type

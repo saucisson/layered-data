@@ -1,9 +1,9 @@
-// ---- le template — pn-philosophers-1 : UN philosophe du dîner —
-//      think1/eat1/fork1, take1/release1, pt1/er1/te1 — le MORCEAU
-//      de réseau que la couche pn-philosophers-5 ci-dessous
-//      instancie cinq fois ; les arcs portent un weight (poids
-//      d'arc, terminologie usuelle des réseaux de Petri, alignée
-//      sur le weight de weighted-hypergraph, défaut 1).
+// ---- the template — pn-philosophers-1: ONE philosopher of the dinner —
+//      think1/eat1/fork1, take1/release1, pt1/er1/te1 — the NETWORK
+//      PIECE that the pn-philosophers-5 layer below instantiates
+//      five times; arcs carry a weight (arc weight, usual Petri net
+//      terminology, aligned with weighted-hypergraph's weight,
+//      default 1).
 layer pn-philosophers-1 refines @pn-philosophers then @positions-grid
   extend places
     think1 refines @pn-philosophers/specification/think
@@ -20,9 +20,9 @@ layer pn-philosophers-1 refines @pn-philosophers then @positions-grid
       identifier = 1
     release1 refines @pn-philosophers/specification/release
       identifier = 1
-  // arcs pré (place → transition) et post (transition → place) ; l'alias
-  // arcs les réunit. Refines explicites : l'espace principal ne joue pas le
-  // désucrage (qui les rendrait implicites)
+  // pre arcs (place → transition) and post arcs (transition → place); the
+  // arcs alias reunites them. Explicit refines: the main space does not play
+  // desugaring (which would make them implicit)
   extend pre_arcs
     pt1 refines @petrinet-scheme/specification/pre_arc_type
       source = @pn-philosophers-1/places/think1
@@ -35,10 +35,10 @@ layer pn-philosophers-1 refines @pn-philosophers then @positions-grid
       source = @pn-philosophers-1/transitions/take1
       target = @pn-philosophers-1/places/eat1
   // positions locales du philosophe : le
-  // siège est l'origine du repère local — think1, fork1, eat1 en
-  // colonne à sa gauche, take1, release1 à sa droite ; chaque
-  // position CITE le siège (relative_to) et porte son décalage —
-  // le dîner ne reposera que les cinq sièges, tout le reste
+  // seat is the origin of the local frame — think1, fork1, eat1 in
+  // the column to its left, take1, release1 to its right; each
+  // position CITES the seat (relative_to) and carries its offset —
+  // the dinner will re-pose only the five seats, everything else
   // descendra du template par la citation
   extend positions
     seat refines @positions-grid/specification/position_type

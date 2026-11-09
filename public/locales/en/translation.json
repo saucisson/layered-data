@@ -1,0 +1,8 @@
+{
+  "nonempty: empty edge ({e})": "nonempty: empty edge ({e})",
+  "simple: loop ({e} : {e/source*})": "simple: loop ({e} : {e/source*})",
+  "simple: multiple edge ({e1} == {e2} : ({e1/source*}, {e2/target*}))": "simple: multiple edge ({e1} == {e2} : ({e1/source*}, {e2/target*}))",
+  "simple: multiple edge ({e1} == {e2})": "simple: multiple edge ({e1} == {e2})",
+  "simple: repeated vertex ({e} : {a1/vertex*})": "simple: repeated vertex ({e} : {a1/vertex*})",
+  "sperner: edge {e2} contained in {e1}": "sperner: edge {e2} contained in {e1}"
+}

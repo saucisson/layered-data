@@ -1,13 +1,12 @@
-// ---- mixed-graph — (V, E, A) : arêtes non orientées et arcs
-//      orientés dans le même formalisme. Mécanisme : les arêtes de
-//      paire de pair-graph restent disponibles telles quelles (2
-//      flèches sans rôles), et l'arc orienté est un arc_type qui
-//      raffine l'arête de paire en y greffant les rôles source/target
-//      (l'idiome d'auto-désignation du multidigraphe) — le modèle
-//      range ses paires dans edges (la base) et ses arcs dans arcs
-//      (la collection typée ci-dessous). Aucun modèle du tronc ne
-//      raffine mixed-graph : mécanisme posé, exercé par la seule
-//      marche de la couche.
+// ---- mixed-graph — (V, E, A): undirected edges and oriented arcs
+//      in the same formalism. Mechanism: pair-graph's pair edges
+//      stay available as-is (2 arrows without roles), and the
+//      oriented arc is an arc_type refining the pair edge by
+//      grafting the source/target roles onto it (multidigraph's
+//      self-designation idiom) — the model stores its pairs in
+//      edges (the base) and its arcs in arcs (the typed collection
+//      below). No model of the trunk refines mixed-graph: mechanism
+//      posed, exercised only by the layer's own walk.
 layer mixed-graph refines @named-ends-hypergraph then @pair-graph
   extend specification
     arc_type refines @mixed-graph/edge_type

@@ -1,11 +1,11 @@
 // ---- le template du tutoriel : UN philosophe. La couche raffine le
-//      réseau de Petri et instancie un philosophe seul — trois
+//      Petri net and instantiates a single philosopher — three
 //      places (think, eat, fork), deux transitions (take, release),
-//      trois arcs. Le vocabulaire est typé (specification/think…),
+//      three arcs. The vocabulary is typed (specification/think…),
 //      les membres raffinent leurs types et posent identifier et
-//      marking. La contrainte posée au niveau de la déclaration :
+//      marking. The constraint posed at declaration level:
 //      arc_type weight = 1 — tout arc qui raffine le type en
-//      hérite, aucun modèle ne le réécrit.
+//      inherits, no model rewrites it.
 layer philosophers refines @petrinet
   extend specification
     think refines @philosophers/specification/place_type

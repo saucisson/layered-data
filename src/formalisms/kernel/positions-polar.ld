@@ -1,7 +1,6 @@
-// ---- le pôle — positions-polar : distance r et angle
-//      theta — theta en degrés, zéro à l'est, sens horaire
-//      du dessin (le y descend) ; z monte le plan en
-//      cylindre
+// ---- the pole — positions-polar: distance r and angle
+//      theta — theta in degrees, zero east, clockwise in drawing
+//      sense (y goes down); z lifts the plane into a cylinder
 layer positions-polar refines @positions-scheme
   extend specification
     extend position_type

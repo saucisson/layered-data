@@ -1,15 +1,15 @@
-// ---- le modèle du tutoriel : CINQ philosophes, cinq CITATIONS du
+// ---- the tutorial's model: FIVE philosophers, five CITATIONS of the
 //      template. La collection philosophes porte une citation par
-//      philosophe (lref du template, identifier posé) ; le lecteur
-//      développe chaque citation : les membres du template
-//      atterrissent qualifiés (philo2.think…), les refs internes
-//      s'ancrent sur le dîner. Les trois conteneurs portent chacun
-//      une équation d'union au parent (then), l'anneau se referme
-//      sur les fourchettes partagées : fk_i part de la fourchette
+//      philosopher (lref of the template, identifier posed); the reader
+//      expands each citation: the template's members
+//      land qualified (philo2.think…), the internal refs
+//      anchor on the dinner. The three containers each carry
+//      a union equation to the parent (then), the ring closes
+//      on the shared forks: fk_i leaves the fork and returns
 //      du philosophe i vers le take du philosophe i+1, rf_i la lui
-//      rend — modulo 5. La cardinalité de la collection philosophes
-//      se déclare ici (5, mesuré) : le check cardinality porté par
-//      graph rejoue le contrat. Total mesuré : 15 places, 10 transitions,
+//      — modulo 5. The cardinality of the philosophers collection
+//      is declared here (5, measured): the cardinality check carried by
+//      graph replays the contract. Measured total: 15 places, 10 transitions,
 //      25 arcs, weight 1 partout.
 layer philosophers-5 refines @philosophers
   philosophes refines @collection

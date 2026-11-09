@@ -45,12 +45,9 @@ Quatre ⟪slot⟫ ouverts (`type`, `container`, `minimum`, `maximum`) : l'appart
 
 Cliquez la ligne `abstract minimum` : la carte dit « declared by collection, provided by none » — un slot ouvert reste lisible ; ne rien poser, c'est ⟪hériter⟫.
 
-### check-registry — les contrats des checks
+### checks — formules inline
 
-Depuis ADR-0019, le contrat d'une étiquette de ⟪check⟫ est une donnée : où elle juge (`level`), quels slots il lui faut lire. Le ⟪registre⟫ du tutoriel réduit aux deux étiquettes génériques que le corpus pose.
-
-```ldflat:check-registry
-```
+Depuis l'ADR-0027, un ⟪check⟫ porte sa formule inline : `check simple { level, judgment { formula, message } }` — le comportement de la contrainte est écrit dans le langage lui-même (ADR-0022). Les étiquettes qui ont besoin de la fermeture transitive (`dag`, `arbre`) gardent un algorithme intégré au noyau jusqu'à la strate 2.
 
 ## graph — le métamodèle de base
 

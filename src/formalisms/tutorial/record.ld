@@ -1,7 +1,7 @@
 // ---- le socle minimal du tutoriel — record : la dalle de fond,
-//      la couche que rien ne raffine. Un « record » nu sous la clé
-//      spéciale specification : le tutoriel pose ici son propre
-//      magasin, séparé du corpus noyau — dix couches, pas
+//      the layer nothing refines. A bare "record" under the special
+//      specification key: the tutorial poses its own store here,
+//      separate from the kernel corpus — ten layers, not
 //      quarante-sept, pour lire chaque strate sans bruit.
 layer record
   specification

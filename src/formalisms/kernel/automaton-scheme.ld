@@ -1,8 +1,7 @@
-// ---- le schéma d'automate — un graphe dont les sommets sont des
-//      états, plus un alphabet. state_type et transition_type
-//      raffinent les types du graphe ; alias inversés : chercher
-//      vertices, c'est chercher states — la carte des sommets et
-//      celle des états ne font qu'une.
+// ---- the automaton scheme — a graph whose vertices are states,
+//      plus an alphabet. state_type and transition_type refine the
+//      graph's types; inverted aliases: looking up vertices is
+//      looking up states — the vertex map and the state map are one.
 layer automaton-scheme refines @graph
   alphabet refines @collection
   extend specification
