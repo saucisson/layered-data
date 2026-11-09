@@ -23,6 +23,7 @@
 import { asLayerName, asLayerPath, type LayerName, type LayerPath } from "../domain/identifiers.ts";
 import { AddressView, isDictionary, LayerReference, type Address } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
+import { resolvePositionAt } from "./positions.ts";
 
 /** One member container of a model, as the formalism declares it. */
 export interface MemberContainer {
@@ -144,6 +145,60 @@ export function positionContainerOf({
   );
 }
 
+/** A suggested `refines` clause for a new model, read from the
+ * corpus itself — never a hardcoded formalism name: the first layer
+ * that declares member containers, plus the first layer that declares
+ * a position container (when one exists). */
+export function suggestModelRefines({
+  space,
+  layerNames,
+}: {
+  space: Space;
+  layerNames: readonly string[];
+}): string {
+  let base: string | null = null;
+  let positions: string | null = null;
+  for (const layerName of layerNames) {
+    const containers = readMemberContainers({ space, model: layerName });
+    if (containers.length === 0) continue;
+    const positionContainer = positionContainerOf({ containers });
+    if (
+      base === null &&
+      containers.some((container) => container.kind === "sommet" && container.name !== positionContainer?.name)
+    ) {
+      base = layerName;
+    }
+    if (positions === null && positionContainer !== null) positions = layerName;
+    if (base !== null && positions !== null) break;
+  }
+  if (base === null) return "";
+  return positions !== null && positions !== base
+    ? "@" + base + " then @" + positions
+    : "@" + base;
+}
+
+/** The label key of one arc member: the first of the arc container's
+ * declared annotation keys that reads a number at this address — the
+ * formalism's own data names the label, never a hardcoded key. */
+export function arcLabelKeyOf({
+  space,
+  model,
+  arcContainer,
+  arcName,
+}: {
+  space: Space;
+  model: string;
+  arcContainer: MemberContainer;
+  arcName: string;
+}): string | null {
+  const layer = asLayerName(model);
+  const path = asLayerPath([arcContainer.name, arcName]);
+  for (const key of arcContainer.annotationKeys) {
+    if (typeof space.read({ layer, path, key }) === "number") return key;
+  }
+  return null;
+}
+
 /** The member names of one container, read through the chain —
  * the cited members surface like the local ones. */
 export function readMemberNames({
@@ -194,40 +249,12 @@ export function readMemberPosition({
   name: string;
   visited: ReadonlySet<string>;
 }): { x: number; y: number } | null {
-  const layer = asLayerName(model);
-  const path = asLayerPath([positionContainer, name]);
-  const visitKey = layer + "::" + path.join("/");
-  if (visited.has(visitKey)) return null;
-  const nextVisited = new Set(visited);
-  nextVisited.add(visitKey);
-  const readAt = (key: string) => space.read({ layer, path, key });
-  let baseX = 0;
-  let baseY = 0;
-  const relativeTo = readAt("relative_to");
-  if (relativeTo instanceof AddressView) {
-    const upstream = readMemberPosition({
-      space,
-      model: relativeTo.layer,
-      positionContainer: relativeTo.path[0] ?? positionContainer,
-      name: relativeTo.path[1] ?? "",
-      visited: nextVisited,
-    });
-    if (upstream === null) return null;
-    baseX = upstream.x;
-    baseY = upstream.y;
-  }
-  const system = readAt("system");
-  if (system === "polar") {
-    const radius = readAt("r");
-    const theta = readAt("theta");
-    if (typeof radius !== "number" || typeof theta !== "number") return null;
-    const angle = (theta * Math.PI) / 180;
-    return { x: baseX + radius * Math.cos(angle), y: baseY + radius * Math.sin(angle) };
-  }
-  const x = readAt("x");
-  if (typeof x !== "number") return null;
-  const y = readAt("y");
-  return { x: baseX + x, y: baseY + (typeof y === "number" ? y : 0) };
+  return resolvePositionAt({
+    space,
+    layer: model,
+    path: [positionContainer, name],
+    visited: new Set(visited),
+  });
 }
 
 // ---- the source drafting ----------------------------------------------
