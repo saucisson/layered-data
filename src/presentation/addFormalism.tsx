@@ -10,7 +10,7 @@ import type { LayeredDataKernel } from "../application/corpus.ts";
 import { renderMessage, type Language } from "../domain/messages.ts";
 import {
   simulatedAssistantProposal,
-  stageLayerAddition,
+  streamStageLayerAddition,
   applyStagedAddition,
   type StagingOutcome,
 } from "../application/staging.ts";
@@ -52,6 +52,7 @@ export function AddFormalismComposer({
   const [proposalOrigin, setProposalOrigin] = useState<string | null>(null);
   const [composerResult, setComposerResult] = useState<ComposerResult | null>(null);
   const [busy, setBusy] = useState(false);
+  const [stagingProgress, setStagingProgress] = useState<{ done: number; total: number } | null>(null);
 
   async function requestProposal() {
     setBusy(true);
@@ -108,32 +109,45 @@ export function AddFormalismComposer({
     setBusy(false);
   }
 
-  function validateAndAdd() {
-    const staging = stageLayerAddition({
-      languageSource: kernel.languageSource,
-      previousAdditionSources: [...previousAdditionSources],
-      draftSource,
-      livingLayerNames,
-      readonlyLayerNames: kernel.layerNames,
-      language,
-    });
-    const applied = staging.ok
-      ? applyStagedAddition({
-          space: kernel.space,
-          staging,
-          knownLayerNames: livingLayerNames,
+  async function validateAndAdd() {
+    setBusy(true);
+    setStagingProgress(null);
+    try {
+      // The validation runs chunk by chunk on the event loop
+      // (ADR-0026): the button shows the progress, the interface
+      // stays responsive, the outcome is the synchronous one's.
+      const staging = await streamStageLayerAddition(
+        {
+          languageSource: kernel.languageSource,
+          previousAdditionSources: [...previousAdditionSources],
+          draftSource,
+          livingLayerNames,
           readonlyLayerNames: kernel.layerNames,
-        })
-      : null;
-    const newLayerNames = applied ? applied.newLayerNames : [];
-    setComposerResult({ ...staging, newLayerNames });
-    if (staging.ok && applied && applied.newLayerNames.length > 0) {
-      onAdded({
-        source: draftSource.trim(),
-        newLayerNames: applied.newLayerNames,
-        blocks: staging.blocks,
-        refinementTargets: applied.refinementTargetsOf,
-      });
+          language,
+        },
+        { onChunk: (chunk) => setStagingProgress(chunk.progress) },
+      );
+      const applied = staging.ok
+        ? applyStagedAddition({
+            space: kernel.space,
+            staging,
+            knownLayerNames: livingLayerNames,
+            readonlyLayerNames: kernel.layerNames,
+          })
+        : null;
+      const newLayerNames = applied ? applied.newLayerNames : [];
+      setComposerResult({ ...staging, newLayerNames });
+      if (staging.ok && applied && applied.newLayerNames.length > 0) {
+        onAdded({
+          source: draftSource.trim(),
+          newLayerNames: applied.newLayerNames,
+          blocks: staging.blocks,
+          refinementTargets: applied.refinementTargetsOf,
+        });
+      }
+    } finally {
+      setBusy(false);
+      setStagingProgress(null);
     }
   }
 
@@ -191,11 +205,19 @@ export function AddFormalismComposer({
       />
       <div className="flex flex-wrap items-center gap-2">
         <button
-          onClick={validateAndAdd}
-          disabled={!draftSource.trim()}
+          onClick={() => {
+            void validateAndAdd();
+          }}
+          disabled={busy || !draftSource.trim()}
           className="rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
         >
-          {say({ language, en: "staging — validate & add", fr: "staging — valider & ajouter" })}
+          {busy && stagingProgress !== null
+            ? say({
+                language,
+                en: "staging — " + stagingProgress.done + "/" + stagingProgress.total + " judged…",
+                fr: "staging — " + stagingProgress.done + "/" + stagingProgress.total + " jugées…",
+              })
+            : say({ language, en: "staging — validate & add", fr: "staging — valider & ajouter" })}
         </button>
         <span className="text-[10px] leading-4 text-slate-400">
           {say({

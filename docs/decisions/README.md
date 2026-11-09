@@ -64,6 +64,7 @@ What this decision implies - good and bad.
 | [ADR-0023](adr-0023-two-regime-algebra.md) | The two-regime algebra - mask and assume retire, the guarantees become theorems | accepted | 2026-11-05 |
 | [ADR-0024](adr-0024-daily-integration-sync.md) | daily integrates main through a sync driver (`make sync-daily`) | proposed | 2026-11-08 |
 | [ADR-0025](adr-0025-scripts-cli-package.md) | Driver commands: one CLI package with subcommands, make/npm stay the agent surface | proposed | 2026-11-08 |
+| [ADR-0026](adr-0026-streamed-validation.md) | Streamed validation - chunked generator + event-loop pacing, synchronous drain kept as the API | proposed | 2026-11-09 |
 
 ## Adding a new ADR
 

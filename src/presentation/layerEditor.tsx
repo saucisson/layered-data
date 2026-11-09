@@ -9,7 +9,7 @@ import React, { useState } from "react";
 import type { LayeredDataKernel } from "../application/corpus.ts";
 import { renderMessage, type Language } from "../domain/messages.ts";
 import {
-  stageLayerEdition,
+  streamStageLayerEdition,
   applyStagedEdition,
   type AppliedEdition,
   type EditionOutcome,
@@ -47,29 +47,44 @@ export function LayerEditor({
 }) {
   const [source, setSource] = useState(initialSource);
   const [result, setResult] = useState<EditorResult | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [stagingProgress, setStagingProgress] = useState<{ done: number; total: number } | null>(null);
 
-  function judgeAndApply() {
-    const outcome = stageLayerEdition({
-      languageSource: kernel.languageSource,
-      livingAdditions,
-      livingLayerNames,
-      readonlyLayerNames: kernel.layerNames,
-      layerName: asLayerName(layerName),
-      editedSource: source,
-      language,
-    });
-    if (!outcome.ok) {
-      setResult({ outcome, applied: false });
-      return;
+  async function judgeAndApply() {
+    setBusy(true);
+    setStagingProgress(null);
+    try {
+      // The revalidation runs chunk by chunk on the event loop
+      // (ADR-0026): the button shows the progress, the interface
+      // stays responsive, the outcome is the synchronous one's.
+      const outcome = await streamStageLayerEdition(
+        {
+          languageSource: kernel.languageSource,
+          livingAdditions,
+          livingLayerNames,
+          readonlyLayerNames: kernel.layerNames,
+          layerName: asLayerName(layerName),
+          editedSource: source,
+          language,
+        },
+        { onChunk: (chunk) => setStagingProgress(chunk.progress) },
+      );
+      if (!outcome.ok) {
+        setResult({ outcome, applied: false });
+        return;
+      }
+      const edition = applyStagedEdition({
+        space: kernel.space,
+        layerName: asLayerName(layerName),
+        staging: outcome.staging,
+        readonlyLayerNames: kernel.layerNames,
+      });
+      setResult({ outcome, applied: true });
+      onApplied(edition);
+    } finally {
+      setBusy(false);
+      setStagingProgress(null);
     }
-    const edition = applyStagedEdition({
-      space: kernel.space,
-      layerName: asLayerName(layerName),
-      staging: outcome.staging,
-      readonlyLayerNames: kernel.layerNames,
-    });
-    setResult({ outcome, applied: true });
-    onApplied(edition);
   }
 
   const staging: StagingOutcome | null = result ? result.outcome.staging : null;
@@ -115,15 +130,23 @@ export function LayerEditor({
       />
       <div className="flex flex-wrap items-center gap-2">
         <button
-          onClick={judgeAndApply}
-          disabled={!source.trim()}
+          onClick={() => {
+            void judgeAndApply();
+          }}
+          disabled={busy || !source.trim()}
           className="rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
         >
-          {say({
-            language,
-            en: "staging — re-judge & rewrite the layer",
-            fr: "staging — rejuger & réécrire la couche",
-          })}
+          {busy && stagingProgress !== null
+            ? say({
+                language,
+                en: "staging — " + stagingProgress.done + "/" + stagingProgress.total + " judged…",
+                fr: "staging — " + stagingProgress.done + "/" + stagingProgress.total + " jugées…",
+              })
+            : say({
+                language,
+                en: "staging — re-judge & rewrite the layer",
+                fr: "staging — rejuger & réécrire la couche",
+              })}
         </button>
         <span className="text-[10px] leading-4 text-slate-400">
           {say({

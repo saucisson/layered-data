@@ -153,13 +153,7 @@ export function formatExpectation(value: any): string {
   return String(value);
 }
 
-export function validateSpace({
-  space,
-  parse,
-  compilation,
-  layerNames,
-  walkedOf = undefined,
-}: {
+export interface ValidationInput {
   space: Space;
   parse: ParsedLanguage;
   compilation: CompiledLanguage;
@@ -171,8 +165,42 @@ export function validateSpace({
    * verdicts and the stats are identical either way: the walks are
    * a pure observation of the space. */
   walkedOf?: (layer: LayerName) => WalkedAddress[];
-}): ValidationOutcome {
+}
+
+/** One chunk of a streamed validation: the verdicts produced since
+ * the previous chunk, the phase and the layer being judged, and the
+ * progress within the phase. The chunks concatenated are exactly
+ * the full validation's verdicts, in order (ADR-0026). */
+export interface ValidationChunk {
+  phase: string;
+  layer: LayerName | null;
+  verdicts: Verdict[];
+  progress: { done: number; total: number };
+}
+
+/** The streamed validation: the same passes as validateSpace, but
+ * yielding one chunk per judged unit (layer, declaration, vacancy),
+ * so a caller can interleave the work with the event loop and show
+ * progress. The generator's return value is the full outcome. */
+export function* streamValidation({
+  space,
+  parse,
+  compilation,
+  layerNames,
+  walkedOf = undefined,
+}: ValidationInput): Generator<ValidationChunk, ValidationOutcome, void> {
   const verdicts: Verdict[] = [];
+  let emittedVerdicts = 0;
+  const emit = (phase: string, layer: LayerName | null, done: number, total: number): ValidationChunk => {
+    const chunk: ValidationChunk = {
+      phase,
+      layer,
+      verdicts: verdicts.slice(emittedVerdicts),
+      progress: { done, total },
+    };
+    emittedVerdicts = verdicts.length;
+    return chunk;
+  };
   const stats: Record<string, number> = {
     couches: parse.layers.length,
     erreursSyntaxe: parse.errors.length,
@@ -227,7 +255,8 @@ export function validateSpace({
   // the shared walk): the first closure computation of a layer is
   // observable — it records the resolution diagnostics — and the
   // recorded order is part of the audit's byte-identical dump.
-  for (const layer of layerNames) {
+  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
+    const layer = layerNames[layerIndex];
     for (const [sourceLayer, sourcePath] of space.closure({ layer, path: [] })) {
       if (sourcePath.length === 0) ancestorsOf.get(layer)!.add(sourceLayer);
       const node = space.raw({ layer: sourceLayer, path: sourcePath });
@@ -238,10 +267,12 @@ export function validateSpace({
         if (typeof tag === "string") labelsOf.get(layer)!.add(tag);
       }
     }
+    yield emit("étiquetage", layer, layerIndex + 1, layerNames.length);
   }
 
   // ---- (a) declarations against the closures
-  for (const declaration of compilation.declarations) {
+  for (let declarationIndex = 0; declarationIndex < compilation.declarations.length; declarationIndex += 1) {
+    const declaration = compilation.declarations[declarationIndex];
     let existsUpstream = false;
     for (const [sourceLayer, sourcePath] of space.closure({ layer: declaration.layer, path: declaration.path as LayerPath })) {
       if (
@@ -269,6 +300,7 @@ export function validateSpace({
         fact: fact("ghost-declaration", { where, key: declaration.key, mode: declaration.mode }),
       });
     } else stats.declOK++;
+    yield emit("déclarations", declaration.layer, declarationIndex + 1, compilation.declarations.length);
   }
 
   // ---- the registry's contracts, read from the data (ADR-0019):
@@ -278,12 +310,14 @@ export function validateSpace({
   const slotContracts = checkSlotContractsOf(contracts);
 
   // ---- (b) check tags against the registry
-  for (const layer of layerNames) {
+  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
+    const layer = layerNames[layerIndex];
     for (const tag of labelsOf.get(layer)!) {
       if (!contracts[tag]) {
         verdicts.push({ kind: "étiquette-inconnue", fact: fact("unknown-label", { layer, tag }) });
       } else stats.etiquettes++;
     }
+    yield emit("étiquettes", layer, layerIndex + 1, layerNames.length);
   }
 
   // ---- (b2) the vacant checks (ADR-0018): a check carried but
@@ -295,40 +329,48 @@ export function validateSpace({
   // slots of the layer checks a layer's root carries. The instance
   // slots of an inherited check are the lint's inventory: the type
   // binds them, the root never sees it.
-  for (const vacancy of vacantChecksOf({ space, layerNames, contracts, walkedOf: walkedLayerOf })) {
-    if (!vacancy.posed && !(vacancy.level === "root" && vacancy.address[1].length === 0)) continue;
-    const where = vacancy.address[0] + "::" + (vacancy.address[1].join("/") || ".");
-    verdicts.push({
-      kind: "check-vacant",
-      fact: fact("vacant-slot", { where, tag: vacancy.tag, slot: vacancy.slot }),
-    });
+  const vacancies = vacantChecksOf({ space, layerNames, contracts, walkedOf: walkedLayerOf });
+  for (let vacancyIndex = 0; vacancyIndex < vacancies.length; vacancyIndex += 1) {
+    const vacancy = vacancies[vacancyIndex];
+    if (vacancy.posed || (vacancy.level === "root" && vacancy.address[1].length === 0)) {
+      const where = vacancy.address[0] + "::" + (vacancy.address[1].join("/") || ".");
+      verdicts.push({
+        kind: "check-vacant",
+        fact: fact("vacant-slot", { where, tag: vacancy.tag, slot: vacancy.slot }),
+      });
+    }
+    yield emit("checks-vacants", null, vacancyIndex + 1, vacancies.length);
   }
 
   // ---- (c) dead bindings: an instance-level slot bound at the root
   // of a layer L is unreadable for every tag of a reading layer that
   // descends from L (the type is in the arc's closure, the root never)
-  for (const layer of layerNames) {
+  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
+    const layer = layerNames[layerIndex];
     const root = space.raw({ layer, path: [] });
-    if (!isDictionary(root) || !isDictionary(root["bindings"])) continue;
-    for (const slot of Object.keys(root["bindings"])) {
-      for (const readingLayer of layerNames) {
-        if (readingLayer === layer || !ancestorsOf.get(readingLayer)!.has(layer)) continue;
-        for (const tag of labelsOf.get(readingLayer)!) {
-          const contract = slotContracts[tag];
-          if (contract && contract[slot] === "instance") {
-            verdicts.push({
-              kind: "liaison-morte",
-              fact: fact("dead-binding", { layer, slot, tag, readingLayer }),
-            });
+    if (isDictionary(root) && isDictionary(root["bindings"])) {
+      for (const slot of Object.keys(root["bindings"])) {
+        for (const readingLayer of layerNames) {
+          if (readingLayer === layer || !ancestorsOf.get(readingLayer)!.has(layer)) continue;
+          for (const tag of labelsOf.get(readingLayer)!) {
+            const contract = slotContracts[tag];
+            if (contract && contract[slot] === "instance") {
+              verdicts.push({
+                kind: "liaison-morte",
+                fact: fact("dead-binding", { layer, slot, tag, readingLayer }),
+              });
+            }
           }
         }
       }
     }
+    yield emit("liaisons-mortes", layer, layerIndex + 1, layerNames.length);
   }
 
   // ---- (d) shadows against declarations — the same walk as the
   // diagnostics fallback, but judging
-  for (const layer of layerNames) {
+  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
+    const layer = layerNames[layerIndex];
     for (const entry of walkedLayerOf(layer)) {
       const [addressLayer, addressPath] = entry.address;
       for (const key of entry.keys) {
@@ -371,6 +413,7 @@ export function validateSpace({
         }
       }
     }
+    yield emit("ombres", layer, layerIndex + 1, layerNames.length);
   }
 
   // ---- (e) the expected-reads contract replays — every layer of
@@ -378,7 +421,8 @@ export function validateSpace({
   // a candidate that breaks a scene (its own, or a redefined
   // layer's) is refused; the absent expectation compares to null, the
   // reference to the exact resolved address
-  for (const layer of layerNames) {
+  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
+    const layer = layerNames[layerIndex];
     for (const expectation of expectationsOf(compilation.layers[layer])) {
       stats.tests++;
       let read: any;
@@ -400,6 +444,7 @@ export function validateSpace({
         });
       }
     }
+    yield emit("tests", layer, layerIndex + 1, layerNames.length);
   }
   // ---- (f) the check couples (ADR-0022): the declarative strate is
   // data too — it is judged at assembly, never at execution. A couple
@@ -415,7 +460,8 @@ export function validateSpace({
   // judgment's quantified scope — a couple the reading cannot read
   // is refused HERE, the execution never meets it.
   const redefinitions = new Set<string>(); // name|first|second — one verdict per confrontation, not per address
-  for (const layer of layerNames) {
+  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
+    const layer = layerNames[layerIndex];
     for (const entry of walkedLayerOf(layer)) {
       const [addressLayer, addressPath] = entry.address;
       // per-address: only poses CO-VISIBLE at this address confront
@@ -456,12 +502,14 @@ export function validateSpace({
         }
       }
     }
+    yield emit("couples", layer, layerIndex + 1, layerNames.length);
   }
 
   // the readability of each POSE (deduplicated by (source, path,
   // name)) — the winner anywhere is judged exactly once
   const judgedPoses = new Set<string>();
-  for (const layer of layerNames) {
+  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
+    const layer = layerNames[layerIndex];
     for (const entry of walkedLayerOf(layer)) {
       const [addressLayer, addressPath] = entry.address;
       for (let index = 0; index < entry.closure.length; index += 1) {
@@ -519,6 +567,25 @@ export function validateSpace({
         }
       }
     }
+    yield emit("lisibilité", layer, layerIndex + 1, layerNames.length);
   }
   return { verdicts, stats };
+}
+
+/** The API form of the validation: drain every chunk synchronously
+ * and return the full outcome — exactly what validateSpace always
+ * answered (ADR-0026). */
+export function collectValidation(
+  stream: Generator<ValidationChunk, ValidationOutcome, void>,
+): ValidationOutcome {
+  let step = stream.next();
+  while (!step.done) step = stream.next();
+  return step.value;
+}
+
+/** The synchronous validation: the streamed validation with every
+ * chunk consumed at once. The verdicts and the stats are the
+ * stream's, by construction. */
+export function validateSpace(input: ValidationInput): ValidationOutcome {
+  return collectValidation(streamValidation(input));
 }
