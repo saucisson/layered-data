@@ -1,6 +1,6 @@
 # ADR-0026: the validation streams in chunks
 
-- Status: proposed (awaiting the human owner's acceptance)
+- Status: accepted (accepted by the human owner on 2026-11-09)
 - Date: 2026-11-09
 
 ## Context
