@@ -8,7 +8,11 @@
 //   2. the AI geologist — a thin proxy to Mistral that carries the
 //      access key server-side and grounds the model in the real
 //      state of the corpus;
-//   3. the static host — serves dist/ when a production build
+//   3. the shared editor session (ADR-0028) — the versioned living
+//      additions of the graphical editor, judged by the same staging,
+//      broadcast to every connected editor over SSE, persisted as
+//      JSON on disk;
+//   4. the static host — serves dist/ when a production build
 //      exists.
 //
 // By default it binds to the loopback only (127.0.0.1:8791):
@@ -26,12 +30,21 @@ import { createServer } from "node:http";
 import type { IncomingMessage, ServerResponse } from "node:http";
 import { readFileSync, writeFileSync, unlinkSync, existsSync, readdirSync, mkdirSync } from "node:fs";
 import { join, extname } from "node:path";
+import { randomUUID } from "node:crypto";
 
 // The verified geologist loop lives in the application layer — a pure
 // use case, injected with the model call. The canonical layer
-// order is the one of the corpus assembly.
+// order is the one of the corpus assembly. The shared editor session
+// (ADR-0028) is application logic too: the transport below only wires
+// it to HTTP/SSE and to the JSON file.
 import { KERNEL_LAYER_NAMES as CANONICAL_LAYER_NAMES } from "./src/application/corpus.ts";
 import { composeVerifiedLayerDraft } from "./src/application/penLoop.ts";
+import {
+  createEditorSession,
+  parseEditorSession,
+  serializeEditorSession,
+  type EditorSessionState,
+} from "./src/application/editorSession.ts";
 
 // ------------------------------------------------------------
 // 1. CONFIGURATION
@@ -82,7 +95,12 @@ const STRICT_CHECKS = process.env.PEN_STRICT_CHECKS === "1";
 const KERNEL_DIRECTORY = join(import.meta.dirname, "formalisms", "kernel");
 const USERS_DIRECTORY = join(import.meta.dirname, "formalisms", "users");
 const DIST_DIRECTORY = join(import.meta.dirname, "dist");
+// The persisted state of the shared editor session (ADR-0028) —
+// runtime data, never committed (data/ is gitignored).
+const DATA_DIRECTORY = join(import.meta.dirname, "data");
+const EDITOR_SESSION_FILE = join(DATA_DIRECTORY, "editor-session.json");
 mkdirSync(USERS_DIRECTORY, { recursive: true });
+mkdirSync(DATA_DIRECTORY, { recursive: true });
 
 /** A layer name as it appears in a URL: lowercase letters,
  * digits and dashes. The brand keeps names from being confused
@@ -120,6 +138,15 @@ const KERNEL_LANGUAGE_SOURCE = CANONICAL_LAYER_NAMES.map((name) => {
   const source = readFileSync(kernelLayerPath({ name: String(name) as LayerName }), "utf8");
   return source.endsWith("\n") ? source : source + "\n";
 }).join("");
+
+/** The kernel layer sources keyed by name — the assembly input of the
+ * fresh bedrock each editor gesture is judged against. */
+const KERNEL_LAYER_SOURCES: Record<string, string> = Object.fromEntries(
+  CANONICAL_LAYER_NAMES.map((name) => [
+    String(name),
+    readFileSync(kernelLayerPath({ name: String(name) as LayerName }), "utf8"),
+  ]),
+);
 
 /** The path of a kernel layer — read-only ground. */
 function kernelLayerPath({ name }: { name: LayerName }): string {
@@ -273,6 +300,73 @@ Réponds uniquement avec la ou les couches en langage, sans enceinte de code, sa
  * the default, French its mirror; both follow VERSION. */
 function penInstructions(language: "en" | "fr" = "en"): string {
   return language === "fr" ? PEN_INSTRUCTIONS_FR : PEN_INSTRUCTIONS_EN;
+}
+
+// ------------------------------------------------------------
+// 5b. THE SHARED EDITOR SESSION (ADR-0028)
+//
+// The graphical editor's living additions, kept as ONE versioned
+// state: every gesture is a layer source judged by the same staging
+// as the browser (the pure store lives in the application layer),
+// accepted under optimistic locking (baseVersion), persisted as JSON
+// and broadcast to every connected editor over SSE. Presence is
+// transport-level: the connected editors, each with the model it is
+// editing (its focus).
+// ------------------------------------------------------------
+
+/** The persisted state, reloaded at boot — a missing or malformed
+ * file is an empty session, never a crash. */
+function loadEditorSessionState(): EditorSessionState | undefined {
+  if (!existsSync(EDITOR_SESSION_FILE)) return undefined;
+  return parseEditorSession({ text: readFileSync(EDITOR_SESSION_FILE, "utf8") }) ?? undefined;
+}
+
+const editorSession = createEditorSession({
+  kernelLayerSources: KERNEL_LAYER_SOURCES,
+  kernelLayerNames: [...CANONICAL_LAYER_NAMES],
+  initial: loadEditorSessionState(),
+});
+
+/** Persist the accepted state — the durable path of the session. */
+function persistEditorSession(): void {
+  writeFileSync(EDITOR_SESSION_FILE, serializeEditorSession({ state: editorSession.readState() }));
+}
+
+/** One connected editor: its SSE stream and the model it edits. */
+interface EditorClient {
+  response: ServerResponse;
+  focus: string | null;
+}
+
+const editorClients = new Map<string, EditorClient>();
+
+/** The presence list broadcast with every state change. */
+function presenceList(): { id: string; focus: string | null }[] {
+  return [...editorClients.entries()].map(([id, client]) => ({ id, focus: client.focus }));
+}
+
+/** Write one SSE event to a client. */
+function sendEvent({ response, event, data }: { response: ServerResponse; event: string; data: unknown }): void {
+  response.write("event: " + event + "\ndata: " + JSON.stringify(data) + "\n\n");
+}
+
+/** The full state, with presence, as every client receives it. */
+function sessionSnapshot(): EditorSessionState & { presence: { id: string; focus: string | null }[] } {
+  return { ...editorSession.readState(), presence: presenceList() };
+}
+
+/** Broadcast the state to every connected editor. */
+function broadcastEditorState(): void {
+  for (const client of editorClients.values()) {
+    sendEvent({ response: client.response, event: "state", data: sessionSnapshot() });
+  }
+}
+
+/** Broadcast the presence alone (a focus changed, a client left). */
+function broadcastEditorPresence(): void {
+  for (const client of editorClients.values()) {
+    sendEvent({ response: client.response, event: "presence", data: { presence: presenceList() } });
+  }
 }
 
 // ------------------------------------------------------------
@@ -540,6 +634,73 @@ const server = createServer(async (request, response) => {
           }
           throw error;
         }
+      }
+
+      // ---- the shared editor session (ADR-0028) ----
+      if (url.pathname === "/api/editor/session" && request.method === "GET") {
+        const clientId = randomUUID();
+        response.writeHead(200, {
+          "Content-Type": "text/event-stream; charset=utf-8",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+        });
+        response.write("retry: 3000\n\n");
+        editorClients.set(clientId, { response, focus: null });
+        sendEvent({ response, event: "hello", data: { clientId } });
+        sendEvent({ response, event: "state", data: sessionSnapshot() });
+        // the heartbeat keeps proxies from closing the idle stream
+        const heartbeat = setInterval(() => {
+          response.write(": ping\n\n");
+        }, 25_000);
+        request.on("close", () => {
+          clearInterval(heartbeat);
+          editorClients.delete(clientId);
+          broadcastEditorPresence();
+        });
+        return;
+      }
+
+      if (url.pathname === "/api/editor/presence" && request.method === "POST") {
+        const body = JSON.parse((await readRequestBody({ request })) || "{}") as { clientId?: unknown; focus?: unknown };
+        const client = typeof body?.clientId === "string" ? editorClients.get(body.clientId) : undefined;
+        if (!client) return sendJson({ response, statusCode: 404, body: { erreur: "client inconnu" } });
+        client.focus = typeof body?.focus === "string" && body.focus.trim() ? body.focus : null;
+        broadcastEditorPresence();
+        return sendJson({ response, statusCode: 200, body: { ok: true } });
+      }
+
+      if (url.pathname === "/api/editor/gesture" && request.method === "POST") {
+        const body = JSON.parse((await readRequestBody({ request })) || "{}") as {
+          source?: unknown;
+          baseVersion?: unknown;
+        };
+        if (typeof body?.source !== "string" || !body.source.trim() || typeof body?.baseVersion !== "number") {
+          return sendJson({
+            response,
+            statusCode: 400,
+            body: { erreur: "corps JSON attendu : { \"source\": \"…\", \"baseVersion\": 0 }" },
+          });
+        }
+        const outcome = editorSession.applyGesture({ source: body.source, baseVersion: body.baseVersion });
+        if (outcome.ok) {
+          persistEditorSession();
+          broadcastEditorState();
+          return sendJson({ response, statusCode: 200, body: { ok: true, ...sessionSnapshot() } });
+        }
+        if (outcome.reason === "conflict") {
+          return sendJson({ response, statusCode: 409, body: { ok: false, reason: "conflict", ...sessionSnapshot() } });
+        }
+        return sendJson({
+          response,
+          statusCode: 422,
+          body: {
+            ok: false,
+            reason: "refused",
+            refusals: outcome.refusals,
+            staging: outcome.staging,
+            ...sessionSnapshot(),
+          },
+        });
       }
 
       return sendJson({ response, statusCode: 404, body: { erreur: "route inconnue : " + request.method + " " + url.pathname } });
