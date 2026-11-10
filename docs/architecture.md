@@ -113,7 +113,7 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   independence, permutation invariance of the 47-layer assembly),
   the cycle guard, late binding, desugaring (topological order,
   idempotence), the touch protocol (exact invalidation) — and, since
-  ADR-0023, the two-regime theorems (§14): confluence,
+  ADR-0106, the two-regime theorems (§14): confluence,
   conservativity, monotony, measured over every layer's removal and
   every growth of the assembly.
 - **The staging checks** (`tests/staging-checks.mts`): a sound draft

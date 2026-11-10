@@ -78,7 +78,7 @@ const emit = (
       output.checks = act.labels;
       continue;
     }
-    // The definition (ADR-0022): a couple lands in the INTERNAL
+    // The definition (ADR-0105): a couple lands in the INTERNAL
     // check-definitions container — the only door into it, never a
     // writable key of the language — and the name lands among the
     // check tags: defining a check is also posing it. The container

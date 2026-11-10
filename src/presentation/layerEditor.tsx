@@ -55,7 +55,7 @@ export function LayerEditor({
     setStagingProgress(null);
     try {
       // The revalidation runs chunk by chunk on the event loop
-      // (ADR-0026): the button shows the progress, the interface
+      // (ADR-0108): the button shows the progress, the interface
       // stays responsive, the outcome is the synchronous one's.
       const outcome = await streamStageLayerEdition(
         {
@@ -117,8 +117,8 @@ export function LayerEditor({
       <p className="mb-2 text-[11px] leading-4 text-slate-500">
         {say({
           language,
-          en: "the layer leaves the living context for the time of the judgement: the staging revalidates the whole corpus + supplements, replays the expectations of the other living layers and demands 0 verdict; renaming the layer or sliding another one in is not editing; and the bedrock is read-only by protocol — an edition never aims at it (ADR-0020)",
-          fr: "la couche quitte le contexte vivant le temps du jugement : le staging revalide corpus + suppléments entiers, rejoue les attendus des autres couches vivantes et exige 0 verdict ; renommer la couche ou en glisser une autre n'est pas l'éditer ; et le socle est immuable par protocole — une édition ne vise jamais le socle (ADR-0020)",
+          en: "the layer leaves the living context for the time of the judgement: the staging revalidates the whole corpus + supplements, replays the expectations of the other living layers and demands 0 verdict; renaming the layer or sliding another one in is not editing; and the bedrock is read-only by protocol — an edition never aims at it (ADR-0103)",
+          fr: "la couche quitte le contexte vivant le temps du jugement : le staging revalide corpus + suppléments entiers, rejoue les attendus des autres couches vivantes et exige 0 verdict ; renommer la couche ou en glisser une autre n'est pas l'éditer ; et le socle est immuable par protocole — une édition ne vise jamais le socle (ADR-0103)",
         })}
       </p>
       <textarea

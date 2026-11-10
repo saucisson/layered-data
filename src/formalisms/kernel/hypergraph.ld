@@ -4,7 +4,7 @@
 //      set, not a multiset — singletons stay legal: excluding them
 //      would be a loopless-hypergraph layer, not posed).
 //
-//      ADR-0022: the constraint is a COUPLE — defining a check is also
+//      ADR-0105: the constraint is a COUPLE — defining a check is also
 //      posing it. The formula speaks the definer's vocabulary (edges,
 //      arrows, vertex) and reads as-is in every descendant; a formula's
 //      universe is the declared vocabulary of its writer, never a layer

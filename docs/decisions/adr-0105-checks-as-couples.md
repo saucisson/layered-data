@@ -1,11 +1,11 @@
-# ADR-0022: Checks as couples — the constraint's behavior written in the language, judged by the reading machine
+# ADR-0105: Checks as couples — the constraint's behavior written in the language, judged by the reading machine
 
 - Status: accepted
 - Date: 2026-11-05
 
 ## Context
 
-ADR-0019 brought the checks' CONTRACTS home: the registry layer declares,
+ADR-0102 brought the checks' CONTRACTS home: the registry layer declares,
 in the language, where each tag judges and which slots it reads. But the
 BEHAVIOR still lived in TypeScript — `src/domain/checks.ts`, nine
 algorithms. A posed tag names a constraint; what that constraint MEANS
@@ -33,14 +33,14 @@ Three design threads converged to force it open:
 ## Options considered
 
 - **Keep the algorithm table as the only semantics** (status quo):
-  rejected — the contracts became data (ADR-0019) on the promise that
+  rejected — the contracts became data (ADR-0102) on the promise that
   the behavior would follow; a "kernel never modified" that nobody can
   verify against the data is a discipline, not a structure;
 - **A rich constraint DSL** (second-order, power sets, arithmetic,
   merging policies): rejected — it multiplies the semantics (the
   project's thesis is one mechanism), and the bedrock's checks need
   none of it; CUE/Jsonnet-style unification was already rejected in
-  ADR-0017's terms;
+  ADR-0100's terms;
 - **External verification** (an oracle beside the machine): rejected —
   the Python oracle was removed for exactly this reason; the interpreter
   is the reading machine, the witnesses come free;
@@ -110,7 +110,7 @@ Three design threads converged to force it open:
    interpreter is measured — one step per member enumerated, one per
    term resolved, a budget guards the walk; a judgment that overruns
    is « formule-épuisée »: a diagnostic, never a silent pass.
-7. **Two strates, one execution.** The algorithmic table (ADR-0019's
+7. **Two strates, one execution.** The algorithmic table (ADR-0102's
    registry binding) stays THE execution of the bedrock — 79 contract
    judgments, 0 vacancies, unchanged. `runChecksFO` is the
    declarative strate, and specification-properties MEASURES the two

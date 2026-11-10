@@ -13,14 +13,14 @@
 //     registry; cardinality bounds read without the closure ever
 //     reaching the collection root; and a check carried but unable
 //     to judge — its required slots unbound, the contract's
-//     inventory (ADR-0018), never the check's execution.
+//     inventory (ADR-0101), never the check's execution.
 //   - contrat-sans-algorithme / algorithme-sans-contrat /
-//     contrat-illisible: the registry's META-audit (ADR-0019) — the
+//     contrat-illisible: the registry's META-audit (ADR-0102) — the
 //     contracts live in the data now, so the data and the kernel's
 //     algorithms can drift apart; the lint watches the seam.
 //   - conflit-d'ordre: a leaf value decided between INCOMPARABLE
-//     sources — the diamond's convention made visible (ADR-0017;
-//     retired as a semantics by ADR-0023: nothing silences it
+//     sources — the diamond's convention made visible (ADR-0100;
+//     retired as a semantics by ADR-0106: nothing silences it
 //     anymore, to resolve it is to restructure).
 // The root sweep triggers the kernel channel once for all layers
 // (trace: bypasses the memo at this level).
@@ -137,7 +137,7 @@ function lintShadow({ space, layerNames, compilation }: LintingTarget): void {
 }
 
 /** A check tag with neither a built-in contract nor an inline couple
- * definition (ADR-0027) is a check that will never run — wanted but
+ * definition (ADR-0109) is a check that will never run — wanted but
  * nonexistent. */
 function lintTags({ space, layerNames }: LintingTarget): void {
   const contracts = registryContractsOf();
@@ -187,7 +187,7 @@ function lintVacuousBounds({ space, layerNames }: LintingTarget): void {
   }
 }
 
-/** The vacant checks, inventory (ADR-0018): every check carried but
+/** The vacant checks, inventory (ADR-0101): every check carried but
  * unable to judge — a required slot unbound at an address the
  * contract makes it judge, the detector reading the nominal
  * registry, never executing the checks. The validation refuses what
@@ -211,7 +211,7 @@ function lintVacantChecks(target: LintingTarget): void {
 
 /** Record the order conflicts as conflit-d'ordre diagnostics — the
  * inventory of what the refines order decides silently elsewhere.
- * Nothing signs a conflict anymore (ADR-0023): the inventory is
+ * Nothing signs a conflict anymore (ADR-0106): the inventory is
  * the whole story, the strict staging makes it contractual. */
 function lintOrderConflicts(target: LintingTarget): void {
   for (const conflict of orderConflictsOf({ space: target.space, layerNames: target.layerNames })) {

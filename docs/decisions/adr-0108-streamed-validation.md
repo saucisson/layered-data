@@ -1,4 +1,4 @@
-# ADR-0026: the validation streams in chunks
+# ADR-0108: the validation streams in chunks
 
 - Status: accepted (accepted by the human owner on 2026-11-09)
 - Date: 2026-11-09

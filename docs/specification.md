@@ -3,7 +3,7 @@
 > **Status in this repository.** This is the normative reference for
 > `src/domain/`: what the kernel *does*, implementation-independent.
 > The obligations below (O1–O18) and the conformance requirements
-> (C1–C8) — and, since ADR-0023, the two-regime theorems (T1–T3) —
+> (C1–C8) — and, since ADR-0106, the two-regime theorems (T1–T3) —
 > are executable: `tests/specification-properties.mts`
 > checks them as properties over the bedrock corpus and over dedicated
 > spaces — conformance measurements, not formal demonstrations —
@@ -188,14 +188,14 @@ source, c'est-à-dire dans l'ordre de sortie de la fermeture :
 La première source qui fournit tranche : c'est le **premier-gagné**. Le seul juge d'une
 valeur est la spécificité — la structure des `refines` (O2) : premier source définissant
 une clé = plus spécifique. Une divergence de valeur entre sources INCOMPARABLES n'est pas
-une sémantique : c'est un **conflit d'ordre** (ADR-0023) — inventorié par le linter,
+une sémantique : c'est un **conflit d'ordre** (ADR-0106) — inventorié par le linter,
 refusé par le staging strict, et jamais signé : le résoudre, c'est restructurer.
 
 **Obligation O8.** Les statuts observables d'une lecture sont exactement : `fournit`,
 `transparent`, `absent` — dans cet ordre de parcours. Toute implantation DOIT
 pouvoir exposer ce scan (l'atelier le fait en panneau ③).
 
-**Obligation O9 (retirée, ADR-0023).** Le masque opaque — une valeur qui court-circuite
+**Obligation O9 (retirée, ADR-0106).** Le masque opaque — une valeur qui court-circuite
 toute lecture — est retiré de l'algèbre : aucun acte ne retranche depuis en dessous, la
 monotonie de l'héritage est un théorème. Le numéro reste réservé, l'obligation ne décrit
 plus rien.
@@ -264,7 +264,7 @@ modifié pour un formalisme) `[runChecks]` :
 d'exception). Une étiquette a **une seule sémantique par registre** : redéfinir `simple`
 dans un sous-espace avec un autre sens est une non-conformité à consigner, jamais un usage.
 
-**La strate déclarative (ADR-0022).** Une étiquette peut porter sa sémantique dans la
+**La strate déclarative (ADR-0105).** Une étiquette peut porter sa sémantique dans la
 langue même : `check nom { … }` définit le check en le posant. Le couple — niveau (la
 strate de lecture ne juge qu'aux racines des couches), condition (une liaison lue, le
 seul paramètre-valeur du socle), jugements (`when`/formule/message) — atterrit dans le
@@ -278,7 +278,7 @@ couche. Le doublon est refusé à l'assemblage : un couple n'est jamais remplac�
 re-pose identique (à l'alpha-renommage près, sur le couple entier) est tolérée, la
 re-pose divergente est un verdict, et seules des poses co-visibles à une même adresse
 se confrontent. O15 devient structurelle : une étiquette portant un couple ne peut plus
-être redéfinie. La table algorithmique reste l'exécution du socle (ADR-0019) ; la
+être redéfinie. La table algorithmique reste l'exécution du socle (ADR-0102) ; la
 strate déclarative est mesurée contre elle, adresse par adresse, et juge avec les
 témoins libres de l'affectation falsifiée — tous, gabarits `{x}` (clé) et `{x*}` (tuple
 d'adresse) rendus sur place. Une formule qui épuise son budget ne juge jamais en
@@ -386,9 +386,9 @@ désormais normatifs :
 
 ---
 
-## 14. Théorèmes de l'algèbre deux-régimes (ADR-0023)
+## 14. Théorèmes de l'algèbre deux-régimes (ADR-0106)
 
-ADR-0023 retire deux gestes et gagne trois garanties : ce que `mask` et `assume`
+ADR-0106 retire deux gestes et gagne trois garanties : ce que `mask` et `assume`
 tenaient pour acquises devient démontrable — l'algèbre est assez petite pour porter
 ses propres théorèmes. Les voici énoncés et esquissés dans les termes de la présente
 spécification ; le harnais `tests/specification-properties.mts` les mesure (T1, T2,
@@ -445,7 +445,7 @@ arrivée ne retire un membre, un nom, ni un couple de check.
 
 *Esquisse.* Les trois conteneurs cumulatifs — les membres, les noms (la loi de
 l'alias : `extend` ajoute un synonyme, l'original survit), les couples de check
-(ADR-0022 : un couple n'est jamais remplacé — la re-pose identique est tolérée, la
+(ADR-0105 : un couple n'est jamais remplacé — la re-pose identique est tolérée, la
 divergente est un verdict posé à l'assemblage) — sont des unions ordonnées,
 re-fusionnées à chaque lecture (§7, O3, O10) : une source de plus ajoute ses entrées en position, n'en retranche
 aucune. L'arrivée d'un ANCÊTRE — le sens difficile, une base qui atterrit après ses

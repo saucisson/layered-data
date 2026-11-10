@@ -1,4 +1,4 @@
-// The shared editor session client (ADR-0028): connects to the
+// The shared editor session client (ADR-0110): connects to the
 // server's SSE stream, sends gestures, reports presence. The stream
 // is read over fetch — EventSource cannot carry the access-code
 // header. When the server is unreachable or refuses the access code,

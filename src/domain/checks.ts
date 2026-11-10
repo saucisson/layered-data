@@ -20,7 +20,7 @@
 // the algorithm and the slot contract; an unbound slot is never
 // guessed — the check withdraws.
 //
-// The CONTRACT itself lives in the language since ADR-0019: the
+// The CONTRACT itself lives in the language since ADR-0102: the
 // `check-registry` layer of the corpus declares every tag's level,
 // required, optional and conditional slots, and this file only
 // READS it (`registryContractsOf`) and binds the tag to its
@@ -28,8 +28,8 @@
 // means; the kernel says how it executes; the two answer for each
 // other in the meta-audit (`registryAuditOf` — the lint's
 // registry pass). A posed check that cannot judge is a check-vacant
-// verdict (ADR-0018), a declared check without an algorithm is
-// refused as « algorithme absent » (ADR-0019).
+// verdict (ADR-0101), a declared check without an algorithm is
+// refused as « algorithme absent » (ADR-0102).
 //
 // The placement rule follows from the closure: a binding lives at the
 // level where the check READS it. Layer-level checks (simple,
@@ -555,7 +555,7 @@ function checkConnected({ space, view }: { space: Space; view: AddressView }): s
 // The registry is NOMINAL: every check tag declares its contract —
 // WHERE it judges (a layer root, an instance of the type that
 // poses it) and WHICH slots it must read to be able to judge
-// (ADR-0018). The contract is the check's semantics made readable
+// (ADR-0101). The contract is the check's semantics made readable
 // WITHOUT executing it: the validation (a posed check that cannot
 // judge is a verdict), the lint (the inventory of the vacancies)
 // and the dead-binding rule (the reading levels) all read the
@@ -586,10 +586,10 @@ export interface CheckContract {
   };
 }
 
-// ---- the built-in contracts (ADR-0027) ---------------------------------
+// ---- the built-in contracts (ADR-0109) ---------------------------------
 //
-// ADR-0027 retired the check-registry layer: first-order checks carry
-// their formula inline (the couple, ADR-0022). The tags that still
+// ADR-0109 retired the check-registry layer: first-order checks carry
+// their formula inline (the couple, ADR-0105). The tags that still
 // need an algorithm (dag, arbre, k-partite — transitive closure or
 // class comparison, strate 2) keep a built-in contract here, in the
 // kernel, until strate 2 expresses them as formulas.
@@ -608,7 +608,7 @@ const BUILTIN_CONTRACTS: Record<string, CheckContract> = {
 };
 
 /** The contracts of every known tag. First-order tags are defined by
- * their inline couple (ADR-0022/0027) — their contract is the formula
+ * their inline couple (ADR-0105/0027) — their contract is the formula
  * itself. The algorithmic tags (strate 2) read their built-in contract
  * here. A tag with neither a couple nor a built-in contract is
  * unknown (« étiquette-inconnue »). */
@@ -630,7 +630,7 @@ export function slotReadingLevelsOf(contract: CheckContract): Record<string, "ro
   };
 }
 
-// ---- the vacant checks (ADR-0018) -------------------------------------
+// ---- the vacant checks (ADR-0101) -------------------------------------
 
 /** A check that cannot judge: carried (posed, or inherited through
  * the closure) at an address its contract makes it judge, but a
@@ -654,7 +654,7 @@ function pathsEqual(first: string[], second: string[]): boolean {
 
 /** Inventory the vacant checks of a space, WITHOUT executing the
  * checks — the detector is the contract's reader, not the check's
- * runner (ADR-0018). The walk mirrors runChecks': every address,
+ * runner (ADR-0101). The walk mirrors runChecks': every address,
  * the tags of its closure. The judgment follows the contract's
  * placement rule: a local pose always judges; an inherited layer
  * check judges at the layer roots that carry it; an inherited
@@ -774,12 +774,12 @@ export function vacantChecksOf({
 export type CheckFunction = (parameters: { space: Space; view: AddressView }) => string[];
 
 // The check registry's ALGORITHMS: the tags the kernel resolves to
-// code — the contracts live in the data (ADR-0019, read above); this
+// code — the contracts live in the data (ADR-0102, read above); this
 // table binds each declared tag to its execution. The tag strings are
 // behavior, they stay as they are. The data declares what a check
 // means, this table says how it runs — and the meta-audit
 // (`registryAuditOf`) holds the two answer for each other.
-// ADR-0027: the first-order tags (simple, nonempty, oriented, sperner)
+// ADR-0109: the first-order tags (simple, nonempty, oriented, sperner)
 // are defined by their inline couple — no algorithm here. Only the
 // strate-2 tags (transitive closure, class comparison) keep an
 // algorithm until strate 2 expresses them as formulas.
@@ -795,8 +795,8 @@ export const checkRegistry: Record<string, CheckFunction> = {
 // Walks the flattened view; at each address, runs the checks carried
 // by the sources of its closure (checks inherited from the types) —
 // port of the original `run_checks`. Used by the strict staging arm
-// (ADR-0018) and the harnesses; the workbench itself reads the space
-// immutably. Existence is the data's (ADR-0019): the registry layer
+// (ADR-0101) and the harnesses; the workbench itself reads the space
+// immutably. Existence is the data's (ADR-0102): the registry layer
 // declares, the algorithm table binds.
 export function runChecks({ space, layer }: { space: Space; layer: LayerName }): string[] {
   const errors: string[] = [];
@@ -817,7 +817,7 @@ export function runChecks({ space, layer }: { space: Space; layer: LayerName }):
         const deduplicationKey = address[0] + "|" + address[1].join("/") + "|" + tag;
         if (seen.has(deduplicationKey)) continue;
         seen.add(deduplicationKey);
-        // ADR-0027: a tag with an inline couple is judged by its
+        // ADR-0109: a tag with an inline couple is judged by its
         // formula; a tag with a built-in algorithm runs it; a tag
         // with neither is unknown.
         const couple = definitions[tag];
@@ -883,7 +883,7 @@ function runCoupleAt({ space, view, tag, couple }: { space: Space; view: Address
 }
 
 
-// ---- the declarative strate: the check couples (ADR-0022) ---------
+// ---- the declarative strate: the check couples (ADR-0105) ---------
 
 /** One couple, READ from the data: a name, a level (root: the
  * prototype's strate judges at layer roots), an optional condition
@@ -933,7 +933,7 @@ export function checkCoupleOfRecord(record: RawValue): CheckCoupleRead | null {
 }
 
 /** The couples readable at an address — first-winner per name across
- * the closure. The doublon rule (ADR-0022) is judged at validation:
+ * the closure. The doublon rule (ADR-0105) is judged at validation:
  * an identical re-pose is tolerated, a divergent one is a verdict,
  * so the winner here is never ambiguous. */
 export function checkDefinitionsOf({ space, view }: { space: Space; view: AddressView }): Record<string, CheckCouple> {
@@ -985,7 +985,7 @@ export interface FoJudgment {
   steps: number;
 }
 
-/** The declarative execution (ADR-0022): the same walk as
+/** The declarative execution (ADR-0105): the same walk as
  * `runChecks`, the same deduplication — wherever a posed tag has a
  * readable couple, the sentences judge instead of the algorithm
  * table. The algorithmic strate stays THE execution of the bedrock

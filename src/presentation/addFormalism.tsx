@@ -114,7 +114,7 @@ export function AddFormalismComposer({
     setStagingProgress(null);
     try {
       // The validation runs chunk by chunk on the event loop
-      // (ADR-0026): the button shows the progress, the interface
+      // (ADR-0108): the button shows the progress, the interface
       // stays responsive, the outcome is the synchronous one's.
       const staging = await streamStageLayerAddition(
         {

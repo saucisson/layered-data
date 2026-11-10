@@ -1,6 +1,6 @@
 // The scheduled validation: drive a validation stream chunk by chunk,
 // yielding to the event loop between chunks, so a long validation
-// never blocks the interface (ADR-0026). The stream itself is pure
+// never blocks the interface (ADR-0108). The stream itself is pure
 // (domain/validation.ts); this driver only paces it — the outcome is
 // the stream's return value, identical to a synchronous drain.
 

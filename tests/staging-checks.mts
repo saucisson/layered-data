@@ -8,10 +8,10 @@
 // "cible-inconnue", a betrayed expectation is refused as
 // "attendu-trahi", an order conflict is accepted
 // permissively but refused as "conflit-d'ordre" in strict mode,
-// without exception (ADR-0017, retired as a semantics by ADR-0023),
+// without exception (ADR-0100, retired as a semantics by ADR-0106),
 // the retired words fall back to the common vocabulary of keys
-// (ADR-0023), a check posed without
-// its slots is refused as "check-vacant" (ADR-0018), and a cyclic
+// (ADR-0106), a check posed without
+// its slots is refused as "check-vacant" (ADR-0101), and a cyclic
 // candidate over the dag family is accepted permissively but its
 // carried check refuses it as "check-trahi" in strict mode. The
 // verdict kinds are part of the observable contract — they are
@@ -159,7 +159,7 @@ check(
 
 // =====================================================================
 // (e) an order conflict: permissive staging accepts, the strict
-// mode refuses as conflit-d'ordre, without exception (ADR-0023) —
+// mode refuses as conflit-d'ordre, without exception (ADR-0106) —
 // and inheritance alone never conflicts: the sound draft stays
 // accepted in strict mode
 // =====================================================================
@@ -229,7 +229,7 @@ check(
 
 // =====================================================================
 // (f) the retired words fall back to the common vocabulary of keys
-// (ADR-0023): `mask` and `assume` are no longer acts of the grammar
+// (ADR-0106): `mask` and `assume` are no longer acts of the grammar
 // — written as members, they are ordinary data, declared and read
 // like any key. The door is closed, not welded.
 // =====================================================================
@@ -254,7 +254,7 @@ check(
 );
 
 // =====================================================================
-// (g) nothing signs a conflict anymore (ADR-0023): the lint
+// (g) nothing signs a conflict anymore (ADR-0106): the lint
 // inventories the whole of it — conflit-d'ordre is a diagnostic, the
 // strict staging a verdict, and no act silences either
 // =====================================================================
@@ -278,7 +278,7 @@ check(
 
 // =====================================================================
 // (h) a check posed without its slots is refused as check-vacant —
-// the constraint carried but unable to judge (ADR-0018); the lint
+// the constraint carried but unable to judge (ADR-0101); the lint
 // inventories the same vacancy as a diagnostic
 // =====================================================================
 
@@ -317,7 +317,7 @@ check(
 );
 
 // =====================================================================
-// (i) the carried checks finally execute in strict mode (ADR-0018):
+// (i) the carried checks finally execute in strict mode (ADR-0101):
 // a cyclic candidate over the dag family is accepted permissively,
 // refused as "check-trahi" when the strict arm executes the checks
 // =====================================================================
@@ -379,7 +379,7 @@ check(
 );
 
 // =====================================================================
-// (j) the bedrock is read-only BY PROTOCOL (ADR-0020): a draft that
+// (j) the bedrock is read-only BY PROTOCOL (ADR-0103): a draft that
 //     claims a bedrock name is refused as socle-occupé — the theft
 //     named, the forgery never judged
 // =====================================================================
@@ -391,7 +391,7 @@ check(
   refusedBedrock.ok === false && refusedBedrock.step === "validation",
 );
 check(
-  '(j) the refusal carries exactly the "socle-occupé" verdict — the theft named, never the forgery judged (measured before ADR-0020: 13 ghost declarations accusing innocent layers)',
+  '(j) the refusal carries exactly the "socle-occupé" verdict — the theft named, never the forgery judged (measured before ADR-0103: 13 ghost declarations accusing innocent layers)',
   refusedBedrock.verdicts.length === 1 && refusedBedrock.verdicts[0].kind === "socle-occupé",
 );
 check(

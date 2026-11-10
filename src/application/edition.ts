@@ -7,7 +7,7 @@
 // through the touch protocol: every memo entry that depends on the
 // layer — its own and the children's, O18 — is invalidated, the
 // panels re-read the space, the workshop reacts. The corpus stays
-// read-only BY PROTOCOL (ADR-0020), not by UI convention: the
+// read-only BY PROTOCOL (ADR-0103), not by UI convention: the
 // route itself carries the bedrock's signature and refuses to touch
 // it — an edition aimed at a bedrock layer is « socle-édité », and
 // the act of edition never writes a readonly name, whoever calls
@@ -87,7 +87,7 @@ export interface StageLayerEditionInput {
   languageSource: string;
   livingAdditions: readonly LivingAddition[];
   livingLayerNames: readonly string[];
-  /** the bedrock's signature (ADR-0020): the layers this route
+  /** the bedrock's signature (ADR-0103): the layers this route
    * refuses to touch — an edition aimed at one of them is refused
    * as « socle-édité », before the staging is even convened (the
    * bedrock layer would leave the context and be judged as a draft —
@@ -179,7 +179,7 @@ export function stageLayerEdition({
   editedSource,
   language = DEFAULT_LANGUAGE,
 }: StageLayerEditionInput): EditionOutcome {
-  // ---- the bedrock guard (ADR-0020): the refusal speaks before the
+  // ---- the bedrock guard (ADR-0103): the refusal speaks before the
   // staging is convened — a bedrock layer never re-enters it, the
   // frozen verdicts of the corpus stay true
   if (readonlyLayerNames.includes(layerName)) {
@@ -203,7 +203,7 @@ export function stageLayerEdition({
   return { ok: staging.ok && refusals.length === 0, staging, refusals };
 }
 
-/** The streamed edition (ADR-0026): the same judgement as
+/** The streamed edition (ADR-0108): the same judgement as
  * stageLayerEdition, with the staging's validation paced chunk by
  * chunk on the event loop — onChunk sees the progress, the resolved
  * outcome is identical to the synchronous one. */
@@ -261,7 +261,7 @@ export function applyStagedEdition({
   space: Space;
   layerName: LayerName;
   staging: StagingOutcome;
-  /** the bedrock's signature (ADR-0020): the act of edition itself
+  /** the bedrock's signature (ADR-0103): the act of edition itself
    * refuses to write a readonly name — the staged tree stays out,
    * the space stays intact, whoever calls the route */
   readonlyLayerNames: readonly string[];
