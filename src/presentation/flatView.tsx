@@ -261,7 +261,9 @@ export function FlatView({
       (globalThis as any).navigator?.clipboard?.writeText?.(
         dumpFlattenedLayer({ space, layer, language }),
       );
-    } catch {}
+    } catch {
+      // clipboard unavailable: the copy is best-effort
+    }
     setCopied(true);
   }
 

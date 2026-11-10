@@ -768,7 +768,7 @@ export class Space {
     const holderLayer = holder[0];
     const holderPath = holder[1];
     const search: any[] = [];
-    let result: any = "introuvable";
+    const result: any = "introuvable";
     for (let prefixLength = holderPath.length; prefixLength >= 0; prefixLength--) {
       const prefix = holderPath.slice(0, prefixLength);
       const anchors = this.anchorsAt({ layer: holderLayer, path: prefix, tracer });

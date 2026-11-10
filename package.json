@@ -14,7 +14,7 @@
     "test:staging": "node tests/staging-checks.mts",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
     "check:structure": "node scripts/cli.mjs check-structure src/App.tsx src/presentation/*.tsx src/pages/*.tsx src/WorkshopContainer.tsx",
-    "verify": "npm run typecheck && npm run check:structure && npm test && npm run build",
+    "verify": "npm run typecheck && npm run check:structure && npm run lint && npm test && npm run build",
     "serve": "node scripts/cli.mjs serve",
     "serve:prod": "node server.ts",
     "test:pen-loop": "node tests/pen-loop-checks.mts",
@@ -30,7 +30,11 @@
     "test:perf": "node tests/perf-checks.mts",
     "test:validation-session": "node tests/validation-session-checks.mts",
     "test:vscode": "node tests/vscode-checks.mts",
-    "test:server": "node tests/server-http-checks.mts"
+    "test:server": "node tests/server-http-checks.mts",
+    "lint": "eslint src server tests --no-warn-ignored",
+    "lint:fix": "eslint src server tests --no-warn-ignored --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"server/**/*.ts\" \"tests/**/*.mts\" \"*.{js,json,md}\" \".github/**/*.yml\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"server/**/*.ts\" \"tests/**/*.mts\" \"*.{js,json,md}\" \".github/**/*.yml\""
   },
   "dependencies": {
     "i18next": "^27.1.0",
@@ -38,14 +42,21 @@
     "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@tailwindcss/vite": "4.1.11",
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^5.2.0",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^9.1.2",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "globals": "^15.15.0",
     "i18next-parser": "^9.0.2",
+    "prettier": "^3.9.10",
     "tailwindcss": "4.1.11",
     "typescript": "5.6.3",
+    "typescript-eslint": "^8.72.2",
     "vite": "^7.3.8"
   }
 }

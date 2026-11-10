@@ -1,14 +1,10 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": [
-      "ES2022"
-    ],
+    "lib": ["ES2022"],
     "module": "ESNext",
     "moduleResolution": "bundler",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "strict": true,
     "noUnusedLocals": true,
     "noUncheckedIndexedAccess": true,
@@ -18,10 +14,5 @@
     "noEmit": true,
     "allowImportingTsExtensions": true
   },
-  "include": [
-    "server.ts",
-    "server",
-    "tests",
-    "vite.config.ts"
-  ]
+  "include": ["server.ts", "server", "tests", "vite.config.ts"]
 }

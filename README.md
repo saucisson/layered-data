@@ -5,7 +5,7 @@ et modèles sont des couches qui se sédimentent (raffinement, héritage,
 carottage premier-gagné). Le réseau de Petri s'y dérive du socle des
 hypergraphes jusqu'au dîner des cinq philosophes, et son espace d'états
 hérite du réseau par liaison tardive. Le modèle vient du papier
-*Layered Data: A Modular Formal Definition without Formalisms*
+_Layered Data: A Modular Formal Definition without Formalisms_
 (PNSE'16) ; sa filiation intellectuelle — les prédécesseurs
 nommés, des frames aux langages de configuration, et les
 métamodélisations comparées
@@ -95,13 +95,13 @@ Le code d'accès passe dans l'en-tête `x-access-code` (le `Authorization:
 Bearer <API_TOKEN>` de compatibilité reste accepté). Toutes les routes le
 demandent et rendent du JSON, sauf indication.
 
-| Route | Effet |
-| --- | --- |
-| `GET /api/whoami` | 200 avec code valide, 401 sinon |
-| `GET /api/layers` | `{ layers: [{ name, builtIn }] }` — socle + couches des visiteurs |
-| `GET /api/layers/:nom` | `{ name, builtIn, source }` — la couche `.ld` |
-| `PUT /api/layers/:nom` | pose une couche visiteur (403 sur le socle, 400 nom invalide) |
-| `POST /api/generate` | corps `{ prompt }`, réponse **texte brut** : la couche en langage |
+| Route                  | Effet                                                             |
+| ---------------------- | ----------------------------------------------------------------- |
+| `GET /api/whoami`      | 200 avec code valide, 401 sinon                                   |
+| `GET /api/layers`      | `{ layers: [{ name, builtIn }] }` — socle + couches des visiteurs |
+| `GET /api/layers/:nom` | `{ name, builtIn, source }` — la couche `.ld`                     |
+| `PUT /api/layers/:nom` | pose une couche visiteur (403 sur le socle, 400 nom invalide)     |
+| `POST /api/generate`   | corps `{ prompt }`, réponse **texte brut** : la couche en langage |
 
 L'ancienne API `api/formalismes` reste servie à l'identique (liste,
 lecture, pose, effacement) : c'est un alias d'héritage, les nouvelles
