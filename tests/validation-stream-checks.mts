@@ -54,7 +54,7 @@ const layerNames: LayerName[] = [...KERNEL_LAYER_NAMES, asLayerName("users-draft
 const joinedSource = (): string =>
   layerNames
     .map((layerName) =>
-      sources[layerName].endsWith("\n") ? sources[layerName] : sources[layerName] + "\n",
+      (sources[layerName] ?? "").endsWith("\n") ? (sources[layerName] ?? "") : (sources[layerName] ?? "") + "\n",
     )
     .join("");
 

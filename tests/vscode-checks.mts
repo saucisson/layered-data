@@ -33,7 +33,7 @@ const manifest = JSON.parse(readFileSync(join(extensionDirectory, "package.json"
   };
 };
 const languageConfiguration = JSON.parse(
-  readFileSync(join(extensionDirectory, manifest.contributes.languages[0].configuration), "utf8"),
+  readFileSync(join(extensionDirectory, at(manifest.contributes.languages, 0).configuration), "utf8"),
 ) as { comments: { lineComment: string }; folding: string; wordPattern: string };
 interface Grammar {
   scopeName: string;
@@ -42,7 +42,7 @@ interface Grammar {
 }
 
 const grammar = JSON.parse(
-  readFileSync(join(extensionDirectory, manifest.contributes.grammars[0].path), "utf8"),
+  readFileSync(join(extensionDirectory, at(manifest.contributes.grammars, 0).path), "utf8"),
 ) as Grammar;
 
 // ---- the flat-grammar matcher (vscode-textmate's rule, replayed) ---
@@ -78,8 +78,8 @@ const tokenizeLine = ({ line, patterns }: { line: string; patterns: GrammarPatte
       pattern.regex.lastIndex = index;
       const match = pattern.regex.exec(line);
       if (match === null) throw new Error("sticky rematch failed at " + index);
-      tokens.push({ scope: pattern.name, text: match[0] });
-      index += match[0].length;
+      tokens.push({ scope: pattern.name, text: at(match, 0) });
+      index += at(match, 0).length;
       continue;
     }
     const start = index;
@@ -117,16 +117,25 @@ function check(label: string, condition: boolean): void {
 
 // (a) the extension declares the language and ships its files
 
+
+/** Indexed access in assertions: a missing element is a test failure,
+ * not a silent undefined. */
+function at<T>(list: readonly T[], index: number): T {
+  const value = list[index];
+  if (value === undefined) throw new Error("missing element at index " + index);
+  return value;
+}
+
 check(
   "the manifest contributes one language for .ld files with a configuration file",
   manifest.contributes.languages.length === 1 &&
-    manifest.contributes.languages[0].extensions.includes(".ld") &&
-    manifest.contributes.languages[0].id === "layered-data",
+    at(manifest.contributes.languages, 0).extensions.includes(".ld") &&
+    at(manifest.contributes.languages, 0).id === "layered-data",
 );
 check(
   "the manifest wires the grammar to the language and the grammar file exists",
   manifest.contributes.grammars.length === 1 &&
-    manifest.contributes.grammars[0].scopeName === grammar.scopeName &&
+    at(manifest.contributes.grammars, 0).scopeName === grammar.scopeName &&
     grammar.scopeName === "source.layered-data",
 );
 
@@ -135,7 +144,7 @@ check(
 check(
   "every pattern of the grammar compiles and carries a scope name",
   grammar.patterns.every((include) =>
-    grammar.repository[include.include.slice(1)].patterns.every((pattern) => pattern.name !== "" && pattern.match !== ""),
+    (grammar.repository[include.include.slice(1)]?.patterns ?? []).every((pattern) => pattern.name !== "" && pattern.match !== ""),
   ),
 );
 check(
@@ -279,9 +288,9 @@ rmSync(syntaxRoot, { recursive: true, force: true });
 check(
   "a tab in a kernel layer is one syntax diagnostic at its own line, and the assembly pass suspends (it cannot judge a text it cannot read)",
   syntaxAnswer.diagnostics.length === 1 &&
-    syntaxAnswer.diagnostics[0].file === "formalisms/kernel/record.ld" &&
-    syntaxAnswer.diagnostics[0].line === 2 &&
-    syntaxAnswer.diagnostics[0].code === "syntaxe",
+    at(syntaxAnswer.diagnostics, 0).file === "formalisms/kernel/record.ld" &&
+    at(syntaxAnswer.diagnostics, 0).line === 2 &&
+    at(syntaxAnswer.diagnostics, 0).code === "syntaxe",
 );
 
 const betrayedRoot = brokenCorpus({
@@ -298,10 +307,10 @@ rmSync(betrayedRoot, { recursive: true, force: true });
 check(
   "a betrayed expect is a verdict on its own expect line, rendered in French",
   betrayedAnswer.diagnostics.length === 1 &&
-    betrayedAnswer.diagnostics[0].file === "formalisms/kernel/pn-philosophers-5.ld" &&
-    betrayedAnswer.diagnostics[0].line === betrayedLine &&
-    betrayedAnswer.diagnostics[0].code === "attendu-trahi" &&
-    betrayedAnswer.diagnostics[0].message.includes("attendu 7, lu 1"),
+    at(betrayedAnswer.diagnostics, 0).file === "formalisms/kernel/pn-philosophers-5.ld" &&
+    at(betrayedAnswer.diagnostics, 0).line === betrayedLine &&
+    at(betrayedAnswer.diagnostics, 0).code === "attendu-trahi" &&
+    at(betrayedAnswer.diagnostics, 0).message.includes("attendu 7, lu 1"),
 );
 
 const overloadRoot = brokenCorpus({
@@ -315,8 +324,8 @@ rmSync(overloadRoot, { recursive: true, force: true });
 check(
   "an undeclared overload is a verdict pinned on its layer's file",
   overloadAnswer.diagnostics.length === 1 &&
-    overloadAnswer.diagnostics[0].file === "formalisms/kernel/pn-philosophers.ld" &&
-    overloadAnswer.diagnostics[0].code === "surcharge-implicite",
+    at(overloadAnswer.diagnostics, 0).file === "formalisms/kernel/pn-philosophers.ld" &&
+    at(overloadAnswer.diagnostics, 0).code === "surcharge-implicite",
 );
 
 const mixedRoot = brokenCorpus({

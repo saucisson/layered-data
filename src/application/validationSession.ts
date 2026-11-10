@@ -115,7 +115,9 @@ export function createValidationSession({
     applyEdition({ layerName, parse, compilation }) {
       currentParse = parse;
       currentCompilation = compilation;
-      space.layers[layerName] = compilation.layers[layerName];
+      const compiledTree = compilation.layers[layerName];
+      if (compiledTree === undefined) throw new Error("compiled layer missing: " + layerName);
+      space.layers[layerName] = compiledTree;
       space.touch({ layer: layerName, path: asLayerPath([]) });
       return session.outcome();
     },

@@ -37,7 +37,7 @@ function check(label: string, condition: boolean): void {
 }
 
 const median = (values: number[]): number =>
-  [...values].sort((first, second) => first - second)[Math.floor(values.length / 2)];
+  [...values].sort((first, second) => first - second)[Math.floor(values.length / 2)] ?? 0;
 
 const elapsed = (action: () => void): number => {
   const start = performance.now();
@@ -167,11 +167,11 @@ check(
 const scaledValidation = (copies: number): number => {
   const sources: Record<string, string> = {};
   const names = [...KERNEL_LAYER_NAMES];
-  for (const layerName of KERNEL_LAYER_NAMES) sources[layerName] = layerSources[layerName];
+  for (const layerName of KERNEL_LAYER_NAMES) sources[layerName] = layerSources[layerName] ?? "";
   for (let copy = 2; copy <= copies; copy += 1) {
     for (const layerName of KERNEL_LAYER_NAMES) {
       const clone = layerName + "-x" + copy;
-      sources[clone] = layerSources[layerName].replace("layer " + layerName, "layer " + clone);
+      sources[clone] = (layerSources[layerName] ?? "").replace("layer " + layerName, "layer " + clone);
       names.push(asLayerName(clone));
     }
   }

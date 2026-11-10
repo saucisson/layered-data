@@ -217,7 +217,7 @@ export function streamStageLayerEdition(
     editedSource,
     language = DEFAULT_LANGUAGE,
   }: StageLayerEditionInput,
-  { onChunk }: { onChunk?: (chunk: ValidationChunk) => void },
+  { onChunk }: { onChunk?: ((chunk: ValidationChunk) => void) | undefined },
 ): Promise<EditionOutcome> {
   if (readonlyLayerNames.includes(layerName)) {
     return Promise.resolve(bedrockEditionRefusal({ layerName }));

@@ -3,7 +3,7 @@
 // (the workshop and the editor are ONE page, two tabs — the hash
 // picks the tab), #hierarchy, #creation, #formalism/<layer>
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { RouterProvider, useRouter } from "./components/Router";
 import { LandingPage } from "./pages/LandingPage";
 import { TutorialPage } from "./pages/TutorialPage";

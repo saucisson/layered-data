@@ -5,7 +5,7 @@
 // key, the providing layer (badge), the resolved value. Pure
 // observer: nothing is ever written back.
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AddressView, isDictionary } from "../domain/addresses.ts";
 import { isSpecialKey } from "../domain/specialKeys.ts";
 import type { Address } from "../domain/addresses.ts";
@@ -127,7 +127,7 @@ export function FlatView({
       ? baseEntries.filter(
           (entry) =>
             keyMatches(entry.key) ||
-            (node.children[entry.key] && nodeMatches(node.children[entry.key])),
+            (node.children[entry.key] !== undefined && nodeMatches(node.children[entry.key]!)),
         )
       : baseEntries;
     return (

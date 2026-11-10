@@ -41,6 +41,15 @@ const session = createEditorSession({ kernelLayerSources, kernelLayerNames: KERN
 
 // ---- layerNamesOfSource ---------------------------------------------
 
+
+/** Indexed access in assertions: a missing element is a test failure,
+ * not a silent undefined. */
+function at<T>(list: readonly T[], index: number): T {
+  const value = list[index];
+  if (value === undefined) throw new Error("missing element at index " + index);
+  return value;
+}
+
 check(
   "layerNamesOfSource reads the declared layers in order",
   JSON.stringify(layerNamesOfSource({ source: "layer a\n  x = 1\nlayer b refines @a\n  y = 2" })) ===
@@ -67,8 +76,8 @@ if (creation.ok) {
   check(
     "the addition is kept with its block",
     creation.state.additions.length === 1 &&
-      creation.state.additions[0]!.name === "pn-demo" &&
-      creation.state.additions[0]!.source.startsWith("layer pn-demo"),
+      at(creation.state.additions, 0)!.name === "pn-demo" &&
+      at(creation.state.additions, 0)!.source.startsWith("layer pn-demo"),
   );
 }
 
@@ -86,7 +95,7 @@ if (edition.ok) {
   check("the version moved to 2", edition.state.version === 2);
   check(
     "the addition was REPLACED, not appended",
-    edition.state.additions.length === 1 && edition.state.additions[0]!.source.includes("p1"),
+    edition.state.additions.length === 1 && at(edition.state.additions, 0)!.source.includes("p1"),
   );
 }
 

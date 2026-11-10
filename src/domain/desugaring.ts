@@ -59,7 +59,9 @@ export function refinementEntriesEqual(first: RawValue, second: RawValue): boole
 // original `desugar`. This is the only place outside the journal where
 // raw trees are mutated, because the mechanism IS a rewrite.
 export function desugarLayer({ space, layer }: { space: Space; layer: LayerName }): void {
-  const snapshot = rawTreeWalk(space.layers[layer]);
+  const tree = space.layers[layer];
+  if (tree === undefined) return;
+  const snapshot = rawTreeWalk(tree);
   for (const [path, node] of snapshot) {
     const children = Object.keys(node).filter(
       (key) => !(SPECIAL_KEYS as readonly string[]).includes(key) && isDictionary(node[key]),
@@ -86,5 +88,5 @@ export function desugarLayer({ space, layer }: { space: Space; layer: LayerName 
 // closure (the own raw node if it exists, else the first ancestor).
 export function designatedAddress({ space, layer, path }: { space: Space; layer: LayerName; path: LayerPath }): Address | null {
   const sources = space.closure({ layer, path });
-  return sources.length ? sources[0] : null;
+  return sources.length ? (sources[0] ?? null) : null;
 }

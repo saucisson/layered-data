@@ -5,7 +5,6 @@
 // stats keys (couches, decl, …) are the kernel's observable
 // vocabulary — they are shown as-is.
 
-import React from "react";
 import type { ValidationOutcome } from "../domain/validation.ts";
 import { renderMessage } from "../domain/messages.ts";
 import { labelOf, say } from "./i18n.ts";

@@ -66,7 +66,7 @@ function RawBranch({ keyName, value, depth, language }: { keyName: string; value
 
 /** The raw tree of one layer of the living space. */
 export function RawLayerExplorer({ space, layer, language }: { space: Space; layer: LayerName; language: Language }) {
-  const node = space.layers[layer];
+  const node = space.layers[layer] ?? {};
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3 font-mono text-[11px] leading-5">
       {Object.keys(node).map((key) => (

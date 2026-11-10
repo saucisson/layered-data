@@ -4,8 +4,8 @@
 // refinements internal to the group, the drawing on the right
 // follows the choice — no more frozen cards, a living viewpoint.
 
-import { type LayerName, asLayerName, asLayerPath } from "../domain/identifiers.ts";
-import { AddressView, LayerReference, PathReference } from "../domain/addresses.ts";
+import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
+import { LayerReference, PathReference } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
 import type { Language } from "../domain/messages.ts";
 import { resolvePositionAt } from "../application/positions.ts";

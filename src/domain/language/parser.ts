@@ -101,7 +101,8 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
         }),
       );
     }
-    return tokens[position++];
+    position++;
+    return token;
   };
   const eatKey = (): string => {
     const token = tokens[position];
@@ -207,7 +208,11 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
       // — the compilation will store them as __note:key; orphaned at
       // the end of a block, they fall with it.
       const notes: string[] = [];
-      while (peek()?.kind === "note") notes.push(tokens[position++].text);
+      while (peek()?.kind === "note") {
+        const noteToken = tokens[position++];
+        if (noteToken === undefined) break;
+        notes.push(noteToken.text);
+      }
       if (peek()?.kind === "}" || peek() === undefined) break;
       const token = peek()!;
 
@@ -232,11 +237,12 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
         acts.push({
           kind: "expect",
           path: segments.slice(0, -1),
-          key: segments[segments.length - 1],
+          key: segments[segments.length - 1] ?? "",
           value,
           line: token.line,
         });
-        if (notes.length) acts[acts.length - 1].notes = notes;
+        const lastAct = acts[acts.length - 1];
+        if (notes.length && lastAct !== undefined) lastAct.notes = notes;
         continue;
       }
 
@@ -265,7 +271,8 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
           block: null,
           line: token.line,
         });
-        if (notes.length) acts[acts.length - 1].notes = notes;
+        const lastAct = acts[acts.length - 1];
+        if (notes.length && lastAct !== undefined) lastAct.notes = notes;
         continue;
       }
 
@@ -275,7 +282,8 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
         const slot = eatKey();
         eat("->");
         acts.push({ kind: "bind", slot, value: parseValue(), line: token.line });
-        if (notes.length) acts[acts.length - 1].notes = notes;
+        const lastAct = acts[acts.length - 1];
+        if (notes.length && lastAct !== undefined) lastAct.notes = notes;
         continue;
       }
       if (token.kind === "id" && token.text === "check") {
@@ -356,12 +364,14 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
             }
           }
           eat("}");
-          acts.push({ kind: "check-definition", name: labels[0], level, condition, judgments, line: token.line });
-          if (notes.length) acts[acts.length - 1].notes = notes;
+          acts.push({ kind: "check-definition", name: labels[0] ?? "", level, condition, judgments, line: token.line });
+          const lastAct = acts[acts.length - 1];
+        if (notes.length && lastAct !== undefined) lastAct.notes = notes;
           continue;
         }
         acts.push({ kind: "check", labels, line: token.line });
-        if (notes.length) acts[acts.length - 1].notes = notes;
+        const lastAct = acts[acts.length - 1];
+        if (notes.length && lastAct !== undefined) lastAct.notes = notes;
         continue;
       }
 
@@ -393,7 +403,8 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
           block: parseActs(),
           line: token.line,
         });
-        if (notes.length) acts[acts.length - 1].notes = notes;
+        const lastAct = acts[acts.length - 1];
+        if (notes.length && lastAct !== undefined) lastAct.notes = notes;
         eat("}");
       } else if (peek()?.kind === "=") {
         position++;
@@ -406,7 +417,8 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
           block: null,
           line: token.line,
         });
-        if (notes.length) acts[acts.length - 1].notes = notes;
+        const lastAct = acts[acts.length - 1];
+        if (notes.length && lastAct !== undefined) lastAct.notes = notes;
       } else {
         // A member alone on its line reads as an empty block — the
         // declaration without content (record, alphabet refines
@@ -420,7 +432,8 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
           block: [],
           line: token.line,
         });
-        if (notes.length) acts[acts.length - 1].notes = notes;
+        const lastAct = acts[acts.length - 1];
+        if (notes.length && lastAct !== undefined) lastAct.notes = notes;
       }
     }
     return acts;
@@ -434,7 +447,11 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
     // its empty note — never mute; comments in the tribune, without a
     // layer to document, stay on the quay.
     const layerNotes: string[] = [];
-    while (peek()?.kind === "note") layerNotes.push(tokens[position++].text);
+    while (peek()?.kind === "note") {
+      const noteToken = tokens[position++];
+      if (noteToken === undefined) break;
+      layerNotes.push(noteToken.text);
+    }
     if (position >= tokens.length) break;
     const token = eat("id");
     if (token.text !== "layer") {

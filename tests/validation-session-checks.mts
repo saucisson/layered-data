@@ -39,7 +39,7 @@ function check(label: string, condition: boolean): void {
 }
 
 const median = (values: number[]): number =>
-  [...values].sort((first, second) => first - second)[Math.floor(values.length / 2)];
+  [...values].sort((first, second) => first - second)[Math.floor(values.length / 2)] ?? 0;
 
 // ---- the corpus: the kernel plus one living draft -------------------
 
@@ -66,7 +66,7 @@ const layerNames: LayerName[] = [...KERNEL_LAYER_NAMES, "users-draft" as LayerNa
 const joinedSource = (): string =>
   layerNames
     .map((layerName) =>
-      sources[layerName].endsWith("\n") ? sources[layerName] : sources[layerName] + "\n",
+      (sources[layerName] ?? "").endsWith("\n") ? (sources[layerName] ?? "") : (sources[layerName] ?? "") + "\n",
     )
     .join("");
 
@@ -104,7 +104,7 @@ check("the pristine assembly carries no verdict", sessionInitial.verdicts.length
 
 const pristineJoined = layerNames
   .map((layerName) =>
-    initialSources[layerName].endsWith("\n") ? initialSources[layerName] : initialSources[layerName] + "\n",
+    (initialSources[layerName] ?? "").endsWith("\n") ? (initialSources[layerName] ?? "") : (initialSources[layerName] ?? "") + "\n",
   )
   .join("");
 const pristineParsed = parseLanguage(pristineJoined);
@@ -181,7 +181,7 @@ const editions: Edition[] = [
 let lastParsed: ReturnType<typeof freshParse> | null = null;
 let lastCompilation: ReturnType<typeof freshCompilation> | null = null;
 for (const edition of editions) {
-  const before = sources[edition.layerName];
+  const before = sources[edition.layerName] ?? "";
   const after = edition.mutate(before);
   check("the mutation applied: " + edition.label, after !== before);
   sources[edition.layerName] = after;
