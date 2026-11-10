@@ -13,7 +13,12 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { assembleLayeredDataKernel, assembleTutorialKernel, KERNEL_LAYER_NAMES, TUTORIAL_LAYER_NAMES } from "../src/application/corpus.ts";
+import {
+  assembleLayeredDataKernel,
+  assembleTutorialKernel,
+  KERNEL_LAYER_NAMES,
+  TUTORIAL_LAYER_NAMES,
+} from "../src/application/corpus.ts";
 import { asLayerName, asLayerPath } from "../src/domain/identifiers.ts";
 import { AddressView } from "../src/domain/addresses.ts";
 import { runChecks } from "../src/domain/checks.ts";
@@ -63,7 +68,10 @@ const kernel = assembleLayeredDataKernel({ layerSources });
 //     in place, the provenance kept, refines absent
 // =====================================================================
 
-const flatWb1 = writeFlattenedLayerSource({ space: kernel.space, layer: asLayerName("wb1") });
+const flatWb1 = writeFlattenedLayerSource({
+  space: kernel.space,
+  layer: asLayerName("wb1"),
+});
 const flatWb1Lines = flatWb1.split("\n");
 
 /** Indexed access in assertions: a missing element is a test failure,
@@ -81,13 +89,20 @@ check(
 );
 check(
   "(a) the diamond reads flattened: e1 carries weight = 3 provided by wb1, e2 inherits weight = 1 provided by weighted-hypergraph",
-  flatWb1Lines.some((line) => line.trim() === "weight = 3  // provided by wb1") &&
-    flatWb1Lines.some((line) => line.trim() === "weight = 1  // provided by weighted-hypergraph"),
+  flatWb1Lines.some(
+    (line) => line.trim() === "weight = 3  // provided by wb1",
+  ) &&
+    flatWb1Lines.some(
+      (line) =>
+        line.trim() === "weight = 1  // provided by weighted-hypergraph",
+    ),
 );
 check(
   "(a) the abstract slots speak the language's gesture — abstract identifier, declared by multihypergraph, provided by none",
-  flatWb1Lines.some((line) =>
-    line.trim() === "abstract identifier  // declared by multihypergraph, provided by none",
+  flatWb1Lines.some(
+    (line) =>
+      line.trim() ===
+      "abstract identifier  // declared by multihypergraph, provided by none",
   ),
 );
 check(
@@ -96,24 +111,38 @@ check(
 );
 check(
   "(a) the provenance travels as a comment on every entry line",
-  flatWb1Lines.slice(4).every((line) => line.trim() === "" || line.includes("//")),
+  flatWb1Lines
+    .slice(4)
+    .every((line) => line.trim() === "" || line.includes("//")),
 );
 
-const flatGraph = writeFlattenedLayerSource({ space: kernel.space, layer: asLayerName("graph") });
+const flatGraph = writeFlattenedLayerSource({
+  space: kernel.space,
+  layer: asLayerName("graph"),
+});
 check(
-  "(a) the purity of the graph reads flattened: checks = [\"simple\", \"nonempty\"] provided by hypergraph",
+  '(a) the purity of the graph reads flattened: checks = ["simple", "nonempty"] provided by hypergraph',
   flatGraph
     .split("\n")
-    .some((line) => line.trim() === 'checks = ["simple", "nonempty"]  // provided by hypergraph'),
+    .some(
+      (line) =>
+        line.trim() ===
+        'checks = ["simple", "nonempty"]  // provided by hypergraph',
+    ),
 );
 check(
   "(a) the references stay references — @graph/edge_type, not a copied tree",
-  flatGraph.split("\n").some((line) => line.trim().startsWith("edge_type = @graph/edge_type  //")),
+  flatGraph
+    .split("\n")
+    .some((line) => line.trim().startsWith("edge_type = @graph/edge_type  //")),
 );
 
 // The foldable flattened DSL (2.24.1): the page renders a structure,
 // the artifact stays the text — the two must agree byte for byte.
-const flatWb1Text = writeFlattenedLayerSections({ space: kernel.space, layer: asLayerName("wb1") });
+const flatWb1Text = writeFlattenedLayerSections({
+  space: kernel.space,
+  layer: asLayerName("wb1"),
+});
 check(
   "(a) the foldable structure serializes to the same text — the page folds lines, it never rewrites them (wb1)",
   serializeFlattenedLayerText({ text: flatWb1Text }) === flatWb1,
@@ -128,7 +157,8 @@ const flatDinnerLines = writeFlattenedLayerSource({
 }).split("\n");
 check(
   "(a) the foldable structure serializes to the same text (the dinner — 12 000+ lines)",
-  serializeFlattenedLayerText({ text: flatDinnerText }) === flatDinnerLines.join("\n"),
+  serializeFlattenedLayerText({ text: flatDinnerText }) ===
+    flatDinnerLines.join("\n"),
 );
 check(
   "(a) the fold counts what it hides: the sections of the dinner cover exactly its serialized lines (header included)",
@@ -143,7 +173,8 @@ check(
   "(a) the dinner folds: at least one root section carries nested sections — the +N badge never lies",
   flatDinnerText.sections.some((section) => section.sections.length > 0) &&
     flatDinnerText.sections.some(
-      (section) => countFlattenedSectionLines({ section }) > 1 + section.sections.length,
+      (section) =>
+        countFlattenedSectionLines({ section }) > 1 + section.sections.length,
     ),
 );
 
@@ -172,10 +203,14 @@ const dinnerPetriLook = buildWorkshopLook({
 check(
   "(b) the Petri lens dresses the dinner with its own shapes — ellipses for the places, rectangles for the transitions",
   dinnerPetriLook.vertices.length === 25 &&
-    dinnerPetriLook.vertices.filter((vertex) => vertex.drawn !== null && vertex.drawn.spec.shape === "ellipse")
-      .length === 15 &&
-    dinnerPetriLook.vertices.filter((vertex) => vertex.drawn !== null && vertex.drawn.spec.shape === "rectangle")
-      .length === 10,
+    dinnerPetriLook.vertices.filter(
+      (vertex) =>
+        vertex.drawn !== null && vertex.drawn.spec.shape === "ellipse",
+    ).length === 15 &&
+    dinnerPetriLook.vertices.filter(
+      (vertex) =>
+        vertex.drawn !== null && vertex.drawn.spec.shape === "rectangle",
+    ).length === 10,
 );
 const dinnerKahnLook = buildWorkshopLook({
   space: kernel.space,
@@ -234,10 +269,13 @@ const draftSource = [
   "      target = @wb1/right/b1",
 ].join("\n");
 const versionBefore = readSessionVersion();
-writeSessionAddition({ addition: { source: draftSource, layerNames: ["draft-pages-checks"] } });
+writeSessionAddition({
+  addition: { source: draftSource, layerNames: ["draft-pages-checks"] },
+});
 check(
   "(c) the write moves the ledger: one addition kept, the version follows",
-  readSessionAdditions().length === 1 && readSessionVersion() === versionBefore + 1,
+  readSessionAdditions().length === 1 &&
+    readSessionVersion() === versionBefore + 1,
 );
 const materialized = materializeSessionAdditions({ kernel });
 check(
@@ -245,7 +283,9 @@ check(
   materialized.layerNames.includes("draft-pages-checks") &&
     "draft-pages-checks" in kernel.space.layers &&
     materialized.sources.length === 1 &&
-    (materialized.blocks["draft-pages-checks"] ?? "").includes("layer draft-pages-checks"),
+    (materialized.blocks["draft-pages-checks"] ?? "").includes(
+      "layer draft-pages-checks",
+    ),
 );
 const layerCountAfterFirst = materialized.layerNames.length;
 const reMaterialized = materializeSessionAdditions({ kernel });
@@ -253,7 +293,8 @@ check(
   "(c) the materialization is idempotent: the same ledger materializes to the same layers, sources and blocks — never twice",
   reMaterialized.layerNames.length === layerCountAfterFirst &&
     reMaterialized.sources.length === materialized.sources.length &&
-    Object.keys(reMaterialized.blocks).length === Object.keys(materialized.blocks).length,
+    Object.keys(reMaterialized.blocks).length ===
+      Object.keys(materialized.blocks).length,
 );
 const otherKernel = assembleLayeredDataKernel({ layerSources });
 const otherMaterialized = materializeSessionAdditions({ kernel: otherKernel });
@@ -279,7 +320,11 @@ const flatDraft = writeFlattenedLayerSource({
 check(
   "(c) the session layer flattens like any layer: its own key, its inherited weight — first-winner across the session boundary",
   flatDraft.split("\n").some((line) => line.includes("weight = 1")) &&
-    flatDraft.split("\n").some((line) => line.trim().startsWith("e3 = @draft-pages-checks/arcsAB/e3")),
+    flatDraft
+      .split("\n")
+      .some((line) =>
+        line.trim().startsWith("e3 = @draft-pages-checks/arcsAB/e3"),
+      ),
 );
 
 // =====================================================================
@@ -287,10 +332,14 @@ check(
 //     measured before the layout lays it out
 // =====================================================================
 
-const corpusDag = new RefinementDag({ space: kernel.space, layerNames: KERNEL_LAYER_NAMES });
+const corpusDag = new RefinementDag({
+  space: kernel.space,
+  layerNames: KERNEL_LAYER_NAMES,
+});
 check(
   "(d) the corpus DAG knows the multiple inheritance: the diamond layer refines bipartite-digraph then weighted-hypergraph, and wb1 hangs from it",
-  corpusDag.targetsOf("weighted-bipartite").join(",") === "bipartite-digraph,weighted-hypergraph" &&
+  corpusDag.targetsOf("weighted-bipartite").join(",") ===
+    "bipartite-digraph,weighted-hypergraph" &&
     corpusDag.targetsOf("wb1").join(",") === "weighted-bipartite",
 );
 check(
@@ -302,15 +351,21 @@ check(
   "(d) the descendants of the base cover the family — more than thirty layers descend from multihypergraph",
   corpusDag.descendantsOf("multihypergraph").size > 30,
 );
-const layout = computeGraphLayout({ layerNames: [...KERNEL_LAYER_NAMES], dag: corpusDag });
-const secondLayout = computeGraphLayout({ layerNames: [...KERNEL_LAYER_NAMES], dag: corpusDag });
+const layout = computeGraphLayout({
+  layerNames: [...KERNEL_LAYER_NAMES],
+  dag: corpusDag,
+});
+const secondLayout = computeGraphLayout({
+  layerNames: [...KERNEL_LAYER_NAMES],
+  dag: corpusDag,
+});
 check(
   "(d) the layout is deterministic: two passes place every layer at the same pixel — the hierarchy page is measured, not drawn",
   KERNEL_LAYER_NAMES.every(
     (layerName) =>
-      JSON.stringify(layout.position(layerName)) === JSON.stringify(secondLayout.position(layerName)),
-  ) &&
-    layout.rows.length > 1,
+      JSON.stringify(layout.position(layerName)) ===
+      JSON.stringify(secondLayout.position(layerName)),
+  ) && layout.rows.length > 1,
 );
 
 // =====================================================================
@@ -318,7 +373,12 @@ check(
 //     markdown tutorial flattens, measured like any corpus
 // =====================================================================
 
-const tutorialDirectory = join(import.meta.dirname, "..", "formalisms", "tutorial");
+const tutorialDirectory = join(
+  import.meta.dirname,
+  "..",
+  "formalisms",
+  "tutorial",
+);
 const tutorialLayerSources = Object.fromEntries(
   TUTORIAL_LAYER_NAMES.map((layerName) => [
     layerName,
@@ -338,11 +398,17 @@ const dinnerPlaces = tutorial.space
   .keys({ layer: asLayerName("philosophers-5"), path: asLayerPath(["places"]) })
   .filter((key) => key.startsWith("philo"));
 const dinnerTransitions = tutorial.space
-  .keys({ layer: asLayerName("philosophers-5"), path: asLayerPath(["transitions"]) })
+  .keys({
+    layer: asLayerName("philosophers-5"),
+    path: asLayerPath(["transitions"]),
+  })
   .filter((key) => key.startsWith("philo"));
 const dinnerArcs = tutorial.space
   .keys({ layer: asLayerName("philosophers-5"), path: asLayerPath(["arcs"]) })
-  .filter((key) => key.startsWith("philo") || key.startsWith("fk") || key.startsWith("rf"));
+  .filter(
+    (key) =>
+      key.startsWith("philo") || key.startsWith("fk") || key.startsWith("rf"),
+  );
 check(
   "(e) the dinner measures as the tutorial claims: 15 places, 10 transitions, 25 arcs — the citations land qualified, the ring closes",
   dinnerPlaces.length === 15 &&
@@ -386,12 +452,16 @@ check(
       path: asLayerPath(["philosophes", "specification", "collection"]),
       key: "maximum",
     }) === 5 &&
-    tutorial.space.keys({ layer: asLayerName("philosophers-5"), path: asLayerPath(["philosophes"]) }).length === 5,
+    tutorial.space.keys({
+      layer: asLayerName("philosophers-5"),
+      path: asLayerPath(["philosophes"]),
+    }).length === 5,
 );
 check(
   "(e) the checks carried since graph judge the whole tutorial corpus and find nothing to say",
   TUTORIAL_LAYER_NAMES.every(
-    (layerName) => runChecks({ space: tutorial.space, layer: layerName }).length === 0,
+    (layerName) =>
+      runChecks({ space: tutorial.space, layer: layerName }).length === 0,
   ),
 );
 
@@ -414,7 +484,10 @@ check(
 );
 
 const flatTutorialLayer = (layerName: string) =>
-  writeFlattenedLayerSections({ space: tutorial.space, layer: asLayerName(layerName) });
+  writeFlattenedLayerSections({
+    space: tutorial.space,
+    layer: asLayerName(layerName),
+  });
 const walkTutorialSections = (
   sections: FlattenedSection[],
   visit: (section: FlattenedSection) => void,
@@ -434,10 +507,14 @@ for (const layerName of TUTORIAL_LAYER_NAMES) {
         : section.key + " = " + section.value + "  // ";
     if (!section.line.startsWith(expectedLine)) sectionAgreement = false;
     if (section.node !== (section.target.key === null)) targetAgreement = false;
-    if (section.node && section.target.path[section.target.path.length - 1] !== section.key) {
+    if (
+      section.node &&
+      section.target.path[section.target.path.length - 1] !== section.key
+    ) {
       targetAgreement = false;
     }
-    if (!section.node && section.target.key !== section.key) targetAgreement = false;
+    if (!section.node && section.target.key !== section.key)
+      targetAgreement = false;
   });
 }
 check(
@@ -446,17 +523,30 @@ check(
 );
 check(
   "(e) the tutorial's listings open by size: the metamodels stay under the fold threshold, the two models of the dinner cross it — the widget opens them folded, never truncated",
-  listingVisibleLines({ sections: flatTutorialLayer("graph").sections }) <= 250 &&
-    listingVisibleLines({ sections: flatTutorialLayer("state-space").sections }) <= 250 &&
-    listingVisibleLines({ sections: flatTutorialLayer("philosophers-5").sections }) > 250 &&
-    listingVisibleLines({ sections: flatTutorialLayer("philosophers-5-state-space").sections }) > 250,
+  listingVisibleLines({ sections: flatTutorialLayer("graph").sections }) <=
+    250 &&
+    listingVisibleLines({
+      sections: flatTutorialLayer("state-space").sections,
+    }) <= 250 &&
+    listingVisibleLines({
+      sections: flatTutorialLayer("philosophers-5").sections,
+    }) > 250 &&
+    listingVisibleLines({
+      sections: flatTutorialLayer("philosophers-5-state-space").sections,
+    }) > 250,
 );
 
 // =====================================================================
 // the ledger
 // =====================================================================
 
-console.log("pages checks: " + assertions + " assertions, " + failures.length + " failure(s)");
+console.log(
+  "pages checks: " +
+    assertions +
+    " assertions, " +
+    failures.length +
+    " failure(s)",
+);
 for (const failure of failures) {
   console.log("FAIL " + failure);
 }
