@@ -13,14 +13,25 @@
 //
 //     AUDIT_DUMP=1 node tests/audit-kernel.mts | gzip -9 > tests/baseline-kernel.txt.gz
 
-
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { gunzipSync } from "node:zlib";
 
-import { assembleLayeredDataKernel, KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
-import { MESSAGE_LANGUAGES, renderMessage, type Language } from "../src/domain/messages.ts";
-import { AddressView, LayerReference, PathReference, type Address } from "../src/domain/addresses.ts";
+import {
+  assembleLayeredDataKernel,
+  KERNEL_LAYER_NAMES,
+} from "../src/application/corpus.ts";
+import {
+  MESSAGE_LANGUAGES,
+  renderMessage,
+  type Language,
+} from "../src/domain/messages.ts";
+import {
+  AddressView,
+  LayerReference,
+  PathReference,
+  type Address,
+} from "../src/domain/addresses.ts";
 import { SPECIAL_KEYS } from "../src/domain/specialKeys.ts";
 import { walkAddresses } from "../src/domain/views.ts";
 
@@ -40,17 +51,33 @@ function dumpRepresentation(value: any): string {
   if (value === null) return "null";
   if (value === undefined) return "undefined";
   if (value instanceof AddressView) {
-    return "@" + value.layer + (value.path.length ? "/" + value.path.join("/") : "");
+    return (
+      "@" + value.layer + (value.path.length ? "/" + value.path.join("/") : "")
+    );
   }
   if (value instanceof LayerReference) return "@L:" + value.layer;
   if (value instanceof PathReference) {
-    return "@R:" + value.anchor + (value.path.length ? "/" + value.path.join("/") : "");
+    return (
+      "@R:" +
+      value.anchor +
+      (value.path.length ? "/" + value.path.join("/") : "")
+    );
   }
-  if (Array.isArray(value)) return "[" + value.map(dumpRepresentation).join(", ") + "]";
+  if (Array.isArray(value))
+    return "[" + value.map(dumpRepresentation).join(", ") + "]";
   if (typeof value === "string") return JSON.stringify(value);
   if (typeof value === "object") {
     const keys = Object.keys(value);
-    return "{" + keys.map((key: string) => JSON.stringify(key) + ": " + dumpRepresentation(value[key])).join(", ") + "}";
+    return (
+      "{" +
+      keys
+        .map(
+          (key: string) =>
+            JSON.stringify(key) + ": " + dumpRepresentation(value[key]),
+        )
+        .join(", ") +
+      "}"
+    );
   }
   return String(value);
 }
@@ -77,13 +104,20 @@ function dumpOf(language: Language): string[] {
   dumpLines.push("verdicts " + kernel.validation.verdicts.length);
   for (const verdict of kernel.validation.verdicts) {
     dumpLines.push(
-      "verdict " + verdict.kind + " :: " + renderMessage({ message: verdict.fact, language }),
+      "verdict " +
+        verdict.kind +
+        " :: " +
+        renderMessage({ message: verdict.fact, language }),
     );
   }
   dumpLines.push("diag " + kernel.space.diagnostics.length);
   for (const diagnostic of kernel.space.diagnostics) {
     dumpLines.push(
-      "diag " + diagnostic.kind + " :: " + addressRepresentation(diagnostic.address) + " :: " +
+      "diag " +
+        diagnostic.kind +
+        " :: " +
+        addressRepresentation(diagnostic.address) +
+        " :: " +
         renderMessage({ message: diagnostic.fact, language }),
     );
   }
@@ -91,23 +125,52 @@ function dumpOf(language: Language): string[] {
   for (const layerName of kernel.layerNames) {
     dumpLines.push("LAYER " + layerName);
     dumpLines.push(
-      "closure @ => " + kernel.space.closure({ layer: layerName, path: [] }).map(addressRepresentation).join(" "),
+      "closure @ => " +
+        kernel.space
+          .closure({ layer: layerName, path: [] })
+          .map(addressRepresentation)
+          .join(" "),
     );
-    for (const [addressLayer, addressPath] of walkAddresses({ space: kernel.space, layer: layerName })) {
+    for (const [addressLayer, addressPath] of walkAddresses({
+      space: kernel.space,
+      layer: layerName,
+    })) {
       const where = addressRepresentation([addressLayer, addressPath]);
       dumpLines.push(
-        "closure " + where + " => " +
-          kernel.space.closure({ layer: addressLayer, path: addressPath }).map(addressRepresentation).join(" "),
+        "closure " +
+          where +
+          " => " +
+          kernel.space
+            .closure({ layer: addressLayer, path: addressPath })
+            .map(addressRepresentation)
+            .join(" "),
       );
-      const visibleKeys = kernel.space.keys({ layer: addressLayer, path: addressPath });
+      const visibleKeys = kernel.space.keys({
+        layer: addressLayer,
+        path: addressPath,
+      });
       dumpLines.push("keys " + where + " => " + visibleKeys.join(" "));
       for (const key of visibleKeys) {
-        dumpLines.push("read " + where + " :: " + key + " => " + dumpRepresentation(readObservation(addressLayer, addressPath, key)));
+        dumpLines.push(
+          "read " +
+            where +
+            " :: " +
+            key +
+            " => " +
+            dumpRepresentation(readObservation(addressLayer, addressPath, key)),
+        );
       }
       for (const specialKey of SPECIAL_KEYS) {
         if (specialKey === "note" || specialKey === "tests") continue;
         dumpLines.push(
-          "special " + where + " :: " + specialKey + " => " + dumpRepresentation(readObservation(addressLayer, addressPath, specialKey)),
+          "special " +
+            where +
+            " :: " +
+            specialKey +
+            " => " +
+            dumpRepresentation(
+              readObservation(addressLayer, addressPath, specialKey),
+            ),
         );
       }
     }
@@ -117,7 +180,8 @@ function dumpOf(language: Language): string[] {
 
 const dumpText =
   MESSAGE_LANGUAGES.map(
-    (language) => "=== language " + language + " ===\n" + dumpOf(language).join("\n"),
+    (language) =>
+      "=== language " + language + " ===\n" + dumpOf(language).join("\n"),
   ).join("\n") + "\n";
 
 if (process.env.AUDIT_DUMP === "1") {
@@ -128,8 +192,14 @@ if (process.env.AUDIT_DUMP === "1") {
   if (dumpText !== baselineText) {
     const dumpLines = dumpText.split("\n");
     const baselineLines = baselineText.split("\n");
-    const differing = dumpLines.filter((line, index) => line !== baselineLines[index]);
-    console.error("kernel audit: dump differs from tests/baseline-kernel.txt.gz (" + differing.length + " differing lines)");
+    const differing = dumpLines.filter(
+      (line, index) => line !== baselineLines[index],
+    );
+    console.error(
+      "kernel audit: dump differs from tests/baseline-kernel.txt.gz (" +
+        differing.length +
+        " differing lines)",
+    );
     for (const line of differing.slice(0, 20)) console.error("  " + line);
     process.exit(1);
   }

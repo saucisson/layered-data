@@ -22,9 +22,15 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { assembleLayeredDataKernel, KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
+import {
+  assembleLayeredDataKernel,
+  KERNEL_LAYER_NAMES,
+} from "../src/application/corpus.ts";
 import { asLayerName, asLayerPath } from "../src/domain/identifiers.ts";
-import { stageLayerAddition, applyStagedAddition } from "../src/application/staging.ts";
+import {
+  stageLayerAddition,
+  applyStagedAddition,
+} from "../src/application/staging.ts";
 import { runAllLints } from "../src/application/linting.ts";
 import { Space } from "../src/domain/space.ts";
 
@@ -49,7 +55,13 @@ const layerSources = Object.fromEntries(
 );
 const kernel = assembleLayeredDataKernel({ layerSources });
 
-function stage({ draftSource, previousAdditionSources = [] }: { draftSource: string; previousAdditionSources?: string[] }) {
+function stage({
+  draftSource,
+  previousAdditionSources = [],
+}: {
+  draftSource: string;
+  previousAdditionSources?: string[];
+}) {
   return stageLayerAddition({
     languageSource: kernel.languageSource,
     previousAdditionSources,
@@ -85,7 +97,9 @@ function at<T>(list: readonly T[], index: number): T {
 
 check(
   "(a) the sound draft is accepted: ok, no verdict, at the validation step",
-  accepted.ok === true && accepted.verdicts.length === 0 && accepted.step === "validation",
+  accepted.ok === true &&
+    accepted.verdicts.length === 0 &&
+    accepted.step === "validation",
 );
 check(
   "(a) the staged outcome declares exactly the draft layer",
@@ -93,13 +107,21 @@ check(
 );
 check(
   "(a) the staged outcome blocks the draft layer text for the quarry",
-  (accepted.blocks["draft-demo"] ?? "").includes("layer draft-demo refines @wb1"),
+  (accepted.blocks["draft-demo"] ?? "").includes(
+    "layer draft-demo refines @wb1",
+  ),
 );
 
-const applied = applyStagedAddition({ space: kernel.space, staging: accepted, knownLayerNames: KERNEL_LAYER_NAMES, readonlyLayerNames: KERNEL_LAYER_NAMES });
+const applied = applyStagedAddition({
+  space: kernel.space,
+  staging: accepted,
+  knownLayerNames: KERNEL_LAYER_NAMES,
+  readonlyLayerNames: KERNEL_LAYER_NAMES,
+});
 check(
   "(a) the applied addition registers exactly the new layer",
-  applied.newLayerNames.length === 1 && applied.newLayerNames.includes(asLayerName("draft-demo")),
+  applied.newLayerNames.length === 1 &&
+    applied.newLayerNames.includes(asLayerName("draft-demo")),
 );
 check(
   "(a) the applied addition reports the refinement target of the new layer",
@@ -107,7 +129,11 @@ check(
 );
 check(
   "(a) the new layer is readable in the living space — the inherited weight crosses the diamond",
-  kernel.space.read({ layer: asLayerName("draft-demo"), path: asLayerPath(["arcsAB", "e3"]), key: "weight" }) === 1,
+  kernel.space.read({
+    layer: asLayerName("draft-demo"),
+    path: asLayerPath(["arcsAB", "e3"]),
+    key: "weight",
+  }) === 1,
 );
 
 // a second staging over the same living space still accepts the
@@ -122,7 +148,8 @@ check(
 // (b) a broken syntax is refused at the syntax step
 // =====================================================================
 
-const brokenDraft = "layer draft-broken refines @wb1\n  extend arcsAB\n    e3 = oops \x1b[[";
+const brokenDraft =
+  "layer draft-broken refines @wb1\n  extend arcsAB\n    e3 = oops \x1b[[";
 const refusedSyntax = stage({ draftSource: brokenDraft });
 check(
   "(b) the broken draft is refused at the syntax step, with readable errors",
@@ -144,7 +171,8 @@ check(
 );
 check(
   '(c) the orphan target carries exactly the "cible-inconnue" verdict',
-  refusedOrphan.verdicts.length === 1 && at(refusedOrphan.verdicts, 0).kind === "cible-inconnue",
+  refusedOrphan.verdicts.length === 1 &&
+    at(refusedOrphan.verdicts, 0).kind === "cible-inconnue",
 );
 
 // =====================================================================
@@ -163,7 +191,8 @@ check(
 );
 check(
   '(d) the betrayed expectation carries exactly the "attendu-trahi" verdict',
-  refusedBetrayed.verdicts.length === 1 && at(refusedBetrayed.verdicts, 0).kind === "attendu-trahi",
+  refusedBetrayed.verdicts.length === 1 &&
+    at(refusedBetrayed.verdicts, 0).kind === "attendu-trahi",
 );
 
 // =====================================================================
@@ -226,14 +255,21 @@ check(
 );
 check(
   '(e) the conflict carries exactly the "conflit-d\'ordre" verdict',
-  strictConflict.verdicts.length === 1 && at(strictConflict.verdicts, 0).kind === "conflit-d'ordre",
+  strictConflict.verdicts.length === 1 &&
+    at(strictConflict.verdicts, 0).kind === "conflit-d'ordre",
 );
 check(
   "(e) the conflict verdict names the winner, the loser and the key",
   strictConflict.verdicts.length === 1 &&
-    JSON.stringify(at(strictConflict.verdicts, 0).fact.params).includes("charge") &&
-    JSON.stringify(at(strictConflict.verdicts, 0).fact.params).includes("demo-left") &&
-    JSON.stringify(at(strictConflict.verdicts, 0).fact.params).includes("demo-right"),
+    JSON.stringify(at(strictConflict.verdicts, 0).fact.params).includes(
+      "charge",
+    ) &&
+    JSON.stringify(at(strictConflict.verdicts, 0).fact.params).includes(
+      "demo-left",
+    ) &&
+    JSON.stringify(at(strictConflict.verdicts, 0).fact.params).includes(
+      "demo-right",
+    ),
 );
 
 // =====================================================================
@@ -258,8 +294,16 @@ check(
   "(f) the retired words are measured: both members read their laid values",
   retiredStage.ok &&
     retiredStage.compiledLanguage !== null &&
-    new Space(retiredStage.compiledLanguage.layers).read({ layer: asLayerName("demo-retired"), path: asLayerPath([]), key: "assume" }) === 7 &&
-    new Space(retiredStage.compiledLanguage.layers).read({ layer: asLayerName("demo-retired"), path: asLayerPath([]), key: "mask" }) === 3,
+    new Space(retiredStage.compiledLanguage.layers).read({
+      layer: asLayerName("demo-retired"),
+      path: asLayerPath([]),
+      key: "assume",
+    }) === 7 &&
+    new Space(retiredStage.compiledLanguage.layers).read({
+      layer: asLayerName("demo-retired"),
+      path: asLayerPath([]),
+      key: "mask",
+    }) === 3,
 );
 
 // =====================================================================
@@ -305,7 +349,9 @@ check(
 check(
   '(h) the vacant pose carries the "check-vacant" verdicts, one per required slot, naming the tag',
   refusedVacant.verdicts.length === 4 &&
-    refusedVacant.verdicts.every((verdict) => verdict.kind === "check-vacant") &&
+    refusedVacant.verdicts.every(
+      (verdict) => verdict.kind === "check-vacant",
+    ) &&
     refusedVacant.verdicts.every((verdict) =>
       JSON.stringify(verdict.fact.params).includes("k-partite"),
     ) &&
@@ -377,7 +423,9 @@ check(
   '(i) each cyclic arc carries its "check-trahi" verdict, the carried check refusing',
   strictCycle.verdicts.length === 3 &&
     strictCycle.verdicts.every((verdict) => verdict.kind === "check-trahi") &&
-    strictCycle.verdicts.every((verdict) => JSON.stringify(verdict.fact.params).includes("cycle")),
+    strictCycle.verdicts.every((verdict) =>
+      JSON.stringify(verdict.fact.params).includes("cycle"),
+    ),
 );
 check(
   "(i) the refusal names the judging address — the arc the check refused at",
@@ -396,23 +444,24 @@ check(
 const bedrockDraft = 'layer record\n  specification\n    record = "volé"\n';
 const refusedBedrock = stage({ draftSource: bedrockDraft });
 check(
-  '(j) the draft claiming a bedrock name is refused at the validation step',
+  "(j) the draft claiming a bedrock name is refused at the validation step",
   refusedBedrock.ok === false && refusedBedrock.step === "validation",
 );
 check(
   '(j) the refusal carries exactly the "socle-occupé" verdict — the theft named, never the forgery judged (measured before ADR-0103: 13 ghost declarations accusing innocent layers)',
-  refusedBedrock.verdicts.length === 1 && at(refusedBedrock.verdicts, 0).kind === "socle-occupé",
+  refusedBedrock.verdicts.length === 1 &&
+    at(refusedBedrock.verdicts, 0).kind === "socle-occupé",
 );
 check(
-  '(j) the refused staging compiles nothing — the token space of a forgery never leaves the staging',
+  "(j) the refused staging compiles nothing — the token space of a forgery never leaves the staging",
   refusedBedrock.compiledLanguage === null,
 );
 check(
-  '(j) a draft that REFINES a bedrock layer stays welcome — the bedrock is read-only, not refinement-proof',
+  "(j) a draft that REFINES a bedrock layer stays welcome — the bedrock is read-only, not refinement-proof",
   stage({ draftSource: "layer draft-welcome refines @record\n" }).ok === true,
 );
 check(
-  '(j) the act of addition itself never writes a readonly name — the route refuses, whoever calls it',
+  "(j) the act of addition itself never writes a readonly name — the route refuses, whoever calls it",
   applyStagedAddition({
     space: kernel.space,
     staging: accepted,
@@ -425,7 +474,13 @@ check(
 // the ledger
 // =====================================================================
 
-console.log("staging checks: " + assertions + " assertions, " + failures.length + " failure(s)");
+console.log(
+  "staging checks: " +
+    assertions +
+    " assertions, " +
+    failures.length +
+    " failure(s)",
+);
 for (const failure of failures) {
   console.log("FAIL " + failure);
 }
