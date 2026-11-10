@@ -152,8 +152,8 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   byte-identical from one version to the next.
 
 ```bash
-npm run verify         # typecheck, structure, all six harnesses, build
-npm test               # the six harnesses alone
+npm run verify         # typecheck, structure, all fifteen harnesses, build
+npm test               # the fifteen harnesses alone
 ```
 
 The audit line of defense never weakens: no change to the domain is
