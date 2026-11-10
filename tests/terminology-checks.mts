@@ -235,7 +235,11 @@ function sourceFilesUnder(directory: string): string[] {
 }
 
 const everyLiteral: string[] = [];
-for (const file of [...sourceFilesUnder(join(rootDirectory, "src")), join(rootDirectory, "server.ts")]) {
+for (const file of [
+  ...sourceFilesUnder(join(rootDirectory, "src")),
+  ...sourceFilesUnder(join(rootDirectory, "server")),
+  join(rootDirectory, "server.ts"),
+]) {
   everyLiteral.push(...stringLiteralsOf(readFileSync(file, "utf8")));
 }
 // the tutorial's markdown pair is narration too — each file is read
@@ -321,7 +325,9 @@ check(
     !tutorialMarkdownSource("en").includes("plume"),
 );
 
-const serverSource = readFileSync(join(rootDirectory, "server.ts"), "utf8");
+const serverSource = [join(rootDirectory, "server.ts"), ...sourceFilesUnder(join(rootDirectory, "server"))]
+  .map((file) => readFileSync(file, "utf8"))
+  .join("\n");
 
 check(
   "the geologist's system prompt speaks the treaty in both tongues — the pen is retired from the words humans read",
