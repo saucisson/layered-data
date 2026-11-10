@@ -54,7 +54,7 @@ function AppContent() {
   }
 }
 
-export default function App() {
+export function App() {
   return (
     <RouterProvider>
       <AppContent />

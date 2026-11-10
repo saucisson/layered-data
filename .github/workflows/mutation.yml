@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Branch to run mutation testing on'
+        description: "Branch to run mutation testing on"
         required: true
-        default: 'daily'
+        default: "daily"
   schedule:
     # Run at end of business day (adjust as needed)
-    - cron: '0 18 * * 1-5'
+    - cron: "0 18 * * 1-5"
 
 jobs:
   mutate:
@@ -36,7 +36,7 @@ jobs:
         run: |
           # Install Stryker if not already in dependencies
           npm install --save-dev @stryker-mutator/core @stryker-mutator/typescript-checker @stryker-mutator/jest-runner 2>&1 | grep -v "audited" || true
-          
+
           # Configure Stryker (minimal config)
           cat > stryker.conf.js << 'EOF'
           module.exports = {
@@ -59,7 +59,7 @@ jobs:
             coverageAnalysis: "perTest"
           };
           EOF
-          
+
           # Run Stryker (this may take a while)
           npx stryker run --fileLogLevel trace || true
 

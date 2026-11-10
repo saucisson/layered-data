@@ -57,8 +57,8 @@ Enforced by TypeScript strict mode, ESLint, and the review checklist - read them
   and `scripts/`.
 - Errors: typed domain errors, `throw ...` with context, nothing swallowed.
 - **Web (`src/`)** same discipline in TypeScript: strict `tsc` + type-checked
-  ESLint + layer boundaries (`src/domain/` <- `src/application/` <- 
-  `src/presentation/` <- `src/App.tsx`); no `any` (`unknown` + narrowing), 
+  ESLint + layer boundaries (`src/domain/` <- `src/application/` <-
+  `src/presentation/` <- `src/App.tsx`); no `any` (`unknown` + narrowing),
   unions not enums, named exports only, no `console`;
   `npm run verify` before reporting web work.
 

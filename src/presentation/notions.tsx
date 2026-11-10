@@ -272,13 +272,7 @@ export function glossaryIds(): string[] {
 /** The glossary id behind a term as the prose writes it — the
  * markers carry the term in the prose's own language, sometimes
  * capitalized; the resolution is case-insensitive. */
-export function glossaryIdOfTerm({
-  term,
-  language,
-}: {
-  term: string;
-  language: Language;
-}): string | null {
+export function glossaryIdOfTerm({ term }: { term: string }): string | null {
   const sought = term.toLowerCase();
   for (const id of glossaryIds()) {
     const entry = GLOSSARY[id];
@@ -306,7 +300,7 @@ export function NotionTip({
   children?: React.ReactNode;
 }) {
   const [open, setOpen] = useState(false);
-  const id = glossaryIdOfTerm({ term, language });
+  const id = glossaryIdOfTerm({ term });
   const entry = id === null ? undefined : GLOSSARY[id];
   if (entry === undefined) return <span>{children ?? term}</span>;
   const termText = localized({ language, text: entry.term });
