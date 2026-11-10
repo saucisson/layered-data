@@ -385,13 +385,14 @@ check(
 // the geologist's instructions (server source — both tongues follow VERSION)
 // =====================================================================
 
-const serverSource = readFileSync(join(import.meta.dirname, "..", "server.ts"), "utf8");
+const promptsSource = readFileSync(join(import.meta.dirname, "..", "server", "geologistPrompts.ts"), "utf8");
+const configSource = readFileSync(join(import.meta.dirname, "..", "server", "config.ts"), "utf8");
 check(
   "the geologist's system prompt speaks both workshop tongues, English by default, both following VERSION",
-  serverSource.includes("PEN_INSTRUCTIONS_EN") &&
-    serverSource.includes("PEN_INSTRUCTIONS_FR") &&
-    serverSource.includes('penInstructions("en")') &&
-    serverSource.includes("const VERSION = \"2.25.0\";"),
+  promptsSource.includes("PEN_INSTRUCTIONS_EN") &&
+    promptsSource.includes("PEN_INSTRUCTIONS_FR") &&
+    promptsSource.includes('penInstructions("en")') &&
+    configSource.includes("const VERSION = \"2.25.0\";"),
 );
 
 // =====================================================================

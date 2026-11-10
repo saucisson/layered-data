@@ -18,6 +18,7 @@
   },
   "include": [
     "server.ts",
+    "server",
     "tests",
     "vite.config.ts"
   ]
