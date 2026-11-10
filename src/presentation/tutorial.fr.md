@@ -47,7 +47,7 @@ Cliquez la ligne `abstract minimum` : la carte dit « declared by collection, pr
 
 ### checks — formules inline
 
-Depuis l'ADR-0027, un ⟪check⟫ porte sa formule inline : `check simple { level, judgment { formula, message } }` — le comportement de la contrainte est écrit dans le langage lui-même (ADR-0022). Les étiquettes qui ont besoin de la fermeture transitive (`dag`, `arbre`) gardent un algorithme intégré au noyau jusqu'à la strate 2.
+Depuis l'ADR-0109, un ⟪check⟫ porte sa formule inline : `check simple { level, judgment { formula, message } }` — le comportement de la contrainte est écrit dans le langage lui-même (ADR-0105). Les étiquettes qui ont besoin de la fermeture transitive (`dag`, `arbre`) gardent un algorithme intégré au noyau jusqu'à la strate 2.
 
 ## graph — le métamodèle de base
 

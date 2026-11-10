@@ -1,5 +1,5 @@
 // The checks' declarative strate: the reading language of the
-// couples (ADR-0022).
+// couples (ADR-0105).
 //
 // A couple's judgment is a closed sentence over the reading machine.
 // Quantifiers range over NAMED views (collections — finite domains,

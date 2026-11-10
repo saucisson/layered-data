@@ -1,4 +1,4 @@
-# ADR-0018: Checks as contracts — the constraint semantics made nominal, visible, executable
+# ADR-0101: Checks as contracts — the constraint semantics made nominal, visible, executable
 
 - Status: accepted
 - Date: 2026-11-04
@@ -33,7 +33,7 @@ Measured on the trunk corpus:
 The constraint semantics composed with nothing: a layer could carry
 `sperner` without an `edges` binding and pass every judge — a
 constraint that cannot judge, refused by no one. The mirror image of
-ADR-0017's order convention: there the meaning was silent, here the
+ADR-0100's order convention: there the meaning was silent, here the
 VERIFICATION is silent.
 
 Rejected diagnosis: "the checks work, they just need wiring". The
@@ -54,7 +54,7 @@ read without execution.
   documents the kernel's semantics, not its current usage. The corpus
   carrying no `container =` verification is a finding, not a deletion.
 - **An open registry in the data** (checks as layers, defined in the
-  language): rejected — that is the meta-model question (ADR-0019's
+  language): rejected — that is the meta-model question (ADR-0102's
   territory); this ADR makes the CLOSED registry honest first.
 - **The contracts, the inventory, the verdict, the strict arm** (chosen):
   the semantics of every tag declared once, read everywhere.
@@ -76,7 +76,7 @@ read without execution.
    refused as « check-vacant » — the mirror of étiquette-inconnue
    (the posed tag that does not exist), the symmetry of the
    retired assume-fantôme (the signature that judged nothing —
-   retired by ADR-0023). The inherited
+   retired by ADR-0106). The inherited
    instance vacancies stay the lint's: the type binds them, the root
    never sees them.
 4. **The strict arm** (`strictChecks`, off by default;
@@ -94,7 +94,7 @@ read without execution.
 - The withdrawal policy stays free INSIDE each check (a check may
   still judge partially); what is no longer free is claiming the name
   without the means.
-- The ADR-0017 discipline holds: the kernel stays total, never an
+- The ADR-0100 discipline holds: the kernel stays total, never an
   exception; the severity is yours — permissive by default, the two
   strict arms opt in.
 - Follow-up: wiring `runChecks` into the audit baseline (a new dump

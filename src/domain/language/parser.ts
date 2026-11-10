@@ -16,14 +16,14 @@ export type LanguageValue =
   | { kind: "list"; items: LanguageValue[] };
 
 // The declaration modes of the members: three gestures since
-// ADR-0023 — the ones the ontology measured, nothing else.
+// ADR-0106 — the ones the ontology measured, nothing else.
 export type DeclarationMode = "new" | "extend" | "override";
 
 export type LanguageAct =
   | { kind: "bind"; slot: string; value: LanguageValue; line: number; notes?: string[] }
   | { kind: "check"; labels: string[]; line: number; notes?: string[] }
   | {
-      /** `check name { … }` — the DEFINITION (ADR-0022): one check,
+      /** `check name { … }` — the DEFINITION (ADR-0105): one check,
        * its level, an optional condition slot, and its judgments —
        * closed sentences in the reading language, each with its
        * message template. The act desugars into the internal
@@ -285,7 +285,7 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
           position++;
           labels.push(eatKey());
         }
-        // The block opens the DEFINITION (ADR-0022) — the sugar is
+        // The block opens the DEFINITION (ADR-0105) — the sugar is
         // the only door into the check-definitions container: the
         // language poses (`check simple`) and defines (`check
         // simple { … }`); it never addresses the container itself.

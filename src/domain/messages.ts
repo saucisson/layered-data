@@ -223,14 +223,14 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       text(p, "tag") +
       " » cannot judge — the slot « " +
       text(p, "slot") +
-      " » is unbound (ADR-0018)",
+      " » is unbound (ADR-0101)",
     fr: (p) =>
       text(p, "where") +
       " : le check « " +
       text(p, "tag") +
       " » ne peut pas juger — le slot « " +
       text(p, "slot") +
-      " » n'est pas lié (ADR-0018)",
+      " » n'est pas lié (ADR-0101)",
   },
   "check-betrayed": {
     en: (p) =>
@@ -246,18 +246,18 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
     en: (p) =>
       "the check « " +
       text(p, "tag") +
-      " » is declared in the registry but no algorithm executes it (ADR-0019)",
+      " » is declared in the registry but no algorithm executes it (ADR-0102)",
     fr: (p) =>
       "le check « " +
       text(p, "tag") +
-      " » est déclaré dans le registre mais aucun algorithme ne l'exécute (ADR-0019)",
+      " » est déclaré dans le registre mais aucun algorithme ne l'exécute (ADR-0102)",
   },
-  // ---- the declarative strate's facts (ADR-0022) ----
+  // ---- the declarative strate's facts (ADR-0105) ----
   "redefined-check": {
     en: (p) =>
-      text(p, "where") + " : the check « " + text(p, "name") + " » is re-posed divergently (" + text(p, "first") + " then " + text(p, "second") + ") — a couple is never replaced (ADR-0022)",
+      text(p, "where") + " : the check « " + text(p, "name") + " » is re-posed divergently (" + text(p, "first") + " then " + text(p, "second") + ") — a couple is never replaced (ADR-0105)",
     fr: (p) =>
-      text(p, "where") + " : le check « " + text(p, "name") + " » est re-possé divergent (" + text(p, "first") + " puis " + text(p, "second") + ") — un couple n'est jamais remplacé (ADR-0022)",
+      text(p, "where") + " : le check « " + text(p, "name") + " » est re-possé divergent (" + text(p, "first") + " puis " + text(p, "second") + ") — un couple n'est jamais remplacé (ADR-0105)",
   },
   "unsupported-level": {
     en: (p) =>
@@ -272,8 +272,8 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       text(p, "where") + " : le jugement de « " + text(p, "name") + " » porte un « when » mais le couple ne déclare pas de condition",
   },
   "unreadable-formula": {
-    en: (p) => "the check « " + text(p, "tag") + " » carries an unreadable formula: " + text(p, "detail") + " (ADR-0022)",
-    fr: (p) => "le check « " + text(p, "tag") + " » porte une formule illisible : " + text(p, "detail") + " (ADR-0022)",
+    en: (p) => "the check « " + text(p, "tag") + " » carries an unreadable formula: " + text(p, "detail") + " (ADR-0105)",
+    fr: (p) => "le check « " + text(p, "tag") + " » porte une formule illisible : " + text(p, "detail") + " (ADR-0105)",
   },
   "template-out-of-scope": {
     en: (p) =>
@@ -289,43 +289,43 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
     en: (p) =>
       "the registry declares « " +
       text(p, "tag") +
-      " » but the kernel binds no algorithm to it (ADR-0019)",
+      " » but the kernel binds no algorithm to it (ADR-0102)",
     fr: (p) =>
       "le registre déclare « " +
       text(p, "tag") +
-      " » mais le noyau ne lui lie aucun algorithme (ADR-0019)",
+      " » mais le noyau ne lui lie aucun algorithme (ADR-0102)",
   },
   "algorithm-without-contract": {
     en: (p) =>
       "the kernel binds an algorithm for « " +
       text(p, "tag") +
-      " » that the registry never declares (ADR-0019)",
+      " » that the registry never declares (ADR-0102)",
     fr: (p) =>
       "le noyau lie un algorithme pour « " +
       text(p, "tag") +
-      " » que le registre ne déclare pas (ADR-0019)",
+      " » que le registre ne déclare pas (ADR-0102)",
   },
   "contract-unreadable": {
     en: (p) =>
       text(p, "where") +
       " : the contract of « " +
       text(p, "tag") +
-      " » is unreadable — a clause the kernel cannot parse (ADR-0019)",
+      " » is unreadable — a clause the kernel cannot parse (ADR-0102)",
     fr: (p) =>
       text(p, "where") +
       " : le contrat de « " +
       text(p, "tag") +
-      " » est illisible — une clause que le noyau ne sait pas lire (ADR-0019)",
+      " » est illisible — une clause que le noyau ne sait pas lire (ADR-0102)",
   },
   "bedrock-occupied": {
     en: (p) =>
       "the name « " +
       text(p, "layer") +
-      " » belongs to the bedrock — the read-only corpus: its layers are never rewritten, a draft may refine them, never replace them (ADR-0020)",
+      " » belongs to the bedrock — the read-only corpus: its layers are never rewritten, a draft may refine them, never replace them (ADR-0103)",
     fr: (p) =>
       "le nom « " +
       text(p, "layer") +
-      " » appartient au socle — le corpus en lecture seule : ses couches ne se réécrivent jamais, un brouillon peut les raffiner, jamais les remplacer (ADR-0020)",
+      " » appartient au socle — le corpus en lecture seule : ses couches ne se réécrivent jamais, un brouillon peut les raffiner, jamais les remplacer (ADR-0103)",
   },
 };
 

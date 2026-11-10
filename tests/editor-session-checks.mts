@@ -1,4 +1,4 @@
-// The shared editor session checks (ADR-0028): the versioned state
+// The shared editor session checks (ADR-0110): the versioned state
 // the server keeps and broadcasts, and the judged gesture — the same
 // staging as the browser, optimistic locking on the version, the
 // deterministic re-staging of every candidate addition over a fresh

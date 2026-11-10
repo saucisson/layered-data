@@ -1,8 +1,8 @@
-# ADR-0017: Order as semantics — first-wins conflicts made visible, signable, contractual
+# ADR-0100: Order as semantics — first-wins conflicts made visible, signable, contractual
 
 - Status: accepted
 - Date: 2026-11-04
-- Amended by: [ADR-0023](adr-0023-two-regime-algebra.md) — the signature
+- Amended by: [ADR-0106](adr-0106-two-regime-algebra.md) — the signature
   (decision 3) retires with it; the visibility (decision 1) and the
   strict staging (decision 4, now without exception) stand.
 
@@ -56,7 +56,7 @@ it is given an address — and an address nobody could read.
    providers with diverging LAID values (structurally compared, never
    resolved — faithful to O6). Vertical inheritance never conflicts
    (specificity is structure). `MASK` is an act, not a value (the act
-   retired by ADR-0023). Notes
+   retired by ADR-0106). Notes
    document, they never provide. The diagnostic is an inventory —
    amber, « à inspecter » — never a fault.
 2. **Leaf values only**: two incomparable dict providers are NOT
@@ -66,7 +66,7 @@ it is given an address — and an address nobody could read.
    by design). This is a measured choice, not an oversight: the
    reported conflict is exactly the observable a reader can be
    surprised by — the VALUE the read returns.
-3. **`assume`** (new language act — **retired by ADR-0023**: the
+3. **`assume`** (new language act — **retired by ADR-0106**: the
    zero-divergence census emptied the signature of its object, the
    reading is confluent, nothing blesses an order-decided read
    anymore): `assume key` signs the
@@ -84,7 +84,7 @@ it is given an address — and an address nobody could read.
    the pen loop): the unsigned conflicts of the judged layers become
    staging verdicts — a candidate that lets the refines order decide a
    leaf value between incomparable sources is refused as
-   « conflit-d'ordre » — since ADR-0023 the refusal is WITHOUT
+   « conflit-d'ordre » — since ADR-0106 the refusal is WITHOUT
    EXCEPTION: no act signs a conflict, an exacting space restructures
    (make the providers comparable, or diverge them into different
    addresses). The trunk
@@ -104,15 +104,15 @@ it is given an address — and an address nobody could read.
 - New observable vocabulary: verdict/diagnostic kinds
   « conflit-d'ordre » and « assume-fantôme », fact codes
   `order-conflict` and `ghost-assume`, both bilingual — the ghost
-  and its code retired with the signature (ADR-0023); the conflict
+  and its code retired with the signature (ADR-0106); the conflict
   and its code stand.
 - The language grows an eighth gesture (`assume`), colored as a
   keyword, in the tutorial's seventh step, in the glossary — the
-  gesture, the keyword and the glossary entry retired with ADR-0023;
+  gesture, the keyword and the glossary entry retired with ADR-0106;
   the word falls back to the common vocabulary of keys.
 - The staging protocol freezes two more scenarios (unsigned conflict
   refused in strict mode; ghost assume refused always) — the ghost
-  scenario retired with the signature (ADR-0023); since then the
+  scenario retired with the signature (ADR-0106); since then the
   strict refusal is without exception, and the lint inventories a
   seventh kind.
 - The lint over the trunk reports zero conflit-d'ordre (measured): a
@@ -131,7 +131,7 @@ it is given an address — and an address nobody could read.
 - A workshop toggle for strict staging (presentation only).
 - A « signed crossings » view of the spine: the assume's addresses,
   walkable like the closure's — retired with the signature
-  (ADR-0023); the lint's inventory is the whole story now.
+  (ADR-0106); the lint's inventory is the whole story now.
 - Revisit the 59 topological crossings if a corpus ever shows a
   scalar surprise re-merged downstream — the detector is the same,
   the filter is one line.

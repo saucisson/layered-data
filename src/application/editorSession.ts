@@ -1,4 +1,4 @@
-// The shared editor session (ADR-0028): the living additions of the
+// The shared editor session (ADR-0110): the living additions of the
 // graphical model editor, kept as ONE versioned state on the server
 // and broadcast to every connected editor. This module is the pure
 // application logic — the HTTP/SSE transport lives in server.ts, the

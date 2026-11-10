@@ -3,7 +3,7 @@
 // First-wins is the single read semantics — and when the two
 // providers of a key are INCOMPARABLE (neither lives in the other's
 // closure), the first of the two wins by the ORDER of the refines
-// lists: a convention the reading never blesses (ADR-0023: the
+// lists: a convention the reading never blesses (ADR-0106: the
 // algebra is two regimes, specificity is the only judge of values).
 // This module makes the convention observable without blessing it:
 // the lint inventories it, the strict staging refuses it.
@@ -13,7 +13,7 @@
 // incomparable dict providers are NOT a conflict: a dict opens a
 // sub-address whose closure re-merges both branches, the divergence
 // does not survive the scalar read (measured on the bedrock: 59 such
-// topological crossings, 0 leaf-value conflicts — the ADR-0017
+// topological crossings, 0 leaf-value conflicts — the ADR-0100
 // records the choice).
 //
 // Vertical inheritance (the winner refined from the loser) is never
@@ -132,7 +132,7 @@ export function orderConflictsAt({ space, address }: { space: Space; address: Ad
 
 /** The order conflicts of a set of layers: every conflict of every
  * address — the convention made visible, nothing silenced it
- * anymore (ADR-0023: no act blesses an order-decided read; to
+ * anymore (ADR-0106: no act blesses an order-decided read; to
  * resolve one is to restructure). */
 export function orderConflictsOf({
   space,

@@ -327,7 +327,7 @@ check(
 );
 
 // =====================================================================
-// (g) the bedrock never re-enters staging (ADR-0020): an edition
+// (g) the bedrock never re-enters staging (ADR-0103): an edition
 //     aimed at a bedrock layer is refused as socle-édité — the corpus
 //     is read-only by protocol, not by UI convention
 // =====================================================================
@@ -348,7 +348,7 @@ const refusedTrunkApply = applyStagedEdition({
   readonlyLayerNames: [...KERNEL_LAYER_NAMES],
 });
 check(
-  '(g) the act of edition never writes a bedrock layer — the tree is untouched, whoever calls the route (measured before ADR-0020: `record` was mutable in place)',
+  '(g) the act of edition never writes a bedrock layer — the tree is untouched, whoever calls the route (measured before ADR-0103: `record` was mutable in place)',
   kernel.space.layers["record"] === recordTreeBefore && refusedTrunkApply.block === "",
 );
 

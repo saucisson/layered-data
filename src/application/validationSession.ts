@@ -58,7 +58,7 @@ export interface ValidationSession {
   }): ValidationOutcome;
   /** The validation of the current state, without edition. */
   outcome(): ValidationOutcome;
-  /** The same validation as a stream (ADR-0026): one chunk per judged
+  /** The same validation as a stream (ADR-0108): one chunk per judged
    * unit, the return value is the full outcome — drain it with
    * collectValidation for the synchronous form, or pace it with
    * scheduleValidation for a non-blocking one. */

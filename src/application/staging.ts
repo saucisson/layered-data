@@ -3,7 +3,7 @@
 // verdict. Wherever a verdict is, the addition is refused.
 //
 // The bedrock's immutability is a PROTOCOL rule here, not a UI
-// convention (ADR-0020): every mutation route carries the bedrock's
+// convention (ADR-0103): every mutation route carries the bedrock's
 // signature (`readonlyLayerNames`) and refuses to touch it itself.
 // A draft that claims a bedrock name would REPLACE the bedrock layer
 // in the token space (the compiler keys the layers by name) — the
@@ -85,8 +85,8 @@ export function extractLayerBlock({ name, source }: { name: string; source: stri
  * an exception towards the UI).
  *
  * `strictConflicts` (off by default) promotes the order conflicts —
- * the diamond's convention (ADR-0017, retired as a semantics by
- * ADR-0023) — from a lint diagnostic to a staging verdict: a
+ * the diamond's convention (ADR-0100, retired as a semantics by
+ * ADR-0106) — from a lint diagnostic to a staging verdict: a
  * candidate that lets the refines ORDER decide a leaf value between
  * incomparable sources is refused as « conflit-d'ordre », without
  * exception — to resolve one is to RESTRUCTURE (make the providers
@@ -96,7 +96,7 @@ export function extractLayerBlock({ name, source }: { name: string; source: stri
  * contractual.
  *
  * `strictChecks` (off by default) makes the carried constraints
- * EXECUTE (ADR-0018): runChecks over the layers under judgment,
+ * EXECUTE (ADR-0101): runChecks over the layers under judgment,
  * their errors refused as « check-trahi ». The constraint semantics
  * composes with the staging at last — bounded to the candidate:
  * the workshop stays immutable, the frozen corpus is never
@@ -108,7 +108,7 @@ export interface StageLayerAdditionInput {
   /** the layers the living space already holds — a draft layer of
    * the same name is neither re-judged nor re-added */
   livingLayerNames: readonly string[];
-  /** the bedrock's signature (ADR-0020): the layers this route
+  /** the bedrock's signature (ADR-0103): the layers this route
    * refuses to touch — a draft claiming one of their names is
    * refused as « socle-occupé », the theft named, the forgery
    * never judged */
@@ -120,7 +120,7 @@ export interface StageLayerAdditionInput {
    * leaving them to the lint's inventory */
   strictConflicts?: boolean;
   /** execute the carried checks of the judged layers, refusing
-   * their errors as « check-trahi » (ADR-0018) — instead of
+   * their errors as « check-trahi » (ADR-0101) — instead of
    * leaving the constraints decorative */
   strictChecks?: boolean;
 }
@@ -189,7 +189,7 @@ function prepareStaging({
     };
   }
 
-  // ---- the bedrock's signature (ADR-0020): the draft's own declared
+  // ---- the bedrock's signature (ADR-0103): the draft's own declared
   // names, read from the draft alone (the bedrock blocks never claim
   // anything — they ARE the names). A claimed readonly name is the
   // theft itself: the verdict names it, and the staging never
@@ -280,8 +280,8 @@ function concludeStaging({
   const verdicts = [...validation.verdicts, ...context.orphanVerdicts];
 
   // ---- strict conflicts: the order conflicts of the judged layers
-  // become verdicts — the convention, made contractual (ADR-0017,
-  // retired as a semantics by ADR-0023: no signed crossing, the
+  // become verdicts — the convention, made contractual (ADR-0100,
+  // retired as a semantics by ADR-0106: no signed crossing, the
   // refusal is without exception). Only the layers under judgment
   // are walked: the loaded corpus keeps its own frozen verdicts,
   // and a draft layer can only create conflicts at its own
@@ -304,7 +304,7 @@ function concludeStaging({
   }
 
   // ---- strict checks: the carried constraints of the judged layers
-  // finally EXECUTE (ADR-0018) — the semantics of the check tags,
+  // finally EXECUTE (ADR-0101) — the semantics of the check tags,
   // runChecks over the layers under judgment, their operands read
   // through the composed closure. The errors of the checks become
   // « check-trahi » verdicts; off by default, the workshop stays
@@ -343,8 +343,8 @@ function concludeStaging({
  * an exception towards the UI).
  *
  * `strictConflicts` (off by default) promotes the order conflicts —
- * the diamond's convention (ADR-0017, retired as a semantics by
- * ADR-0023) — from a lint diagnostic to a staging verdict: a
+ * the diamond's convention (ADR-0100, retired as a semantics by
+ * ADR-0106) — from a lint diagnostic to a staging verdict: a
  * candidate that lets the refines ORDER decide a leaf value between
  * incomparable sources is refused as « conflit-d'ordre », without
  * exception — to resolve one is to RESTRUCTURE (make the providers
@@ -354,7 +354,7 @@ function concludeStaging({
  * contractual.
  *
  * `strictChecks` (off by default) makes the carried constraints
- * EXECUTE (ADR-0018): runChecks over the layers under judgment,
+ * EXECUTE (ADR-0101): runChecks over the layers under judgment,
  * their errors refused as « check-trahi ». The constraint semantics
  * composes with the staging at last — bounded to the candidate:
  * the workshop stays immutable, the frozen corpus is never
@@ -374,7 +374,7 @@ export function stageLayerAddition(input: StageLayerAdditionInput): StagingOutco
   return concludeStaging({ context, validation });
 }
 
-/** The streamed staging (ADR-0026): the same judgement as
+/** The streamed staging (ADR-0108): the same judgement as
  * stageLayerAddition, but the validation runs chunk by chunk on the
  * event loop — onChunk sees each chunk's progress, the interface
  * stays responsive, and the resolved outcome is identical to the
@@ -421,7 +421,7 @@ export function applyStagedAddition({
   space: Space;
   staging: StagingOutcome;
   knownLayerNames: readonly string[];
-  /** the bedrock's signature (ADR-0020): the route itself refuses to
+  /** the bedrock's signature (ADR-0103): the route itself refuses to
    * write a readonly name — defense in depth, the staging's
    * « socle-occupé » verdict is the primary guard */
   readonlyLayerNames: readonly string[];
@@ -433,7 +433,7 @@ export function applyStagedAddition({
   // A refinement target counts only if it is already known (corpus
   // or previously applied) — a self- or forward-reference within the
   // same draft does not found a graph position. A readonly name never
-  // enters: the bedrock is written by nobody at runtime (ADR-0020).
+  // enters: the bedrock is written by nobody at runtime (ADR-0103).
   const processedLayerNames: string[] = [];
   for (const layerName of staging.layerNames) {
     if (knownLayerNames.includes(layerName)) continue;

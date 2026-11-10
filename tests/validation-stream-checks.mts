@@ -1,4 +1,4 @@
-// The streamed validation's equivalence checks (ADR-0026): the
+// The streamed validation's equivalence checks (ADR-0108): the
 // chunked validation must answer EXACTLY what the synchronous
 // validateSpace answers — the same verdicts in the same order, the
 // same stats — whether the stream is drained at once

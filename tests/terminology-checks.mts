@@ -1,4 +1,4 @@
-// The vocabulary's treaty checks (ADR-0021): three strata, one
+// The vocabulary's treaty checks (ADR-0104): three strata, one
 // story. The informatics words keep their established names —
 // staging stays staging, the linter keeps the industry's word in
 // both tongues — the ⟪…⟫ marks cite the glossary, each tongue its
@@ -335,7 +335,7 @@ check(
 );
 
 check(
-  "the glossary keeps thirty-five entries — the treaty's ledger, one entry per notion the workshop names (assume and masque retired with ADR-0023)",
+  "the glossary keeps thirty-five entries — the treaty's ledger, one entry per notion the workshop names (assume and masque retired with ADR-0106)",
   glossaryIds.length === 35,
 );
 

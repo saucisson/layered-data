@@ -80,8 +80,8 @@ const DIAGNOSTIC_LABELS: Record<string, { label: BilingualText; tone: string; no
     label: { en: "order conflict", fr: "conflit d'ordre" },
     tone: "border-amber-200 bg-amber-50 text-amber-700",
     note: {
-      en: "first-wins decided between incomparable sources: the refines order, a convention — to inspect, or to restructure (ADR-0023)",
-      fr: "le premier-gagné a tranché entre sources incomparables : l'ordre des refines, une convention — à inspecter, ou à restructurer (ADR-0023)",
+      en: "first-wins decided between incomparable sources: the refines order, a convention — to inspect, or to restructure (ADR-0106)",
+      fr: "le premier-gagné a tranché entre sources incomparables : l'ordre des refines, une convention — à inspecter, ou à restructurer (ADR-0106)",
     },
   },
 };

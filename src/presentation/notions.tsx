@@ -76,8 +76,8 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   "conflit d'ordre": {
     term: { en: "order conflict", fr: "conflit d'ordre" },
     definition: {
-      en: "a leaf value decided between incomparable sources: the refines order, a convention — visible as a lint diagnostic, refused in strict staging; nothing signs it (ADR-0023), to resolve it is to restructure.",
-      fr: "une valeur feuille tranchée entre sources incomparables : l'ordre des refines, une convention — visible en diagnostic de linter, refusée en staging strict ; rien ne la signe (ADR-0023), la résoudre, c'est restructurer.",
+      en: "a leaf value decided between incomparable sources: the refines order, a convention — visible as a lint diagnostic, refused in strict staging; nothing signs it (ADR-0106), to resolve it is to restructure.",
+      fr: "une valeur feuille tranchée entre sources incomparables : l'ordre des refines, une convention — visible en diagnostic de linter, refusée en staging strict ; rien ne la signe (ADR-0106), la résoudre, c'est restructurer.",
     },
   },
   contrainte: {
@@ -223,8 +223,8 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   registre: {
     term: { en: "registry", fr: "registre" },
     definition: {
-      en: "the checks' contracts: since ADR-0027 the first-order checks carry their formula inline in the language (ADR-0022); the algorithmic tags keep a built-in contract in the kernel. A check carried but unable to judge is refused as check vacant (ADR-0018).",
-      fr: "les contrats des checks : depuis l'ADR-0027, les checks du premier ordre portent leur formule inline dans le langage (ADR-0022) ; les étiquettes algorithmiques gardent un contrat intégré au noyau. Un check porté mais incapable de juger est refusé comme check vacant (ADR-0018).",
+      en: "the checks' contracts: since ADR-0109 the first-order checks carry their formula inline in the language (ADR-0105); the algorithmic tags keep a built-in contract in the kernel. A check carried but unable to judge is refused as check vacant (ADR-0101).",
+      fr: "les contrats des checks : depuis l'ADR-0109, les checks du premier ordre portent leur formule inline dans le langage (ADR-0105) ; les étiquettes algorithmiques gardent un contrat intégré au noyau. Un check porté mais incapable de juger est refusé comme check vacant (ADR-0101).",
     },
   },
   specification: {
@@ -244,8 +244,8 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   socle: {
     term: { en: "bedrock", fr: "socle" },
     definition: {
-      en: "the kernel's 47 shipped layers, read-only by protocol (ADR-0020): a draft may refine them, never replace or edit them — the UI filter and the HTTP 403 are conveniences over the protocol's own rule.",
-      fr: "les 47 couches livrées par le noyau, en lecture seule par protocole (ADR-0020) : un brouillon peut les raffiner, jamais les remplacer ni les éditer — le filtre de l'interface et le 403 HTTP sont des commodités par-dessus la règle du protocole lui-même.",
+      en: "the kernel's 47 shipped layers, read-only by protocol (ADR-0103): a draft may refine them, never replace or edit them — the UI filter and the HTTP 403 are conveniences over the protocol's own rule.",
+      fr: "les 47 couches livrées par le noyau, en lecture seule par protocole (ADR-0103) : un brouillon peut les raffiner, jamais les remplacer ni les éditer — le filtre de l'interface et le 403 HTTP sont des commodités par-dessus la règle du protocole lui-même.",
     },
   },
   surcharger: {

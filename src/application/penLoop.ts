@@ -120,7 +120,7 @@ export async function composeVerifiedLayerDraft({
   instruction: string;
   languageSource: string;
   livingLayerNames: readonly string[];
-  /** the bedrock's signature (ADR-0020): the geologist may propose a layer
+  /** the bedrock's signature (ADR-0103): the geologist may propose a layer
    * that REFINES the bedrock, never one that REPLACES it — a draft
    * claiming a bedrock name is refused « socle-occupé », the refusal
    * travels back to the model like any verdict, in the workshop
@@ -132,12 +132,12 @@ export async function composeVerifiedLayerDraft({
    * kernel's vocabulary in the language the workshop renders it */
   language?: Language;
   /** refuse order conflicts too — the strict arm of the loop
-   * (ADR-0017, retired by ADR-0023): the geologist may no longer
+   * (ADR-0100, retired by ADR-0106): the geologist may no longer
    * propose a read the refines order settles between incomparable
    * sources — to resolve it is to restructure, never to sign */
   strictConflicts?: boolean;
   /** execute the carried checks of the judged layers too — the
-   * strict arm of the loop (ADR-0018): the geologist may no longer
+   * strict arm of the loop (ADR-0101): the geologist may no longer
    * propose a layer whose carried constraints refuse it */
   strictChecks?: boolean;
   propose: PenPropose;
