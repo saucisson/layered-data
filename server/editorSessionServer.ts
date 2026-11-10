@@ -54,12 +54,22 @@ export function presenceList(): { id: string; focus: string | null }[] {
 }
 
 /** Write one SSE event to a client. */
-export function sendEvent({ response, event, data }: { response: ServerResponse; event: string; data: unknown }): void {
+export function sendEvent({
+  response,
+  event,
+  data,
+}: {
+  response: ServerResponse;
+  event: string;
+  data: unknown;
+}): void {
   response.write("event: " + event + "\ndata: " + JSON.stringify(data) + "\n\n");
 }
 
 /** The full state, with presence, as every client receives it. */
-export function sessionSnapshot(): EditorSessionState & { presence: { id: string; focus: string | null }[] } {
+export function sessionSnapshot(): EditorSessionState & {
+  presence: { id: string; focus: string | null }[];
+} {
   return { ...editorSession.readState(), presence: presenceList() };
 }
 

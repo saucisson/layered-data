@@ -6,7 +6,15 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 
 import { API_TOKEN } from "./config.ts";
 
-export function sendJson({ response, statusCode, body }: { response: ServerResponse; statusCode: number; body: unknown }): void {
+export function sendJson({
+  response,
+  statusCode,
+  body,
+}: {
+  response: ServerResponse;
+  statusCode: number;
+  body: unknown;
+}): void {
   const text = JSON.stringify(body);
   response.writeHead(statusCode, {
     "Content-Type": "application/json; charset=utf-8",
@@ -15,7 +23,15 @@ export function sendJson({ response, statusCode, body }: { response: ServerRespo
   response.end(text);
 }
 
-export function sendText({ response, statusCode, body }: { response: ServerResponse; statusCode: number; body: string }): void {
+export function sendText({
+  response,
+  statusCode,
+  body,
+}: {
+  response: ServerResponse;
+  statusCode: number;
+  body: string;
+}): void {
   response.writeHead(statusCode, { "Content-Type": "text/plain; charset=utf-8" });
   response.end(body);
 }
@@ -25,7 +41,11 @@ export function sendText({ response, statusCode, body }: { response: ServerRespo
  * never in the URL, never in the page. */
 export function isAccessGranted({ request }: { request: IncomingMessage }): boolean {
   const workshopHeader = request.headers["x-access-code"];
-  if (typeof workshopHeader === "string" && workshopHeader.trim() !== "" && workshopHeader.trim() === API_TOKEN) {
+  if (
+    typeof workshopHeader === "string" &&
+    workshopHeader.trim() !== "" &&
+    workshopHeader.trim() === API_TOKEN
+  ) {
     return true;
   }
   const authorizationHeader = request.headers["authorization"] ?? "";
@@ -46,10 +66,14 @@ export function readRequestBody({ request }: { request: IncomingMessage }): Prom
 }
 
 /** The source field of a JSON body, or why the body is refused. */
-export function sourceOfRequestBody({ rawBody }: { rawBody: string }): { source: string } | { reason: string } {
+export function sourceOfRequestBody({
+  rawBody,
+}: {
+  rawBody: string;
+}): { source: string } | { reason: string } {
   const body = JSON.parse(rawBody || "{}") as { source?: unknown };
   if (typeof body?.source === "string" && body.source.trim()) {
     return { source: body.source };
   }
-  return { reason: "corps JSON attendu : { \"source\": \"…\" }" };
+  return { reason: 'corps JSON attendu : { "source": "…" }' };
 }
