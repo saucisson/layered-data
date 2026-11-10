@@ -48,7 +48,9 @@ export function LayerEditor({
   const [source, setSource] = useState(initialSource);
   const [result, setResult] = useState<EditorResult | null>(null);
   const [busy, setBusy] = useState(false);
-  const [stagingProgress, setStagingProgress] = useState<{ done: number; total: number } | null>(null);
+  const [stagingProgress, setStagingProgress] = useState<{ done: number; total: number } | null>(
+    null,
+  );
 
   async function judgeAndApply() {
     setBusy(true);
@@ -92,9 +94,7 @@ export function LayerEditor({
   return (
     <div className="mb-3 rounded-lg border border-sky-200 bg-sky-50/40 p-3">
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
-        <span className="rounded bg-sky-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
-          ✎
-        </span>
+        <span className="rounded bg-sky-600 px-1.5 py-0.5 text-[11px] font-bold text-white">✎</span>
         <span className="text-xs font-semibold text-slate-700">
           {say({
             language,
@@ -166,7 +166,9 @@ export function LayerEditor({
             })}
           </div>
           {staging.errors.map((error, index) => (
-            <div key={index} className="font-mono">{error}</div>
+            <div key={index} className="font-mono">
+              {error}
+            </div>
           ))}
         </div>
       )}

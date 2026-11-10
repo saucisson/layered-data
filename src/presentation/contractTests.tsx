@@ -58,7 +58,12 @@ export function LayerContractTests({
           break;
         }
       }
-      return { expectation, read, provenance, matching: readMatchesExpectation(read, expectation.expectation) };
+      return {
+        expectation,
+        read,
+        provenance,
+        matching: readMatchesExpectation(read, expectation.expectation),
+      };
     });
   }, [expectations, space, layer]);
   if (expectations.length === 0) return null;
@@ -107,17 +112,12 @@ export function LayerContractTests({
               </span>
               {!row.matching && (
                 <span className="text-red-600">
-                  {", " +
-                    say({ language, en: "read ", fr: "lu " }) +
-                    formatExpectation(row.read)}
+                  {", " + say({ language, en: "read ", fr: "lu " }) + formatExpectation(row.read)}
                 </span>
               )}
               {row.provenance !== null && (
                 <span className="text-slate-400">
-                  {" (" +
-                    say({ language, en: "by ", fr: "par " }) +
-                    row.provenance +
-                    ")"}
+                  {" (" + say({ language, en: "by ", fr: "par " }) + row.provenance + ")"}
                 </span>
               )}
             </div>

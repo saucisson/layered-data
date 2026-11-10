@@ -83,7 +83,10 @@ export function CascadeCard({
   language: Language;
 }) {
   const chain = useMemo(
-    () => (target.key === null ? refinementChainOf({ space, layer: target.layer, path: target.path }) : []),
+    () =>
+      target.key === null
+        ? refinementChainOf({ space, layer: target.layer, path: target.path })
+        : [],
     [space, target.layer, target.path.join("/"), target.key],
   );
   const provenance = useMemo(() => {
@@ -121,8 +124,7 @@ export function CascadeCard({
       </div>
       {target.key !== null && (
         <div className="mt-1 text-[11px] leading-4">
-          <span className="font-mono font-semibold text-slate-800">{target.key}</span>
-          {" "}←{" "}
+          <span className="font-mono font-semibold text-slate-800">{target.key}</span> ←{" "}
           {provenance && provenance.winner !== null ? (
             isLast ? (
               <button
@@ -152,7 +154,11 @@ export function CascadeCard({
               {say({
                 language,
                 en: provenance.readCount > 1 ? "sources consulted" : "source consulted",
-                fr: "source" + (provenance.readCount > 1 ? "s" : "") + " consultée" + (provenance.readCount > 1 ? "s" : ""),
+                fr:
+                  "source" +
+                  (provenance.readCount > 1 ? "s" : "") +
+                  " consultée" +
+                  (provenance.readCount > 1 ? "s" : ""),
               })}
               )
             </span>
@@ -190,16 +196,23 @@ export function CascadeCard({
       {target.key === null && chain.length === 0 && (
         <div className="mt-1 text-[11px] text-slate-400">
           {say({ language, en: "closure: ", fr: "fermeture : " })}
-          {space.closure({ layer: asLayerName(target.layer), path: asLayerPath(target.path) }).length}{" "}
+          {
+            space.closure({ layer: asLayerName(target.layer), path: asLayerPath(target.path) })
+              .length
+          }{" "}
           {say({
             language,
             en:
-              space.closure({ layer: asLayerName(target.layer), path: asLayerPath(target.path) }).length > 1
+              space.closure({ layer: asLayerName(target.layer), path: asLayerPath(target.path) })
+                .length > 1
                 ? "sources"
                 : "source",
             fr:
               "source" +
-              (space.closure({ layer: asLayerName(target.layer), path: asLayerPath(target.path) }).length > 1 ? "s" : ""),
+              (space.closure({ layer: asLayerName(target.layer), path: asLayerPath(target.path) })
+                .length > 1
+                ? "s"
+                : ""),
           })}
         </div>
       )}

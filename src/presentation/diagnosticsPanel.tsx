@@ -19,7 +19,10 @@ import { say, type BilingualText } from "./i18n.ts";
 /** One diagnostic kind as shown in the fold: label, tone, and the
  * note that says what the silence means. The keys are the kernel's
  * observable kind strings. */
-const DIAGNOSTIC_LABELS: Record<string, { label: BilingualText; tone: string; note: BilingualText }> = {
+const DIAGNOSTIC_LABELS: Record<
+  string,
+  { label: BilingualText; tone: string; note: BilingualText }
+> = {
   "refines-inversés": {
     label: { en: "inverted refines", fr: "refines inversés" },
     tone: "border-red-200 bg-red-50 text-red-700",
@@ -109,7 +112,10 @@ export function DiagnosticsPanel({
     [],
   );
   const byKind = useMemo(() => {
-    const groups = new Map<string, { kind: string; address: Address; fact: Diagnostic["fact"] }[]>();
+    const groups = new Map<
+      string,
+      { kind: string; address: Address; fact: Diagnostic["fact"] }[]
+    >();
     for (const event of events) {
       if (!groups.has(event.kind)) groups.set(event.kind, []);
       groups.get(event.kind)!.push(event);
@@ -142,14 +148,22 @@ export function DiagnosticsPanel({
             {say({
               language,
               en: verdicts.length > 1 ? "blocking verdicts" : "blocking verdict",
-              fr: "verdict" + (verdicts.length > 1 ? "s" : "") + " bloquant" + (verdicts.length > 1 ? "s" : ""),
+              fr:
+                "verdict" +
+                (verdicts.length > 1 ? "s" : "") +
+                " bloquant" +
+                (verdicts.length > 1 ? "s" : ""),
             })}{" "}
             {"· "}
             {events.length}{" "}
             {say({
               language,
               en: events.length > 1 ? "logged silences" : "logged silence",
-              fr: "silence" + (events.length > 1 ? "s" : "") + " consigné" + (events.length > 1 ? "s" : ""),
+              fr:
+                "silence" +
+                (events.length > 1 ? "s" : "") +
+                " consigné" +
+                (events.length > 1 ? "s" : ""),
             })}
           </span>
         </span>
@@ -165,72 +179,69 @@ export function DiagnosticsPanel({
               fr: "Le noyau reste total — jamais d'exception — mais tout ce qu'il ignore est consigné : entrées ignorées, gardes de cycle, étiquettes inconnues, checks vacants, ombres du premier-gagné, inversions de spécificité détectées par la fermeture. Les checks génériques ne lisent aucun nom en dur : leurs slots sont liés par les couches (bindings). Le noyau consigne, il ne juge pas — la sévérité est à vous.",
             })}
           </p>
-      {events.length === 0 && (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-          {say({
-            language,
-            en: "Space sweep: 0 logged silence — verified, nothing to list.",
-            fr: "Balayage de l'espace : 0 silence consigné — vérifié, rien à lister.",
-          })}
-        </p>
-      )}
-      <div className="space-y-2">
-        {kindOrder
-          .filter((kind) => byKind.has(kind))
-          .map((kind) => {
-            const kindEvents = byKind.get(kind)!;
-            const meta = DIAGNOSTIC_LABELS[kind];
-            if (meta === undefined) return null;
-            return (
-              <div key={kind} className="rounded-md border border-slate-200 p-2">
-                <div className="flex flex-wrap items-baseline gap-2">
-                  <span
-                    className={
-                      "rounded border px-1.5 py-0.5 text-[11px] font-semibold " + meta.tone
-                    }
-                  >
-                    {say({ language, en: meta.label.en, fr: meta.label.fr })}
-                  </span>
-                  <span className="text-[11px] text-slate-400">
-                    {say({ language, en: meta.note.en, fr: meta.note.fr })}
-                  </span>
-                  <span className="ml-auto font-mono text-[11px] text-slate-400">
-                    {kindEvents.length}
-                  </span>
-                </div>
-                <div className="mt-1 max-h-40 space-y-0.5 overflow-y-auto">
-                  {kindEvents.slice(0, 40).map((event, index) => (
-                    <div
-                      key={index}
-                      className="font-mono text-[10px] leading-4 text-slate-600"
-                    >
-                      <span className="text-slate-400">
-                        {event.address[0]}::{event.address[1].join("/") || "."}
-                      </span>{" "}
-                      {renderMessage({ message: event.fact, language })}
+          {events.length === 0 && (
+            <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+              {say({
+                language,
+                en: "Space sweep: 0 logged silence — verified, nothing to list.",
+                fr: "Balayage de l'espace : 0 silence consigné — vérifié, rien à lister.",
+              })}
+            </p>
+          )}
+          <div className="space-y-2">
+            {kindOrder
+              .filter((kind) => byKind.has(kind))
+              .map((kind) => {
+                const kindEvents = byKind.get(kind)!;
+                const meta = DIAGNOSTIC_LABELS[kind];
+                if (meta === undefined) return null;
+                return (
+                  <div key={kind} className="rounded-md border border-slate-200 p-2">
+                    <div className="flex flex-wrap items-baseline gap-2">
+                      <span
+                        className={
+                          "rounded border px-1.5 py-0.5 text-[11px] font-semibold " + meta.tone
+                        }
+                      >
+                        {say({ language, en: meta.label.en, fr: meta.label.fr })}
+                      </span>
+                      <span className="text-[11px] text-slate-400">
+                        {say({ language, en: meta.note.en, fr: meta.note.fr })}
+                      </span>
+                      <span className="ml-auto font-mono text-[11px] text-slate-400">
+                        {kindEvents.length}
+                      </span>
                     </div>
-                  ))}
-                  {kindEvents.length > 40 && (
-                    <div className="text-[10px] text-slate-400">
-                      {say({
-                        language,
-                        en: "… and " + (kindEvents.length - 40) + " more",
-                        fr: "… et " + (kindEvents.length - 40) + " autres",
-                      })}
+                    <div className="mt-1 max-h-40 space-y-0.5 overflow-y-auto">
+                      {kindEvents.slice(0, 40).map((event, index) => (
+                        <div key={index} className="font-mono text-[10px] leading-4 text-slate-600">
+                          <span className="text-slate-400">
+                            {event.address[0]}::{event.address[1].join("/") || "."}
+                          </span>{" "}
+                          {renderMessage({ message: event.fact, language })}
+                        </div>
+                      ))}
+                      {kindEvents.length > 40 && (
+                        <div className="text-[10px] text-slate-400">
+                          {say({
+                            language,
+                            en: "… and " + (kindEvents.length - 40) + " more",
+                            fr: "… et " + (kindEvents.length - 40) + " autres",
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
+                  </div>
+                );
+              })}
+            {[...byKind.keys()]
+              .filter((kind) => !kindOrder.includes(kind))
+              .map((kind) => (
+                <div key={kind} className="font-mono text-[10px] text-slate-400">
+                  {kind} × {byKind.get(kind)!.length}
                 </div>
-              </div>
-            );
-          })}
-        {[...byKind.keys()]
-          .filter((kind) => !kindOrder.includes(kind))
-          .map((kind) => (
-            <div key={kind} className="font-mono text-[10px] text-slate-400">
-              {kind} × {byKind.get(kind)!.length}
-            </div>
-          ))}
-        </div>
+              ))}
+          </div>
         </>
       )}
     </div>

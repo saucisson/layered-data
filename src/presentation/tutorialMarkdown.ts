@@ -58,7 +58,11 @@ export function parseTutorialMarkdown({ source }: { source: string }): TutorialB
     }
     const headingMatch = /^(#{1,4})\s+(.*)$/.exec(line);
     if (headingMatch !== null) {
-      blocks.push({ kind: "heading", level: (headingMatch[1] ?? "").length, text: (headingMatch[2] ?? "").trim() });
+      blocks.push({
+        kind: "heading",
+        level: (headingMatch[1] ?? "").length,
+        text: (headingMatch[2] ?? "").trim(),
+      });
       index++;
       continue;
     }
@@ -72,7 +76,13 @@ export function parseTutorialMarkdown({ source }: { source: string }): TutorialB
       continue;
     }
     const paragraphLines: string[] = [];
-    while (index < lines.length && (lines[index] ?? "").trim() !== "" && !(lines[index] ?? "").startsWith("```") && !/^#{1,4}\s/.test(lines[index] ?? "") && !(lines[index] ?? "").startsWith("- ")) {
+    while (
+      index < lines.length &&
+      (lines[index] ?? "").trim() !== "" &&
+      !(lines[index] ?? "").startsWith("```") &&
+      !/^#{1,4}\s/.test(lines[index] ?? "") &&
+      !(lines[index] ?? "").startsWith("- ")
+    ) {
       paragraphLines.push((lines[index] ?? "").trim());
       index++;
     }
@@ -84,7 +94,9 @@ export function parseTutorialMarkdown({ source }: { source: string }): TutorialB
 /** The layers an interactive listing directive asks for, in document
  * order — the harness pins the agreement with the tutorial corpus. */
 export function listingLayersOf({ blocks }: { blocks: TutorialBlock[] }): string[] {
-  return blocks.filter((block) => block.kind === "listing").map((block) => (block as { layer: string }).layer);
+  return blocks
+    .filter((block) => block.kind === "listing")
+    .map((block) => (block as { layer: string }).layer);
 }
 
 /** The lines a listing widget renders: the note special key stays
@@ -95,7 +107,10 @@ export function countListingLines({ sections }: { sections: FlattenedSection[] }
     (total, section) =>
       section.key === "note"
         ? total
-        : total + 1 + (section.value !== null ? section.value.split("\n").length - 1 : 0) + countListingLines({ sections: section.sections }),
+        : total +
+          1 +
+          (section.value !== null ? section.value.split("\n").length - 1 : 0) +
+          countListingLines({ sections: section.sections }),
     0,
   );
 }

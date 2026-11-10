@@ -15,7 +15,17 @@ import type { Language } from "../domain/messages.ts";
 /** One key of the raw tree: a dictionary recurses, a refinement
  * list renders element by element (references never collapse into
  * `[object Object]`), a leaf shows its written value. */
-function RawBranch({ keyName, value, depth, language }: { keyName: string; value: any; depth: number; language: Language }) {
+function RawBranch({
+  keyName,
+  value,
+  depth,
+  language,
+}: {
+  keyName: string;
+  value: any;
+  depth: number;
+  language: Language;
+}) {
   const special = (SPECIAL_KEYS as readonly string[]).includes(keyName);
   const keyClassName = special ? "font-semibold text-amber-600" : "font-semibold text-slate-800";
   if (isDictionary(value)) {
@@ -24,7 +34,13 @@ function RawBranch({ keyName, value, depth, language }: { keyName: string; value
         <span className={keyClassName}>{keyName}</span>
         <span className="text-slate-400"> : {"{"}</span>
         {Object.keys(value).map((childKey) => (
-          <RawBranch key={childKey} keyName={childKey} value={value[childKey]} depth={depth + 1} language={language} />
+          <RawBranch
+            key={childKey}
+            keyName={childKey}
+            value={value[childKey]}
+            depth={depth + 1}
+            language={language}
+          />
         ))}
         <span className="text-slate-400">{"}"}</span>
       </div>
@@ -47,11 +63,19 @@ function RawBranch({ keyName, value, depth, language }: { keyName: string; value
   }
   let rendered: React.ReactNode;
   if (value instanceof PathReference) {
-    rendered = <span className="text-sky-700">→ ({value.anchor}) {value.path.join("/")}</span>;
+    rendered = (
+      <span className="text-sky-700">
+        → ({value.anchor}) {value.path.join("/")}
+      </span>
+    );
   } else if (value instanceof LayerReference) {
     rendered = <span className="text-sky-700">→ {value.layer}</span>;
   } else if (value === null) {
-    rendered = <span className="text-slate-400">{say({ language, en: "∅ abstract slot", fr: "∅ slot abstrait" })}</span>;
+    rendered = (
+      <span className="text-slate-400">
+        {say({ language, en: "∅ abstract slot", fr: "∅ slot abstrait" })}
+      </span>
+    );
   } else {
     rendered = <span className="text-slate-800">{String(value)}</span>;
   }
@@ -65,7 +89,15 @@ function RawBranch({ keyName, value, depth, language }: { keyName: string; value
 }
 
 /** The raw tree of one layer of the living space. */
-export function RawLayerExplorer({ space, layer, language }: { space: Space; layer: LayerName; language: Language }) {
+export function RawLayerExplorer({
+  space,
+  layer,
+  language,
+}: {
+  space: Space;
+  layer: LayerName;
+  language: Language;
+}) {
   const node = space.layers[layer] ?? {};
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3 font-mono text-[11px] leading-5">

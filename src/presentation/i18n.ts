@@ -43,7 +43,13 @@ export const EDITION_REFUSAL_LABEL: Record<string, BilingualText> = {
 
 /** Render an edition refusal code — unknown codes render as
  * themselves. */
-export function editionRefusalLabel({ code, language }: { code: string; language: Language }): string {
+export function editionRefusalLabel({
+  code,
+  language,
+}: {
+  code: string;
+  language: Language;
+}): string {
   const entry = EDITION_REFUSAL_LABEL[code];
   if (entry === undefined) return code;
   return localized({ language, text: entry });
