@@ -52,6 +52,10 @@ Le code suit une architecture en oignon, documentée dans
   puis la divergence mesurée — le papier fondateur (PNSE'16) y est
   cité.
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) — humans and agents follow the protocol in `AGENTS.md` and `docs/branching.md`.
+
 ## Démarrage
 
 ```bash
