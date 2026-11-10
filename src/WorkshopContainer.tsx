@@ -22,7 +22,12 @@ import {
 import { WORKSHOP_SCENARIOS } from "./presentation/scenarios.ts";
 
 import { localized, say } from "./presentation/i18n.ts";
-import { KernelValue, StatusPill, TraceEventRow, addressText } from "./presentation/valueRendering.tsx";
+import {
+  KernelValue,
+  StatusPill,
+  TraceEventRow,
+  addressText,
+} from "./presentation/valueRendering.tsx";
 import { LayerBadge } from "./presentation/layerBadge.tsx";
 import { RefinesGraph } from "./presentation/refinesGraph.tsx";
 import { FormalismPanel } from "./presentation/formalismPanel.tsx";
@@ -78,7 +83,13 @@ interface AcceptedAdditionState {
   layerNames: string[];
 }
 
-export function WorkshopPage({ language, onChooseLanguage }: { language: Language; onChooseLanguage: (lang: Language) => void; }) {
+export function WorkshopPage({
+  language,
+  onChooseLanguage,
+}: {
+  language: Language;
+  onChooseLanguage: (lang: Language) => void;
+}) {
   // The workshop tongue: remembered from the last visit, else
   // detected from the browser, English by default. The choice is
   // written back at every change — it travels by props from here
@@ -200,7 +211,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
     // measured there.
     try {
       (globalThis as any).navigator?.clipboard?.writeText?.(
-        addressText([layer, path]) + (selectedKey ? " :: " + selectedKey : "")
+        addressText([layer, path]) + (selectedKey ? " :: " + selectedKey : ""),
       );
     } catch {}
     setCopied(true);
@@ -274,7 +285,12 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
     const keys = KERNEL.space.keys({ layer: asLayerName(layer), path: asLayerPath(path) });
     return keys.map((key) => {
       const scan: any[] = [];
-      const value = KERNEL.space.read({ layer: asLayerName(layer), path: asLayerPath(path), key, scan });
+      const value = KERNEL.space.read({
+        layer: asLayerName(layer),
+        path: asLayerPath(path),
+        key,
+        scan,
+      });
       const last = scan.length ? scan[scan.length - 1] : null;
       const winner = last && last.status === "fournit" ? last.source : null;
       return { key, value, winner, scan };
@@ -300,7 +316,10 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
     let referenceEvents: any[] = [];
     if (last && last.raw instanceof PathReference) {
       referenceEvents = KERNEL.space
-        .traceReferenceResolution({ reference: last.raw, holder: [asLayerName(layer), asLayerPath(path)] })
+        .traceReferenceResolution({
+          reference: last.raw,
+          holder: [asLayerName(layer), asLayerPath(path)],
+        })
         .events.filter((event: any) => event.kind === "refsearch" && event.depth === 1);
     }
     return { value, scan, winner, referenceEvents };
@@ -318,7 +337,9 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
 
   const winnerIndex = useMemo(() => {
     if (!selectedKeyDetail || !selectedKeyDetail.winner) return -1;
-    return closureData.closure.findIndex((address) => addressesEqual(address, selectedKeyDetail!.winner!));
+    return closureData.closure.findIndex((address) =>
+      addressesEqual(address, selectedKeyDetail!.winner!),
+    );
   }, [closureData, selectedKeyDetail]);
 
   const activeScenario = scenarioIndex >= 0 ? WORKSHOP_SCENARIOS[scenarioIndex] : null;
@@ -436,9 +457,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
               fr:
                 "Rechercher — couche, ou clé de l'adresse courante ; " +
                 "Entrée : y aller · Ctrl+K",
-              en:
-                "Search — layer, or key of the current address; " +
-                "Enter: go there · Ctrl+K",
+              en: "Search — layer, or key of the current address; " + "Enter: go there · Ctrl+K",
             })}
             className="min-w-[240px] flex-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none"
           />
@@ -461,50 +480,52 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
             {guidedTourOpen ? "▾" : "▸"}
           </button>
         </div>
-            {guidedTourOpen && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {WORKSHOP_SCENARIOS.map((scenario, index) => (
-                  <button
-                    key={scenario.id}
-                    onClick={() => activateScenario(index)}
-                    title={localized({ language, text: scenario.text }).slice(0, 120) + "…"}
-                    className={
-                      "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
-                      (scenarioIndex === index
-                        ? "border-slate-800 bg-slate-800 text-white"
-                        : "border-slate-300 bg-white text-slate-600 hover:border-slate-500")
-                    }
-                  >
-                    {scenario.id} · {localized({ language, text: scenario.label })}
-                  </button>
-                ))}
-              </div>
-            )}
-          </header>
+        {guidedTourOpen && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            {WORKSHOP_SCENARIOS.map((scenario, index) => (
+              <button
+                key={scenario.id}
+                onClick={() => activateScenario(index)}
+                title={localized({ language, text: scenario.text }).slice(0, 120) + "…"}
+                className={
+                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
+                  (scenarioIndex === index
+                    ? "border-slate-800 bg-slate-800 text-white"
+                    : "border-slate-300 bg-white text-slate-600 hover:border-slate-500")
+                }
+              >
+                {scenario.id} · {localized({ language, text: scenario.label })}
+              </button>
+            ))}
+          </div>
+        )}
+      </header>
 
-          {/* The tutorial at the top: the workshop is learned before
+      {/* The tutorial at the top: the workshop is learned before
               it is used — the addresses of the stratigraphic column navigate the
               space like the rest of the tool (goto: the address is
               the artifact) */}
 
-          {activeScenario && (
-            <div className="mx-4 mt-3 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm">
-              <div className="mb-1 flex items-center gap-2">
-                <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
-                  {activeScenario.id}
-                </span>
-                <span className="font-semibold">{localized({ language, text: activeScenario.label })}</span>
-                <button
-                  className="ml-auto rounded px-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                  onClick={() => setScenarioIndex(-1)}
-                  aria-label={say({ language, fr: "fermer le scénario", en: "close the scenario" })}
-                >
-                  ×
-                </button>
-              </div>
-              {localized({ language, text: activeScenario.text })}
-            </div>
-          )}
+      {activeScenario && (
+        <div className="mx-4 mt-3 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm">
+          <div className="mb-1 flex items-center gap-2">
+            <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
+              {activeScenario.id}
+            </span>
+            <span className="font-semibold">
+              {localized({ language, text: activeScenario.label })}
+            </span>
+            <button
+              className="ml-auto rounded px-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              onClick={() => setScenarioIndex(-1)}
+              aria-label={say({ language, fr: "fermer le scénario", en: "close the scenario" })}
+            >
+              ×
+            </button>
+          </div>
+          {localized({ language, text: activeScenario.text })}
+        </div>
+      )}
 
       <main
         className={
@@ -520,7 +541,11 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
               {say({ language, fr: "① Les couches", en: "① The layers" })}
               <span className="font-normal text-slate-400">
                 {graphView
-                  ? say({ language, fr: "le graphe des raffinements", en: "the graph of refinements" })
+                  ? say({
+                      language,
+                      fr: "le graphe des raffinements",
+                      en: "the graph of refinements",
+                    })
                   : say({ language, fr: "et leurs bruts", en: "and their raws" })}
               </span>
               <span className="ml-auto flex overflow-hidden rounded border border-slate-300 text-[10px] leading-4">
@@ -611,95 +636,109 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                 onPick={(layerName) => goto(layerName, [])}
               />
             ) : (
-            <div className="space-y-1">
-              {livingLayerNames.filter(layerMatches).length === 0 && (
-                <div className="py-2 text-xs text-slate-400">
-                  {say({
-                    language,
-                    fr: "Aucune couche ne correspond à « " + search + " ».",
-                    en: "No layer matches « " + search + " ».",
-                  })}
-                </div>
-              )}
-              {livingLayerNames.filter(layerMatches).map((layerName) => {
-                const depth = (() => {
-                  let steps = 0;
-                  let current: string | null = layerName;
-                  // != null covers undefined: a layer forgotten in
-                  // PRINCIPAL_PARENT gives a wrong indentation, not
-                  // an infinite loop.
-                  while (current != null) {
-                    current = PRINCIPAL_PARENT[current] ?? null;
-                    steps += 1;
-                  }
-                  return steps - 1;
-                })();
-                const inClosure = closureData.closure.some((address) => address[0] === layerName);
-                return (
-                  <div key={layerName} style={{ marginLeft: depth * 10 }}>
-                    <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => goto(layerName, [])}
-                      title={localized({ language, text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName } })}
-                      className={
-                        "flex flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-xs transition-colors " +
-                        (layerName === layer
-                          ? "bg-slate-100 ring-1 ring-slate-400"
-                          : "hover:bg-slate-50") +
-                        (inClosure ? " font-semibold" : "")
-                      }
-                    >
-                      <span className={"h-2.5 w-2.5 shrink-0 rounded-full " + LAYER_COLOR[layerName]} />
-                      <span>
-                        {layerName}
-                        <span
-                          title={say({
-                            language,
-                            fr: "dans la fermeture de l'adresse courante (③)",
-                            en: "in the closure of the current address (③)",
-                          })}
-                          className="ml-1 text-[10px] text-slate-400">
-                          {inClosure ? "•" : ""}
-                        </span>
-                      </span>
-                    </button>
-                    {editableLayerSet.has(layerName) && (
-                      <button
-                        onClick={() =>
-                          setEditorLayer(editorLayer === layerName ? null : layerName)
-                        }
-                        title={say({
-                          language,
-                          fr:
-                            "éditer la couche vivante — le staging la rejuge " +
-                            "(0 verdict exigé), l'écriture est déclarée, " +
-                            "l'atelier relit l'espace",
-                          en:
-                            "edit the living layer — staging rejudges it " +
-                            "(0 verdict demanded), the write is declared, " +
-                            "the workshop re-reads the space",
-                        })}
-                        aria-label={say({ language, fr: "éditer la couche ", en: "edit the layer " }) + layerName}
-                        className={
-                          "shrink-0 rounded-md px-1.5 py-1 text-xs transition-colors " +
-                          (editorLayer === layerName
-                            ? "bg-sky-600 text-white"
-                            : "text-slate-400 hover:bg-sky-50 hover:text-sky-600")
-                        }
-                      >
-                        ✎
-                      </button>
-                    )}
+              <div className="space-y-1">
+                {livingLayerNames.filter(layerMatches).length === 0 && (
+                  <div className="py-2 text-xs text-slate-400">
+                    {say({
+                      language,
+                      fr: "Aucune couche ne correspond à « " + search + " ».",
+                      en: "No layer matches « " + search + " ».",
+                    })}
                   </div>
-                  {layerName === layer && (
-                    <div className="ml-4 text-[10px] leading-4 text-slate-400">
-                      {localized({ language, text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName } })}
+                )}
+                {livingLayerNames.filter(layerMatches).map((layerName) => {
+                  const depth = (() => {
+                    let steps = 0;
+                    let current: string | null = layerName;
+                    // != null covers undefined: a layer forgotten in
+                    // PRINCIPAL_PARENT gives a wrong indentation, not
+                    // an infinite loop.
+                    while (current != null) {
+                      current = PRINCIPAL_PARENT[current] ?? null;
+                      steps += 1;
+                    }
+                    return steps - 1;
+                  })();
+                  const inClosure = closureData.closure.some((address) => address[0] === layerName);
+                  return (
+                    <div key={layerName} style={{ marginLeft: depth * 10 }}>
+                      <div className="flex items-center gap-1">
+                        <button
+                          onClick={() => goto(layerName, [])}
+                          title={localized({
+                            language,
+                            text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName },
+                          })}
+                          className={
+                            "flex flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-xs transition-colors " +
+                            (layerName === layer
+                              ? "bg-slate-100 ring-1 ring-slate-400"
+                              : "hover:bg-slate-50") +
+                            (inClosure ? " font-semibold" : "")
+                          }
+                        >
+                          <span
+                            className={
+                              "h-2.5 w-2.5 shrink-0 rounded-full " + LAYER_COLOR[layerName]
+                            }
+                          />
+                          <span>
+                            {layerName}
+                            <span
+                              title={say({
+                                language,
+                                fr: "dans la fermeture de l'adresse courante (③)",
+                                en: "in the closure of the current address (③)",
+                              })}
+                              className="ml-1 text-[10px] text-slate-400"
+                            >
+                              {inClosure ? "•" : ""}
+                            </span>
+                          </span>
+                        </button>
+                        {editableLayerSet.has(layerName) && (
+                          <button
+                            onClick={() =>
+                              setEditorLayer(editorLayer === layerName ? null : layerName)
+                            }
+                            title={say({
+                              language,
+                              fr:
+                                "éditer la couche vivante — le staging la rejuge " +
+                                "(0 verdict exigé), l'écriture est déclarée, " +
+                                "l'atelier relit l'espace",
+                              en:
+                                "edit the living layer — staging rejudges it " +
+                                "(0 verdict demanded), the write is declared, " +
+                                "the workshop re-reads the space",
+                            })}
+                            aria-label={
+                              say({ language, fr: "éditer la couche ", en: "edit the layer " }) +
+                              layerName
+                            }
+                            className={
+                              "shrink-0 rounded-md px-1.5 py-1 text-xs transition-colors " +
+                              (editorLayer === layerName
+                                ? "bg-sky-600 text-white"
+                                : "text-slate-400 hover:bg-sky-50 hover:text-sky-600")
+                            }
+                          >
+                            ✎
+                          </button>
+                        )}
+                      </div>
+                      {layerName === layer && (
+                        <div className="ml-4 text-[10px] leading-4 text-slate-400">
+                          {localized({
+                            language,
+                            text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName },
+                          })}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
             )}
           </div>
 
@@ -733,12 +772,8 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                   history.length
                     ? say({
                         language,
-                        fr:
-                          "retour à l'adresse précédente (" + history.length +
-                          " dans la pile)",
-                        en:
-                          "back to the previous address (" + history.length +
-                          " in the stack)",
+                        fr: "retour à l'adresse précédente (" + history.length + " dans la pile)",
+                        en: "back to the previous address (" + history.length + " in the stack)",
                       })
                     : say({
                         language,
@@ -847,10 +882,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                       <button
                         className="ml-auto shrink-0 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800"
                         onClick={() =>
-                          goto(
-                            (info.value as AddressView).layer,
-                            (info.value as AddressView).path
-                          )
+                          goto((info.value as AddressView).layer, (info.value as AddressView).path)
                         }
                       >
                         {say({ language, fr: "→ y aller", en: "→ go there" })}
@@ -889,8 +921,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                     "le dernier cran en détail — fermeture par adresse, sources dans " +
                     "l'ordre de lecture",
                   en:
-                    "the last crank in detail — closure by address, sources in " +
-                    "reading order",
+                    "the last crank in detail — closure by address, sources in " + "reading order",
                 })}
               </span>
             </h2>
@@ -914,7 +945,9 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
             </p>
             <div className="space-y-1">
               {closureData.closure.map((address, index) => {
-                const status = selectedKey ? statusBySource.get(addressText(address)) || "non atteint" : null;
+                const status = selectedKey
+                  ? statusBySource.get(addressText(address)) || "non atteint"
+                  : null;
                 return (
                   <div
                     key={index}
@@ -930,7 +963,11 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                     <span className="font-mono text-slate-700">
                       {address[1].length ? address[1].join("/") : "()"}
                     </span>
-                    {status && <span className="ml-auto shrink-0"><StatusPill status={status} language={language} /></span>}
+                    {status && (
+                      <span className="ml-auto shrink-0">
+                        <StatusPill status={status} language={language} />
+                      </span>
+                    )}
                   </div>
                 );
               })}
@@ -938,17 +975,19 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
             {selectedKey && (
               <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-slate-50 px-2 py-1.5 text-[11px]">
                 <span className="text-slate-500">
-                  <span className="font-mono font-semibold text-slate-700">{selectedKey}</span>{" "}
-                  =
+                  <span className="font-mono font-semibold text-slate-700">{selectedKey}</span> =
                 </span>
-                <KernelValue value={selectedKeyDetail ? selectedKeyDetail.value : null} language={language} />
+                <KernelValue
+                  value={selectedKeyDetail ? selectedKeyDetail.value : null}
+                  language={language}
+                />
                 {selectedKeyDetail && selectedKeyDetail.value instanceof AddressView && (
                   <button
                     className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600"
                     onClick={() =>
                       goto(
                         (selectedKeyDetail!.value as AddressView).layer,
-                        (selectedKeyDetail!.value as AddressView).path
+                        (selectedKeyDetail!.value as AddressView).path,
                       )
                     }
                   >
@@ -1105,31 +1144,33 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                 {say({ language, fr: "Lentilles", en: "Lenses" })}
               </div>
               <div className="space-y-1">
-                {groupTree({ space: KERNEL.space, members: LENS_LAYERS }).map(({ layer: viewLayer, depth }) => (
-                  <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
-                    <button
-                      className={
-                        "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
-                        (selectedView === viewLayer
-                          ? "bg-slate-800 text-white"
-                          : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100")
-                      }
-                      onClick={() => {
-                        setSelectedView(viewLayer);
-                        setSelectedGlyph(null);
-                      }}
-                    >
-                      <LayerBadge layer={viewLayer} small />
-                      <span className="truncate text-slate-400">
-                        {say({
-                          language,
-                          fr: "lentille — modèle : le courant de ①",
-                          en: "lens — model: the current one of ①",
-                        })}
-                      </span>
-                    </button>
-                  </div>
-                ))}
+                {groupTree({ space: KERNEL.space, members: LENS_LAYERS }).map(
+                  ({ layer: viewLayer, depth }) => (
+                    <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
+                      <button
+                        className={
+                          "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
+                          (selectedView === viewLayer
+                            ? "bg-slate-800 text-white"
+                            : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100")
+                        }
+                        onClick={() => {
+                          setSelectedView(viewLayer);
+                          setSelectedGlyph(null);
+                        }}
+                      >
+                        <LayerBadge layer={viewLayer} small />
+                        <span className="truncate text-slate-400">
+                          {say({
+                            language,
+                            fr: "lentille — modèle : le courant de ①",
+                            en: "lens — model: the current one of ①",
+                          })}
+                        </span>
+                      </button>
+                    </div>
+                  ),
+                )}
               </div>
             </div>
             <div>
@@ -1137,33 +1178,36 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                 {say({ language, fr: "Points de vue", en: "Viewpoints" })}
               </div>
               <div className="space-y-1">
-                {groupTree({ space: KERNEL.space, members: VIEWPOINT_LAYERS }).map(({ layer: viewLayer, depth }) => (
-                  <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
-                    <button
-                      className={
-                        "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
-                        (selectedView === viewLayer
-                          ? "bg-slate-800 text-white"
-                          : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100")
-                      }
-                      onClick={() => {
-                        setSelectedView(viewLayer);
-                        setSelectedGlyph(null);
-                      }}
-                    >
-                      <LayerBadge layer={viewLayer} small />
-                      <span className="truncate text-slate-400">
-                        {bindingOf({ space: KERNEL.space, view: viewLayer, key: "model" }).value instanceof AddressView
-                          ? say({ language, fr: "→ modèle désigné", en: "→ designated model" })
-                          : say({
-                              language,
-                              fr: "→ modèle : le courant de ①",
-                              en: "→ model: the current one of ①",
-                            })}
-                      </span>
-                    </button>
-                  </div>
-                ))}
+                {groupTree({ space: KERNEL.space, members: VIEWPOINT_LAYERS }).map(
+                  ({ layer: viewLayer, depth }) => (
+                    <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
+                      <button
+                        className={
+                          "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
+                          (selectedView === viewLayer
+                            ? "bg-slate-800 text-white"
+                            : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100")
+                        }
+                        onClick={() => {
+                          setSelectedView(viewLayer);
+                          setSelectedGlyph(null);
+                        }}
+                      >
+                        <LayerBadge layer={viewLayer} small />
+                        <span className="truncate text-slate-400">
+                          {bindingOf({ space: KERNEL.space, view: viewLayer, key: "model" })
+                            .value instanceof AddressView
+                            ? say({ language, fr: "→ modèle désigné", en: "→ designated model" })
+                            : say({
+                                language,
+                                fr: "→ modèle : le courant de ①",
+                                en: "→ model: the current one of ①",
+                              })}
+                        </span>
+                      </button>
+                    </div>
+                  ),
+                )}
               </div>
             </div>
           </div>
@@ -1191,18 +1235,18 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                       en: "lone lens — current model of ①",
                     })
                   : look.viewpointDecidesPositions
-                  ? say({ language, fr: "positions du cours", en: "course positions" })
-                  : look.modelCarriesPositions
-                  ? say({
-                      language,
-                      fr: "positions du modèle — résolues (grille ou pôle, relatives comprises)",
-                      en: "model positions — resolved (grid or pole, relative included)",
-                    })
-                  : say({
-                      language,
-                      fr: "positions : disposition cercle",
-                      en: "positions: circle layout",
-                    })}
+                    ? say({ language, fr: "positions du cours", en: "course positions" })
+                    : look.modelCarriesPositions
+                      ? say({
+                          language,
+                          fr: "positions du modèle — résolues (grille ou pôle, relatives comprises)",
+                          en: "model positions — resolved (grid or pole, relative included)",
+                        })
+                      : say({
+                          language,
+                          fr: "positions : disposition cercle",
+                          en: "positions: circle layout",
+                        })}
               </span>
             </div>
             <svg viewBox={look.frame ?? "0 0 270 220"} className="w-full rounded bg-white">
@@ -1210,11 +1254,12 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                 look.edges.map((edge) => {
                   const from =
                     edge.from !== null
-                      ? look.vertices.find((vertex) => vertex.name === edge.from)?.position ?? null
+                      ? (look.vertices.find((vertex) => vertex.name === edge.from)?.position ??
+                        null)
                       : null;
                   const to =
                     edge.to !== null
-                      ? look.vertices.find((vertex) => vertex.name === edge.to)?.position ?? null
+                      ? (look.vertices.find((vertex) => vertex.name === edge.to)?.position ?? null)
                       : null;
                   if (!from || !to) return null;
                   return (
@@ -1225,12 +1270,18 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                       weight={edge.weight}
                       from={from}
                       to={to}
-                      selected={selectedGlyph !== null && selectedGlyph.kind === "edge" && selectedGlyph.name === edge.name}
+                      selected={
+                        selectedGlyph !== null &&
+                        selectedGlyph.kind === "edge" &&
+                        selectedGlyph.name === edge.name
+                      }
                       onPick={() =>
                         setSelectedGlyph(
-                          selectedGlyph && selectedGlyph.kind === "edge" && selectedGlyph.name === edge.name
+                          selectedGlyph &&
+                            selectedGlyph.kind === "edge" &&
+                            selectedGlyph.name === edge.name
                             ? null
-                            : { kind: "edge", name: edge.name }
+                            : { kind: "edge", name: edge.name },
                         )
                       }
                     />
@@ -1245,55 +1296,65 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                       name={vertex.name}
                       shape={vertex.drawn ? vertex.drawn.spec : null}
                       position={vertex.position}
-                      selected={selectedGlyph !== null && selectedGlyph.kind === "vertex" && selectedGlyph.name === vertex.name}
+                      selected={
+                        selectedGlyph !== null &&
+                        selectedGlyph.kind === "vertex" &&
+                        selectedGlyph.name === vertex.name
+                      }
                       onPick={() =>
                         setSelectedGlyph(
-                          selectedGlyph && selectedGlyph.kind === "vertex" && selectedGlyph.name === vertex.name
+                          selectedGlyph &&
+                            selectedGlyph.kind === "vertex" &&
+                            selectedGlyph.name === vertex.name
                             ? null
-                            : { kind: "vertex", name: vertex.name }
+                            : { kind: "vertex", name: vertex.name },
                         )
                       }
                     />
                   );
                 })}
             </svg>
-              {/* The bindings of the viewpoint: the layer that
+            {/* The bindings of the viewpoint: the layer that
                   provides each field, the resolved value — a look
                   stays a layer, its slots read like the others */}
-              {!look.isLens && (
-                <div className="mt-1.5 space-y-0.5 text-[10px] leading-4">
-                  {["model", "display", "zoom"].map((slotKey) => {
-                    const binding = bindingOf({ space: KERNEL.space, view: selectedView, key: slotKey });
-                    return (
-                      <div key={slotKey} className="flex items-center gap-1">
-                        <span className="w-11 shrink-0 font-mono text-slate-600">{slotKey}</span>
-                        {binding.winner ? (
-                          <LayerBadge layer={binding.winner[0]} small />
-                        ) : (
-                          <span className="text-slate-400">∅</span>
-                        )}
-                        <span className="truncate text-slate-500">
-                          {binding.value instanceof AddressView
-                            ? "→ " + binding.value.layer
-                            : binding.value === null
+            {!look.isLens && (
+              <div className="mt-1.5 space-y-0.5 text-[10px] leading-4">
+                {["model", "display", "zoom"].map((slotKey) => {
+                  const binding = bindingOf({
+                    space: KERNEL.space,
+                    view: selectedView,
+                    key: slotKey,
+                  });
+                  return (
+                    <div key={slotKey} className="flex items-center gap-1">
+                      <span className="w-11 shrink-0 font-mono text-slate-600">{slotKey}</span>
+                      {binding.winner ? (
+                        <LayerBadge layer={binding.winner[0]} small />
+                      ) : (
+                        <span className="text-slate-400">∅</span>
+                      )}
+                      <span className="truncate text-slate-500">
+                        {binding.value instanceof AddressView
+                          ? "→ " + binding.value.layer
+                          : binding.value === null
                             ? say({ language, fr: "∅ non défini", en: "∅ undefined" })
                             : String(binding.value)}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-              {/* Honest applicability: nothing hidden — no lens, no
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+            {/* Honest applicability: nothing hidden — no lens, no
                   graph, blind or partial lens, every case speaks */}
-              <div className="mt-1 text-[10px] text-slate-500">
-                {look.lens === null
-                  ? say({
-                      language,
-                      fr: "point de vue sans lentille — aucun dessin",
-                      en: "viewpoint without a lens — no drawing",
-                    })
-                  : look.applicability.total === -1
+            <div className="mt-1 text-[10px] text-slate-500">
+              {look.lens === null
+                ? say({
+                    language,
+                    fr: "point de vue sans lentille — aucun dessin",
+                    en: "viewpoint without a lens — no drawing",
+                  })
+                : look.applicability.total === -1
                   ? say({
                       language,
                       fr: "le modèle n'est pas un graphe — aucune entrée vertices",
@@ -1318,144 +1379,153 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                           en: " — blind lens: domain error (check_view_lens)",
                         })
                       : "") +
-                    (look.applicability.dressed > 0 && look.applicability.dressed < look.applicability.total
+                    (look.applicability.dressed > 0 &&
+                    look.applicability.dressed < look.applicability.total
                       ? say({
                           language,
                           fr: " — partiel : erreur de domaine",
                           en: " — partial: domain error",
                         })
                       : "")}
-              </div>
-              <p className="mt-1 text-[10px] leading-4 text-slate-400">
-                {localized({ language, text: VIEW_NOTES[selectedView] ?? { en: "", fr: "" } })}
-              </p>
             </div>
+            <p className="mt-1 text-[10px] leading-4 text-slate-400">
+              {localized({ language, text: VIEW_NOTES[selectedView] ?? { en: "", fr: "" } })}
+            </p>
+          </div>
         </div>
 
-        {selectedGlyph && look.lens !== null && (() => {
-          const glyphPath = selectedGlyph.kind === "vertex"
-            ? ["vertices", selectedGlyph.name]
-            : ["edges", selectedGlyph.name];
-          const matches = dressingEntries({
-            space: KERNEL.space,
-            lens: asLayerName(look.lens),
-            layer: asLayerName(look.model),
-            path: asLayerPath(glyphPath),
-          });
-          let best: { path: string[]; spec: any; hit: ReturnType<typeof dressingEntries>[number]["hit"] } | null = null;
-          for (const match of matches) {
-            if (best === null || coversAddresses({ space: KERNEL.space, covering: match.hit, covered: best.hit })) best = match;
-          }
-          return (
-            <div className="mt-3 rounded-lg border border-slate-300 bg-slate-50 p-3">
-              <div className="mb-1 flex items-center gap-2">
-                <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
-                  {selectedGlyph.name}
-                </span>
-                <span className="text-xs text-slate-500">
-                  {look.model} :: {glyphPath.join("/")} —{" "}
-                  {say({ language, fr: "habillage par", en: "dressing by" })}{" "}
-                  <span className="font-medium">{look.lens}</span>
-                </span>
-                <button
-                  className="ml-auto rounded px-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                  onClick={() => setSelectedGlyph(null)}
-                >
-                  ×
-                </button>
-              </div>
-              {matches.length === 0 && (
-                <p className="text-xs text-slate-500">
-                  {say({
-                    language,
-                    fr:
-                      "Aucune entrée de la lentille n'habille ce nœud — il se " +
-                      "dessinerait « nu » (pointillé).",
-                    en:
-                      "No entry of the lens dresses this node — it would be " +
-                      "drawn « naked » (dotted).",
-                  })}
-                </p>
-              )}
-              <div className="space-y-1">
-                {matches.map((match, index) => {
-                  const isBest = match === best;
-                  return (
-                    <div
-                      key={index}
-                      className={
-                        "flex flex-wrap items-center gap-1.5 rounded-md px-2 py-1 text-[11px] " +
-                        (isBest ? "bg-emerald-50 ring-1 ring-emerald-300" : "bg-white")
-                      }
-                    >
-                      <span className="font-semibold text-slate-800">
-                        {shapeLabel({ shape: match.spec, language })}
-                      </span>
-                      <span className="text-slate-400">
-                        {say({ language, fr: "← entrée", en: "← entry" })}
-                      </span>
-                      <span className="font-mono text-slate-600">{match.path.join("/")}</span>
-                      <span className="text-slate-400">
-                        {say({ language, fr: "habille", en: "dresses" })}
-                      </span>
-                      {match.hit.map((hitAddress, hitIndex) => (
-                        <span key={hitIndex} className="inline-flex items-center gap-0.5">
-                          {hitIndex > 0 && <span className="text-slate-400">,</span>}
-                          <LayerBadge layer={hitAddress[0]} small />
-                          <span className="font-mono text-slate-500">
-                            {hitAddress[1].length ? hitAddress[1].join("/") : "()"}
+        {selectedGlyph &&
+          look.lens !== null &&
+          (() => {
+            const glyphPath =
+              selectedGlyph.kind === "vertex"
+                ? ["vertices", selectedGlyph.name]
+                : ["edges", selectedGlyph.name];
+            const matches = dressingEntries({
+              space: KERNEL.space,
+              lens: asLayerName(look.lens),
+              layer: asLayerName(look.model),
+              path: asLayerPath(glyphPath),
+            });
+            let best: {
+              path: string[];
+              spec: any;
+              hit: ReturnType<typeof dressingEntries>[number]["hit"];
+            } | null = null;
+            for (const match of matches) {
+              if (
+                best === null ||
+                coversAddresses({ space: KERNEL.space, covering: match.hit, covered: best.hit })
+              )
+                best = match;
+            }
+            return (
+              <div className="mt-3 rounded-lg border border-slate-300 bg-slate-50 p-3">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
+                    {selectedGlyph.name}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    {look.model} :: {glyphPath.join("/")} —{" "}
+                    {say({ language, fr: "habillage par", en: "dressing by" })}{" "}
+                    <span className="font-medium">{look.lens}</span>
+                  </span>
+                  <button
+                    className="ml-auto rounded px-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+                    onClick={() => setSelectedGlyph(null)}
+                  >
+                    ×
+                  </button>
+                </div>
+                {matches.length === 0 && (
+                  <p className="text-xs text-slate-500">
+                    {say({
+                      language,
+                      fr:
+                        "Aucune entrée de la lentille n'habille ce nœud — il se " +
+                        "dessinerait « nu » (pointillé).",
+                      en:
+                        "No entry of the lens dresses this node — it would be " +
+                        "drawn « naked » (dotted).",
+                    })}
+                  </p>
+                )}
+                <div className="space-y-1">
+                  {matches.map((match, index) => {
+                    const isBest = match === best;
+                    return (
+                      <div
+                        key={index}
+                        className={
+                          "flex flex-wrap items-center gap-1.5 rounded-md px-2 py-1 text-[11px] " +
+                          (isBest ? "bg-emerald-50 ring-1 ring-emerald-300" : "bg-white")
+                        }
+                      >
+                        <span className="font-semibold text-slate-800">
+                          {shapeLabel({ shape: match.spec, language })}
+                        </span>
+                        <span className="text-slate-400">
+                          {say({ language, fr: "← entrée", en: "← entry" })}
+                        </span>
+                        <span className="font-mono text-slate-600">{match.path.join("/")}</span>
+                        <span className="text-slate-400">
+                          {say({ language, fr: "habille", en: "dresses" })}
+                        </span>
+                        {match.hit.map((hitAddress, hitIndex) => (
+                          <span key={hitIndex} className="inline-flex items-center gap-0.5">
+                            {hitIndex > 0 && <span className="text-slate-400">,</span>}
+                            <LayerBadge layer={hitAddress[0]} small />
+                            <span className="font-mono text-slate-500">
+                              {hitAddress[1].length ? hitAddress[1].join("/") : "()"}
+                            </span>
                           </span>
-                        </span>
-                      ))}
-                      {isBest && (
-                        <span className="ml-auto rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                          {say({
-                            language,
-                            fr: "gagnante — la plus spécifique",
-                            en: "winner — the most specific",
-                          })}
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-              {matches.length > 1 && (
-                <p className="mt-1.5 text-[11px] leading-4 text-slate-500">
-                  {language === "fr" ? (
-                    <>
-                      Deux entrées habillent ce nœud : celle de la famille et le
-                      cercle générique. L'entrée la plus spécifique gagne — son
-                      type <span className="font-mono">raffine</span> celui de
-                      l'autre, mesuré par fermeture : ce verdict ne dépend pas de
-                      l'ordre de la chaîne du nœud (think1 porte son type le
-                      plus spécifique en fin de chaîne, producer en début).
-                    </>
-                  ) : (
-                    <>
-                      Two entries dress this node: the family one and the
-                      generic circle. The most specific entry wins — its
-                      type <span className="font-mono">refines</span> the
-                      other's, measured by closure: this verdict does not
-                      depend on the order of the node's chain (think1 carries
-                      its most specific type at the end of the chain,
-                      producer at the start).
-                    </>
-                  )}
-                </p>
-              )}
-              {matches.length === 1 && (
-                <p className="mt-1.5 text-[11px] text-slate-500">
-                  {say({
-                    language,
-                    fr: "Une seule entrée habille ce nœud : aucun choix à faire.",
-                    en: "A single entry dresses this node: no choice to make.",
+                        ))}
+                        {isBest && (
+                          <span className="ml-auto rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                            {say({
+                              language,
+                              fr: "gagnante — la plus spécifique",
+                              en: "winner — the most specific",
+                            })}
+                          </span>
+                        )}
+                      </div>
+                    );
                   })}
-                </p>
-              )}
-            </div>
-          );
-        })()}
+                </div>
+                {matches.length > 1 && (
+                  <p className="mt-1.5 text-[11px] leading-4 text-slate-500">
+                    {language === "fr" ? (
+                      <>
+                        Deux entrées habillent ce nœud : celle de la famille et le cercle générique.
+                        L'entrée la plus spécifique gagne — son type{" "}
+                        <span className="font-mono">raffine</span> celui de l'autre, mesuré par
+                        fermeture : ce verdict ne dépend pas de l'ordre de la chaîne du nœud (think1
+                        porte son type le plus spécifique en fin de chaîne, producer en début).
+                      </>
+                    ) : (
+                      <>
+                        Two entries dress this node: the family one and the generic circle. The most
+                        specific entry wins — its type <span className="font-mono">refines</span>{" "}
+                        the other's, measured by closure: this verdict does not depend on the order
+                        of the node's chain (think1 carries its most specific type at the end of the
+                        chain, producer at the start).
+                      </>
+                    )}
+                  </p>
+                )}
+                {matches.length === 1 && (
+                  <p className="mt-1.5 text-[11px] text-slate-500">
+                    {say({
+                      language,
+                      fr: "Une seule entrée habille ce nœud : aucun choix à faire.",
+                      en: "A single entry dresses this node: no choice to make.",
+                    })}
+                  </p>
+                )}
+              </div>
+            );
+          })()}
       </section>
 
       {/* The panels are counted on one hand — ① the layers, ② the
@@ -1487,7 +1557,6 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
             "that same harness.",
         })}
       </footer>
-
     </div>
   );
 }

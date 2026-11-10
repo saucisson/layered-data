@@ -14,10 +14,7 @@ import React, { useMemo } from "react";
 import { useRouter } from "../components/Router";
 import { say } from "../presentation/i18n.ts";
 import { NotionText, GLOSSARY, NotionTip } from "../presentation/notions.tsx";
-import {
-  parseTutorialMarkdown,
-  type TutorialBlock,
-} from "../presentation/tutorialMarkdown.ts";
+import { parseTutorialMarkdown, type TutorialBlock } from "../presentation/tutorialMarkdown.ts";
 import { TutorialListing } from "../presentation/TutorialListing.tsx";
 import { highlightSourceLine, SPAN_CLASSES } from "../presentation/layerSourceView.tsx";
 import { assembleTutorialKernel } from "../application/corpus.ts";
@@ -101,7 +98,10 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
         }
         if (block.level === 2) {
           return (
-            <h2 key={index} className="mt-10 border-t border-slate-200 pt-6 text-lg font-bold text-slate-800">
+            <h2
+              key={index}
+              className="mt-10 border-t border-slate-200 pt-6 text-lg font-bold text-slate-800"
+            >
               <NotionText text={block.text} language={language} />
             </h2>
           );

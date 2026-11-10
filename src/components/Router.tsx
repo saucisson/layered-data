@@ -6,10 +6,27 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Page = "landing" | "tutorial" | "filiation" | "workshop" | "hierarchy" | "creation" | "formalism" | "editor";
+type Page =
+  | "landing"
+  | "tutorial"
+  | "filiation"
+  | "workshop"
+  | "hierarchy"
+  | "creation"
+  | "formalism"
+  | "editor";
 
 /** The pages the router serves — the landing page is the home. */
-const PAGES: readonly Page[] = ["landing", "tutorial", "filiation", "workshop", "hierarchy", "creation", "formalism", "editor"];
+const PAGES: readonly Page[] = [
+  "landing",
+  "tutorial",
+  "filiation",
+  "workshop",
+  "hierarchy",
+  "creation",
+  "formalism",
+  "editor",
+];
 
 interface RouterContextType {
   page: Page;
