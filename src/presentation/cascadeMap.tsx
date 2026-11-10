@@ -4,7 +4,7 @@
 // the chain of refined types; only the last card is active, the
 // others are the history.
 
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { LayerReference, PathReference } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";

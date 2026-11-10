@@ -76,6 +76,15 @@ const soundDraft = [
 // =====================================================================
 
 const firstTry = await runLoop({ scripts: [soundDraft] });
+
+/** Indexed access in assertions: a missing element is a test failure,
+ * not a silent undefined. */
+function at<T>(list: readonly T[], index: number): T {
+  const value = list[index];
+  if (value === undefined) throw new Error("missing element at index " + index);
+  return value;
+}
+
 check(
   "(a) a sound proposal is accepted first try: ok, one attempt, no refusal",
   firstTry.ok === true && firstTry.attempts === 1 && firstTry.refusals.length === 0,
@@ -110,23 +119,23 @@ check(
 );
 check(
   "(b) the first round carried no feedback, the second carried the syntax refusal",
-  correctivePen.rounds.length === 2 && correctivePen.rounds[0].feedback === null && correctivePen.rounds[1].feedback !== null,
+  correctivePen.rounds.length === 2 && at(correctivePen.rounds, 0).feedback === null && at(correctivePen.rounds, 1).feedback !== null,
 );
 check(
   "(b) the refusal is a syntax step with readable errors",
   secondTry.refusals.length === 1 &&
-    secondTry.refusals[0].step === "syntaxe" &&
-    secondTry.refusals[0].errors.length > 0,
+    at(secondTry.refusals, 0).step === "syntaxe" &&
+    at(secondTry.refusals, 0).errors.length > 0,
 );
 check(
   "(b) the feedback speaks the refusal to the model: attempt number, step, error, the order to rewrite",
-  secondTry.refusals[0].feedback.includes("#1") &&
-    secondTry.refusals[0].feedback.includes("syntax") &&
-    secondTry.refusals[0].feedback.includes("no explanation"),
+  at(secondTry.refusals, 0).feedback.includes("#1") &&
+    at(secondTry.refusals, 0).feedback.includes("syntax") &&
+    at(secondTry.refusals, 0).feedback.includes("no explanation"),
 );
 check(
   "(b) the feedback the model received is exactly the formatted refusal",
-  correctivePen.rounds[1].feedback === secondTry.refusals[0].feedback,
+  at(correctivePen.rounds, 1).feedback === at(secondTry.refusals, 0).feedback,
 );
 
 // =====================================================================
@@ -153,9 +162,9 @@ check(
 );
 check(
   "(c) every refusal is the kernel's own verdict vocabulary (cible-inconnue), each attempt feeding back the previous one",
-  thirdTry.refusals.every((refusal) => refusal.step === "validation" && refusal.verdicts.length === 1 && refusal.verdicts[0].kind === "cible-inconnue") &&
-    thirdTry.refusals[1].feedback !== null &&
-    stubbornPen.rounds[2].feedback !== null,
+  thirdTry.refusals.every((refusal) => refusal.step === "validation" && refusal.verdicts.length === 1 && at(refusal.verdicts, 0).kind === "cible-inconnue") &&
+    at(thirdTry.refusals, 1).feedback !== null &&
+    at(stubbornPen.rounds, 2).feedback !== null,
 );
 
 // =====================================================================
@@ -178,13 +187,13 @@ const fourthTry = await composeVerifiedLayerDraft({
 });
 check(
   "(d) the betrayed expectation is refused at the validation step, the measured layer is accepted next",
-  fourthTry.ok === true && fourthTry.attempts === 2 && fourthTry.refusals[0].step === "validation",
+  fourthTry.ok === true && fourthTry.attempts === 2 && at(fourthTry.refusals, 0).step === "validation",
 );
 check(
   '(d) the refusal speaks the "expectation-betrayed" verdict and its fact',
-  fourthTry.refusals[0].verdicts.length >= 1 &&
-    fourthTry.refusals[0].verdicts.some((verdict) => verdict.kind === "attendu-trahi") &&
-    fourthTry.refusals[0].feedback.includes("expectation-betrayed"),
+  at(fourthTry.refusals, 0).verdicts.length >= 1 &&
+    at(fourthTry.refusals, 0).verdicts.some((verdict) => verdict.kind === "attendu-trahi") &&
+    at(fourthTry.refusals, 0).feedback.includes("expectation-betrayed"),
 );
 
 // =====================================================================
@@ -206,8 +215,8 @@ check(
   fifthTry.ok === true &&
     fifthTry.attempts === 2 &&
     fifthTry.refusals.length === 1 &&
-    fifthTry.refusals[0].errors.length === 1 &&
-    fifthTry.refusals[0].errors[0] === "the proposal is empty",
+    at(fifthTry.refusals, 0).errors.length === 1 &&
+    at(at(fifthTry.refusals, 0).errors, 0) === "the proposal is empty",
 );
 
 // =====================================================================
@@ -260,10 +269,10 @@ check(
 );
 check(
   '(g) the refusal speaks the "bedrock-occupied" verdict — the theft named, the geologist told',
-  eighthTry.refusals[0].verdicts.length === 1 &&
-    eighthTry.refusals[0].verdicts[0].kind === "socle-occupé" &&
-    eighthTry.refusals[0].feedback.includes("bedrock-occupied") &&
-    eighthTry.refusals[0].feedback.includes("record"),
+  at(eighthTry.refusals, 0).verdicts.length === 1 &&
+    at(at(eighthTry.refusals, 0).verdicts, 0).kind === "socle-occupé" &&
+    at(eighthTry.refusals, 0).feedback.includes("bedrock-occupied") &&
+    at(eighthTry.refusals, 0).feedback.includes("record"),
 );
 
 // =====================================================================

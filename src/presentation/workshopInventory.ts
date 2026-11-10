@@ -344,7 +344,11 @@ export class RefinementDag {
     }
     for (const layerName of layerNames) this.children[layerName] = [];
     for (const layerName of layerNames) {
-      for (const parent of this.targets[layerName]) this.children[parent].push(layerName);
+      for (const parent of this.targets[layerName] ?? []) {
+        const siblings = this.children[parent];
+        if (siblings === undefined) continue;
+        siblings.push(layerName);
+      }
     }
     for (const layerName of layerNames) this.computeRank(layerName, new Set());
   }
@@ -358,7 +362,8 @@ export class RefinementDag {
   /** Rank of a layer: depth of the longest path towards a base.
    * Guard: an eventual cycle in the data would not freeze the view. */
   private computeRank(layerName: string, seenLayers: Set<string>): number {
-    if (layerName in this.ranks) return this.ranks[layerName];
+    const knownRank = this.ranks[layerName];
+    if (knownRank !== undefined) return knownRank;
     if (seenLayers.has(layerName)) return 0;
     seenLayers.add(layerName);
     const parents = this.targets[layerName] ?? [];
@@ -426,7 +431,7 @@ export class RefinementDag {
    * copy). */
   retargetLayer({ layerName, targets }: { layerName: string; targets: string[] }): void {
     for (const parent of Object.keys(this.children)) {
-      this.children[parent] = this.children[parent].filter((child) => child !== layerName);
+      this.children[parent] = (this.children[parent] ?? []).filter((child) => child !== layerName);
     }
     this.targets[layerName] = targets;
     if (this.children[layerName] === undefined) this.children[layerName] = [];
@@ -493,52 +498,52 @@ export function computeGraphLayout({
   // result is deterministic ----
   for (let sweep = 0; sweep < 2; sweep++) {
     for (let rank = 1; rank <= maxRank; rank++) {
-      const scored = rows[rank].map((layerName) => {
-        const parentCenters = dag.targetsOf(layerName).map((parent) => centerX[parent]);
+      const scored = (rows[rank] ?? []).map((layerName) => {
+        const parentCenters = dag.targetsOf(layerName).map((parent) => centerX[parent] ?? 0);
         return {
           layerName,
           barycenter: parentCenters.length
             ? parentCenters.reduce((total, center) => total + center, 0) / parentCenters.length
-            : centerX[layerName],
+            : (centerX[layerName] ?? 0),
         };
       });
       scored.sort(
         (first, second) => first.barycenter - second.barycenter || layerNames.indexOf(first.layerName) - layerNames.indexOf(second.layerName),
       );
       rows[rank] = scored.map((scoredNode) => scoredNode.layerName);
-      placeRow(rows[rank]);
+      placeRow(rows[rank] ?? []);
     }
     for (let rank = maxRank - 1; rank >= 0; rank--) {
-      const scored = rows[rank].map((layerName) => {
-        const childCenters = dag.childrenOf(layerName).map((child) => centerX[child]);
+      const scored = (rows[rank] ?? []).map((layerName) => {
+        const childCenters = dag.childrenOf(layerName).map((child) => centerX[child] ?? 0);
         return {
           layerName,
           barycenter: childCenters.length
             ? childCenters.reduce((total, center) => total + center, 0) / childCenters.length
-            : centerX[layerName],
+            : (centerX[layerName] ?? 0),
         };
       });
       scored.sort(
         (first, second) => first.barycenter - second.barycenter || layerNames.indexOf(first.layerName) - layerNames.indexOf(second.layerName),
       );
       rows[rank] = scored.map((scoredNode) => scoredNode.layerName);
-      placeRow(rows[rank]);
+      placeRow(rows[rank] ?? []);
     }
   }
 
   // ---- center each band horizontally ----
   const rowWidths = rows.map((row) =>
-    row.reduce((total, layerName) => total + widthOf(layerName) + HORIZONTAL_GAP, -HORIZONTAL_GAP),
+    (row ?? []).reduce((total, layerName) => total + widthOf(layerName) + HORIZONTAL_GAP, -HORIZONTAL_GAP),
   );
   const W = Math.max(...rowWidths) + 2;
   for (let rank = 0; rank <= maxRank; rank++) {
-    const offset = (W - rowWidths[rank]) / 2;
-    for (const layerName of rows[rank]) centerX[layerName] += offset;
+    const offset = (W - (rowWidths[rank] ?? 0)) / 2;
+    for (const layerName of rows[rank] ?? []) centerX[layerName] = (centerX[layerName] ?? 0) + offset;
   }
 
   const H = 30 + (maxRank + 1) * ROW + 14;
   const position = (layerName: string): GraphNodePosition => ({
-    x: centerX[layerName] - widthOf(layerName) / 2,
+    x: (centerX[layerName] ?? 0) - widthOf(layerName) / 2,
     y: 30 + dag.rank(layerName) * ROW,
     w: widthOf(layerName),
   });

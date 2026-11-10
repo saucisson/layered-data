@@ -27,7 +27,7 @@ export function scheduleValidation({
   onChunk,
 }: {
   stream: Generator<ValidationChunk, ValidationOutcome, void>;
-  onChunk?: (chunk: ValidationChunk) => void;
+  onChunk?: ((chunk: ValidationChunk) => void) | undefined;
 }): ScheduledValidation {
   let cancelled = false;
   let settle!: (outcome: ValidationOutcome) => void;

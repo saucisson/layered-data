@@ -4,7 +4,7 @@
 // the verdict count cites the assembly validation. The counter
 // reads folded, the detail opens on click.
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { LayerName } from "../domain/identifiers.ts";
 import type { Address } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
@@ -180,6 +180,7 @@ export function DiagnosticsPanel({
           .map((kind) => {
             const kindEvents = byKind.get(kind)!;
             const meta = DIAGNOSTIC_LABELS[kind];
+            if (meta === undefined) return null;
             return (
               <div key={kind} className="rounded-md border border-slate-200 p-2">
                 <div className="flex flex-wrap items-baseline gap-2">

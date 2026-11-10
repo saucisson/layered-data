@@ -4,7 +4,6 @@
 // kernel codes (statuses, vias) render through the vocabulary, the
 // composed ones through say().
 
-import React from "react";
 import { AddressView, LayerReference, PathReference, isDictionary } from "../domain/addresses.ts";
 import { say } from "./i18n.ts";
 import { labelOf } from "./i18n.ts";

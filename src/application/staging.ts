@@ -55,8 +55,7 @@ export interface StagingOutcome {
 export function extractLayerBlock({ name, source }: { name: string; source: string }): string | null {
   const lines = source.split("\n");
   let start = -1;
-  for (let index = 0; index < lines.length; index++) {
-    const line = lines[index];
+  for (const [index, line] of lines.entries()) {
     if (line.startsWith("layer ") && line.slice(6).trim().split(/\s+/)[0] === name) {
       start = index;
       break;
@@ -64,8 +63,8 @@ export function extractLayerBlock({ name, source }: { name: string; source: stri
   }
   if (start < 0) return null;
   let end = start;
-  for (let index = start + 1; index < lines.length; index++) {
-    const line = lines[index];
+  for (const [index, line] of lines.entries()) {
+    if (index <= start) continue;
     // the block ends at the first margin line (an indented block can
     // contain comments at column 0 only between layers — they stay
     // out, indented comment lines stay in)
@@ -381,7 +380,7 @@ export function stageLayerAddition(input: StageLayerAdditionInput): StagingOutco
  * synchronous staging's, by construction (same stream, drained). */
 export function streamStageLayerAddition(
   input: StageLayerAdditionInput,
-  { onChunk }: { onChunk?: (chunk: ValidationChunk) => void },
+  { onChunk }: { onChunk?: ((chunk: ValidationChunk) => void) | undefined },
 ): Promise<StagingOutcome> {
   const preparation = prepareStaging(input);
   if ("early" in preparation) return Promise.resolve(preparation.early);
@@ -440,7 +439,9 @@ export function applyStagedAddition({
     if (readonlyLayerNames.includes(layerName)) continue;
     processedLayerNames.push(layerName);
     newLayerNames.push(layerName);
-    space.layers[layerName] = staging.compiledLanguage!.layers[layerName];
+    const compiledTree = staging.compiledLanguage!.layers[layerName];
+    if (compiledTree === undefined) continue;
+    space.layers[layerName] = compiledTree;
     const layerTree = space.layers[layerName];
     refinementTargetsOf[layerName] = ((layerTree?.["refines"] ?? []) as RawValue[])
       .filter((entry): entry is LayerReference => entry instanceof LayerReference)

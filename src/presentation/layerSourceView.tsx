@@ -7,7 +7,7 @@
 // cascade opens there. Silent lines (comments, empty lines) stay
 // silent.
 
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { extractLayerBlock } from "../application/staging.ts";
 import type { LanguageAct, LanguageLayer, ParsedLanguage } from "../domain/language/parser.ts";
 import { say } from "./i18n.ts";
@@ -80,6 +80,7 @@ export function highlightSourceLine(line: string): { text: string; kind: string 
   let index = 0;
   while (index < line.length) {
     const character = line[index];
+    if (character === undefined) break;
     const next = line[index + 1];
     if (character === "/" && next === "/") {
       spans.push({ text: line.slice(index), kind: "cm" });
@@ -94,13 +95,13 @@ export function highlightSourceLine(line: string): { text: string; kind: string 
     }
     if (character === "@") {
       let end = index + 1;
-      while (end < line.length && /[A-Za-z0-9_-]/.test(line[end])) end++;
+      while (end < line.length && /[A-Za-z0-9_-]/.test(line[end] ?? "")) end++;
       while (
         line[end] === "/" && line[end + 1] !== undefined &&
-        /[A-Za-z0-9_-]/.test(line[end + 1])
+        /[A-Za-z0-9_-]/.test(line[end + 1] ?? "")
       ) {
         end++;
-        while (end < line.length && /[A-Za-z0-9_-]/.test(line[end])) end++;
+        while (end < line.length && /[A-Za-z0-9_-]/.test(line[end] ?? "")) end++;
       }
       spans.push({ text: line.slice(index, end), kind: "rf" });
       index = end;
@@ -108,7 +109,7 @@ export function highlightSourceLine(line: string): { text: string; kind: string 
     }
     if (/[A-Za-z_]/.test(character)) {
       let end = index;
-      while (end < line.length && /[A-Za-z0-9_-]/.test(line[end])) end++;
+      while (end < line.length && /[A-Za-z0-9_-]/.test(line[end] ?? "")) end++;
       const word = line.slice(index, end);
       spans.push({
         text: word,
@@ -123,7 +124,7 @@ export function highlightSourceLine(line: string): { text: string; kind: string 
     }
     if (/[0-9]/.test(character)) {
       let end = index;
-      while (end < line.length && /[0-9.]/.test(line[end])) end++;
+      while (end < line.length && /[0-9.]/.test(line[end] ?? "")) end++;
       spans.push({ text: line.slice(index, end), kind: "nu" });
       index = end;
       continue;

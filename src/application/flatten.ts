@@ -79,7 +79,7 @@ export function flattenLayer({ space, layer }: { space: Space; layer: LayerName 
     const scan: ReadObservation[] = [];
     const value = space.read({ layer: address[0], path: address[1], key, scan });
 
-    const last = scan.length ? scan[scan.length - 1] : null;
+    const last = scan.length ? (scan[scan.length - 1] ?? null) : null;
     if (last !== null && last.status === "fournit") {
       const winner = asLayerName(last.source[0]);
       winners.add(winner);

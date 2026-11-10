@@ -183,7 +183,7 @@ export function createQuarryServer() {
           return sendText({
             response,
             statusCode: 422,
-            body: "le géologue n'a pas produit de couche acceptable en " + loopOutcome.attempts + " propositions — dernier refus :\n" + lastRefusal.feedback,
+            body: "le géologue n'a pas produit de couche acceptable en " + loopOutcome.attempts + " propositions — dernier refus :\n" + (lastRefusal?.feedback ?? ""),
           });
         } catch (error) {
           if (error instanceof PenInfraFailure) {

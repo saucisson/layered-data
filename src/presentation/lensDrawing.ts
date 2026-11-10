@@ -155,8 +155,8 @@ export function buildWorkshopLook({
             name,
             drawn,
             weight,
-            from: source instanceof AddressView ? source.path[source.path.length - 1] : null,
-            to: target instanceof AddressView ? target.path[target.path.length - 1] : null,
+            from: source instanceof AddressView ? (source.path[source.path.length - 1] ?? null) : null,
+            to: target instanceof AddressView ? (target.path[target.path.length - 1] ?? null) : null,
           };
         })
       : [];

@@ -74,6 +74,15 @@ const soundDraft = [
 ].join("\n");
 
 const accepted = stage({ draftSource: soundDraft });
+
+/** Indexed access in assertions: a missing element is a test failure,
+ * not a silent undefined. */
+function at<T>(list: readonly T[], index: number): T {
+  const value = list[index];
+  if (value === undefined) throw new Error("missing element at index " + index);
+  return value;
+}
+
 check(
   "(a) the sound draft is accepted: ok, no verdict, at the validation step",
   accepted.ok === true && accepted.verdicts.length === 0 && accepted.step === "validation",
@@ -94,7 +103,7 @@ check(
 );
 check(
   "(a) the applied addition reports the refinement target of the new layer",
-  applied.refinementTargetsOf["draft-demo"].join(",") === "wb1",
+  (applied.refinementTargetsOf["draft-demo"] ?? []).join(",") === "wb1",
 );
 check(
   "(a) the new layer is readable in the living space — the inherited weight crosses the diamond",
@@ -135,7 +144,7 @@ check(
 );
 check(
   '(c) the orphan target carries exactly the "cible-inconnue" verdict',
-  refusedOrphan.verdicts.length === 1 && refusedOrphan.verdicts[0].kind === "cible-inconnue",
+  refusedOrphan.verdicts.length === 1 && at(refusedOrphan.verdicts, 0).kind === "cible-inconnue",
 );
 
 // =====================================================================
@@ -154,7 +163,7 @@ check(
 );
 check(
   '(d) the betrayed expectation carries exactly the "attendu-trahi" verdict',
-  refusedBetrayed.verdicts.length === 1 && refusedBetrayed.verdicts[0].kind === "attendu-trahi",
+  refusedBetrayed.verdicts.length === 1 && at(refusedBetrayed.verdicts, 0).kind === "attendu-trahi",
 );
 
 // =====================================================================
@@ -217,14 +226,14 @@ check(
 );
 check(
   '(e) the conflict carries exactly the "conflit-d\'ordre" verdict',
-  strictConflict.verdicts.length === 1 && strictConflict.verdicts[0].kind === "conflit-d'ordre",
+  strictConflict.verdicts.length === 1 && at(strictConflict.verdicts, 0).kind === "conflit-d'ordre",
 );
 check(
   "(e) the conflict verdict names the winner, the loser and the key",
   strictConflict.verdicts.length === 1 &&
-    JSON.stringify(strictConflict.verdicts[0].fact.params).includes("charge") &&
-    JSON.stringify(strictConflict.verdicts[0].fact.params).includes("demo-left") &&
-    JSON.stringify(strictConflict.verdicts[0].fact.params).includes("demo-right"),
+    JSON.stringify(at(strictConflict.verdicts, 0).fact.params).includes("charge") &&
+    JSON.stringify(at(strictConflict.verdicts, 0).fact.params).includes("demo-left") &&
+    JSON.stringify(at(strictConflict.verdicts, 0).fact.params).includes("demo-right"),
 );
 
 // =====================================================================
@@ -271,7 +280,7 @@ check(
   conflictLints.some(
     (diagnostic) =>
       diagnostic.kind === "conflit-d'ordre" &&
-      diagnostic.address[0] === "demo-conflict" &&
+      at(diagnostic.address, 0) === "demo-conflict" &&
       JSON.stringify(diagnostic.fact.params).includes("charge"),
   ),
 );
@@ -392,7 +401,7 @@ check(
 );
 check(
   '(j) the refusal carries exactly the "socle-occupé" verdict — the theft named, never the forgery judged (measured before ADR-0103: 13 ghost declarations accusing innocent layers)',
-  refusedBedrock.verdicts.length === 1 && refusedBedrock.verdicts[0].kind === "socle-occupé",
+  refusedBedrock.verdicts.length === 1 && at(refusedBedrock.verdicts, 0).kind === "socle-occupé",
 );
 check(
   '(j) the refused staging compiles nothing — the token space of a forgery never leaves the staging',

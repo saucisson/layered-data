@@ -1,7 +1,7 @@
 // The visible lock: one field, one verification, one state that
 // speaks — never a silent failure, even without a proxy.
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { apiFetch, readAccessCode, writeAccessCode } from "../infrastructure/wardrobeClient.ts";
 import { say } from "./i18n.ts";
 import type { Language } from "../domain/messages.ts";

@@ -132,6 +132,12 @@ export class Space {
   // the string-keyed public view over this same table.
   memoMap = new Map<number, ClosureMemoEntry>();
   closureMemo = new ClosureMemoView(this);
+
+  /** The frame on top of the stack, if any. */
+  private currentFrame(): ClosureFrame | undefined {
+    const topId = this.frameStack[this.frameStack.length - 1];
+    return topId === undefined ? undefined : this.frames.get(topId);
+  }
   touched: number[] = []; // the touch journal (interned event id per event)
   journalBase = 0; // events purged from the journal
   // ---- address interning. Every (layer, path) becomes one number:
@@ -183,6 +189,7 @@ export class Space {
     const eventCount = this.touched.length + this.journalBase;
     for (let eventIndex = Math.max(gen, this.journalBase); eventIndex < eventCount; eventIndex += 1) {
       const eventId = this.touched[eventIndex - this.journalBase];
+      if (eventId === undefined) continue;
       for (const dependency of deps) {
         if (this.eventCovers(eventId, dependency)) {
           return true;
@@ -225,6 +232,7 @@ export class Space {
     if (node === undefined) {
       const sym = this.internSeg(layer);
       const rootChildren = this.nodeChild[0];
+      if (rootChildren === undefined) throw new Error("trie root missing: nodeChild[0] is always initialized");
       let layerNode: number | undefined = rootChildren.get(sym);
       if (layerNode === undefined) {
         layerNode = this.newTrieNode(0, sym);
@@ -234,9 +242,10 @@ export class Space {
       node = layerNode;
     }
     let current: number = node;
-    for (let i = 0; i < path.length; i++) {
-      const children: Map<number, number> = this.nodeChild[current];
-      const sym = this.internSeg(path[i]);
+    for (const segment of path) {
+      const children = this.nodeChild[current];
+      if (children === undefined) throw new Error("trie node missing: nodeChild[" + current + "] is always initialized");
+      const sym = this.internSeg(segment);
       let child: number | undefined = children.get(sym);
       if (child === undefined) {
         child = this.newTrieNode(current, sym);
@@ -267,11 +276,12 @@ export class Space {
   /** The "layer|a/b" string of one interned id (addressKey format). */
   pathKeyOf(id: number): string {
     const syms: number[] = [];
-    for (let node = id; node !== 0; node = this.nodeParent[node]) syms.push(this.nodeSeg[node]);
+    for (let node = id; node !== 0; node = this.nodeParent[node] ?? 0) syms.push(this.nodeSeg[node] ?? -1);
     syms.reverse();
-    if (syms.length === 1) return this.segNames[syms[0]] + "|";
-    let key = this.segNames[syms[0]] + "|";
-    for (let i = 1; i < syms.length; i++) key += (i > 1 ? "/" : "") + this.segNames[syms[i]];
+    const [firstSym, ...restSyms] = syms;
+    if (firstSym === undefined) return "|";
+    let key = (this.segNames[firstSym] ?? "") + "|";
+    for (let i = 0; i < restSyms.length; i++) key += (i > 0 ? "/" : "") + (this.segNames[restSyms[i] ?? -1] ?? "");
     return key;
   }
 
@@ -281,7 +291,7 @@ export class Space {
    * address of the layer; a path event covers its descendants only
    * at segment boundaries — never "places" over "places2". */
   private eventCovers(eventId: number, dependencyId: number): boolean {
-    for (let node = dependencyId; node !== 0; node = this.nodeParent[node]) {
+    for (let node = dependencyId; node !== 0; node = this.nodeParent[node] ?? 0) {
       if (node === eventId) return true;
     }
     return false;
@@ -346,6 +356,7 @@ export class Space {
       eventIndex++
     ) {
       const eventId = this.touched[eventIndex - this.journalBase];
+      if (eventId === undefined) continue;
       for (const dependency of entry.deps) {
         if (this.eventCovers(eventId, dependency)) {
           return false;
@@ -370,11 +381,7 @@ export class Space {
     // Every raw read during a closure is a dependency (layer, path)
     // of the entry being computed — and of any open observation.
     this.observationDeps?.add(this.internPathId(layer, path));
-    if (this.frameStack.length) {
-      this.frames
-        .get(this.frameStack[this.frameStack.length - 1])!
-        .collectedDependencies.add(this.internPathId(layer, path));
-    }
+    this.currentFrame()?.collectedDependencies.add(this.internPathId(layer, path));
     let node: any = this.layers[layer];
     if (node === undefined) return null;
     for (const segment of path) {
@@ -391,8 +398,9 @@ export class Space {
   rawValue({ layer, path, key }: { layer: LayerName; path: LayerPath; key: string }): RawValue {
     for (const [sourceLayer, sourcePath] of this.closure({ layer, path })) {
       const node = this.raw({ layer: sourceLayer, path: sourcePath });
-      if (isDictionary(node) && key in node && node[key] !== null) {
-        return node[key];
+      if (isDictionary(node) && key in node) {
+        const value = node[key];
+        if (value !== null && value !== undefined) return value;
       }
     }
     return null;
@@ -404,7 +412,7 @@ export class Space {
     if (this.frames.has(key)) return []; // in flight: unknown, skip
     const anchors: string[] = [];
     for (const [sourceLayer, sourcePath] of this.closure({ layer, path, tracer })) {
-      const anchor = sourcePath.length ? sourcePath[sourcePath.length - 1] : sourceLayer;
+      const anchor = sourcePath.length ? (sourcePath[sourcePath.length - 1] ?? sourceLayer) : sourceLayer;
       if (!anchors.includes(anchor)) anchors.push(anchor);
     }
     return anchors;
@@ -432,8 +440,8 @@ export class Space {
       if (entry !== undefined && this.isMemoEntryValid(entry)) {
         // Composition: the parent inherits the dependencies of the
         // entry it reads — otherwise its own memo would be blind.
-        if (this.frameStack.length) {
-          const parentFrame = this.frames.get(this.frameStack[this.frameStack.length - 1])!;
+        const parentFrame = this.currentFrame();
+        if (parentFrame !== undefined) {
           for (const dependency of entry.deps) parentFrame.collectedDependencies.add(dependency);
         }
         return entry.list;
@@ -443,7 +451,9 @@ export class Space {
       // Cycle guard: taint the re-entered frame and those above it.
       const reentryIndex = this.frameStack.indexOf(key);
       for (let i = reentryIndex; i < this.frameStack.length; i++) {
-        this.frames.get(this.frameStack[i])!.tainted = true;
+        const frameId = this.frameStack[i];
+        if (frameId === undefined) continue;
+        this.frames.get(frameId)!.tainted = true;
       }
       // A truncated closure is not mute. The guard records [layer,
       // path] — the pair being closed; reading special keys of the
@@ -467,8 +477,8 @@ export class Space {
       // The parent inherits the collected dependencies — even from a
       // tainted frame: one must know what it read, to avoid memoizing
       // a result born from a truncated computation.
-      if (this.frameStack.length) {
-        const parentFrame = this.frames.get(this.frameStack[this.frameStack.length - 1])!;
+      const parentFrame = this.currentFrame();
+      if (parentFrame !== undefined) {
         for (const dependency of frame.collectedDependencies) {
           parentFrame.collectedDependencies.add(dependency);
         }
@@ -502,13 +512,14 @@ export class Space {
     // ---- base: own node + the father's members, in the father's order
     const base: Address[] = [];
     if (this.raw({ layer, path }) !== null) base.push([layer, path]);
-    if (path.length) {
+    const lastSegment = path[path.length - 1];
+    if (path.length && lastSegment !== undefined) {
       for (const [parentLayer, parentPath] of this.closure({
         layer,
         path: path.slice(0, -1),
         tracer,
       })) {
-        const candidate: Address = [parentLayer, [...parentPath, path[path.length - 1]]];
+        const candidate: Address = [parentLayer, [...parentPath, lastSegment]];
         if (
           (parentLayer !== layer || this.internPathId(parentLayer, parentPath) !== id) &&
           this.raw({ layer: candidate[0], path: candidate[1] }) !== null
@@ -558,7 +569,7 @@ export class Space {
     const normalize = (targetAddress: Address): Address | null => {
       if (this.raw({ layer: targetAddress[0], path: targetAddress[1] }) === null) {
         const closure = this.closure({ layer: targetAddress[0], path: targetAddress[1], tracer });
-        return closure.length ? closure[0] : null;
+        return closure.length ? (closure[0] ?? null) : null;
       }
       return targetAddress;
     };
@@ -592,10 +603,11 @@ export class Space {
     };
 
     // ---- 1) own node
-    if (base.length) {
-      seen.add(this.internPathId(base[0][0], base[0][1]));
-      output.push(base[0]);
-      tracer?.record({ kind: "push", addr: base[0], via: "propre" });
+    const ownAddress = base[0];
+    if (ownAddress !== undefined) {
+      seen.add(this.internPathId(ownAddress[0], ownAddress[1]));
+      output.push(ownAddress);
+      tracer?.record({ kind: "push", addr: ownAddress, via: "propre" });
     }
     // ---- 2) the refinement chain of the address
     for (const entry of entries) {
@@ -786,10 +798,12 @@ export class Space {
   }): RawValue {
     for (const [sourceLayer, sourcePath] of this.closure({ layer, path, tracer })) {
       const node = this.raw({ layer: sourceLayer, path: sourcePath });
-      if (node !== null && key in node && node[key] !== null) {
+      if (node !== null && key in node) {
         const raw = node[key];
-        scan?.push({ source: [sourceLayer, sourcePath], status: "fournit", raw });
-        return this.valueOf({ layer, path, key, raw, tracer });
+        if (raw !== null && raw !== undefined) {
+          scan?.push({ source: [sourceLayer, sourcePath], status: "fournit", raw });
+          return this.valueOf({ layer, path, key, raw, tracer });
+        }
       }
       const status = node !== null && key in node ? "transparent" : "absent";
       scan?.push({ source: [sourceLayer, sourcePath], status });

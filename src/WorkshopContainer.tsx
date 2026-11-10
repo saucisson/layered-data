@@ -4,12 +4,12 @@
 // resolution, ④ the point of view. The first render is a pure
 // pass: every derivation is a memo, nothing is written back.
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { asLayerName, asLayerPath } from "./domain/identifiers.ts";
 import { AddressView, PathReference, addressesEqual } from "./domain/addresses.ts";
 import { Tracer } from "./domain/space.ts";
 import { type Language } from "./domain/messages.ts";
-import { coversAddresses, drawnShape, dressingEntries } from "./domain/views.ts";
+import { coversAddresses, dressingEntries } from "./domain/views.ts";
 import { assembleLayeredDataKernel } from "./application/corpus.ts";
 import { loadKernelLayerSources } from "./infrastructure/corpusLoader.ts";
 
@@ -87,9 +87,9 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
   // no active scenario at rest; the guided tour S1–S14 stays one
   // click away, folded in the header.
   const [scenarioIndex, setScenarioIndex] = useState(-1);
-  const [layer, setLayer] = useState(WORKSHOP_SCENARIOS[0].layer);
-  const [path, setPath] = useState<string[]>(WORKSHOP_SCENARIOS[0].path);
-  const [selectedKey, setSelectedKey] = useState<string | null>(WORKSHOP_SCENARIOS[0].key);
+  const [layer, setLayer] = useState(WORKSHOP_SCENARIOS[0]?.layer ?? "");
+  const [path, setPath] = useState<string[]>(WORKSHOP_SCENARIOS[0]?.path ?? []);
+  const [selectedKey, setSelectedKey] = useState<string | null>(WORKSHOP_SCENARIOS[0]?.key ?? null);
   // The closure calculation folds — opened automatically by the
   // click on a key, closed with one gesture.
   const [showClosureCalculation, setShowClosureCalculation] = useState(false);
@@ -141,8 +141,8 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
   }
 
   function goBack() {
-    if (!history.length) return;
     const last = history[history.length - 1];
+    if (last === undefined) return;
     setHistory(history.slice(0, -1));
     setLayer(last.layer);
     setPath(last.path);
@@ -154,6 +154,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
     setScenarioIndex(index);
     if (index < 0) return;
     const scenario = WORKSHOP_SCENARIOS[index];
+    if (scenario === undefined) return;
     if (!(scenario.layer === layer && scenario.path.join("/") === path.join("/"))) {
       setHistory([...history, { layer, path, key: selectedKey }]);
     }
@@ -225,11 +226,13 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
   function handleComposerAdded(addition: AcceptedAddition) {
     registerAddition(addition);
     setComposerOpen(false);
-    goto(addition.newLayerNames[0], []);
+    const firstNewLayer = addition.newLayerNames[0];
+    if (firstNewLayer !== undefined) goto(firstNewLayer, []);
   }
   function handleWardrobeAdded(addition: AcceptedAddition) {
     registerAddition(addition);
-    goto(addition.newLayerNames[0], []);
+    const firstNewLayer = addition.newLayerNames[0];
+    if (firstNewLayer !== undefined) goto(firstNewLayer, []);
   }
 
   // The ＋ flow's sibling: the editor's staging accepted the
@@ -626,7 +629,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                   // PRINCIPAL_PARENT gives a wrong indentation, not
                   // an infinite loop.
                   while (current != null) {
-                    current = PRINCIPAL_PARENT[current];
+                    current = PRINCIPAL_PARENT[current] ?? null;
                     steps += 1;
                   }
                   return steps - 1;
@@ -637,7 +640,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                     <div className="flex items-center gap-1">
                     <button
                       onClick={() => goto(layerName, [])}
-                      title={localized({ language, text: LAYER_ROLE[layerName] })}
+                      title={localized({ language, text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName } })}
                       className={
                         "flex flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-xs transition-colors " +
                         (layerName === layer
@@ -690,7 +693,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                   </div>
                   {layerName === layer && (
                     <div className="ml-4 text-[10px] leading-4 text-slate-400">
-                      {localized({ language, text: LAYER_ROLE[layerName] })}
+                      {localized({ language, text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName } })}
                     </div>
                   )}
                 </div>
@@ -1324,7 +1327,7 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
                       : "")}
               </div>
               <p className="mt-1 text-[10px] leading-4 text-slate-400">
-                {localized({ language, text: VIEW_NOTES[selectedView] })}
+                {localized({ language, text: VIEW_NOTES[selectedView] ?? { en: "", fr: "" } })}
               </p>
             </div>
         </div>

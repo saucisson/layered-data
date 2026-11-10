@@ -7,7 +7,7 @@
 // demands 0 verdict; the accepted layer enters the living session
 // and stays visible from the hierarchy and formalism pages.
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "../components/Router";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import {

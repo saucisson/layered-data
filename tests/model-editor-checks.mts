@@ -162,6 +162,15 @@ const containerOf = (name: string): MemberContainer => {
   return container;
 };
 
+
+/** Indexed access in assertions: a missing element is a test failure,
+ * not a silent undefined. */
+function at<T>(list: readonly T[], index: number): T {
+  const value = list[index];
+  if (value === undefined) throw new Error("missing element at index " + index);
+  return value;
+}
+
 check(
   "(a) the palette reads the Petri containers through the chain",
   ["places", "transitions", "pre_arcs", "post_arcs", "positions"].every((name) => names.includes(name)),
@@ -376,9 +385,9 @@ const citations = readMemberCitations({
 check(
   "(f) the citations reading finds the arc that cites the place",
   citations.length === 1 &&
-    citations[0]!.container === arcContainer.name &&
-    citations[0]!.name === arcName &&
-    citations[0]!.via === "source",
+    at(citations, 0)!.container === arcContainer.name &&
+    at(citations, 0)!.name === arcName &&
+    at(citations, 0)!.via === "source",
 );
 
 // the arc leaves first, then the place — the order the guard teaches
@@ -693,7 +702,7 @@ check(
 );
 check(
   "(o) the suggested base declares member containers",
-  readMemberContainers({ space: kernel.space, model: suggestion.split(" ")[0].slice(1) }).length > 0,
+  readMemberContainers({ space: kernel.space, model: (suggestion.split(" ")[0] ?? "").slice(1) }).length > 0,
 );
 
 // =====================================================================

@@ -43,9 +43,26 @@ export interface Verdict {
   fact: MessageFact;
 }
 
+export type ValidationStats = {
+  couches: number;
+  erreursSyntaxe: number;
+  decl: number;
+  nouveau: number;
+  extension: number;
+  surcharge: number;
+  declOK: number;
+  etiquettes: number;
+  ombresDeclarées: number;
+  ombresÉmergentes: number;
+  ombresBrutes: number;
+  tests: number;
+  trahis: number;
+  couples: number;
+};
+
 export interface ValidationOutcome {
   verdicts: Verdict[];
-  stats: Record<string, number>;
+  stats: ValidationStats;
 }
 
 // The slot contracts of the check tags: for each tag, its slots and
@@ -116,14 +133,14 @@ export interface ExpectedRead {
 export function expectationsOf(layerNode: any): ExpectedRead[] {
   if (!isDictionary(layerNode) || !isDictionary(layerNode["tests"])) return [];
   const expectations: ExpectedRead[] = [];
-  for (const address of Object.keys(layerNode["tests"])) {
+  for (const [address, expectation] of Object.entries(layerNode["tests"])) {
     if (address.startsWith("__note:")) continue;
     const segments = address.split("/");
     expectations.push({
       address,
       path: segments.slice(0, -1),
-      key: segments[segments.length - 1],
-      expectation: layerNode["tests"][address],
+      key: segments[segments.length - 1] ?? "",
+      expectation,
     });
   }
   return expectations;
@@ -214,7 +231,7 @@ export function* streamValidation({
     emittedVerdicts = verdicts.length;
     return chunk;
   };
-  const stats: Record<string, number> = {
+  const stats: ValidationStats = {
     couches: parse.layers.length,
     erreursSyntaxe: parse.errors.length,
     decl: compilation.declarations.length,
@@ -268,8 +285,7 @@ export function* streamValidation({
   // the shared walk): the first closure computation of a layer is
   // observable — it records the resolution diagnostics — and the
   // recorded order is part of the audit's byte-identical dump.
-  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
-    const layer = layerNames[layerIndex];
+  for (const [layerIndex, layer] of layerNames.entries()) {
     for (const [sourceLayer, sourcePath] of space.closure({ layer, path: [] })) {
       if (sourcePath.length === 0) ancestorsOf.get(layer)!.add(sourceLayer);
       const node = space.raw({ layer: sourceLayer, path: sourcePath });
@@ -284,8 +300,7 @@ export function* streamValidation({
   }
 
   // ---- (a) declarations against the closures
-  for (let declarationIndex = 0; declarationIndex < compilation.declarations.length; declarationIndex += 1) {
-    const declaration = compilation.declarations[declarationIndex];
+  for (const [declarationIndex, declaration] of compilation.declarations.entries()) {
     let existsUpstream = false;
     for (const [sourceLayer, sourcePath] of space.closure({ layer: declaration.layer, path: declaration.path as LayerPath })) {
       if (
@@ -323,8 +338,7 @@ export function* streamValidation({
   const slotContracts = checkSlotContractsOf(contracts);
 
   // ---- (b) check tags against the registry
-  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
-    const layer = layerNames[layerIndex];
+  for (const [layerIndex, layer] of layerNames.entries()) {
     for (const tag of labelsOf.get(layer)!) {
       const hasCouple = layerHasCoupleDefinition({ space, layer, tag });
       if (!contracts[tag] && !hasCouple) {
@@ -344,8 +358,7 @@ export function* streamValidation({
   // slots of an inherited check are the lint's inventory: the type
   // binds them, the root never sees it.
   const vacancies = vacantChecksOf({ space, layerNames, contracts, walkedOf: walkedLayerOf });
-  for (let vacancyIndex = 0; vacancyIndex < vacancies.length; vacancyIndex += 1) {
-    const vacancy = vacancies[vacancyIndex];
+  for (const [vacancyIndex, vacancy] of vacancies.entries()) {
     if (vacancy.posed || (vacancy.level === "root" && vacancy.address[1].length === 0)) {
       const where = vacancy.address[0] + "::" + (vacancy.address[1].join("/") || ".");
       verdicts.push({
@@ -359,8 +372,7 @@ export function* streamValidation({
   // ---- (c) dead bindings: an instance-level slot bound at the root
   // of a layer L is unreadable for every tag of a reading layer that
   // descends from L (the type is in the arc's closure, the root never)
-  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
-    const layer = layerNames[layerIndex];
+  for (const [layerIndex, layer] of layerNames.entries()) {
     const root = space.raw({ layer, path: [] });
     if (isDictionary(root) && isDictionary(root["bindings"])) {
       for (const slot of Object.keys(root["bindings"])) {
@@ -383,15 +395,12 @@ export function* streamValidation({
 
   // ---- (d) shadows against declarations — the same walk as the
   // diagnostics fallback, but judging
-  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
-    const layer = layerNames[layerIndex];
+  for (const [layerIndex, layer] of layerNames.entries()) {
     for (const entry of walkedLayerOf(layer)) {
-      const [addressLayer, addressPath] = entry.address;
       for (const key of entry.keys) {
         let winner: [string, string[]] | null = null;
         let providers = 0;
-        for (let index = 0; index < entry.closure.length; index += 1) {
-          const [sourceLayer, sourcePath] = entry.closure[index];
+        for (const [index, [sourceLayer, sourcePath]] of entry.closure.entries()) {
           const node = entry.nodes[index];
           if (isDictionary(node) && key in node && node[key] !== null) {
             providers += 1;
@@ -435,8 +444,7 @@ export function* streamValidation({
   // a candidate that breaks a scene (its own, or a redefined
   // layer's) is refused; the absent expectation compares to null, the
   // reference to the exact resolved address
-  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
-    const layer = layerNames[layerIndex];
+  for (const [layerIndex, layer] of layerNames.entries()) {
     for (const expectation of expectationsOf(compilation.layers[layer])) {
       stats.tests++;
       let read: any;
@@ -474,22 +482,19 @@ export function* streamValidation({
   // judgment's quantified scope — a couple the reading cannot read
   // is refused HERE, the execution never meets it.
   const redefinitions = new Set<string>(); // name|first|second — one verdict per confrontation, not per address
-  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
-    const layer = layerNames[layerIndex];
+  for (const [layerIndex, layer] of layerNames.entries()) {
     for (const entry of walkedLayerOf(layer)) {
-      const [addressLayer, addressPath] = entry.address;
       // per-address: only poses CO-VISIBLE at this address confront
       // each other — two sibling branches never meet (the geometry
       // of the refinement, the same the first-winner reads with)
       const firstPoseOf = new Map<string, { pose: string; canonical: string }>();
-      for (let index = 0; index < entry.closure.length; index += 1) {
-        const [sourceLayer, sourcePath] = entry.closure[index];
+      for (const [index, [sourceLayer, sourcePath]] of entry.closure.entries()) {
         const node = entry.nodes[index];
         if (!isDictionary(node) || !isDictionary(node["check-definitions"])) continue;
-        for (const name of Object.keys(node["check-definitions"])) {
+        for (const [name, rawCouple] of Object.entries(node["check-definitions"])) {
           if (name.startsWith("__note:")) continue;
           const pose = sourceLayer + "::" + (sourcePath.join("/") || ".");
-          const read = checkCoupleOfRecord(node["check-definitions"][name]);
+          const read = checkCoupleOfRecord(rawCouple);
           if (read === null) continue;
           const canonical = canonicalCoupleOf({
             level: read.level === "root" || read.level === "instance" ? read.level : "root",
@@ -522,19 +527,16 @@ export function* streamValidation({
   // the readability of each POSE (deduplicated by (source, path,
   // name)) — the winner anywhere is judged exactly once
   const judgedPoses = new Set<string>();
-  for (let layerIndex = 0; layerIndex < layerNames.length; layerIndex += 1) {
-    const layer = layerNames[layerIndex];
+  for (const [layerIndex, layer] of layerNames.entries()) {
     for (const entry of walkedLayerOf(layer)) {
-      const [addressLayer, addressPath] = entry.address;
-      for (let index = 0; index < entry.closure.length; index += 1) {
-        const [sourceLayer, sourcePath] = entry.closure[index];
+      for (const [index, [sourceLayer, sourcePath]] of entry.closure.entries()) {
         const node = entry.nodes[index];
         if (!isDictionary(node) || !isDictionary(node["check-definitions"])) continue;
-        for (const name of Object.keys(node["check-definitions"])) {
+        for (const [name, rawCouple] of Object.entries(node["check-definitions"])) {
           if (name.startsWith("__note:")) continue;
           const poseKey = sourceLayer + "|" + sourcePath.join("/") + "|" + name;
           if (judgedPoses.has(poseKey)) continue;
-          const read = checkCoupleOfRecord(node["check-definitions"][name]);
+          const read = checkCoupleOfRecord(rawCouple);
           if (read === null) continue;
           judgedPoses.add(poseKey);
           stats.couples++;

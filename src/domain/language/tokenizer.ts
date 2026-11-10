@@ -50,8 +50,8 @@ export function tokenizeLanguage(source: string, language: Language = DEFAULT_LA
   // announce.
   const heldNotes: LanguageToken[] = [];
   const lines = source.split("\n");
-  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
-    let rawLine = lines[lineIndex];
+  for (const [lineIndex, line] of lines.entries()) {
+    let rawLine = line;
     if (rawLine.endsWith("\r")) rawLine = rawLine.slice(0, -1);
     const lineNumber = lineIndex + 1;
     let margin = 0;
@@ -65,7 +65,7 @@ export function tokenizeLanguage(source: string, language: Language = DEFAULT_LA
           }),
         );
     }
-    const topMargin = () => margins[margins.length - 1];
+    const topMargin = () => margins[margins.length - 1] ?? 0;
     const body = rawLine.slice(margin);
     // A comment is data — a whole // line travels as a "note" token
     // (the raw line, margin included; the compilation restores the
@@ -119,6 +119,7 @@ export function tokenizeLanguage(source: string, language: Language = DEFAULT_LA
     let cursor = 0;
     while (cursor < body.length) {
       const character = body[cursor];
+      if (character === undefined) break;
       if (character === " " || character === "\t") {
         cursor++;
         continue;
@@ -162,7 +163,7 @@ export function tokenizeLanguage(source: string, language: Language = DEFAULT_LA
         // The dot joins the identifier — the qualified key of a
         // citation (philo1.think1) is one identifier.
         let end = cursor;
-        while (end < body.length && /[A-Za-z0-9_.-]/.test(body[end])) end++;
+        while (end < body.length && /[A-Za-z0-9_.-]/.test(body[end] ?? "")) end++;
         tokens.push({ kind: "id", text: body.slice(cursor, end), line: lineNumber });
         cursor = end;
         continue;
@@ -172,7 +173,7 @@ export function tokenizeLanguage(source: string, language: Language = DEFAULT_LA
       // token, never inside an identifier.
       if (/[0-9]/.test(character) || (character === "-" && /[0-9]/.test(body[cursor + 1] ?? ""))) {
         let end = character === "-" ? cursor + 1 : cursor;
-        while (end < body.length && /[0-9.]/.test(body[end])) end++;
+        while (end < body.length && /[0-9.]/.test(body[end] ?? "")) end++;
         tokens.push({ kind: "num", text: body.slice(cursor, end), line: lineNumber });
         cursor = end;
         continue;
