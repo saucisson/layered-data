@@ -1,4 +1,4 @@
-import { defineConfig } from "vite";
+import { defineConfig, searchForWorkspaceRoot } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 
@@ -9,6 +9,11 @@ import tailwindcss from "@tailwindcss/vite";
 export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: {
+    // The .ld corpus lives in ../formalisms (single source of truth,
+    // shared with the Node harnesses) — allow the dev server to read it.
+    fs: {
+      allow: [searchForWorkspaceRoot(process.cwd())],
+    },
     proxy: {
       "/api": "http://127.0.0.1:8791",
     },
