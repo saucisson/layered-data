@@ -38,5 +38,6 @@
   "the member is cited — delete the citing arcs first: {{citations}}": "le membre est cité — supprimez d'abord les arcs qui le citent : {{citations}}",
   "the model enters the space — its palette is read from its formalism": "le modèle entre dans l'espace — sa palette se lit dans son formalisme",
   "the server's staging refused the gesture — the shared state was reloaded": "le staging du serveur a refusé le geste — l’état partagé a été rechargé",
+  "the workshop": "l'atelier",
   "undo (Ctrl+Z)": "annuler (Ctrl+Z)"
 }

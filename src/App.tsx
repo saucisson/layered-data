@@ -1,17 +1,17 @@
 // Layered Data — Main application with routing
-// Routes: #landing, #tutorial, #filiation, #workshop,
-// #hierarchy, #creation, #formalism/<layer>, #editor
+// Routes: #landing, #tutorial, #filiation, #workshop, #editor
+// (the workshop and the editor are ONE page, two tabs — the hash
+// picks the tab), #hierarchy, #creation, #formalism/<layer>
 
 import React, { useState } from "react";
 import { RouterProvider, useRouter } from "./components/Router";
 import { LandingPage } from "./pages/LandingPage";
 import { TutorialPage } from "./pages/TutorialPage";
 import { FiliationPage } from "./pages/FiliationPage";
-import { WorkshopPage } from "./WorkshopContainer";
 import { HierarchyPage } from "./pages/HierarchyPage";
 import { CreationPage } from "./pages/CreationPage";
 import { FormalismPage } from "./pages/FormalismPage";
-import { ModelEditorPage } from "./presentation/modelEditorPage";
+import { WorkshopHomePage } from "./pages/WorkshopHomePage";
 import { readWorkshopLanguage, writeWorkshopLanguage } from "./infrastructure/browserLanguage";
 import { setI18nLanguage } from "./infrastructure/i18n";
 import type { Language } from "./domain/messages";
@@ -32,9 +32,10 @@ function AppContent() {
     case "filiation":
       return <FiliationPage language={language} onChooseLanguage={handleChooseLanguage} />;
     case "workshop":
-      return <WorkshopPage language={language} onChooseLanguage={handleChooseLanguage} />;
     case "editor":
-      return <ModelEditorPage language={language} onChooseLanguage={handleChooseLanguage} />;
+      return (
+        <WorkshopHomePage tab={page} language={language} onChooseLanguage={handleChooseLanguage} />
+      );
     case "hierarchy":
       return <HierarchyPage language={language} onChooseLanguage={handleChooseLanguage} />;
     case "creation":
