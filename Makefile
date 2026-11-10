@@ -1,7 +1,7 @@
 # Makefile for saucisson/layered-data
 # Provides convenience targets for common development operations
 
-.PHONY: help verify check typecheck test build lint format sync-daily vscode-install
+.PHONY: help verify check typecheck test build lint format format:check sync-daily vscode-install
 
 # The VS Code extension version, read from its manifest — the .vsix
 # is named after it.
@@ -59,12 +59,13 @@ build:
 
 # Lint and format
 lint:
-	# ESLint not yet configured, placeholder
-	echo "Linting not yet configured - see docs/architecture.md for style rules"
+	npm run lint
 
 format:
-	# Prettier not yet configured, placeholder
-	echo "Formatting not yet configured"
+	npm run format
+
+format:check:
+	npm run format:check
 
 # VS Code extension (vscode/): package the .vsix with vsce — fetched by
 # npx on the fly, no prior install, as documented in vscode/README.md —
