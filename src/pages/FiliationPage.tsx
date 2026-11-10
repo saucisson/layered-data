@@ -38,7 +38,10 @@ const FILIATION_ERAS: FiliationEra[] = [
   },
   {
     years: "1980–1991",
-    title: { en: "Defaults and non-monotonic reasoning", fr: "Défauts et raisonnement non monotone" },
+    title: {
+      en: "Defaults and non-monotonic reasoning",
+      fr: "Défauts et raisonnement non monotone",
+    },
     text: {
       en: "Reiter's default logic (1980), McCarthy's circumscription (1980), Touretzky's mathematics of inheritance (1986), Brewka's tour (1991): reasoning that revises itself, and the specificity debate — which of two inherited values should win. The workshop answers with data: the order is the layer's refines list, not an engine heuristic.",
       fr: "La logique des défauts de Reiter (1980), la circonscription de McCarthy (1980), les mathématiques de l'héritage de Touretzky (1986), le tour de Brewka (1991) : un raisonnement qui se rétracte, et le débat de la spécificité — laquelle de deux valeurs héritées doit gagner. L'atelier répond par la donnée : l'ordre est la liste refines de la couche, pas une heuristique du moteur.",
@@ -78,7 +81,10 @@ const FILIATION_ERAS: FiliationEra[] = [
   },
   {
     years: "2002–2010",
-    title: { en: "The modeling tower and its dissidents", fr: "La tour de modélisation et ses dissidents" },
+    title: {
+      en: "The modeling tower and its dissidents",
+      fr: "La tour de modélisation et ses dissidents",
+    },
     text: {
       en: "MOF (ISO/IEC 19502, 2002), UML, EMF/Ecore: four ontological floors (M0–M3), instantiation the only crossing, conformance instead of refinement. The field dug under the wall — multilevel modeling: deep instantiation and potency (Atkinson & Kühne), clabjects, MetaDepth (de Lara & Guerra, 2010). The continuum removes the floors instead of relaxing them — and keeps the ordered merge the others lack.",
       fr: "MOF (ISO/IEC 19502, 2002), UML, EMF/Ecore : quatre étages ontologiques (M0–M3), l'instanciation pour seul franchissement, la conformité au lieu du raffinement. Le terrain a creusé sous le mur — la modélisation multi-niveaux : l'instantiation profonde et la potency (Atkinson & Kühne), les clabjects, MetaDepth (de Lara & Guerra, 2010). Le continuum supprime les étages au lieu de les assouplir — et garde la fusion ordonnée qui manque aux autres.",
@@ -143,7 +149,10 @@ const COMPARISON_ROWS: ComparisonRow[] = [
   },
   {
     system: "Kustomize",
-    merge: { en: "ordered — strategic-merge patches", fr: "ordonnée — des patchs à fusion stratégique" },
+    merge: {
+      en: "ordered — strategic-merge patches",
+      fr: "ordonnée — des patchs à fusion stratégique",
+    },
     floors: { en: "none — resources only", fr: "aucun — des ressources seulement" },
     diverges: {
       en: "the same gesture at industrial scale, without a theory",
@@ -152,8 +161,14 @@ const COMPARISON_ROWS: ComparisonRow[] = [
   },
   {
     system: "CUE",
-    merge: { en: "commutative — unification, idempotent", fr: "commutative — unification, idempotente" },
-    floors: { en: "eroded — one lattice for types and values", fr: "érodés — un seul treillis pour types et valeurs" },
+    merge: {
+      en: "commutative — unification, idempotent",
+      fr: "commutative — unification, idempotente",
+    },
+    floors: {
+      en: "eroded — one lattice for types and values",
+      fr: "érodés — un seul treillis pour types et valeurs",
+    },
     diverges: {
       en: "a conflict refuses; here the refines order decides, and strict staging refuses the conflicts",
       fr: "un conflit refuse ; ici l'ordre des refines décide, et le staging strict refuse les conflits",
@@ -161,8 +176,14 @@ const COMPARISON_ROWS: ComparisonRow[] = [
   },
   {
     system: "RDF / OWL 2",
-    merge: { en: "commutative — open world, layered inference", fr: "commutative — monde ouvert, inférence en couches" },
-    floors: { en: "eroded — punning, classes as resources", fr: "érodés — punning, les classes comme ressources" },
+    merge: {
+      en: "commutative — open world, layered inference",
+      fr: "commutative — monde ouvert, inférence en couches",
+    },
+    floors: {
+      en: "eroded — punning, classes as resources",
+      fr: "érodés — punning, les classes comme ressources",
+    },
     diverges: {
       en: "the workshop infers nothing: strict addresses, total deterministic read",
       fr: "l'atelier n'infère rien : adresses strictes, lecture déterministe totale",
@@ -301,8 +322,14 @@ const LINKED_REFERENCES: LinkReference[] = [
     },
     url: "https://github.com/saucisson/layered-data/blob/feat/tutorial-page-defilante/docs/filiation.md",
   },
-  { label: { en: "CUE — the introduction", fr: "CUE — l'introduction" }, url: "https://cuelang.org/docs/introduction/" },
-  { label: { en: "Jsonnet — the language reference", fr: "Jsonnet — la référence du langage" }, url: "https://jsonnet.org/ref/language.html" },
+  {
+    label: { en: "CUE — the introduction", fr: "CUE — l'introduction" },
+    url: "https://cuelang.org/docs/introduction/",
+  },
+  {
+    label: { en: "Jsonnet — the language reference", fr: "Jsonnet — la référence du langage" },
+    url: "https://jsonnet.org/ref/language.html",
+  },
   {
     label: {
       en: "Kustomize — the declarative customization of Kubernetes objects",
@@ -310,9 +337,18 @@ const LINKED_REFERENCES: LinkReference[] = [
     },
     url: "https://kubernetes.io/docs/tasks/manage-kubernetes-objects/kustomization/",
   },
-  { label: { en: "OWL 2 — the W3C primer", fr: "OWL 2 — le primer du W3C" }, url: "https://www.w3.org/TR/owl2-primer/" },
-  { label: { en: "SHACL — the W3C recommendation", fr: "SHACL — la recommandation du W3C" }, url: "https://www.w3.org/TR/shacl/" },
-  { label: { en: "MetaDepth (de Lara & Guerra)", fr: "MetaDepth (de Lara & Guerra)" }, url: "https://metadepth.org/" },
+  {
+    label: { en: "OWL 2 — the W3C primer", fr: "OWL 2 — le primer du W3C" },
+    url: "https://www.w3.org/TR/owl2-primer/",
+  },
+  {
+    label: { en: "SHACL — the W3C recommendation", fr: "SHACL — la recommandation du W3C" },
+    url: "https://www.w3.org/TR/shacl/",
+  },
+  {
+    label: { en: "MetaDepth (de Lara & Guerra)", fr: "MetaDepth (de Lara & Guerra)" },
+    url: "https://metadepth.org/",
+  },
   {
     label: {
       en: "Multilevel modeling — the SoSyM playground survey",
@@ -320,7 +356,13 @@ const LINKED_REFERENCES: LinkReference[] = [
     },
     url: "https://link.springer.com/article/10.1007/s10270-021-00900-2",
   },
-  { label: { en: "PNML — the Petri Net Markup Language", fr: "PNML — le Petri Net Markup Language" }, url: "https://www.pnml.org/" },
+  {
+    label: {
+      en: "PNML — the Petri Net Markup Language",
+      fr: "PNML — le Petri Net Markup Language",
+    },
+    url: "https://www.pnml.org/",
+  },
 ];
 
 const PRINTED_REFERENCES: string[] = [
@@ -433,7 +475,11 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
 
         <section>
           <h2 className="mb-1 text-base font-bold text-slate-800">
-            {say({ language, en: "2 · Two axes to read the existing", fr: "2 · Deux axes pour lire l'existant" })}
+            {say({
+              language,
+              en: "2 · Two axes to read the existing",
+              fr: "2 · Deux axes pour lire l'existant",
+            })}
           </h2>
           <p className="mb-4 text-sm leading-6 text-slate-700">
             <NotionText
@@ -453,10 +499,18 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
                     {say({ language, en: "floors ↓ / merge →", fr: "étages ↓ / fusion →" })}
                   </th>
                   <th className="px-3 py-2 font-semibold">
-                    {say({ language, en: "ordered override — the first that speaks wins", fr: "surcharge ordonnée — le premier qui parle gagne" })}
+                    {say({
+                      language,
+                      en: "ordered override — the first that speaks wins",
+                      fr: "surcharge ordonnée — le premier qui parle gagne",
+                    })}
                   </th>
                   <th className="px-3 py-2 font-semibold">
-                    {say({ language, en: "commutative unification — a conflict refuses", fr: "unification commutative — un conflit refuse" })}
+                    {say({
+                      language,
+                      en: "commutative unification — a conflict refuses",
+                      fr: "unification commutative — un conflit refuse",
+                    })}
                   </th>
                 </tr>
               </thead>
@@ -513,7 +567,11 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
 
         <section>
           <h2 className="mb-1 text-base font-bold text-slate-800">
-            {say({ language, en: "3 · The neighbors, side by side", fr: "3 · Les voisins, côte à côte" })}
+            {say({
+              language,
+              en: "3 · The neighbors, side by side",
+              fr: "3 · Les voisins, côte à côte",
+            })}
           </h2>
           <p className="mb-4 text-xs leading-5 text-slate-500">
             {say({
@@ -543,7 +601,9 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
               <tbody>
                 {COMPARISON_ROWS.map((row) => (
                   <tr key={row.system} className="border-b border-slate-100 align-top">
-                    <th className="px-3 py-2 text-left font-semibold text-slate-700">{row.system}</th>
+                    <th className="px-3 py-2 text-left font-semibold text-slate-700">
+                      {row.system}
+                    </th>
                     <td className="px-3 py-2 text-slate-700">{cell(row.merge)}</td>
                     <td className="px-3 py-2 text-slate-700">{cell(row.floors)}</td>
                     <td className="px-3 py-2 text-slate-600">{cell(row.diverges)}</td>
@@ -556,7 +616,11 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
 
         <section>
           <h2 className="mb-1 text-base font-bold text-slate-800">
-            {say({ language, en: "4 · What the workshop adds — and what it does not", fr: "4 · Ce que l'atelier ajoute — et ce qu'il ne fait pas" })}
+            {say({
+              language,
+              en: "4 · What the workshop adds — and what it does not",
+              fr: "4 · Ce que l'atelier ajoute — et ce qu'il ne fait pas",
+            })}
           </h2>
           <div className="mt-4 grid gap-6 md:grid-cols-2">
             <div className="rounded-lg border border-sky-200 bg-sky-50 p-4">
@@ -571,7 +635,11 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
             </div>
             <div className="rounded-lg border border-rose-200 bg-rose-50 p-4">
               <h3 className="mb-2 text-sm font-bold text-rose-800">
-                {say({ language, en: "What it does not — and says so", fr: "Ce qu'il ne fait pas — et le dit" })}
+                {say({
+                  language,
+                  en: "What it does not — and says so",
+                  fr: "Ce qu'il ne fait pas — et le dit",
+                })}
               </h3>
               <ul className="list-disc space-y-2 pl-4 text-sm leading-6 text-slate-700">
                 {WORKSHOP_LIMITS.map((item) => (
