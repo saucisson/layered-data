@@ -52,10 +52,7 @@ const EXAMPLE_INTENTIONS: { en: string; fr: string }[] = [
 export function CreationPage({ language, onChooseLanguage }: CreationPageProps) {
   const { navigate } = useRouter();
   const [sessionVersion, setSessionVersion] = useState(readSessionVersion());
-  const session = useMemo(
-    () => materializeSessionAdditions({ kernel: KERNEL }),
-    [sessionVersion],
-  );
+  const session = useMemo(() => materializeSessionAdditions({ kernel: KERNEL }), [sessionVersion]);
   const createdLayerNames = session.layerNames.slice(KERNEL.layerNames.length);
 
   function handleAdded(addition: AcceptedAddition) {
@@ -184,7 +181,11 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
             <div className="space-y-1.5">
               {createdLayerNames.map((layerName) => (
                 <div key={layerName} className="flex flex-wrap items-center gap-2 text-xs">
-                  <span className={"h-2 w-2 shrink-0 rounded-full " + (LAYER_COLOR[layerName] ?? "bg-slate-300")} />
+                  <span
+                    className={
+                      "h-2 w-2 shrink-0 rounded-full " + (LAYER_COLOR[layerName] ?? "bg-slate-300")
+                    }
+                  />
                   <span className="font-mono font-semibold">{layerName}</span>
                   <button
                     onClick={() => navigate("formalism", layerName)}
@@ -196,7 +197,11 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
                     onClick={() => navigate("hierarchy")}
                     className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
                   >
-                    {say({ language, en: "see it in the hierarchy →", fr: "le voir dans la hiérarchie →" })}
+                    {say({
+                      language,
+                      en: "see it in the hierarchy →",
+                      fr: "le voir dans la hiérarchie →",
+                    })}
                   </button>
                 </div>
               ))}
@@ -211,7 +216,7 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
           <p>
             {say({
               language,
-              en: "\"layer <name>\" opens a layer; \"refines @<layer>\" declares a parent, \"then @<other>\" chains them; blocks open by indentation (specification, the collections, tests); a member is written \"<key> refines @<absolute-path>\"; the acts are extend, override, abstract, bind, check, and a value \"slot = <value>\". The tutorial of the workshop explains the seven gestures, step by step.",
+              en: '"layer <name>" opens a layer; "refines @<layer>" declares a parent, "then @<other>" chains them; blocks open by indentation (specification, the collections, tests); a member is written "<key> refines @<absolute-path>"; the acts are extend, override, abstract, bind, check, and a value "slot = <value>". The tutorial of the workshop explains the seven gestures, step by step.',
               fr: "« layer <nom> » ouvre une couche ; « refines @<couche> » déclare un parent, « then @<autre> » les enchaîne ; les blocs s'ouvrent par indentation (specification, les collections, tests) ; un membre s'écrit « <clé> refines @<chemin-absolu> » ; les actes sont extend, override, abstract, bind, check, et une valeur « slot = <valeur> ». Le tutoriel de l'atelier explique les sept gestes, pas à pas.",
             })}
           </p>
