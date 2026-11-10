@@ -21,7 +21,7 @@ If you are unsure which role this session assigns you, stop and ask.
 - `main` is merged by the **human only**. `daily` receives agent work
   via platform auto-merge. Full model: `docs/branching.md`.
 - One issue at a time, one branch per issue (`feat/<issue>` or
-  `fix/<issue>` from `daily`), pull requests under ~500 lines.
+  `fix/<issue>` from `daily`), pull requests under ~1000 lines.
 - The morning directive (issue list) is set by the human and is **never
   edited by agents**.
 - `main` can move without `daily` (template sync, hotfix, release):
