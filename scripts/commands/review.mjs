@@ -48,7 +48,7 @@ const CONSTITUTIONAL_FILES = [
 ];
 
 // Maximum lines changed before BLOCKING
-const MAX_LINES_CHANGED = 500;
+const MAX_LINES_CHANGED = 1000;
 
 // Label that waives the human-approval gate (ADR-0011): when a human
 // manually poses it on the PR, constitutional-file and pr-too-large

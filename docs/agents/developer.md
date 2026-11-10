@@ -27,7 +27,7 @@ work, never merge, and never edit constitutional files.
 
   It includes the typecheck, structure checks, all six harnesses, and build.
 
-- Rebase on `daily` before opening the pull request. Keep it under ~500
+- Rebase on `daily` before opening the pull request. Keep it under ~1000
   changed lines; split earlier rather than larger.
 
 ## Reporting

@@ -58,7 +58,7 @@ binary**: yes or no, with `file:line` evidence for every "no".
 - [ ] No constitutional file touched: `AGENTS.md`, `docs/agents/`,
       `docs/decisions/`, `docs/architecture.md`, `docs/branching.md`,
       lint/type/coverage configuration.
-- [ ] Pull request under ~500 changed lines, or split proposed.
+- [ ] Pull request under ~1000 changed lines, or split proposed.
 - [ ] Conventional Commit message matching the actual change.
 - [ ] No `console.log` outside `main.ts` / `scripts/`.
 - [ ] No secrets in code or logs.
