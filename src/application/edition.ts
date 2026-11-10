@@ -157,9 +157,7 @@ function editionGuardsOf({
 }): EditionRefusalCode[] {
   const refusals: EditionRefusalCode[] = [];
   if (staging.compiledLanguage !== null) {
-    const judgedLayerNames = staging.layerNames.filter(
-      (name) => !contextLayerNames.includes(name),
-    );
+    const judgedLayerNames = staging.layerNames.filter((name) => !contextLayerNames.includes(name));
     if (!judgedLayerNames.some((name) => name === layerName)) {
       refusals.push("couche-renomme");
     }
@@ -301,9 +299,7 @@ export function rewriteLivingAddition({
   if (!addition.layerNames.includes(layerName)) return addition;
   const source = addition.layerNames
     .map((name) =>
-      name === layerName
-        ? block
-        : extractLayerBlock({ name, source: addition.source }) ?? "",
+      name === layerName ? block : (extractLayerBlock({ name, source: addition.source }) ?? ""),
     )
     .filter((kept) => kept.length > 0)
     .join("\n");

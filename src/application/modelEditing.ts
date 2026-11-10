@@ -51,7 +51,13 @@ export function referenceTextOf({ address }: { address: Address }): string {
 /** The record node of a member type, as the formalism poses it —
  * `specification/record` under the type. Null when the chain poses
  * no record: the container stays out of the editor's palette. */
-function recordOfMemberType({ space, memberType }: { space: Space; memberType: Address }): Address | null {
+function recordOfMemberType({
+  space,
+  memberType,
+}: {
+  space: Space;
+  memberType: Address;
+}): Address | null {
   const specification = space.read({
     layer: memberType[0],
     path: memberType[1],
@@ -70,7 +76,15 @@ function recordOfMemberType({ space, memberType }: { space: Space; memberType: A
 /** The container name one record key imposes (`source`/`target` pose
  * a `container` override in the formalism) — null when the key poses
  * no container rule. */
-function containerRuleOf({ space, record, key }: { space: Space; record: Address; key: string }): string | null {
+function containerRuleOf({
+  space,
+  record,
+  key,
+}: {
+  space: Space;
+  record: Address;
+  key: string;
+}): string | null {
   const ruleNode = space.read({ layer: record[0], path: record[1], key });
   if (!(ruleNode instanceof AddressView)) return null;
   const rule = space.read({ layer: ruleNode.layer, path: ruleNode.path, key: "container" });
@@ -83,7 +97,15 @@ function containerRuleOf({ space, record, key }: { space: Space; record: Address
  * alias (`vertices refines @places then @transitions`) cites other
  * containers and stays out of the palette. The discrimination is the
  * language's own declaration idiom, never a name list. */
-function declaresCollection({ space, model, name }: { space: Space; model: LayerName; name: string }): boolean {
+function declaresCollection({
+  space,
+  model,
+  name,
+}: {
+  space: Space;
+  model: LayerName;
+  name: string;
+}): boolean {
   const refines = space.read({ layer: model, path: asLayerPath([name]), key: "refines" });
   if (!Array.isArray(refines)) return false;
   return refines.some((entry) =>
@@ -98,7 +120,13 @@ function declaresCollection({ space, model, name }: { space: Space; model: Layer
  * collection `type`. Union aliases (vertices, edges, arcs — they cite
  * other containers) and plain data stay out: the discrimination is
  * the formalism's own idiom, not a name list. */
-export function readMemberContainers({ space, model }: { space: Space; model: string }): MemberContainer[] {
+export function readMemberContainers({
+  space,
+  model,
+}: {
+  space: Space;
+  model: string;
+}): MemberContainer[] {
   const containers: MemberContainer[] = [];
   for (const name of space.keys({ layer: asLayerName(model), path: asLayerPath([]) })) {
     if (name.startsWith("__note:")) continue;
@@ -121,7 +149,9 @@ export function readMemberContainers({ space, model }: { space: Space; model: st
       kind: isArc ? "arc" : "sommet",
       sourceContainer,
       targetContainer,
-      annotationKeys: recordKeys.filter((recordKey) => !(isArc && (recordKey === "source" || recordKey === "target"))),
+      annotationKeys: recordKeys.filter(
+        (recordKey) => !(isArc && (recordKey === "source" || recordKey === "target")),
+      ),
     });
   }
   return containers;
@@ -164,7 +194,9 @@ export function suggestModelRefines({
     const positionContainer = positionContainerOf({ containers });
     if (
       base === null &&
-      containers.some((container) => container.kind === "sommet" && container.name !== positionContainer?.name)
+      containers.some(
+        (container) => container.kind === "sommet" && container.name !== positionContainer?.name,
+      )
     ) {
       base = layerName;
     }
@@ -172,9 +204,7 @@ export function suggestModelRefines({
     if (base !== null && positions !== null) break;
   }
   if (base === null) return "";
-  return positions !== null && positions !== base
-    ? "@" + base + " then @" + positions
-    : "@" + base;
+  return positions !== null && positions !== base ? "@" + base + " then @" + positions : "@" + base;
 }
 
 /** The label key of one arc member: the first of the arc container's
@@ -293,7 +323,13 @@ function isAnySectionHeader({ line }: { line: string }): boolean {
 /** The line range of one container section of a block: from its
  * `  extend <container>` header to the next section header or the
  * end of the block. */
-function sectionRangeOf({ blockLines, container }: { blockLines: string[]; container: string }): SectionRange | null {
+function sectionRangeOf({
+  blockLines,
+  container,
+}: {
+  blockLines: string[];
+  container: string;
+}): SectionRange | null {
   for (let index = 0; index < blockLines.length; index++) {
     if (isSectionHeader({ line: blockLines[index] ?? "", container })) {
       let end = blockLines.length;
@@ -388,16 +424,14 @@ export function draftMemberInsertion({
 }): string {
   const memberLines = [
     MEMBER_MARGIN + name + " refines " + typeReference,
-    ...Object.entries(fields).map(([key, value]) => FIELD_MARGIN + key + " = " + formatFieldValue({ value })),
+    ...Object.entries(fields).map(
+      ([key, value]) => FIELD_MARGIN + key + " = " + formatFieldValue({ value }),
+    ),
   ];
   const blockLines = block.replace(/\n+$/, "").split("\n");
   const section = sectionRangeOf({ blockLines, container });
   if (section === null) {
-    const withSection = [
-      ...blockLines,
-      SECTION_PREFIX + container,
-      ...memberLines,
-    ];
+    const withSection = [...blockLines, SECTION_PREFIX + container, ...memberLines];
     return withSection.join("\n") + "\n";
   }
   const drafted = [
@@ -509,8 +543,7 @@ export function draftMemberPosition({
 }): string {
   const blockLines = block.replace(/\n+$/, "").split("\n");
   const section = sectionRangeOf({ blockLines, container: positionContainer });
-  const existingMember =
-    section !== null ? memberRangeOf({ blockLines, section, name }) : null;
+  const existingMember = section !== null ? memberRangeOf({ blockLines, section, name }) : null;
   if (existingMember !== null && section !== null) {
     return draftMemberFieldEdition({
       block,
@@ -599,9 +632,15 @@ export function readMemberCitations({
   const citations: MemberCitation[] = [];
   const modelLayer = asLayerName(model);
   for (const citingContainer of containers) {
-    for (const citingName of space.keys({ layer: modelLayer, path: asLayerPath([citingContainer.name]) })) {
+    for (const citingName of space.keys({
+      layer: modelLayer,
+      path: asLayerPath([citingContainer.name]),
+    })) {
       if (citingContainer.name === container && citingName === name) continue;
-      for (const key of space.keys({ layer: modelLayer, path: asLayerPath([citingContainer.name, citingName]) })) {
+      for (const key of space.keys({
+        layer: modelLayer,
+        path: asLayerPath([citingContainer.name, citingName]),
+      })) {
         if (key.startsWith("__note:")) continue;
         const reference = space.read({
           layer: modelLayer,

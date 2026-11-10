@@ -52,7 +52,13 @@ export interface StagingOutcome {
  * margin line closes it). Inter-layer comments (column 0) stay out,
  * indented comments stay in. A `layer` word inside a comment never
  * counts. Returns null when the layer is absent. */
-export function extractLayerBlock({ name, source }: { name: string; source: string }): string | null {
+export function extractLayerBlock({
+  name,
+  source,
+}: {
+  name: string;
+  source: string;
+}): string | null {
   const lines = source.split("\n");
   let start = -1;
   for (const [index, line] of lines.entries()) {
@@ -201,7 +207,10 @@ function prepareStaging({
   const claimedBedrockNames: string[] = [];
   if (draftOnly.errors.length === 0) {
     for (const draftLayer of draftOnly.layers) {
-      if (readonlyLayerNames.includes(draftLayer.name) && !claimedBedrockNames.includes(draftLayer.name)) {
+      if (
+        readonlyLayerNames.includes(draftLayer.name) &&
+        !claimedBedrockNames.includes(draftLayer.name)
+      ) {
         claimedBedrockNames.push(draftLayer.name);
       }
     }
@@ -286,8 +295,13 @@ function concludeStaging({
   // and a draft layer can only create conflicts at its own
   // addresses — nothing living refines a candidate.
   if (context.strictConflicts) {
-    const judgedLayerNames = context.layerNames.filter((name) => !context.livingLayerNames.includes(name));
-    for (const conflict of orderConflictsOf({ space: context.space, layerNames: judgedLayerNames })) {
+    const judgedLayerNames = context.layerNames.filter(
+      (name) => !context.livingLayerNames.includes(name),
+    );
+    for (const conflict of orderConflictsOf({
+      space: context.space,
+      layerNames: judgedLayerNames,
+    })) {
       verdicts.push({
         kind: "conflit-d'ordre",
         fact: fact("order-conflict", {
@@ -310,7 +324,9 @@ function concludeStaging({
   // immutable — the frozen corpus is never re-executed, only the
   // candidate is judged, and its cost is the candidate's size.
   if (context.strictChecks) {
-    const judgedLayerNames = context.layerNames.filter((name) => !context.livingLayerNames.includes(name));
+    const judgedLayerNames = context.layerNames.filter(
+      (name) => !context.livingLayerNames.includes(name),
+    );
     for (const judgedLayerName of judgedLayerNames) {
       for (const error of runChecks({ space: context.space, layer: judgedLayerName })) {
         const separator = error.indexOf(" — ");

@@ -72,7 +72,10 @@ export interface ParsedLanguage {
   errors: string[];
 }
 
-export function parseLanguage(source: string, language: Language = DEFAULT_LANGUAGE): ParsedLanguage {
+export function parseLanguage(
+  source: string,
+  language: Language = DEFAULT_LANGUAGE,
+): ParsedLanguage {
   const layers: LanguageLayer[] = [];
   const errors: string[] = [];
   let tokens: LanguageToken[] = [];
@@ -80,7 +83,11 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
     tokens = tokenizeLanguage(source);
   } catch (error) {
     errors.push(
-      parseText({ language, en: "syntax: " + (error as Error).message, fr: "syntaxe : " + (error as Error).message }),
+      parseText({
+        language,
+        en: "syntax: " + (error as Error).message,
+        fr: "syntaxe : " + (error as Error).message,
+      }),
     );
     return { layers, errors };
   }
@@ -95,9 +102,21 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
         parseText({
           language,
           en:
-            "l." + (token?.line ?? 0) + " : expected '" + expectedKind + "', got '" + (token?.text ?? "end") + "'",
+            "l." +
+            (token?.line ?? 0) +
+            " : expected '" +
+            expectedKind +
+            "', got '" +
+            (token?.text ?? "end") +
+            "'",
           fr:
-            "l." + (token?.line ?? 0) + " : attendu '" + expectedKind + "' obtenu '" + (token?.text ?? "fin") + "'",
+            "l." +
+            (token?.line ?? 0) +
+            " : attendu '" +
+            expectedKind +
+            "' obtenu '" +
+            (token?.text ?? "fin") +
+            "'",
         }),
       );
     }
@@ -150,8 +169,12 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
       // A one-line empty layer can end the text — the end is spoken,
       // it does not break.
       throw new Error(
-      parseText({ language, en: "value expected, end of text", fr: "valeur attendue, fin du texte" }),
-    );
+        parseText({
+          language,
+          en: "value expected, end of text",
+          fr: "valeur attendue, fin du texte",
+        }),
+      );
     }
     if (token.kind === "str") {
       position++;
@@ -364,9 +387,16 @@ export function parseLanguage(source: string, language: Language = DEFAULT_LANGU
             }
           }
           eat("}");
-          acts.push({ kind: "check-definition", name: labels[0] ?? "", level, condition, judgments, line: token.line });
+          acts.push({
+            kind: "check-definition",
+            name: labels[0] ?? "",
+            level,
+            condition,
+            judgments,
+            line: token.line,
+          });
           const lastAct = acts[acts.length - 1];
-        if (notes.length && lastAct !== undefined) lastAct.notes = notes;
+          if (notes.length && lastAct !== undefined) lastAct.notes = notes;
           continue;
         }
         acts.push({ kind: "check", labels, line: token.line });

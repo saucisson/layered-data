@@ -42,7 +42,13 @@ import { designatedAddress } from "./desugaring.ts";
 export type Term = { variable: string; segments: string[] };
 
 export type Formula =
-  | { kind: "quantifier"; quantifier: "forall" | "exists"; variable: string; domain: Term; body: Formula }
+  | {
+      kind: "quantifier";
+      quantifier: "forall" | "exists";
+      variable: string;
+      domain: Term;
+      body: Formula;
+    }
   | { kind: "binary"; operator: "and" | "or" | "=>"; left: Formula; right: Formula }
   | { kind: "not"; body: Formula }
   | { kind: "equality"; negative: boolean; left: Term; right: Term }
@@ -73,7 +79,14 @@ export function tokenizeFormula(source: string): FormulaToken[] {
       index += 2;
       continue;
     }
-    if (character === "=" || character === "(" || character === ")" || character === "," || character === ":" || character === "/") {
+    if (
+      character === "=" ||
+      character === "(" ||
+      character === ")" ||
+      character === "," ||
+      character === ":" ||
+      character === "/"
+    ) {
       tokens.push({ text: character });
       index++;
       continue;
@@ -176,7 +189,13 @@ class FormulaParser {
     const firstVariable = variables[0];
     if (firstVariable === undefined) throw new Error("quantifier without variable");
     for (let index = variables.length - 1; index >= 1; index--) {
-      body = { kind: "quantifier", quantifier, variable: variables[index] ?? firstVariable, domain, body };
+      body = {
+        kind: "quantifier",
+        quantifier,
+        variable: variables[index] ?? firstVariable,
+        domain,
+        body,
+      };
     }
     return { kind: "quantifier", quantifier, variable: firstVariable, domain, body };
   }
@@ -204,7 +223,8 @@ class FormulaParser {
   private eatKey(): FormulaToken {
     const token = this.peek();
     if (token === undefined) throw new Error("unexpected end");
-    if (!/^[A-Za-z0-9_-]+$/.test(token.text)) throw new Error("expected a name, got '" + token.text + "'");
+    if (!/^[A-Za-z0-9_-]+$/.test(token.text))
+      throw new Error("expected a name, got '" + token.text + "'");
     this.position++;
     return token;
   }
@@ -250,7 +270,16 @@ export function canonicalFormula(formula: Formula): string {
   const walk = (value: Formula): string => {
     switch (value.kind) {
       case "quantifier":
-        return value.quantifier + " " + nameOf(value.variable) + " in " + term(value.domain) + " : (" + walk(value.body) + ")";
+        return (
+          value.quantifier +
+          " " +
+          nameOf(value.variable) +
+          " in " +
+          term(value.domain) +
+          " : (" +
+          walk(value.body) +
+          ")"
+        );
       case "binary":
         return "(" + walk(value.left) + " " + value.operator + " " + walk(value.right) + ")";
       case "not":
@@ -345,9 +374,15 @@ export interface Evaluation {
 /** The reading of one term — the same machine the kernel reads with:
  * a bound variable, or a key read at the judged address, then one
  * key read per segment. A term that fails to denote reads null. */
-export type TermResolver = (term: Term, assignment: Record<string, AddressView>) => AddressView | null;
+export type TermResolver = (
+  term: Term,
+  assignment: Record<string, AddressView>,
+) => AddressView | null;
 
-export function makeTermResolver({ space, view }: { space: Space; view: AddressView }): { resolve: TermResolver; steps: () => number } {
+export function makeTermResolver({ space, view }: { space: Space; view: AddressView }): {
+  resolve: TermResolver;
+  steps: () => number;
+} {
   let steps = 0;
   const resolve: TermResolver = (term, assignment) => {
     steps++;
@@ -400,17 +435,25 @@ export function evaluateFormula({
     const domain = resolve(term, assignment);
     if (domain === null) return [];
     const keys = space.keys({ layer: domain.layer, path: domain.path });
-    return keys.map((key) => new AddressView(domain.layer, [...domain.path, asPathSegment(key)] as LayerPath));
+    return keys.map(
+      (key) => new AddressView(domain.layer, [...domain.path, asPathSegment(key)] as LayerPath),
+    );
   };
 
   const equal = (left: Term, right: Term, assignment: Record<string, AddressView>): boolean => {
     const first = resolve(left, assignment);
     const second = resolve(right, assignment);
     if (first === null || second === null) return false;
-    return addressesEqual(concreteNodeOf({ space, view: first }), concreteNodeOf({ space, view: second }));
+    return addressesEqual(
+      concreteNodeOf({ space, view: first }),
+      concreteNodeOf({ space, view: second }),
+    );
   };
 
-  const evaluate = (value: Formula, assignment: Record<string, AddressView>): { ok: boolean; failures: Record<string, AddressView>[] } => {
+  const evaluate = (
+    value: Formula,
+    assignment: Record<string, AddressView>,
+  ): { ok: boolean; failures: Record<string, AddressView>[] } => {
     if (resolverSteps() + memberSteps > budget) {
       exhausted = true;
       return { ok: true, failures: [] };
@@ -426,14 +469,16 @@ export function evaluateFormula({
             const inner = evaluate(value.body, { ...assignment, [value.variable]: member });
             if (!inner.ok) {
               ok = false;
-              for (const failure of inner.failures) failures.push({ [value.variable]: member, ...failure });
+              for (const failure of inner.failures)
+                failures.push({ [value.variable]: member, ...failure });
             }
           }
           return { ok, failures };
         }
         for (const member of domain) {
           memberSteps++;
-          if (evaluate(value.body, { ...assignment, [value.variable]: member }).ok) return { ok: true, failures: [] };
+          if (evaluate(value.body, { ...assignment, [value.variable]: member }).ok)
+            return { ok: true, failures: [] };
         }
         return { ok: false, failures: [{ ...assignment }] };
       }
@@ -469,7 +514,12 @@ export function evaluateFormula({
   };
 
   const outcome = evaluate(formula, {});
-  return { ok: outcome.ok, failures: outcome.failures, steps: resolverSteps() + memberSteps, exhausted };
+  return {
+    ok: outcome.ok,
+    failures: outcome.failures,
+    steps: resolverSteps() + memberSteps,
+    exhausted,
+  };
 }
 
 // ---- the message rendering --------------------------------------------
@@ -478,7 +528,14 @@ export function evaluateFormula({
 // (mirror of `addressTupleRepr`, checks.ts; the messages keep one
 // format across the two strates).
 function addressTupleRepr(address: Address): string {
-  return "('" + address[0] + "', (" + address[1].map((segment) => "'" + segment + "'").join(", ") + (address[1].length === 1 ? "," : "") + "))";
+  return (
+    "('" +
+    address[0] +
+    "', (" +
+    address[1].map((segment) => "'" + segment + "'").join(", ") +
+    (address[1].length === 1 ? "," : "") +
+    "))"
+  );
 }
 
 /** Render a judgment's message on a failing assignment: `{x}` — the

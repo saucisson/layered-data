@@ -45,9 +45,17 @@ function writeFlatValue({ value }: { value: unknown }): string {
 
 /** The provenance comment of one entry: who provides the value, or
  * who declares the slot nobody provides. */
-function writeFlatProvenance({ status, winner }: { status: string; winner: string | null }): string {
+function writeFlatProvenance({
+  status,
+  winner,
+}: {
+  status: string;
+  winner: string | null;
+}): string {
   const provider = winner ?? "?";
-  return status === "fournit" ? "provided by " + provider : "declared by " + provider + ", provided by none";
+  return status === "fournit"
+    ? "provided by " + provider
+    : "declared by " + provider + ", provided by none";
 }
 
 /** The click target of one flattened line — what the cascade card
@@ -97,7 +105,13 @@ export interface FlattenedLayerText {
  * page can fold: same walk, same lines — the closure of the dinner
  * serializes to twelve thousand lines, the fold keeps the artifact
  * readable without ever truncating it. */
-export function writeFlattenedLayerSections({ space, layer }: { space: Space; layer: LayerName }): FlattenedLayerText {
+export function writeFlattenedLayerSections({
+  space,
+  layer,
+}: {
+  space: Space;
+  layer: LayerName;
+}): FlattenedLayerText {
   const flattened = flattenLayer({ space, layer });
   const buildSections = (node: FlatNode): FlattenedSection[] =>
     node.entries.map((entry) => {
@@ -148,7 +162,10 @@ export function writeFlattenedLayerSections({ space, layer }: { space: Space; la
 export function countFlattenedSectionLines({ section }: { section: FlattenedSection }): number {
   return (
     section.line.split("\n").length +
-    section.sections.reduce((total, child) => total + countFlattenedSectionLines({ section: child }), 0)
+    section.sections.reduce(
+      (total, child) => total + countFlattenedSectionLines({ section: child }),
+      0,
+    )
   );
 }
 
@@ -170,7 +187,12 @@ export function serializeFlattenedLayerText({ text }: { text: FlattenedLayerText
  * state of every address — the root entries, then one indented
  * block per structural child. `refines` is absent by construction:
  * the hierarchy is exactly what this view removes. */
-export function writeFlattenedLayerSource({ space, layer }: { space: Space; layer: LayerName }): string {
+export function writeFlattenedLayerSource({
+  space,
+  layer,
+}: {
+  space: Space;
+  layer: LayerName;
+}): string {
   return serializeFlattenedLayerText({ text: writeFlattenedLayerSections({ space, layer }) });
 }
-

@@ -62,17 +62,26 @@ export interface PenLoopOutcome {
 /** The refusal as the geologist reads it: the observable vocabulary of the
  * kernel (steps, verdict kinds) plus the rendered facts, in the
  * workshop language — English by default, French its mirror. */
-export function formatPenFeedback(refusal: PenRefusal, language: Language = DEFAULT_LANGUAGE): string {
+export function formatPenFeedback(
+  refusal: PenRefusal,
+  language: Language = DEFAULT_LANGUAGE,
+): string {
   const { attempt, step, errors, verdicts } = refusal;
   const lines: string[] = [
     parseText({
       language,
       en:
-        'Your proposal #' + attempt + ' was refused by the verification, at the step "' +
-        kernelLabel({ code: step, language }) + '".',
+        "Your proposal #" +
+        attempt +
+        ' was refused by the verification, at the step "' +
+        kernelLabel({ code: step, language }) +
+        '".',
       fr:
-        "Ta proposition n°" + attempt + " a été refusée par la vérification, à l'étape « " +
-        kernelLabel({ code: step, language }) + " ».",
+        "Ta proposition n°" +
+        attempt +
+        " a été refusée par la vérification, à l'étape « " +
+        kernelLabel({ code: step, language }) +
+        " ».",
     }),
   ];
   for (const error of errors) {
@@ -83,10 +92,14 @@ export function formatPenFeedback(refusal: PenRefusal, language: Language = DEFA
       parseText({
         language,
         en:
-          'Verdict "' + kernelLabel({ code: verdict.kind, language }) + '": ' +
+          'Verdict "' +
+          kernelLabel({ code: verdict.kind, language }) +
+          '": ' +
           renderMessage({ message: verdict.fact, language }),
         fr:
-          "Verdict « " + kernelLabel({ code: verdict.kind, language }) + " » : " +
+          "Verdict « " +
+          kernelLabel({ code: verdict.kind, language }) +
+          " » : " +
           renderMessage({ message: verdict.fact, language }),
       }),
     );
@@ -157,7 +170,9 @@ export async function composeVerifiedLayerDraft({
       const refusal: PenRefusal = {
         attempt,
         step: "syntaxe",
-        errors: [parseText({ language, en: "the proposal is empty", fr: "la proposition est vide" })],
+        errors: [
+          parseText({ language, en: "the proposal is empty", fr: "la proposition est vide" }),
+        ],
         verdicts: [],
         proposal,
         feedback: "",

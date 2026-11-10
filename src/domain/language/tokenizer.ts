@@ -11,19 +11,7 @@
 import { DEFAULT_LANGUAGE, parseText, type Language } from "../messages.ts";
 
 export type LanguageTokenKind =
-  | "str"
-  | "id"
-  | "num"
-  | "@"
-  | "/"
-  | "["
-  | "]"
-  | ","
-  | "="
-  | "->"
-  | "{"
-  | "}"
-  | "note";
+  "str" | "id" | "num" | "@" | "/" | "[" | "]" | "," | "=" | "->" | "{" | "}" | "note";
 
 export interface LanguageToken {
   kind: LanguageTokenKind;
@@ -43,7 +31,10 @@ export interface LanguageToken {
 // opened is honestly refused (inconsistent indentation); the end of
 // the text closes everything. A brace in the writing is refused: the
 // language lives on indentation.
-export function tokenizeLanguage(source: string, language: Language = DEFAULT_LANGUAGE): LanguageToken[] {
+export function tokenizeLanguage(
+  source: string,
+  language: Language = DEFAULT_LANGUAGE,
+): LanguageToken[] {
   const tokens: LanguageToken[] = [];
   const margins: number[] = [0];
   // Notes deeper than any open block wait here for the block they
@@ -58,12 +49,12 @@ export function tokenizeLanguage(source: string, language: Language = DEFAULT_LA
     while (margin < rawLine.length && rawLine[margin] === " ") margin++;
     if (rawLine[margin] === "\t") {
       throw new Error(
-          parseText({
-            language,
-            en: "l." + lineNumber + " : tab — indentation counts in spaces",
-            fr: "l." + lineNumber + " : tabulation — l'indentation se compte en espaces",
-          }),
-        );
+        parseText({
+          language,
+          en: "l." + lineNumber + " : tab — indentation counts in spaces",
+          fr: "l." + lineNumber + " : tabulation — l'indentation se compte en espaces",
+        }),
+      );
     }
     const topMargin = () => margins[margins.length - 1] ?? 0;
     const body = rawLine.slice(margin);
@@ -110,8 +101,18 @@ export function tokenizeLanguage(source: string, language: Language = DEFAULT_LA
         throw new Error(
           parseText({
             language,
-            en: "l." + lineNumber + " : inconsistent indentation — no block opens at " + margin + " space(s)",
-            fr: "l." + lineNumber + " : indentation incohérente — aucun bloc ne s'ouvre à " + margin + " espace(s)",
+            en:
+              "l." +
+              lineNumber +
+              " : inconsistent indentation — no block opens at " +
+              margin +
+              " space(s)",
+            fr:
+              "l." +
+              lineNumber +
+              " : indentation incohérente — aucun bloc ne s'ouvre à " +
+              margin +
+              " espace(s)",
           }),
         );
       }
@@ -139,8 +140,12 @@ export function tokenizeLanguage(source: string, language: Language = DEFAULT_LA
         while (body[end] !== '"') {
           if (body[end] === undefined) {
             throw new Error(
-            parseText({ language, en: "unterminated string l." + lineNumber, fr: "chaîne non fermée l." + lineNumber }),
-          );
+              parseText({
+                language,
+                en: "unterminated string l." + lineNumber,
+                fr: "chaîne non fermée l." + lineNumber,
+              }),
+            );
           }
           end++;
         }
@@ -153,8 +158,14 @@ export function tokenizeLanguage(source: string, language: Language = DEFAULT_LA
         cursor += 2;
         continue;
       }
-      if (character === "@" || character === "=" || character === "," || character === "/" ||
-          character === "[" || character === "]") {
+      if (
+        character === "@" ||
+        character === "=" ||
+        character === "," ||
+        character === "/" ||
+        character === "[" ||
+        character === "]"
+      ) {
         tokens.push({ kind: character, text: character, line: lineNumber });
         cursor++;
         continue;
