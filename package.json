@@ -38,14 +38,28 @@
     "react-dom": "18.3.1"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.5",
     "@tailwindcss/vite": "4.1.11",
     "@types/node": "^22.10.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
+<<<<<<< HEAD
     "@vitejs/plugin-react": "^5.2.0",
+=======
+    "@vitejs/plugin-react": "4.3.4",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^9.1.2",
+    "globals": "^15.15.0",
+>>>>>>> d2e7fac (chore(lint): eslint 9 + typescript-eslint + prettier flat config with layer boundaries)
     "i18next-parser": "^9.0.2",
+    "prettier": "^3.9.10",
     "tailwindcss": "4.1.11",
     "typescript": "5.6.3",
+<<<<<<< HEAD
     "vite": "^7.3.8"
+=======
+    "typescript-eslint": "^8.72.2",
+    "vite": "5.4.21"
+>>>>>>> d2e7fac (chore(lint): eslint 9 + typescript-eslint + prettier flat config with layer boundaries)
   }
 }
