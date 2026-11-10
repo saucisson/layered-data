@@ -7,7 +7,7 @@
 /** Read the raw sources of the kernel corpus, keyed by layer name
  * (file name without the `.ld` extension). */
 export function loadKernelLayerSources(): Record<string, string> {
-  const globImports = import.meta.glob("../formalisms/kernel/*.ld", {
+  const globImports = import.meta.glob("../../formalisms/kernel/*.ld", {
     query: "?raw",
     import: "default",
     eager: true,
@@ -27,7 +27,7 @@ export function loadKernelLayerSources(): Record<string, string> {
  * layers the tutorial page flattens, never mixed into the bedrock
  * corpus. */
 export function loadTutorialLayerSources(): Record<string, string> {
-  const globImports = import.meta.glob("../formalisms/tutorial/*.ld", {
+  const globImports = import.meta.glob("../../formalisms/tutorial/*.ld", {
     query: "?raw",
     import: "default",
     eager: true,
