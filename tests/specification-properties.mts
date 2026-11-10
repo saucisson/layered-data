@@ -25,9 +25,18 @@ import {
   PathReference,
   isDictionary,
 } from "../src/domain/addresses.ts";
-import { asLayerName, asLayerPath, type LayerName } from "../src/domain/identifiers.ts";
+import {
+  asLayerName,
+  asLayerPath,
+  type LayerName,
+} from "../src/domain/identifiers.ts";
 import { SPECIAL_KEYS } from "../src/domain/specialKeys.ts";
-import { desugarLayer, layerTopologicalOrder, rawTreeWalk, refinementEntriesEqual } from "../src/domain/desugaring.ts";
+import {
+  desugarLayer,
+  layerTopologicalOrder,
+  rawTreeWalk,
+  refinementEntriesEqual,
+} from "../src/domain/desugaring.ts";
 import { parseLanguage } from "../src/domain/language/parser.ts";
 import { compileLanguage } from "../src/domain/language/compiler.ts";
 import { walkAddresses } from "../src/domain/views.ts";
@@ -41,7 +50,10 @@ import {
   slotReadingLevelsOf,
   vacantChecksOf,
 } from "../src/domain/checks.ts";
-import { checkSlotContractsOf, validateSpace } from "../src/domain/validation.ts";
+import {
+  checkSlotContractsOf,
+  validateSpace,
+} from "../src/domain/validation.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -72,10 +84,15 @@ function spaceFromJoinOrder(order: readonly string[]): Space {
 /** A space assembled from a VARIANT of the corpus sources — the
  * data-driven semantics check (ADR-0102) edits the registry layer
  * itself, the rest of the bedrock joins unchanged. */
-function spaceFromSourcesMap(sources: Record<string, string>, order: readonly string[]): Space {
+function spaceFromSourcesMap(
+  sources: Record<string, string>,
+  order: readonly string[],
+): Space {
   const joined = order
     .map((layerName) =>
-      (sources[layerName] ?? "").endsWith("\n") ? (sources[layerName] ?? "") : (sources[layerName] ?? "") + "\n",
+      (sources[layerName] ?? "").endsWith("\n")
+        ? (sources[layerName] ?? "")
+        : (sources[layerName] ?? "") + "\n",
     )
     .join("");
   const parsed = parseLanguage(joined);
@@ -86,7 +103,9 @@ function spaceFromSourcesMap(sources: Record<string, string>, order: readonly st
 /** A space built from written .ld sources — the full language
  * pipeline on a dedicated, minimal corpus. */
 function spaceFromWrittenSources(sources: readonly string[]): Space {
-  const joined = sources.map((source) => (source.endsWith("\n") ? source : source + "\n")).join("");
+  const joined = sources
+    .map((source) => (source.endsWith("\n") ? source : source + "\n"))
+    .join("");
   const parsed = parseLanguage(joined);
   const compiled = compileLanguage(parsed.layers);
   return new Space(compiled.layers);
@@ -99,22 +118,53 @@ function addressText([layer, path]: Address): string {
 }
 
 function valueText(value: unknown): string {
-  if (value instanceof AddressView) return "@" + addressText([value.layer, value.path]);
-  if (value instanceof PathReference) return "@R:" + value.anchor + "/" + value.path.join("/");
+  if (value instanceof AddressView)
+    return "@" + addressText([value.layer, value.path]);
+  if (value instanceof PathReference)
+    return "@R:" + value.anchor + "/" + value.path.join("/");
   if (value instanceof LayerReference) return "@L:" + value.layer;
   return JSON.stringify(value) ?? String(value);
 }
 
 /** The observable dump of a space: closures, keys, reads — the C1/C2/C3
  * protocol over every address. */
-function observableDump({ space, walkOrder }: { space: Space; walkOrder: readonly string[] }): string[] {
+function observableDump({
+  space,
+  walkOrder,
+}: {
+  space: Space;
+  walkOrder: readonly string[];
+}): string[] {
   const lines: string[] = [];
   for (const layerName of walkOrder) {
-    for (const address of walkAddresses({ space, layer: asLayerName(layerName) })) {
-      lines.push("closure " + addressText(address) + " => " + space.closure({ layer: address[0], path: address[1] }).map(addressText).join(" "));
-      lines.push("keys " + addressText(address) + " => " + space.keys({ layer: address[0], path: address[1] }).join(" "));
+    for (const address of walkAddresses({
+      space,
+      layer: asLayerName(layerName),
+    })) {
+      lines.push(
+        "closure " +
+          addressText(address) +
+          " => " +
+          space
+            .closure({ layer: address[0], path: address[1] })
+            .map(addressText)
+            .join(" "),
+      );
+      lines.push(
+        "keys " +
+          addressText(address) +
+          " => " +
+          space.keys({ layer: address[0], path: address[1] }).join(" "),
+      );
       for (const key of space.keys({ layer: address[0], path: address[1] })) {
-        lines.push("read " + addressText(address) + " :: " + key + " => " + valueText(space.read({ layer: address[0], path: address[1], key })));
+        lines.push(
+          "read " +
+            addressText(address) +
+            " :: " +
+            key +
+            " => " +
+            valueText(space.read({ layer: address[0], path: address[1], key })),
+        );
       }
     }
   }
@@ -125,10 +175,18 @@ function observableDump({ space, walkOrder }: { space: Space; walkOrder: readonl
  * dicts key by key in insertion order. */
 function rawTreesEqual(first: unknown, second: unknown): boolean {
   if (first instanceof PathReference || second instanceof PathReference) {
-    return first instanceof PathReference && second instanceof PathReference && refinementEntriesEqual(first, second);
+    return (
+      first instanceof PathReference &&
+      second instanceof PathReference &&
+      refinementEntriesEqual(first, second)
+    );
   }
   if (first instanceof LayerReference || second instanceof LayerReference) {
-    return first instanceof LayerReference && second instanceof LayerReference && refinementEntriesEqual(first, second);
+    return (
+      first instanceof LayerReference &&
+      second instanceof LayerReference &&
+      refinementEntriesEqual(first, second)
+    );
   }
   if (isDictionary(first) && isDictionary(second)) {
     const firstKeys = Object.keys(first);
@@ -136,7 +194,10 @@ function rawTreesEqual(first: unknown, second: unknown): boolean {
     return firstKeys.every((key) => rawTreesEqual(first[key], second[key]));
   }
   if (Array.isArray(first) && Array.isArray(second)) {
-    return first.length === second.length && first.every((item, index) => rawTreesEqual(item, second[index]));
+    return (
+      first.length === second.length &&
+      first.every((item, index) => rawTreesEqual(item, second[index]))
+    );
   }
   return first === second;
 }
@@ -144,7 +205,8 @@ function rawTreesEqual(first: unknown, second: unknown): boolean {
 /** A manual snapshot of raw trees — structuredClone would lose the
  * reference classes. */
 function cloneTree(value: unknown): unknown {
-  if (value instanceof PathReference) return new PathReference(value.anchor, [...value.path]);
+  if (value instanceof PathReference)
+    return new PathReference(value.anchor, [...value.path]);
   if (value instanceof LayerReference) return new LayerReference(value.layer);
   if (Array.isArray(value)) return value.map(cloneTree);
   if (isDictionary(value)) {
@@ -158,15 +220,22 @@ function cloneTree(value: unknown): unknown {
 /** A space built from raw layer trees written as literals — the one
  * legitimate cast: the literals are plain data, the layer names go
  * through the named conversion. */
-function spaceFromLayerTrees(trees: Record<string, Record<string, unknown>>): Space {
+function spaceFromLayerTrees(
+  trees: Record<string, Record<string, unknown>>,
+): Space {
   const layers: Record<string, unknown> = {};
-  for (const layerName of Object.keys(trees)) layers[asLayerName(layerName)] = trees[layerName];
+  for (const layerName of Object.keys(trees))
+    layers[asLayerName(layerName)] = trees[layerName];
   return new Space(layers as never);
 }
 
 /** String-keyed access to the raw tree of one layer. */
 function layerTreeOf(space: Space, layerName: string): Record<string, unknown> {
-  return (space.layers as never as Record<string, Record<string, unknown>>)[layerName] ?? {};
+  return (
+    (space.layers as never as Record<string, Record<string, unknown>>)[
+      layerName
+    ] ?? {}
+  );
 }
 
 // =====================================================================
@@ -179,7 +248,10 @@ let closureDuplicates = 0;
 let ownNodeNotFirst = 0;
 
 for (const layerName of KERNEL_LAYER_NAMES) {
-  for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
+  for (const address of walkAddresses({
+    space: bedrock,
+    layer: asLayerName(layerName),
+  })) {
     walkedAddresses++;
     const [layer, path] = address;
     const closure = bedrock.closure({ layer, path });
@@ -194,11 +266,11 @@ for (const layerName of KERNEL_LAYER_NAMES) {
 
     // O2 — specificity: the own node, when it exists, comes first.
     if (bedrock.raw({ layer, path }) !== null && closure.length > 0) {
-      if (addressText(at(closure, 0)) !== addressText(address)) ownNodeNotFirst++;
+      if (addressText(at(closure, 0)) !== addressText(address))
+        ownNodeNotFirst++;
     }
   }
 }
-
 
 /** Indexed access in assertions: a missing element is a test failure,
  * not a silent undefined. */
@@ -208,12 +280,24 @@ function at<T>(list: readonly T[], index: number): T {
   return value;
 }
 
-check("C1 (O3): no closure of the bedrock corpus contains a duplicate address", closureDuplicates === 0);
-check("C1 (O2): the own node is always the first source when it exists", ownNodeNotFirst === 0);
-check("C1: the walk covers the measured corpus (thousands of addresses)", walkedAddresses > 2000);
+check(
+  "C1 (O3): no closure of the bedrock corpus contains a duplicate address",
+  closureDuplicates === 0,
+);
+check(
+  "C1 (O2): the own node is always the first source when it exists",
+  ownNodeNotFirst === 0,
+);
+check(
+  "C1: the walk covers the measured corpus (thousands of addresses)",
+  walkedAddresses > 2000,
+);
 
 // The measured diamond (§12): the two ways of the refinement cross.
-const diamondClosure = bedrock.closure({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]) });
+const diamondClosure = bedrock.closure({
+  layer: asLayerName("wb1"),
+  path: asLayerPath(["arcsAB", "e2"]),
+});
 check(
   "C1 (O4, measured diamond §12): the closure of wb1::arcsAB::e2 is exactly the §12 walk",
   diamondClosure.map(addressText).join(" ") ===
@@ -228,8 +312,13 @@ check(
 );
 check(
   "C1 (O2, measured diamond §12): the first way of the diamond (bd specification) precedes the second (weight)",
-  diamondClosure.findIndex(([l, p]) => l === "bipartite-digraph" && p.join("/") === "specification/arcAB_type") <
-    diamondClosure.findIndex(([l, p]) => l === "weighted-hypergraph" && p.join("/") === "edge_type"),
+  diamondClosure.findIndex(
+    ([l, p]) =>
+      l === "bipartite-digraph" && p.join("/") === "specification/arcAB_type",
+  ) <
+    diamondClosure.findIndex(
+      ([l, p]) => l === "weighted-hypergraph" && p.join("/") === "edge_type",
+    ),
 );
 check(
   "C1 (O4, measured diamond §12): the closure counts exactly the eight sources of the §12 walk",
@@ -244,7 +333,10 @@ let statusAnomalies = 0;
 let winnerAnomalies = 0;
 let scalarNodeAnomalies = 0;
 for (const layerName of KERNEL_LAYER_NAMES) {
-  for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
+  for (const address of walkAddresses({
+    space: bedrock,
+    layer: asLayerName(layerName),
+  })) {
     const [layer, path] = address;
     for (const key of bedrock.keys({ layer, path })) {
       const scan: ReadObservation[] = [];
@@ -254,45 +346,85 @@ for (const layerName of KERNEL_LAYER_NAMES) {
       // (the mask retired with ADR-0106: fournit, transparent, absent).
       const statuses = scan.map((observation) => observation.status);
       for (const status of statuses) {
-        if (!["fournit", "transparent", "absent"].includes(status)) statusAnomalies++;
+        if (!["fournit", "transparent", "absent"].includes(status))
+          statusAnomalies++;
       }
 
       // C2 — first winner: the scan is cut by at most one source,
       // always at the winner, and a visible value implies a cut.
       const winners = statuses.filter((status) => status === "fournit").length;
       if (winners > 1) winnerAnomalies++;
-      if (winners === 1 && statuses[statuses.length - 1] !== "fournit") winnerAnomalies++;
-      if (value !== null && value !== undefined && winners === 0) winnerAnomalies++;
+      if (winners === 1 && statuses[statuses.length - 1] !== "fournit")
+        winnerAnomalies++;
+      if (value !== null && value !== undefined && winners === 0)
+        winnerAnomalies++;
 
       // O1 — a scalar is never a node: the raw of its address is null.
-      if (typeof value === "number" || typeof value === "boolean" || typeof value === "string") {
-        if (bedrock.raw({ layer: asLayerName(layer), path: asLayerPath([...path, key]) }) !== null) scalarNodeAnomalies++;
+      if (
+        typeof value === "number" ||
+        typeof value === "boolean" ||
+        typeof value === "string"
+      ) {
+        if (
+          bedrock.raw({
+            layer: asLayerName(layer),
+            path: asLayerPath([...path, key]),
+          }) !== null
+        )
+          scalarNodeAnomalies++;
       }
     }
   }
 }
 
-check("C2 (O8): the statuses of every visible read are exactly fournit/transparent/absent", statusAnomalies === 0);
-check("C2: every read is cut by at most one winner, at the winner (first-winner)", winnerAnomalies === 0);
-check("C2 (O1): no scalar is ever visible as a node", scalarNodeAnomalies === 0);
+check(
+  "C2 (O8): the statuses of every visible read are exactly fournit/transparent/absent",
+  statusAnomalies === 0,
+);
+check(
+  "C2: every read is cut by at most one winner, at the winner (first-winner)",
+  winnerAnomalies === 0,
+);
+check(
+  "C2 (O1): no scalar is ever visible as a node",
+  scalarNodeAnomalies === 0,
+);
 
 // Measured conformance anchors (S10 and the late-binding flagship).
 
 check(
   "C2 (S10, measured): wb1::arcsAB::e1::weight is the own override 3",
-  bedrock.read({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e1"]), key: "weight" }) === 3,
+  bedrock.read({
+    layer: asLayerName("wb1"),
+    path: asLayerPath(["arcsAB", "e1"]),
+    key: "weight",
+  }) === 3,
 );
 check(
   "C2 (S10, measured): wb1::arcsAB::e2::weight is the inherited default 1 — through the second way of the diamond",
-  bedrock.read({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]), key: "weight" }) === 1,
+  bedrock.read({
+    layer: asLayerName("wb1"),
+    path: asLayerPath(["arcsAB", "e2"]),
+    key: "weight",
+  }) === 1,
 );
 check(
   "C2 (O6, measured): the late binding of ss-pn-philosophers-5-inst::alphabet::b1::transition resolves to the dinner",
-  valueText(bedrock.read({ layer: asLayerName("ss-pn-philosophers-5-inst"), path: asLayerPath(["alphabet", "b1"]), key: "transition" })) === "@pn-philosophers-5/transitions/philo1.take1",
+  valueText(
+    bedrock.read({
+      layer: asLayerName("ss-pn-philosophers-5-inst"),
+      path: asLayerPath(["alphabet", "b1"]),
+      key: "transition",
+    }),
+  ) === "@pn-philosophers-5/transitions/philo1.take1",
 );
 check(
   "C2 (measured): the state delta overrides the template marking (2 against 1)",
-  bedrock.read({ layer: asLayerName("ss-pn-philosophers-5-inst"), path: asLayerPath(["states", "s1", "places", "philo1.think1"]), key: "marking" }) === 2,
+  bedrock.read({
+    layer: asLayerName("ss-pn-philosophers-5-inst"),
+    path: asLayerPath(["states", "s1", "places", "philo1.think1"]),
+    key: "marking",
+  }) === 2,
 );
 
 // =====================================================================
@@ -301,15 +433,26 @@ check(
 
 let keysAnomalies = 0;
 for (const layerName of KERNEL_LAYER_NAMES) {
-  for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
+  for (const address of walkAddresses({
+    space: bedrock,
+    layer: asLayerName(layerName),
+  })) {
     const keys = bedrock.keys({ layer: address[0], path: address[1] });
     // no special key ever surfaces, no duplicates, stable order
-    if (keys.some((key) => (SPECIAL_KEYS as readonly string[]).includes(key))) keysAnomalies++;
+    if (keys.some((key) => (SPECIAL_KEYS as readonly string[]).includes(key)))
+      keysAnomalies++;
     if (new Set(keys).size !== keys.length) keysAnomalies++;
-    if (bedrock.keys({ layer: address[0], path: address[1] }).join("") !== keys.join("")) keysAnomalies++;
+    if (
+      bedrock.keys({ layer: address[0], path: address[1] }).join("") !==
+      keys.join("")
+    )
+      keysAnomalies++;
   }
 }
-check("C3: keys never surface a special key, never repeat, and are call-stable", keysAnomalies === 0);
+check(
+  "C3: keys never surface a special key, never repeat, and are call-stable",
+  keysAnomalies === 0,
+);
 
 // =====================================================================
 // C4 — ANCHORS: O7 as an independent recomputation
@@ -317,20 +460,41 @@ check("C3: keys never surface a special key, never repeat, and are call-stable",
 
 let anchorsAnomalies = 0;
 for (const layerName of KERNEL_LAYER_NAMES) {
-  for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
+  for (const address of walkAddresses({
+    space: bedrock,
+    layer: asLayerName(layerName),
+  })) {
     const expected: string[] = [];
-    for (const [sourceLayer, sourcePath] of bedrock.closure({ layer: address[0], path: address[1] })) {
-      const anchor = sourcePath.length ? (sourcePath[sourcePath.length - 1] ?? sourceLayer) : sourceLayer;
+    for (const [sourceLayer, sourcePath] of bedrock.closure({
+      layer: address[0],
+      path: address[1],
+    })) {
+      const anchor = sourcePath.length
+        ? (sourcePath[sourcePath.length - 1] ?? sourceLayer)
+        : sourceLayer;
       if (!expected.includes(anchor)) expected.push(anchor);
     }
-    const observed = bedrock.anchorsAt({ layer: address[0], path: address[1], tracer: null });
+    const observed = bedrock.anchorsAt({
+      layer: address[0],
+      path: address[1],
+      tracer: null,
+    });
     if (observed.join("") !== expected.join("")) anchorsAnomalies++;
   }
 }
-check("C4 (O7): anchorsAt is exactly the ordered union of the closure anchors, over every address", anchorsAnomalies === 0);
+check(
+  "C4 (O7): anchorsAt is exactly the ordered union of the closure anchors, over every address",
+  anchorsAnomalies === 0,
+);
 check(
   "C4 (measured diamond §12): the anchors of wb1::arcsAB::e2 are the closure walk",
-  bedrock.anchorsAt({ layer: asLayerName("wb1"), path: asLayerPath(["arcsAB", "e2"]), tracer: null }).join(",") === "e2,arcAB_type,edge_type,record",
+  bedrock
+    .anchorsAt({
+      layer: asLayerName("wb1"),
+      path: asLayerPath(["arcsAB", "e2"]),
+      tracer: null,
+    })
+    .join(",") === "e2,arcAB_type,edge_type,record",
 );
 
 // =====================================================================
@@ -344,19 +508,29 @@ check(
 );
 
 const secondAssembly = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
-const reverseWalk = observableDump({ space: secondAssembly, walkOrder: [...KERNEL_LAYER_NAMES].reverse() });
-const referenceDump = new Set(observableDump({ space: bedrock, walkOrder: KERNEL_LAYER_NAMES }));
+const reverseWalk = observableDump({
+  space: secondAssembly,
+  walkOrder: [...KERNEL_LAYER_NAMES].reverse(),
+});
+const referenceDump = new Set(
+  observableDump({ space: bedrock, walkOrder: KERNEL_LAYER_NAMES }),
+);
 let orderDifferences = 0;
-for (const line of reverseWalk) if (!referenceDump.has(line)) orderDifferences++;
+for (const line of reverseWalk)
+  if (!referenceDump.has(line)) orderDifferences++;
 check(
   "C8 (O16): walking every address in reverse order changes no result",
   orderDifferences === 0 && reverseWalk.length === referenceDump.size,
 );
 
 const permutedAssembly = spaceFromJoinOrder([...KERNEL_LAYER_NAMES].reverse());
-const permutedDump = observableDump({ space: permutedAssembly, walkOrder: KERNEL_LAYER_NAMES });
+const permutedDump = observableDump({
+  space: permutedAssembly,
+  walkOrder: KERNEL_LAYER_NAMES,
+});
 let permutationDifferences = 0;
-for (const line of permutedDump) if (!referenceDump.has(line)) permutationDifferences++;
+for (const line of permutedDump)
+  if (!referenceDump.has(line)) permutationDifferences++;
 check(
   "C8 (permutation invariance): assembling the 47 layers in reverse order changes no closure, no keys, no read",
   permutationDifferences === 0 && permutedDump.length === referenceDump.size,
@@ -372,38 +546,61 @@ check(
 // re-enters. A pure self-reference is absorbed by the deduplication
 // of the walk (measured below), it never reaches the guard.
 const cyclicSpace = spaceFromLayerTrees({
-  "model": {
-    x: { refines: [new PathReference(asLayerName("model"), asLayerPath(["y"]))] },
-    y: { refines: [new PathReference(asLayerName("model"), asLayerPath(["x"]))] },
+  model: {
+    x: {
+      refines: [new PathReference(asLayerName("model"), asLayerPath(["y"]))],
+    },
+    y: {
+      refines: [new PathReference(asLayerName("model"), asLayerPath(["x"]))],
+    },
   },
 });
-const guardedWalk = cyclicSpace.closure({ layer: asLayerName("model"), path: asLayerPath(["x"]) });
+const guardedWalk = cyclicSpace.closure({
+  layer: asLayerName("model"),
+  path: asLayerPath(["x"]),
+});
 check(
   "O5 (measured): the guarded closure of model::x is finite and first — the re-entered way renders an empty list",
   guardedWalk.map(addressText).join(" ") === "model/x model/y",
 );
 check(
   "O5: the guard records its diagnostic on the re-entered address",
-  cyclicSpace.diagnostics.some((diagnostic) => diagnostic.kind === "garde-de-cycle"),
+  cyclicSpace.diagnostics.some(
+    (diagnostic) => diagnostic.kind === "garde-de-cycle",
+  ),
 );
 check(
   "O17: the tainted frames (model::x and model::y) are not memoized",
-  !cyclicSpace.closureMemo.has("model|x") && !cyclicSpace.closureMemo.has("model|y"),
+  !cyclicSpace.closureMemo.has("model|x") &&
+    !cyclicSpace.closureMemo.has("model|y"),
 );
 check(
   "O17 (measured, the assumed consequence): outside any frame, the closure of model::y now includes model::x — the order of calls is observable on a cyclic space",
-  cyclicSpace.closure({ layer: asLayerName("model"), path: asLayerPath(["y"]) }).map(addressText).join(" ") === "model/y model/x",
+  cyclicSpace
+    .closure({ layer: asLayerName("model"), path: asLayerPath(["y"]) })
+    .map(addressText)
+    .join(" ") === "model/y model/x",
 );
 
 // The pure self-reference: absorbed by the deduplication, finite, and
 // memoizable — its result depends on nothing (measured).
 const selfRefSpace = spaceFromLayerTrees({
-  "looped": { node: { refines: [new PathReference(asLayerName("looped"), asLayerPath(["node"]))] } },
+  looped: {
+    node: {
+      refines: [
+        new PathReference(asLayerName("looped"), asLayerPath(["node"])),
+      ],
+    },
+  },
 });
-const selfRefWalk = selfRefSpace.closure({ layer: asLayerName("looped"), path: asLayerPath(["node"]) });
+const selfRefWalk = selfRefSpace.closure({
+  layer: asLayerName("looped"),
+  path: asLayerPath(["node"]),
+});
 check(
   "O5 (measured): a pure self-reference is absorbed by the deduplication — the guard never fires",
-  selfRefWalk.map(addressText).join(" ") === "looped/node" && selfRefSpace.diagnostics.length === 0,
+  selfRefWalk.map(addressText).join(" ") === "looped/node" &&
+    selfRefSpace.diagnostics.length === 0,
 );
 check(
   "O17 (measured): the unguarded self-reference closure is memoized like any other",
@@ -420,11 +617,19 @@ const lateBindingSpace = spaceFromWrittenSources([
 ]);
 check(
   "O6: a reference written in holder resolves in the reading layer — reader::slot reads 42",
-  lateBindingSpace.read({ layer: asLayerName("reader"), path: asLayerPath([]), key: "slot" }) === 42,
+  lateBindingSpace.read({
+    layer: asLayerName("reader"),
+    path: asLayerPath([]),
+    key: "slot",
+  }) === 42,
 );
 check(
   "O6: an interrupted path resolves to null, never to an exception",
-  lateBindingSpace.read({ layer: asLayerName("reader"), path: asLayerPath([]), key: "broken" }) === null,
+  lateBindingSpace.read({
+    layer: asLayerName("reader"),
+    path: asLayerPath([]),
+    key: "broken",
+  }) === null,
 );
 
 // =====================================================================
@@ -435,8 +640,12 @@ check(
 // model listed FIRST in the record: the topological order must still
 // desugar base before model (O13).
 const implicitsSpace = spaceFromLayerTrees({
-  "model": { refines: [new LayerReference(asLayerName("base"))], c: {} },
-  "base": { implicits: [new PathReference(asLayerName("base"), asLayerPath([]))], a: {}, b: {} },
+  model: { refines: [new LayerReference(asLayerName("base"))], c: {} },
+  base: {
+    implicits: [new PathReference(asLayerName("base"), asLayerPath([]))],
+    a: {},
+    b: {},
+  },
 });
 const topological = layerTopologicalOrder(implicitsSpace).map(String);
 check(
@@ -446,7 +655,8 @@ check(
 
 const implicitEntry = new PathReference(asLayerName("base"), asLayerPath([]));
 const refinesOf = (layerName: string, nodeName: string): unknown[] =>
-  (layerTreeOf(implicitsSpace, layerName)[nodeName] as { refines?: unknown[] }).refines ?? [];
+  (layerTreeOf(implicitsSpace, layerName)[nodeName] as { refines?: unknown[] })
+    .refines ?? [];
 
 for (const layerName of topological) {
   desugarLayer({ space: implicitsSpace, layer: asLayerName(layerName) });
@@ -455,23 +665,35 @@ check(
   "C5: desugaring copies the implicits entry into every non-special child of the carrier",
   refinesOf("base", "a").length === 1 &&
     refinesOf("base", "b").length === 1 &&
-    refinementEntriesEqual(refinesOf("base", "a")[0] as PathReference, implicitEntry),
+    refinementEntriesEqual(
+      refinesOf("base", "a")[0] as PathReference,
+      implicitEntry,
+    ),
 );
 check(
   "C5 (measured ruling §13): the implicits entry is inherited by first winner — the model child receives it too",
   refinesOf("model", "c").length === 1 &&
-    refinementEntriesEqual(refinesOf("model", "c")[0] as PathReference, implicitEntry),
+    refinementEntriesEqual(
+      refinesOf("model", "c")[0] as PathReference,
+      implicitEntry,
+    ),
 );
 
 const beforeSecondPass: Record<string, unknown> = {};
-for (const layerName of Object.keys(implicitsSpace.layers)) beforeSecondPass[layerName] = cloneTree(layerTreeOf(implicitsSpace, layerName));
+for (const layerName of Object.keys(implicitsSpace.layers))
+  beforeSecondPass[layerName] = cloneTree(
+    layerTreeOf(implicitsSpace, layerName),
+  );
 for (const layerName of layerTopologicalOrder(implicitsSpace)) {
   desugarLayer({ space: implicitsSpace, layer: asLayerName(layerName) });
 }
 check(
   "C5 (O12): a second desugaring pass changes nothing",
   Object.keys(beforeSecondPass).every((layerName) =>
-    rawTreesEqual(beforeSecondPass[layerName], layerTreeOf(implicitsSpace, layerName)),
+    rawTreesEqual(
+      beforeSecondPass[layerName],
+      layerTreeOf(implicitsSpace, layerName),
+    ),
   ),
 );
 
@@ -480,8 +702,12 @@ check(
 // =====================================================================
 
 const mutableSpace = spaceFromLayerTrees({
-  "scheme": { collection: { bound: 5 } },
-  "model": { refines: [new LayerReference(asLayerName("scheme"))], collection: { own: 1 }, collection2: { own: 2 } },
+  scheme: { collection: { bound: 5 } },
+  model: {
+    refines: [new LayerReference(asLayerName("scheme"))],
+    collection: { own: 1 },
+    collection2: { own: 2 },
+  },
 });
 const modelLayer = asLayerName("model");
 
@@ -518,10 +744,14 @@ check(
 
 // re-march: the recomputed closure equals the original walk (nothing
 // structurally moved — C7's golden re-walk)
-const recollection = mutableSpace.closure({ layer: modelLayer, path: asLayerPath(["collection"]) });
+const recollection = mutableSpace.closure({
+  layer: modelLayer,
+  path: asLayerPath(["collection"]),
+});
 check(
   "C7: after the touch, the re-march of the closure is identical to the original",
-  recollection.map(addressText).join(" ") === "model/collection scheme/collection",
+  recollection.map(addressText).join(" ") ===
+    "model/collection scheme/collection",
 );
 
 // empty path: the whole layer is covered
@@ -529,7 +759,8 @@ mutableSpace.touch({ layer: modelLayer, path: [] });
 const staleAfterLayer = mutableSpace.staleMemoKeys();
 check(
   "C7: an empty-path touch covers the whole layer",
-  staleAfterLayer.includes("model|collection") && staleAfterLayer.includes("model|collection2"),
+  staleAfterLayer.includes("model|collection") &&
+    staleAfterLayer.includes("model|collection2"),
 );
 
 // =====================================================================
@@ -542,13 +773,16 @@ check(
 const bedrockContracts = registryContractsOf();
 check(
   "ADR-0109: the built-in contracts cover the algorithmic tags",
-  Object.keys(bedrockContracts).join(",") === "containers,cardinality,oriented,dag,arbre,k-partite",
+  Object.keys(bedrockContracts).join(",") ===
+    "containers,cardinality,oriented,dag,arbre,k-partite",
 );
 
 // every kernel algorithm has a built-in contract 1:1
 check(
   "ADR-0109: every kernel algorithm has a built-in contract",
-  Object.keys(checkRegistry).every((tag) => bedrockContracts[tag] !== undefined) &&
+  Object.keys(checkRegistry).every(
+    (tag) => bedrockContracts[tag] !== undefined,
+  ) &&
     Object.keys(bedrockContracts).length === Object.keys(checkRegistry).length,
 );
 
@@ -561,7 +795,8 @@ check(
     const contract = bedrockContracts[tag];
     return (
       contract !== undefined &&
-      JSON.stringify(bedrockSlotContracts[tag]) === JSON.stringify(slotReadingLevelsOf(contract))
+      JSON.stringify(bedrockSlotContracts[tag]) ===
+        JSON.stringify(slotReadingLevelsOf(contract))
     );
   }),
 );
@@ -570,21 +805,25 @@ check(
 // judge (measured: 79 contract judgments, 0 vacancies)
 check(
   "ADR-0101: the bedrock corpus carries no vacant check — every carried tag can judge",
-  vacantChecksOf({ space: bedrock, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
+  vacantChecksOf({ space: bedrock, layerNames: [...KERNEL_LAYER_NAMES] })
+    .length === 0,
 );
 
 // the built-in contract check: a variant bedrock is not needed —
 // ADR-0109 moved the algorithmic contracts into the kernel, so the
 // detector reads them from registryContractsOf() directly.
 const variantSources = Object.fromEntries(
-  KERNEL_LAYER_NAMES.map((layerName) => [layerName, layerSources[layerName] ?? ""]),
+  KERNEL_LAYER_NAMES.map((layerName) => [
+    layerName,
+    layerSources[layerName] ?? "",
+  ]),
 );
 const variantTrunk = spaceFromSourcesMap(variantSources, KERNEL_LAYER_NAMES);
 check(
   "ADR-0109: the variant bedrock (no registry layer) carries no vacant check",
-  vacantChecksOf({ space: variantTrunk, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
+  vacantChecksOf({ space: variantTrunk, layerNames: [...KERNEL_LAYER_NAMES] })
+    .length === 0,
 );
-
 
 // =====================================================================
 // the declarative strate (ADR-0105): the couples of hypergraph, judged
@@ -612,7 +851,8 @@ const bedrockValidated = validateSpace({
 });
 check(
   "ADR-0105/0027: the bedrock poses its three inline couples and the validation stays silent",
-  bedrockValidated.stats.couples === 3 && bedrockValidated.verdicts.every((v) => v.kind === "déclaration-fantôme"),
+  bedrockValidated.stats.couples === 3 &&
+    bedrockValidated.verdicts.every((v) => v.kind === "déclaration-fantôme"),
 );
 
 // the two strates stay separate walks on the bedrock (measured: the
@@ -621,7 +861,10 @@ check(
 const bedrockAlgorithmic = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
 check(
   "ADR-0105: the bedrock's algorithmic judgments are unchanged — nothing to judge",
-  KERNEL_LAYER_NAMES.every((layerName) => runChecks({ space: bedrockAlgorithmic, layer: layerName }).length === 0),
+  KERNEL_LAYER_NAMES.every(
+    (layerName) =>
+      runChecks({ space: bedrockAlgorithmic, layer: layerName }).length === 0,
+  ),
 );
 const bedrockDeclarative = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
 const bedrockFoJudgments = KERNEL_LAYER_NAMES.flatMap((layerName) =>
@@ -631,7 +874,9 @@ check(
   "ADR-0105: the bedrock's declarative strate agrees — no violation, no exhaustion",
   bedrockFoJudgments.length === 0 &&
     bedrockDeclarative.diagnostics.every(
-      (diagnostic) => diagnostic.kind !== "formule-illisible" && diagnostic.kind !== "formule-épuisée",
+      (diagnostic) =>
+        diagnostic.kind !== "formule-illisible" &&
+        diagnostic.kind !== "formule-épuisée",
     ),
 );
 
@@ -699,16 +944,26 @@ const foProbeOrderedSource = [
  * every falsified assignment ships; two assignments with the same
  * UNORDERED witness keys are ONE violation (the symmetric pairs, the
  * failed disjuncts of one same cause). */
-function foViolationsOf({ space, layer }: { space: Space; layer: LayerName }): Map<string, number> {
+function foViolationsOf({
+  space,
+  layer,
+}: {
+  space: Space;
+  layer: LayerName;
+}): Map<string, number> {
   const witnesses = new Map<string, Set<string>>();
   for (const judgment of runChecksFO({ space, layer })) {
-    const address = judgment.address[0] + "::" + (judgment.address[1].join("/") || ".");
+    const address =
+      judgment.address[0] + "::" + (judgment.address[1].join("/") || ".");
     const key = address + "|" + judgment.tag;
     if (!witnesses.has(key)) witnesses.set(key, new Set());
     witnesses.get(key)!.add([...judgment.witnessKeys].sort().join(","));
     check(
       "ADR-0105: the declarative judgment carries its measured cost",
-      judgment.steps > 0 && space.diagnostics.every((diagnostic) => diagnostic.kind !== "formule-épuisée"),
+      judgment.steps > 0 &&
+        space.diagnostics.every(
+          (diagnostic) => diagnostic.kind !== "formule-épuisée",
+        ),
     );
   }
   return new Map([...witnesses.entries()].map(([key, set]) => [key, set.size]));
@@ -726,10 +981,15 @@ for (const [probeName, probeSource, expected] of [
   // declarative walk counts UNIQUE witness sets per (address, tag) —
   // the symmetric pairs fold into one cause.
   const probeSpace = spaceFromSourcesMap(probeSources, probeOrder);
-  const counts = foViolationsOf({ space: probeSpace, layer: asLayerName(probeName) });
+  const counts = foViolationsOf({
+    space: probeSpace,
+    layer: asLayerName(probeName),
+  });
   const where = probeName + "::.";
   check(
-    "ADR-0105/0027: probe " + probeName + " — the inline formulas judge the expected causes",
+    "ADR-0105/0027: probe " +
+      probeName +
+      " — the inline formulas judge the expected causes",
     (counts.get(where + "|simple") ?? 0) === expected.simple &&
       (counts.get(where + "|nonempty") ?? 0) === expected.nonempty,
   );
@@ -749,7 +1009,10 @@ for (const [probeName, probeSource, expected] of [
 const confluentBedrock = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
 check(
   "T1 (confluence, the census): the bedrock carries zero leaf-value order conflicts — ADR-0100's census, now a standing property",
-  orderConflictsOf({ space: confluentBedrock, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
+  orderConflictsOf({
+    space: confluentBedrock,
+    layerNames: [...KERNEL_LAYER_NAMES],
+  }).length === 0,
 );
 
 // (b) The divergence probe: two incomparable providers of one leaf —
@@ -763,21 +1026,37 @@ const branchSources = [
   "layer branch-a\n  new slot\n    value = 1\n",
   "layer branch-b\n  new slot\n    value = 2\n",
 ];
-const forkAB = spaceFromWrittenSources([...branchSources, "layer fork refines @branch-a then @branch-b\n  extend slot\n"]);
-const forkBA = spaceFromWrittenSources([...branchSources, "layer fork refines @branch-b then @branch-a\n  extend slot\n"]);
+const forkAB = spaceFromWrittenSources([
+  ...branchSources,
+  "layer fork refines @branch-a then @branch-b\n  extend slot\n",
+]);
+const forkBA = spaceFromWrittenSources([
+  ...branchSources,
+  "layer fork refines @branch-b then @branch-a\n  extend slot\n",
+]);
 check(
   "T1 (confluence, the divergence probe): the unsigned read is deterministic — the refines order owns the fallback (O16): 1, then 2 the other way",
-  forkAB.read({ layer: asLayerName("fork"), path: asLayerPath(["slot"]), key: "value" }) === 1 &&
-    forkBA.read({ layer: asLayerName("fork"), path: asLayerPath(["slot"]), key: "value" }) === 2,
+  forkAB.read({
+    layer: asLayerName("fork"),
+    path: asLayerPath(["slot"]),
+    key: "value",
+  }) === 1 &&
+    forkBA.read({
+      layer: asLayerName("fork"),
+      path: asLayerPath(["slot"]),
+      key: "value",
+    }) === 2,
 );
-const forkInventoryOf = (space: Space) => orderConflictsOf({ space, layerNames: [asLayerName("fork")] });
+const forkInventoryOf = (space: Space) =>
+  orderConflictsOf({ space, layerNames: [asLayerName("fork")] });
 check(
   "T1 (confluence, the divergence probe): both orders carry exactly one inventoried conflict — visible either way, never silenced",
   forkInventoryOf(forkAB).length === 1 && forkInventoryOf(forkBA).length === 1,
 );
 check(
   "T1 (confluence, the divergence probe): the inventory names the winner the order picked — the convention is observable, not blessed",
-  String(at(at(forkInventoryOf(forkAB), 0).winner, 0)) === "branch-a" && String(at(at(forkInventoryOf(forkBA), 0).winner, 0)) === "branch-b",
+  String(at(at(forkInventoryOf(forkAB), 0).winner, 0)) === "branch-a" &&
+    String(at(at(forkInventoryOf(forkBA), 0).winner, 0)) === "branch-b",
 );
 
 // T2 — CONSERVATIVITY. For each layer L of the bedrock: L's posterity
@@ -791,10 +1070,20 @@ check(
 const layerDependencies = new Map<string, string[]>();
 for (const layerName of KERNEL_LAYER_NAMES) {
   const dependencies: string[] = [];
-  for (const [, node] of rawTreeWalk(layerTreeOf(bedrock, String(layerName)) as never)) {
+  for (const [, node] of rawTreeWalk(
+    layerTreeOf(bedrock, String(layerName)) as never,
+  )) {
     for (const entry of (node as { refines?: unknown[] }).refines ?? []) {
-      if (entry instanceof LayerReference && String(entry.layer) !== String(layerName)) dependencies.push(String(entry.layer));
-      if (entry instanceof PathReference && String(entry.anchor) !== String(layerName)) dependencies.push(String(entry.anchor));
+      if (
+        entry instanceof LayerReference &&
+        String(entry.layer) !== String(layerName)
+      )
+        dependencies.push(String(entry.layer));
+      if (
+        entry instanceof PathReference &&
+        String(entry.anchor) !== String(layerName)
+      )
+        dependencies.push(String(entry.anchor));
     }
   }
   layerDependencies.set(String(layerName), dependencies);
@@ -810,7 +1099,12 @@ function posterityOf(target: LayerName): Set<string> {
       const name = String(layerName);
       if (name === String(target) || posterity.has(name)) continue;
       const dependencies = layerDependencies.get(name) ?? [];
-      if (dependencies.some((dependency) => dependency === String(target) || posterity.has(dependency))) {
+      if (
+        dependencies.some(
+          (dependency) =>
+            dependency === String(target) || posterity.has(dependency),
+        )
+      ) {
         posterity.add(name);
         grew = true;
       }
@@ -823,24 +1117,37 @@ let conservativityComparisons = 0;
 let conservativityDisturbances = 0;
 for (const removed of KERNEL_LAYER_NAMES) {
   const posterity = posterityOf(removed);
-  const outside = KERNEL_LAYER_NAMES.filter((name) => name !== removed && !posterity.has(String(name)));
+  const outside = KERNEL_LAYER_NAMES.filter(
+    (name) => name !== removed && !posterity.has(String(name)),
+  );
   if (outside.length === 0) continue;
   const branchless = spaceFromJoinOrder(outside);
   for (const layerName of outside) {
-    for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
+    for (const address of walkAddresses({
+      space: bedrock,
+      layer: asLayerName(layerName),
+    })) {
       const [layer, path] = address;
       conservativityComparisons++;
-      if (branchless.closure({ layer, path }).map(addressText).join(" ") !== bedrock.closure({ layer, path }).map(addressText).join(" ")) {
+      if (
+        branchless.closure({ layer, path }).map(addressText).join(" ") !==
+        bedrock.closure({ layer, path }).map(addressText).join(" ")
+      ) {
         conservativityDisturbances++;
         continue;
       }
       const keptKeys = branchless.keys({ layer, path });
-      if (keptKeys.join("\u0001") !== bedrock.keys({ layer, path }).join("\u0001")) {
+      if (
+        keptKeys.join("\u0001") !== bedrock.keys({ layer, path }).join("\u0001")
+      ) {
         conservativityDisturbances++;
         continue;
       }
       for (const key of keptKeys) {
-        if (valueText(branchless.read({ layer, path, key })) !== valueText(bedrock.read({ layer, path, key }))) {
+        if (
+          valueText(branchless.read({ layer, path, key })) !==
+          valueText(bedrock.read({ layer, path, key }))
+        ) {
           conservativityDisturbances++;
           break;
         }
@@ -867,10 +1174,20 @@ for (let step = 1; step < assemblyOrder.length; step++) {
   const smallSpace = spaceFromJoinOrder(present);
   const bigSpace = spaceFromJoinOrder(grown);
   for (const layerName of present) {
-    for (const address of walkAddresses({ space: smallSpace, layer: asLayerName(layerName) })) {
+    for (const address of walkAddresses({
+      space: smallSpace,
+      layer: asLayerName(layerName),
+    })) {
       monotonyComparisons++;
-      const kept = new Set(bigSpace.keys({ layer: address[0], path: address[1] }));
-      if (!smallSpace.keys({ layer: address[0], path: address[1] }).every((key) => kept.has(key))) monotonyRemovals++;
+      const kept = new Set(
+        bigSpace.keys({ layer: address[0], path: address[1] }),
+      );
+      if (
+        !smallSpace
+          .keys({ layer: address[0], path: address[1] })
+          .every((key) => kept.has(key))
+      )
+        monotonyRemovals++;
     }
   }
 }
@@ -892,25 +1209,27 @@ const coupleSources = [
   "  new slot\n",
   "    value = 1\n",
   "  check containers\n",
-  "    level = \"root\"\n",
+  '    level = "root"\n',
   "    judgment\n",
-  "      formula = \"forall s in slot: s/value\"\n",
-  "      message = \"containers: slot sans valeur ({s})\"\n",
+  '      formula = "forall s in slot: s/value"\n',
+  '      message = "containers: slot sans valeur ({s})"\n',
 ];
 const coupleHeirSource = (formula: string, message: string): string =>
   [
     "layer couple-heir refines @couple-base\n",
     "  check containers\n",
-    "    level = \"root\"\n",
+    '    level = "root"\n',
     "    judgment\n",
-    "      formula = \"" + formula + "\"\n",
-    "      message = \"" + message + " ({s})\"\n",
+    '      formula = "' + formula + '"\n',
+    '      message = "' + message + ' ({s})"\n',
   ].join("");
 
 /** The validation of a written multi-layer space — the assembly's own
  * walk: parse, compile, validate. */
 function validateWrittenSources(sources: readonly string[]) {
-  const joined = sources.map((source) => (source.endsWith("\n") ? source : source + "\n")).join("");
+  const joined = sources
+    .map((source) => (source.endsWith("\n") ? source : source + "\n"))
+    .join("");
   const parse = parseLanguage(joined);
   const compilation = compileLanguage(parse.layers);
   const space = new Space(compilation.layers);
@@ -930,18 +1249,29 @@ check(
 const divergentRePose = validateWrittenSources([
   layerSources["record"] ?? "",
   ...coupleSources,
-  coupleHeirSource("forall s in slot: not s/value", "containers: autre lecture"),
+  coupleHeirSource(
+    "forall s in slot: not s/value",
+    "containers: autre lecture",
+  ),
 ]);
 check(
   "T3 (monotony, the couple clause): the divergent re-pose is refused at assembly — « check-redéfini », a replacement never lands",
-  divergentRePose.verdicts.filter((verdict) => verdict.kind === "check-redéfini").length === 1,
+  divergentRePose.verdicts.filter(
+    (verdict) => verdict.kind === "check-redéfini",
+  ).length === 1,
 );
 
 // =====================================================================
 // the ledger
 // =====================================================================
 
-console.log("specification properties: " + assertions + " assertions, " + failures.length + " failure(s)");
+console.log(
+  "specification properties: " +
+    assertions +
+    " assertions, " +
+    failures.length +
+    " failure(s)",
+);
 for (const failure of failures) {
   console.log("FAIL " + failure);
 }
