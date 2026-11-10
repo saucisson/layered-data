@@ -4,7 +4,6 @@
 // arrowhead — dashed when undressed). Pure rendering, no kernel
 // reads.
 
-
 /** One drawn vertex: the shape decided by the lens for its type,
  * the name inside, dashed when the lens knows nothing of it. */
 export function NodeGlyph({
@@ -27,18 +26,52 @@ export function NodeGlyph({
   const strokeWidth = selected ? 2.5 : 1.5;
   return (
     <g onClick={onPick} style={{ cursor: "pointer" }}>
-      {shapeKind === "circle" && <circle cx={x} cy={y} r={16} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />}
+      {shapeKind === "circle" && (
+        <circle cx={x} cy={y} r={16} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+      )}
       {shapeKind === "ellipse" && (
-        <ellipse cx={x} cy={y} rx={24} ry={14} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+        <ellipse
+          cx={x}
+          cy={y}
+          rx={24}
+          ry={14}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
       )}
       {shapeKind === "rectangle" && (
-        <rect x={x - 22} y={y - 12} width={44} height={24} rx={2} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+        <rect
+          x={x - 22}
+          y={y - 12}
+          width={44}
+          height={24}
+          rx={2}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
       )}
       {shapeKind === "box" && (
-        <rect x={x - 26} y={y - 12} width={52} height={24} rx={3} fill="#ffffff" stroke="#455555" strokeWidth={strokeWidth} />
+        <rect
+          x={x - 26}
+          y={y - 12}
+          width={52}
+          height={24}
+          rx={3}
+          fill="#ffffff"
+          stroke="#455555"
+          strokeWidth={strokeWidth}
+        />
       )}
       {!shape && <circle cx={x} cy={y} r={16} fill="none" stroke={stroke} strokeDasharray="3 3" />}
-      <text x={x} y={y + 3} textAnchor="middle" fontSize={9} fill={shapeKind === "rectangle" ? "#f8fafc" : "#334155"}>
+      <text
+        x={x}
+        y={y + 3}
+        textAnchor="middle"
+        fontSize={9}
+        fill={shapeKind === "rectangle" ? "#f8fafc" : "#334155"}
+      >
         {name}
       </text>
     </g>

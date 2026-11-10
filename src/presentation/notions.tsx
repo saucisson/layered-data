@@ -59,7 +59,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       fr: "un membre qui raffine une fenêtre d'une autre couche (ex. philo2 refines @pn-philosophers-1) ; le moteur développe, les membres atterrissent qualifiés, la donnée reste dans le template.",
     },
   },
-  "clé": {
+  clé: {
     term: { en: "key", fr: "clé" },
     definition: {
       en: "a relative designation: local to its collection, in the current layer only — as opposed to the Ref.",
@@ -136,14 +136,14 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       fr: "la liste ordonnée de tous les nœuds qui définissent une adresse : soi-même, puis chaque ancêtre via refines.",
     },
   },
-  "géologue": {
+  géologue: {
     term: { en: "geologist", fr: "géologue" },
     definition: {
       en: "the AI layer-writer of the workshop: it proposes drafts, the staging judges them; it never applies anything, and an expectation is measured, never invented.",
       fr: "le rédacteur IA de l'atelier : il propose des brouillons, le staging les juge ; il n'applique jamais rien, et un attendu se mesure, il ne s'invente pas.",
     },
   },
-  "hériter": {
+  hériter: {
     term: { en: "inherit", fr: "hériter" },
     definition: {
       en: "laying nothing oneself: the value read is an ancestor's.",
@@ -178,7 +178,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       fr: "le vérificateur structurel de l'espace (références mortes, plongements, liaisons tardives inertes) ; aveugle aux désignations par clés.",
     },
   },
-  "paramètre": {
+  paramètre: {
     term: { en: "parameter", fr: "paramètre" },
     definition: {
       en: "a slot whose value is laid by a descending layer (ex. ss-pn-philosophers-5 lays petrinet = pn-philosophers-5).",
@@ -272,7 +272,13 @@ export function glossaryIds(): string[] {
 /** The glossary id behind a term as the prose writes it — the
  * markers carry the term in the prose's own language, sometimes
  * capitalized; the resolution is case-insensitive. */
-export function glossaryIdOfTerm({ term, language }: { term: string; language: Language }): string | null {
+export function glossaryIdOfTerm({
+  term,
+  language,
+}: {
+  term: string;
+  language: Language;
+}): string | null {
   const sought = term.toLowerCase();
   for (const id of glossaryIds()) {
     const entry = GLOSSARY[id];

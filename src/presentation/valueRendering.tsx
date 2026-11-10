@@ -33,7 +33,11 @@ export function KernelValue({ value, language }: { value: any; language: Languag
     );
   }
   if (value instanceof PathReference) {
-    return <span className="text-sky-700">→ ({value.anchor}) {value.path.join("/")}</span>;
+    return (
+      <span className="text-sky-700">
+        → ({value.anchor}) {value.path.join("/")}
+      </span>
+    );
   }
   if (value instanceof LayerReference) {
     return <span className="text-sky-700">→ {value.layer}</span>;
@@ -75,9 +79,7 @@ export function FlatValue({ value, language }: { value: any; language: Language 
 
 /** One path prefix as text. */
 function prefixText(prefix: string[], language: Language): string {
-  return prefix.length
-    ? prefix.join("/")
-    : say({ language, en: "root ( )", fr: "racine ( )" });
+  return prefix.length ? prefix.join("/") : say({ language, en: "root ( )", fr: "racine ( )" });
 }
 
 /** Render one trace event of a closure walk: the base (own node +
@@ -153,12 +155,17 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
           {event.search.map((searchStep: any, index: number) => (
             <div key={index}>
               {say({ language, en: "prefix ", fr: "préfixe " })}
-              <span className="font-medium text-slate-700">{prefixText(searchStep.prefix, language)}</span>{" "}
-              {say({ language, en: "→ anchors ", fr: "→ ancres " })}{"{ "}
+              <span className="font-medium text-slate-700">
+                {prefixText(searchStep.prefix, language)}
+              </span>{" "}
+              {say({ language, en: "→ anchors ", fr: "→ ancres " })}
+              {"{ "}
               {searchStep.anchors.length ? (
                 searchStep.anchors.map((anchor: string, anchorIndex: number) => (
                   <span key={anchorIndex}>
-                    <span className={anchor === event.ref[0] ? "font-bold text-sky-700" : ""}>{anchor}</span>
+                    <span className={anchor === event.ref[0] ? "font-bold text-sky-700" : ""}>
+                      {anchor}
+                    </span>
                     {anchorIndex < searchStep.anchors.length - 1 ? ", " : ""}
                   </span>
                 ))
@@ -215,7 +222,9 @@ const STATUS_STYLE: Record<string, string> = {
 export function StatusPill({ status, language }: { status: string; language: Language }) {
   return (
     <span
-      className={"rounded border px-1.5 py-0.5 text-[10px] " + (STATUS_STYLE[status] || STATUS_STYLE.absent)}
+      className={
+        "rounded border px-1.5 py-0.5 text-[10px] " + (STATUS_STYLE[status] || STATUS_STYLE.absent)
+      }
     >
       {labelOf({ code: status, language })}
     </span>

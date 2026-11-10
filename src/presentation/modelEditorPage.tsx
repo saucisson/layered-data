@@ -38,7 +38,11 @@ import { circlePosition, LENS_LAYERS } from "./viewTree.ts";
 import { EdgeGlyph } from "./glyphs.tsx";
 import { editionRefusalLabel, labelOf } from "./i18n.ts";
 import { t } from "../infrastructure/i18n.ts";
-import { connectEditorSync, type EditorSyncHandle, type SessionSnapshot } from "../infrastructure/editorSync.ts";
+import {
+  connectEditorSync,
+  type EditorSyncHandle,
+  type SessionSnapshot,
+} from "../infrastructure/editorSync.ts";
 import {
   readMemberContainers,
   positionContainerOf,
@@ -103,9 +107,33 @@ interface ArcView {
 /** The gesture in flight: a pan of the canvas, a drag of one vertex,
  * or an elastic arc being pulled from a vertex. */
 type Gesture =
-  | { kind: "pan"; clientX: number; clientY: number; originX: number; originY: number; moved: boolean }
-  | { kind: "drag"; container: string; name: string; startX: number; startY: number; x: number; y: number; moved: boolean }
-  | { kind: "elastic"; fromContainer: string; fromName: string; fromX: number; fromY: number; x: number; y: number };
+  | {
+      kind: "pan";
+      clientX: number;
+      clientY: number;
+      originX: number;
+      originY: number;
+      moved: boolean;
+    }
+  | {
+      kind: "drag";
+      container: string;
+      name: string;
+      startX: number;
+      startY: number;
+      x: number;
+      y: number;
+      moved: boolean;
+    }
+  | {
+      kind: "elastic";
+      fromContainer: string;
+      fromName: string;
+      fromX: number;
+      fromY: number;
+      x: number;
+      y: number;
+    };
 
 /** The verdict banner of the last gesture: the tribunal's refusal,
  * or the declaration of the write. */
@@ -127,7 +155,9 @@ export function ModelEditorPage({
   // by a fresh assembly + the server's additions on every state
   // event, so the server stays the single writer; locally the space
   // is mutated in place by each accepted gesture.
-  const [KERNEL, setKERNEL] = useState(() => assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() }));
+  const [KERNEL, setKERNEL] = useState(() =>
+    assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() }),
+  );
 
   // ---- the living workshop -----------------------------------------
   const [additions, setAdditions] = useState<LivingAddition[]>([]);
@@ -233,7 +263,12 @@ export function ModelEditorPage({
    * two ends — a dangling citation draws nothing, no error. */
   const drawing = useMemo(() => {
     if (model === null) return { vertices: [] as VertexView[], arcs: [] as ArcView[] };
-    const pending: { container: string; name: string; position: { x: number; y: number } | null; spec: ShapeSpec }[] = [];
+    const pending: {
+      container: string;
+      name: string;
+      position: { x: number; y: number } | null;
+      spec: ShapeSpec;
+    }[] = [];
     for (const container of vertexContainers) {
       const names = readMemberNames({ space: KERNEL.space, model, container: container.name });
       for (const name of names) {
@@ -259,19 +294,28 @@ export function ModelEditorPage({
     const vertices: VertexView[] = pending.map((vertex, index) => ({
       container: vertex.container,
       name: vertex.name,
-      position: vertex.position ?? circlePosition({ index, total: pending.length }) ?? { x: CANVAS_WIDTH / 2, y: CANVAS_HEIGHT / 2 },
+      position: vertex.position ??
+        circlePosition({ index, total: pending.length }) ?? {
+          x: CANVAS_WIDTH / 2,
+          y: CANVAS_HEIGHT / 2,
+        },
       spec: vertex.spec,
     }));
     const positionOfMember = (reference: unknown): { x: number; y: number } | null => {
       if (!(reference instanceof AddressView) || reference.path.length !== 2) return null;
       const vertex = vertices.find(
-        (candidate) => candidate.container === reference.path[0] && candidate.name === reference.path[1],
+        (candidate) =>
+          candidate.container === reference.path[0] && candidate.name === reference.path[1],
       );
       return vertex ? vertex.position : null;
     };
     const arcs: ArcView[] = [];
     for (const container of arcContainers) {
-      for (const arcName of readMemberNames({ space: KERNEL.space, model, container: container.name })) {
+      for (const arcName of readMemberNames({
+        space: KERNEL.space,
+        model,
+        container: container.name,
+      })) {
         const shape = drawnShape({
           space: KERNEL.space,
           lens: asLayerName(lens),
@@ -281,20 +325,36 @@ export function ModelEditorPage({
         // the arc's label: the first declared annotation key that
         // reads a number — the formalism's data names it, never a
         // hardcoded key
-        const labelKey = arcLabelKeyOf({ space: KERNEL.space, model, arcContainer: container, arcName });
-        const label = labelKey === null ? null : KERNEL.space.read({
-          layer: asLayerName(model),
-          path: asLayerPath([container.name, arcName]),
-          key: labelKey,
+        const labelKey = arcLabelKeyOf({
+          space: KERNEL.space,
+          model,
+          arcContainer: container,
+          arcName,
         });
+        const label =
+          labelKey === null
+            ? null
+            : KERNEL.space.read({
+                layer: asLayerName(model),
+                path: asLayerPath([container.name, arcName]),
+                key: labelKey,
+              });
         arcs.push({
           container: container.name,
           name: arcName,
           from: positionOfMember(
-            KERNEL.space.read({ layer: asLayerName(model), path: asLayerPath([container.name, arcName]), key: "source" }),
+            KERNEL.space.read({
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, arcName]),
+              key: "source",
+            }),
           ),
           to: positionOfMember(
-            KERNEL.space.read({ layer: asLayerName(model), path: asLayerPath([container.name, arcName]), key: "target" }),
+            KERNEL.space.read({
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, arcName]),
+              key: "target",
+            }),
           ),
           spec: shape?.spec ?? null,
           weight: typeof label === "number" ? label : null,
@@ -333,8 +393,12 @@ export function ModelEditorPage({
     }
     serverVersionRef.current = snapshot.version;
     setKERNEL(kernel);
-    setAdditions(snapshot.additions.map((entry) => ({ source: entry.source, layerNames: [entry.name] })));
-    setAddedLayerBlocks(Object.fromEntries(snapshot.additions.map((entry) => [entry.name, entry.source])));
+    setAdditions(
+      snapshot.additions.map((entry) => ({ source: entry.source, layerNames: [entry.name] })),
+    );
+    setAddedLayerBlocks(
+      Object.fromEntries(snapshot.additions.map((entry) => [entry.name, entry.source])),
+    );
     setSpaceVersion((version) => version + 1);
   }
 
@@ -390,10 +454,18 @@ export function ModelEditorPage({
           serverVersionRef.current = result.body.version;
         } else if (result.status === 409) {
           serverVersionRef.current = result.body.version;
-          setBanner({ tone: "refused", text: t("another editor wrote first — the shared state was reloaded, replay your gesture") });
+          setBanner({
+            tone: "refused",
+            text: t(
+              "another editor wrote first — the shared state was reloaded, replay your gesture",
+            ),
+          });
         } else if (result.status === 422) {
           serverVersionRef.current = result.body.version;
-          setBanner({ tone: "refused", text: t("the server's staging refused the gesture — the shared state was reloaded") });
+          setBanner({
+            tone: "refused",
+            text: t("the server's staging refused the gesture — the shared state was reloaded"),
+          });
         }
       })
       .catch(() => {
@@ -408,7 +480,11 @@ export function ModelEditorPage({
     const parts: string[] = [];
     if (staging.step === "syntaxe") parts.push(...staging.errors);
     for (const verdict of staging.verdicts) {
-      parts.push(labelOf({ code: verdict.kind, language }) + " — " + renderMessage({ message: verdict.fact, language }));
+      parts.push(
+        labelOf({ code: verdict.kind, language }) +
+          " — " +
+          renderMessage({ message: verdict.fact, language }),
+      );
     }
     return parts.join(" ; ");
   }
@@ -416,7 +492,9 @@ export function ModelEditorPage({
   /** Render an edition outcome's refusal: the guards first, then the
    * staging's own words. */
   function editionRefusalText({ outcome }: { outcome: EditionOutcome }): string {
-    const parts = outcome.refusals.map((refusal) => editionRefusalLabel({ code: refusal, language }));
+    const parts = outcome.refusals.map((refusal) =>
+      editionRefusalLabel({ code: refusal, language }),
+    );
     const stagingText = stagingRefusalText({ staging: outcome.staging });
     if (stagingText.length > 0) parts.push(stagingText);
     return parts.join(" ; ");
@@ -467,7 +545,11 @@ export function ModelEditorPage({
     }
     setAdditions(
       additions.map((addition) =>
-        rewriteLivingAddition({ addition, layerName: asLayerName(targetModel), block: edition.block }),
+        rewriteLivingAddition({
+          addition,
+          layerName: asLayerName(targetModel),
+          block: edition.block,
+        }),
       ),
     );
     setAddedLayerBlocks({ ...addedLayerBlocks, [targetModel]: edition.block });
@@ -475,7 +557,9 @@ export function ModelEditorPage({
     sendSharedGesture({ source: draftedSource });
     setBanner({
       tone: "written",
-      text: t("staging: 0 verdict — the layer is rewritten, the write is declared, the canvas re-reads the space"),
+      text: t(
+        "staging: 0 verdict — the layer is rewritten, the write is declared, the canvas re-reads the space",
+      ),
     });
     return true;
   }
@@ -526,7 +610,10 @@ export function ModelEditorPage({
   // ---- the gestures ---------------------------------------------------
 
   /** The world point under one pointer event. */
-  function toWorld({ clientX, clientY }: { clientX: number; clientY: number }): { x: number; y: number } {
+  function toWorld({ clientX, clientY }: { clientX: number; clientY: number }): {
+    x: number;
+    y: number;
+  } {
     const svg = svgRef.current;
     if (svg === null) return { x: 0, y: 0 };
     const rectangle = svg.getBoundingClientRect();
@@ -547,10 +634,7 @@ export function ModelEditorPage({
     svgRef.current?.setPointerCapture(event.pointerId);
   }
 
-  function handleVertexPointerDown(
-    event: React.PointerEvent<SVGGElement>,
-    vertex: VertexView,
-  ) {
+  function handleVertexPointerDown(event: React.PointerEvent<SVGGElement>, vertex: VertexView) {
     event.stopPropagation();
     svgRef.current?.setPointerCapture(event.pointerId);
     if (tool.kind === "arc") {
@@ -626,7 +710,10 @@ export function ModelEditorPage({
       const vertex = drawing.vertices.find(
         (candidate) => candidate.container === gesture.container && candidate.name === gesture.name,
       );
-      const moved = vertex !== undefined && (Math.abs(gesture.x - gesture.startX) > DRAG_THRESHOLD || Math.abs(gesture.y - gesture.startY) > DRAG_THRESHOLD);
+      const moved =
+        vertex !== undefined &&
+        (Math.abs(gesture.x - gesture.startX) > DRAG_THRESHOLD ||
+          Math.abs(gesture.y - gesture.startY) > DRAG_THRESHOLD);
       if (moved && vertex !== undefined && model !== null && positionContainer !== null) {
         const nextX = Math.round(vertex.position.x + gesture.x - gesture.startX);
         const nextY = Math.round(vertex.position.y + gesture.y - gesture.startY);
@@ -648,7 +735,8 @@ export function ModelEditorPage({
     // which container the arc belongs to, or the banner refuses
     const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
     const hit = drawing.vertices.find((vertex) => {
-      if (vertex.container === gesture.fromContainer && vertex.name === gesture.fromName) return false;
+      if (vertex.container === gesture.fromContainer && vertex.name === gesture.fromName)
+        return false;
       return Math.hypot(vertex.position.x - world.x, vertex.position.y - world.y) < 20;
     });
     if (hit !== undefined && model !== null) {
@@ -666,7 +754,11 @@ export function ModelEditorPage({
           ),
         });
       } else {
-        const arcName = nextMemberName({ space: KERNEL.space, model, container: arcContainer.name });
+        const arcName = nextMemberName({
+          space: KERNEL.space,
+          model,
+          container: arcContainer.name,
+        });
         proposeEdition({
           draftedSource: draftMemberInsertion({
             block: modelSource,
@@ -674,7 +766,11 @@ export function ModelEditorPage({
             name: arcName,
             typeReference: typeReferenceText({ address: arcContainer.memberType }),
             fields: {
-              source: memberReferenceText({ model, container: gesture.fromContainer, member: gesture.fromName }),
+              source: memberReferenceText({
+                model,
+                container: gesture.fromContainer,
+                member: gesture.fromName,
+              }),
               target: memberReferenceText({ model, container: hit.container, member: hit.name }),
             },
           }),
@@ -948,7 +1044,10 @@ export function ModelEditorPage({
       knownLayerNames: livingLayerNames,
       readonlyLayerNames: KERNEL.layerNames,
     });
-    setAdditions([...additions, { source: draftSource.trim(), layerNames: [...applied.newLayerNames] }]);
+    setAdditions([
+      ...additions,
+      { source: draftSource.trim(), layerNames: [...applied.newLayerNames] },
+    ]);
     const nextBlocks = { ...addedLayerBlocks };
     for (const layerName of applied.newLayerNames) {
       const block = staging.blocks[layerName];
@@ -975,7 +1074,9 @@ export function ModelEditorPage({
   return (
     <div className="mx-auto max-w-6xl px-4 py-6">
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[11px] font-bold text-white">✎</span>
+        <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
+          ✎
+        </span>
         <span className="text-sm font-semibold text-slate-700">
           {t("the graphical model editor")}
         </span>
@@ -1128,7 +1229,9 @@ export function ModelEditorPage({
               onClick={() => setTool({ kind: "select" })}
               className={
                 "rounded px-2 py-1 text-left text-[11px] " +
-                (tool.kind === "select" ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")
+                (tool.kind === "select"
+                  ? "bg-sky-600 text-white"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200")
               }
             >
               {t("pointer")}
@@ -1153,9 +1256,13 @@ export function ModelEditorPage({
                 onClick={() => setTool({ kind: "arc" })}
                 className={
                   "rounded px-2 py-1 text-left text-[11px] " +
-                  (tool.kind === "arc" ? "bg-sky-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200")
+                  (tool.kind === "arc"
+                    ? "bg-sky-600 text-white"
+                    : "bg-slate-100 text-slate-600 hover:bg-slate-200")
                 }
-                title={t("drag from a vertex to another — pre or post, the formalism's rules decide")}
+                title={t(
+                  "drag from a vertex to another — pre or post, the formalism's rules decide",
+                )}
               >
                 {t("arc")}
               </button>
@@ -1201,7 +1308,11 @@ export function ModelEditorPage({
                     weight={arc.weight}
                     from={arc.from}
                     to={arc.to}
-                    selected={selected !== null && selected.container === arc.container && selected.name === arc.name}
+                    selected={
+                      selected !== null &&
+                      selected.container === arc.container &&
+                      selected.name === arc.name
+                    }
                     onPick={() => {
                       setSelected({ container: arc.container, name: arc.name });
                       setFieldDrafts({});
@@ -1236,7 +1347,11 @@ export function ModelEditorPage({
                     name={vertex.name}
                     shape={vertex.spec}
                     position={{ x: vertex.position.x + offsetX, y: vertex.position.y + offsetY }}
-                    selected={selected !== null && selected.container === vertex.container && selected.name === vertex.name}
+                    selected={
+                      selected !== null &&
+                      selected.container === vertex.container &&
+                      selected.name === vertex.name
+                    }
                     onPointerDown={(event) => handleVertexPointerDown(event, vertex)}
                   />
                 );
@@ -1301,15 +1416,21 @@ export function ModelEditorPage({
                       ? "@" + reference.layer + "/" + reference.path.join("/")
                       : "");
                   return (
-                    <label key={key} className="mb-1 flex items-center gap-1 text-[11px] text-slate-600">
+                    <label
+                      key={key}
+                      className="mb-1 flex items-center gap-1 text-[11px] text-slate-600"
+                    >
                       <span className="w-20 shrink-0 font-mono text-slate-400">{key}</span>
                       <input
                         value={shown}
                         spellCheck={false}
-                        onChange={(event) => setFieldDrafts({ ...fieldDrafts, [key]: event.target.value })}
+                        onChange={(event) =>
+                          setFieldDrafts({ ...fieldDrafts, [key]: event.target.value })
+                        }
                         onBlur={(event) => commitField({ key, text: event.target.value })}
                         onKeyDown={(event) => {
-                          if (event.key === "Enter") commitField({ key, text: event.currentTarget.value });
+                          if (event.key === "Enter")
+                            commitField({ key, text: event.currentTarget.value });
                         }}
                         className="w-40 rounded border border-slate-200 px-1 py-0.5 font-mono text-[11px]"
                       />
@@ -1327,14 +1448,20 @@ export function ModelEditorPage({
                   fieldDrafts[key] ??
                   (typeof value === "number" || typeof value === "string" ? String(value) : "");
                 return (
-                  <label key={key} className="mb-1 flex items-center gap-1 text-[11px] text-slate-600">
+                  <label
+                    key={key}
+                    className="mb-1 flex items-center gap-1 text-[11px] text-slate-600"
+                  >
                     <span className="w-20 shrink-0 font-mono text-slate-400">{key}</span>
                     <input
                       value={shown}
-                      onChange={(event) => setFieldDrafts({ ...fieldDrafts, [key]: event.target.value })}
+                      onChange={(event) =>
+                        setFieldDrafts({ ...fieldDrafts, [key]: event.target.value })
+                      }
                       onBlur={(event) => commitField({ key, text: event.target.value })}
                       onKeyDown={(event) => {
-                        if (event.key === "Enter") commitField({ key, text: event.currentTarget.value });
+                        if (event.key === "Enter")
+                          commitField({ key, text: event.currentTarget.value });
                       }}
                       className="w-24 rounded border border-slate-200 px-1 py-0.5 font-mono text-[11px]"
                     />
@@ -1398,19 +1525,73 @@ function EditorVertexGlyph({
   const strokeWidth = selected ? 2.5 : 1.5;
   return (
     <g onPointerDown={onPointerDown} style={{ cursor: "grab" }}>
-      {shapeKind === "circle" && <circle cx={x} cy={y} r={16} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />}
+      {shapeKind === "circle" && (
+        <circle cx={x} cy={y} r={16} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+      )}
       {shapeKind === "ellipse" && (
-        <ellipse cx={x} cy={y} rx={24} ry={14} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+        <ellipse
+          cx={x}
+          cy={y}
+          rx={24}
+          ry={14}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
       )}
       {shapeKind === "rectangle" && (
-        <rect x={x - 22} y={y - 12} width={44} height={24} rx={2} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+        <rect
+          x={x - 22}
+          y={y - 12}
+          width={44}
+          height={24}
+          rx={2}
+          fill={fill}
+          stroke={stroke}
+          strokeWidth={strokeWidth}
+        />
       )}
       {shapeKind === "box" && (
-        <rect x={x - 26} y={y - 12} width={52} height={24} rx={3} fill="#ffffff" stroke="#455555" strokeWidth={strokeWidth} />
+        <rect
+          x={x - 26}
+          y={y - 12}
+          width={52}
+          height={24}
+          rx={3}
+          fill="#ffffff"
+          stroke="#455555"
+          strokeWidth={strokeWidth}
+        />
       )}
-      {!shape && <circle cx={x} cy={y} r={16} fill="none" stroke={stroke} strokeDasharray="3 3" strokeWidth={strokeWidth} />}
-      {selected && <circle cx={x} cy={y} r={21} fill="none" stroke="#0ea5e9" strokeWidth={1} strokeDasharray="2 2" />}
-      <text x={x} y={y + 3} textAnchor="middle" fontSize={9} fill={shapeKind === "rectangle" ? "#f8fafc" : "#334155"}>
+      {!shape && (
+        <circle
+          cx={x}
+          cy={y}
+          r={16}
+          fill="none"
+          stroke={stroke}
+          strokeDasharray="3 3"
+          strokeWidth={strokeWidth}
+        />
+      )}
+      {selected && (
+        <circle
+          cx={x}
+          cy={y}
+          r={21}
+          fill="none"
+          stroke="#0ea5e9"
+          strokeWidth={1}
+          strokeDasharray="2 2"
+        />
+      )}
+      <text
+        x={x}
+        y={y + 3}
+        textAnchor="middle"
+        fontSize={9}
+        fill={shapeKind === "rectangle" ? "#f8fafc" : "#334155"}
+      >
         {name}
       </text>
     </g>

@@ -49,16 +49,30 @@ export function RefinesGraph({
       edges.push(
         <path
           key={layerName + "⇢" + parentName}
-          d={"M " + (from.x + from.w / 2) + " " + (from.y + 2) +
-             " C " + (from.x + from.w / 2) + " " + midHeight +
-             " " + (to.x + to.w / 2) + " " + midHeight +
-             " " + (to.x + to.w / 2) + " " + (to.y + 22)}
+          d={
+            "M " +
+            (from.x + from.w / 2) +
+            " " +
+            (from.y + 2) +
+            " C " +
+            (from.x + from.w / 2) +
+            " " +
+            midHeight +
+            " " +
+            (to.x + to.w / 2) +
+            " " +
+            midHeight +
+            " " +
+            (to.x + to.w / 2) +
+            " " +
+            (to.y + 22)
+          }
           fill="none"
           stroke={onChain ? "#1e293b" : "#cbd5e1"}
           strokeWidth={onChain ? 2 : 1}
           opacity={onChain ? 1 : betweenDescendants ? 0.5 : 0.15}
           markerEnd="url(#garrow)"
-        />
+        />,
       );
     }
   }
@@ -96,7 +110,12 @@ export function RefinesGraph({
                 onClick={() => onPick(layerName)}
                 onMouseEnter={() => setHovered(layerName)}
                 onMouseLeave={() => setHovered(null)}
-                style={{ position: "absolute", left: position.x, top: position.y + 2, width: position.w }}
+                style={{
+                  position: "absolute",
+                  left: position.x,
+                  top: position.y + 2,
+                  width: position.w,
+                }}
                 title={localized({
                   language,
                   text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName },
