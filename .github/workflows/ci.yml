@@ -69,3 +69,18 @@ jobs:
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      # Fails on critical vulnerabilities. The remaining high-severity
+      # vite advisories need a major bump (vite 8) - escalated as
+      # needs-human, see issue #27.
+      - name: npm audit (critical gate)
+        run: npm audit --audit-level=critical
