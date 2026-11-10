@@ -39,7 +39,9 @@ function check(label: string, condition: boolean): void {
 }
 
 const median = (values: number[]): number =>
-  [...values].sort((first, second) => first - second)[Math.floor(values.length / 2)] ?? 0;
+  [...values].sort((first, second) => first - second)[
+    Math.floor(values.length / 2)
+  ] ?? 0;
 
 // ---- the corpus: the kernel plus one living draft -------------------
 
@@ -59,19 +61,25 @@ const sources: Record<string, string> = Object.fromEntries(
 );
 sources["users-draft"] = draftSource;
 const initialSources: Record<string, string> = { ...sources };
-const layerNames: LayerName[] = [...KERNEL_LAYER_NAMES, "users-draft" as LayerName];
+const layerNames: LayerName[] = [
+  ...KERNEL_LAYER_NAMES,
+  "users-draft" as LayerName,
+];
 
 // Every layer source ends with exactly one newline — the join is part
 // of the observable compilation input.
 const joinedSource = (): string =>
   layerNames
     .map((layerName) =>
-      (sources[layerName] ?? "").endsWith("\n") ? (sources[layerName] ?? "") : (sources[layerName] ?? "") + "\n",
+      (sources[layerName] ?? "").endsWith("\n")
+        ? (sources[layerName] ?? "")
+        : (sources[layerName] ?? "") + "\n",
     )
     .join("");
 
 const freshParse = () => parseLanguage(joinedSource());
-const freshCompilation = (parsed: ReturnType<typeof freshParse>) => compileLanguage(parsed.layers);
+const freshCompilation = (parsed: ReturnType<typeof freshParse>) =>
+  compileLanguage(parsed.layers);
 
 // ---- the session and its reference ---------------------------------
 
@@ -95,16 +103,23 @@ const referenceInitial = validateSpace({
 });
 check(
   "the initial session outcome is the full validation's",
-  JSON.stringify(sessionInitial.verdicts) === JSON.stringify(referenceInitial.verdicts) &&
-    JSON.stringify(sessionInitial.stats) === JSON.stringify(referenceInitial.stats),
+  JSON.stringify(sessionInitial.verdicts) ===
+    JSON.stringify(referenceInitial.verdicts) &&
+    JSON.stringify(sessionInitial.stats) ===
+      JSON.stringify(referenceInitial.stats),
 );
-check("the pristine assembly carries no verdict", sessionInitial.verdicts.length === 0);
+check(
+  "the pristine assembly carries no verdict",
+  sessionInitial.verdicts.length === 0,
+);
 
 // ---- the cold reference: a full validation on a pristine space -----
 
 const pristineJoined = layerNames
   .map((layerName) =>
-    (initialSources[layerName] ?? "").endsWith("\n") ? (initialSources[layerName] ?? "") : (initialSources[layerName] ?? "") + "\n",
+    (initialSources[layerName] ?? "").endsWith("\n")
+      ? (initialSources[layerName] ?? "")
+      : (initialSources[layerName] ?? "") + "\n",
   )
   .join("");
 const pristineParsed = parseLanguage(pristineJoined);
@@ -121,7 +136,9 @@ for (let index = 0; index < 5; index += 1) {
   coldSamples.push(performance.now() - start);
 }
 const coldReference = median(coldSamples);
-console.log("  cold full validation reference: " + coldReference.toFixed(1) + " ms");
+console.log(
+  "  cold full validation reference: " + coldReference.toFixed(1) + " ms",
+);
 
 // ---- the chained editions ------------------------------------------
 
@@ -139,31 +156,44 @@ const editions: Edition[] = [
     label: "a betrayed expect (pn-philosophers-5, core)",
     layerName: asLayerName("pn-philosophers-5"),
     mutate: (source) =>
-      source.replace("expect places/philo1.think1/marking = 1", "expect places/philo1.think1/marking = 7"),
+      source.replace(
+        "expect places/philo1.think1/marking = 1",
+        "expect places/philo1.think1/marking = 7",
+      ),
     expectVerdicts: 1,
   },
   {
     label: "an undeclared override (pn-philosophers, core)",
     layerName: asLayerName("pn-philosophers"),
-    mutate: (source) => source.replace("override abstract weight", "abstract weight"),
+    mutate: (source) =>
+      source.replace("override abstract weight", "abstract weight"),
     expectVerdicts: 2,
   },
   {
     label: "a new tests block (record, the ontology's root)",
     layerName: asLayerName("record"),
-    mutate: (source) => source + "\n  tests\n    expect specification/record/identifier = 999\n",
+    mutate: (source) =>
+      source + "\n  tests\n    expect specification/record/identifier = 999\n",
   },
   {
     label: "the betrayed expect reverted (pn-philosophers-5)",
     layerName: asLayerName("pn-philosophers-5"),
     mutate: (source) =>
-      source.replace("expect places/philo1.think1/marking = 7", "expect places/philo1.think1/marking = 1"),
+      source.replace(
+        "expect places/philo1.think1/marking = 7",
+        "expect places/philo1.think1/marking = 1",
+      ),
     expectVerdicts: 3,
   },
   {
-    label: "a contract's reading level changed (sperner-hypergraph, peripheral)",
+    label:
+      "a contract's reading level changed (sperner-hypergraph, peripheral)",
     layerName: asLayerName("sperner-hypergraph"),
-    mutate: (source) => source.replace('check sperner\n    level = "root"', 'check sperner\n    level = "instance"'),
+    mutate: (source) =>
+      source.replace(
+        'check sperner\n    level = "root"',
+        'check sperner\n    level = "instance"',
+      ),
     maxRebuiltWalks: 3,
     expectCheap: true,
   },
@@ -171,7 +201,10 @@ const editions: Edition[] = [
     label: "a living draft's expect betrayed (users-draft)",
     layerName: asLayerName("users-draft"),
     mutate: (source) =>
-      source.replace("expect places/philo1.think1/marking = 1", "expect places/philo1.think1/marking = 7"),
+      source.replace(
+        "expect places/philo1.think1/marking = 1",
+        "expect places/philo1.think1/marking = 7",
+      ),
     expectVerdicts: 5,
     maxRebuiltWalks: 1,
     expectCheap: true,
@@ -192,55 +225,95 @@ for (const edition of editions) {
   lastCompilation = compilation;
 
   const start = performance.now();
-  const sessionOutcome = session.applyEdition({ layerName: edition.layerName, parse: parsed, compilation });
+  const sessionOutcome = session.applyEdition({
+    layerName: edition.layerName,
+    parse: parsed,
+    compilation,
+  });
   const sessionMs = performance.now() - start;
   const rebuilt = session.rebuiltWalks();
 
-  const referenceOutcome = validateSpace({ space, parse: parsed, compilation, layerNames });
+  const referenceOutcome = validateSpace({
+    space,
+    parse: parsed,
+    compilation,
+    layerNames,
+  });
 
   check(
     "verdicts identical after: " + edition.label,
-    JSON.stringify(sessionOutcome.verdicts) === JSON.stringify(referenceOutcome.verdicts),
+    JSON.stringify(sessionOutcome.verdicts) ===
+      JSON.stringify(referenceOutcome.verdicts),
   );
   check(
     "stats identical after: " + edition.label,
-    JSON.stringify(sessionOutcome.stats) === JSON.stringify(referenceOutcome.stats),
+    JSON.stringify(sessionOutcome.stats) ===
+      JSON.stringify(referenceOutcome.stats),
   );
   if (edition.expectVerdicts !== undefined) {
     check(
-      "verdict count as expected after: " + edition.label + " (" + sessionOutcome.verdicts.length + ")",
+      "verdict count as expected after: " +
+        edition.label +
+        " (" +
+        sessionOutcome.verdicts.length +
+        ")",
       sessionOutcome.verdicts.length === edition.expectVerdicts,
     );
   }
   if (edition.maxRebuiltWalks !== undefined) {
     check(
-      "walk rebuilds within bounds after: " + edition.label + " (" + rebuilt + ")",
+      "walk rebuilds within bounds after: " +
+        edition.label +
+        " (" +
+        rebuilt +
+        ")",
       rebuilt <= edition.maxRebuiltWalks,
     );
   }
   if (edition.expectCheap === true) {
     check(
-      "the revalidation is at least 2x cheaper than cold: " + edition.label +
-        " (" + sessionMs.toFixed(1) + " ms vs " + coldReference.toFixed(1) + " ms)",
+      "the revalidation is at least 2x cheaper than cold: " +
+        edition.label +
+        " (" +
+        sessionMs.toFixed(1) +
+        " ms vs " +
+        coldReference.toFixed(1) +
+        " ms)",
       sessionMs <= coldReference / 2,
     );
   }
   console.log(
-    "  " + edition.label + ": " + sessionOutcome.verdicts.length + " verdict(s), " +
-      rebuilt + " walk(s) rebuilt, " + sessionMs.toFixed(1) + " ms",
+    "  " +
+      edition.label +
+      ": " +
+      sessionOutcome.verdicts.length +
+      " verdict(s), " +
+      rebuilt +
+      " walk(s) rebuilt, " +
+      sessionMs.toFixed(1) +
+      " ms",
   );
 }
 
 // ---- the session keeps the caller's fresh parse and compilation ----
 
 check("the session keeps the last parse", session.parse === lastParsed);
-check("the session keeps the last compilation", session.compilation === lastCompilation);
+check(
+  "the session keeps the last compilation",
+  session.compilation === lastCompilation,
+);
 
 // =====================================================================
 // the ledger
 // =====================================================================
 
-console.log("validation session checks: " + assertions + " assertions, " + failures.length + " failure(s)");
+console.log(
+  "validation session checks: " +
+    assertions +
+    " assertions, " +
+    failures.length +
+    " failure(s)",
+);
 for (const failure of failures) {
   console.log("FAIL " + failure);
 }

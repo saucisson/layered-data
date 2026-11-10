@@ -49,12 +49,17 @@ const sources: Record<string, string> = Object.fromEntries(
   ]),
 );
 sources["users-draft"] = draftSource;
-const layerNames: LayerName[] = [...KERNEL_LAYER_NAMES, asLayerName("users-draft")];
+const layerNames: LayerName[] = [
+  ...KERNEL_LAYER_NAMES,
+  asLayerName("users-draft"),
+];
 
 const joinedSource = (): string =>
   layerNames
     .map((layerName) =>
-      (sources[layerName] ?? "").endsWith("\n") ? (sources[layerName] ?? "") : (sources[layerName] ?? "") + "\n",
+      (sources[layerName] ?? "").endsWith("\n")
+        ? (sources[layerName] ?? "")
+        : (sources[layerName] ?? "") + "\n",
     )
     .join("");
 
@@ -92,16 +97,28 @@ check(
 );
 check(
   "the stream's return value equals validateSpace (verdicts, stats)",
-  JSON.stringify(manualOutcome.verdicts) === JSON.stringify(reference.verdicts) &&
+  JSON.stringify(manualOutcome.verdicts) ===
+    JSON.stringify(reference.verdicts) &&
     JSON.stringify(manualOutcome.stats) === JSON.stringify(reference.stats),
 );
 check("the stream yields chunks", manualChunks.length > 0);
 check(
   "every chunk's progress is within its phase's bounds",
-  manualChunks.every((chunk) => chunk.progress.done >= 0 && chunk.progress.done <= chunk.progress.total),
+  manualChunks.every(
+    (chunk) =>
+      chunk.progress.done >= 0 && chunk.progress.done <= chunk.progress.total,
+  ),
 );
 const phases = new Set(manualChunks.map((chunk) => chunk.phase));
-for (const phase of ["étiquetage", "déclarations", "étiquettes", "ombres", "tests", "couples", "lisibilité"]) {
+for (const phase of [
+  "étiquetage",
+  "déclarations",
+  "étiquettes",
+  "ombres",
+  "tests",
+  "couples",
+  "lisibilité",
+]) {
   check("the stream covers the phase « " + phase + " »", phases.has(phase));
 }
 
@@ -127,11 +144,20 @@ check(
 
 // ---- (4) the session's stream after an edition -----------------------
 
-const session = createValidationSession({ space, parse: parsed, compilation, layerNames });
+const session = createValidationSession({
+  space,
+  parse: parsed,
+  compilation,
+  layerNames,
+});
 sources["users-draft"] = draftSource.replace("marking = 1", "marking = 7");
 const editedParsed = parseLanguage(joinedSource());
 const editedCompilation = compileLanguage(editedParsed.layers);
-session.applyEdition({ layerName: asLayerName("users-draft"), parse: editedParsed, compilation: editedCompilation });
+session.applyEdition({
+  layerName: asLayerName("users-draft"),
+  parse: editedParsed,
+  compilation: editedCompilation,
+});
 const sessionStreamed = collectValidation(session.outcomeStream());
 const sessionReference = validateSpace({
   space,
@@ -141,8 +167,10 @@ const sessionReference = validateSpace({
 });
 check(
   "the session's streamed outcome equals the full validation's after an edition",
-  JSON.stringify(sessionStreamed.verdicts) === JSON.stringify(sessionReference.verdicts) &&
-    JSON.stringify(sessionStreamed.stats) === JSON.stringify(sessionReference.stats),
+  JSON.stringify(sessionStreamed.verdicts) ===
+    JSON.stringify(sessionReference.verdicts) &&
+    JSON.stringify(sessionStreamed.stats) ===
+      JSON.stringify(sessionReference.stats),
 );
 check(
   "the edition's betrayed expect is seen by the stream",
@@ -151,7 +179,13 @@ check(
 
 // ---- the report -------------------------------------------------------
 
-console.log("validation stream checks: " + assertions + " assertions, " + failures.length + " failure(s)");
+console.log(
+  "validation stream checks: " +
+    assertions +
+    " assertions, " +
+    failures.length +
+    " failure(s)",
+);
 if (failures.length > 0) {
   for (const failure of failures) console.log("  FAIL: " + failure);
   process.exit(1);
