@@ -115,7 +115,7 @@ addLayer({ draftSource: childSource });
 
 // the closure of the edited layer is memoized first, plus a read at
 // the child — both leave their memo entries in the space
-const closureBefore = kernel.space.closure({
+kernel.space.closure({
   layer: asLayerName("draft-demo"),
   path: asLayerPath([]),
 });
@@ -124,6 +124,15 @@ const childWeightBefore = kernel.space.read({
   path: asLayerPath(["arcsAB", "e3"]),
   key: "weight",
 });
+
+/** Indexed access in assertions: a missing element is a test failure,
+ * not a silent undefined. */
+function at<T>(list: readonly T[], index: number): T {
+  const value = list[index];
+  if (value === undefined) throw new Error("missing element at index " + index);
+  return value;
+}
+
 check(
   "(a) the child reads the inherited weight 1 before the edition (the diamond)",
   childWeightBefore === 1,
@@ -233,8 +242,8 @@ check(
 check(
   '(c) the betraying edition carries exactly the "attendu-trahi" verdict of the child layer',
   betraying.staging.verdicts.length === 1 &&
-    betraying.staging.verdicts[0].kind === "attendu-trahi" &&
-    renderMessage({ message: betraying.staging.verdicts[0].fact, language: "en" }).includes("draft-child"),
+    at(betraying.staging.verdicts, 0).kind === "attendu-trahi" &&
+    renderMessage({ message: at(betraying.staging.verdicts, 0).fact, language: "en" }).includes("draft-child"),
 );
 check(
   "(c) the refused betrayal leaves the space intact — the tree is untouched",

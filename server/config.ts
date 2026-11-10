@@ -13,8 +13,8 @@ if (existsSync(environmentFilePath)) {
   for (const line of readFileSync(environmentFilePath, "utf8").split("\n")) {
     const match = line.match(/^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)\s*$/);
     if (!match || line.trim().startsWith("#")) continue;
-    const variable = match[1];
-    const value = match[2].replace(/^["']|["']$/g, "");
+    const variable = match[1] ?? "";
+    const value = (match[2] ?? "").replace(/^["']|["']$/g, "");
     if (process.env[variable] === undefined) process.env[variable] = value;
   }
 }

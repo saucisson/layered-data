@@ -5,7 +5,7 @@
 // carried it). A layer without tests shows nothing — the fold only
 // speaks when the layer holds a contract.
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { isDictionary } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";

@@ -73,7 +73,7 @@ export function createEditorSession({
 }: {
   kernelLayerSources: Readonly<Record<string, string>>;
   kernelLayerNames: readonly LayerName[];
-  initial?: EditorSessionState;
+  initial?: EditorSessionState | undefined;
 }): EditorSession {
   let state: EditorSessionState = initial ?? { version: 0, additions: [] };
 

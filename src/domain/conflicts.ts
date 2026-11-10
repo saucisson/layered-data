@@ -105,6 +105,7 @@ export function orderConflictsAt({ space, address }: { space: Space; address: Ad
     }
     if (providers.length < 2) continue;
     const winner = providers[0];
+    if (winner === undefined) continue;
     // the winner's own closure: every source IT is refined from —
     // a loser in there was outranked by structure, not by order
     const winnerClosure = space.closure({ layer: winner.address[0], path: winner.address[1] });

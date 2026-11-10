@@ -35,7 +35,7 @@ export function parseTutorialMarkdown({ source }: { source: string }): TutorialB
   const lines = source.split("\n");
   let index = 0;
   while (index < lines.length) {
-    const line = lines[index];
+    const line = lines[index] ?? "";
     if (line.trim() === "") {
       index++;
       continue;
@@ -44,8 +44,8 @@ export function parseTutorialMarkdown({ source }: { source: string }): TutorialB
       const info = line.slice(3).trim();
       index++;
       const fenceLines: string[] = [];
-      while (index < lines.length && !lines[index].startsWith("```")) {
-        fenceLines.push(lines[index]);
+      while (index < lines.length && !(lines[index] ?? "").startsWith("```")) {
+        fenceLines.push(lines[index] ?? "");
         index++;
       }
       index++; // the closing fence
@@ -58,22 +58,22 @@ export function parseTutorialMarkdown({ source }: { source: string }): TutorialB
     }
     const headingMatch = /^(#{1,4})\s+(.*)$/.exec(line);
     if (headingMatch !== null) {
-      blocks.push({ kind: "heading", level: headingMatch[1].length, text: headingMatch[2].trim() });
+      blocks.push({ kind: "heading", level: (headingMatch[1] ?? "").length, text: (headingMatch[2] ?? "").trim() });
       index++;
       continue;
     }
     if (line.startsWith("- ")) {
       const items: string[] = [];
-      while (index < lines.length && lines[index].startsWith("- ")) {
-        items.push(lines[index].slice(2).trim());
+      while (index < lines.length && (lines[index] ?? "").startsWith("- ")) {
+        items.push((lines[index] ?? "").slice(2).trim());
         index++;
       }
       blocks.push({ kind: "list", items });
       continue;
     }
     const paragraphLines: string[] = [];
-    while (index < lines.length && lines[index].trim() !== "" && !lines[index].startsWith("```") && !/^#{1,4}\s/.test(lines[index]) && !lines[index].startsWith("- ")) {
-      paragraphLines.push(lines[index].trim());
+    while (index < lines.length && (lines[index] ?? "").trim() !== "" && !(lines[index] ?? "").startsWith("```") && !/^#{1,4}\s/.test(lines[index] ?? "") && !(lines[index] ?? "").startsWith("- ")) {
+      paragraphLines.push((lines[index] ?? "").trim());
       index++;
     }
     blocks.push({ kind: "paragraph", text: paragraphLines.join(" ") });

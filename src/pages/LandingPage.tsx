@@ -1,6 +1,5 @@
 // Landing page for Layered Data
 
-import React from "react";
 import { useRouter } from "../components/Router";
 import { say } from "../presentation/i18n.ts";
 import type { Language } from "../domain/messages.ts";

@@ -47,7 +47,6 @@ import {
   readMemberPosition,
   readMemberCitations,
   draftMemberInsertion,
-  draftMemberRemoval,
   draftMemberRemovalCascade,
   draftMemberFieldEdition,
   draftMemberPosition,
@@ -142,7 +141,7 @@ export function ModelEditorPage({
   const serverVersionRef = useRef(0);
   // ---- the editor's own choices ------------------------------------
   const [model, setModel] = useState<string | null>(null);
-  const [lens, setLens] = useState<string>(LENS_LAYERS[0]);
+  const [lens, setLens] = useState<string>(LENS_LAYERS[0] ?? "");
   const [tool, setTool] = useState<EditorTool>({ kind: "select" });
   const [selected, setSelected] = useState<SelectedMember | null>(null);
   const [banner, setBanner] = useState<Banner | null>(null);
@@ -488,6 +487,7 @@ export function ModelEditorPage({
   function undo() {
     if (history.length === 0 || model === null) return;
     const snapshot = history[history.length - 1];
+    if (snapshot === undefined) return;
     const accepted = proposeEdition({
       draftedSource: snapshot.block,
       journal: false,
@@ -505,6 +505,7 @@ export function ModelEditorPage({
   function redo() {
     if (future.length === 0 || model === null) return;
     const snapshot = future[0];
+    if (snapshot === undefined) return;
     const accepted = proposeEdition({
       draftedSource: snapshot.block,
       journal: false,
@@ -916,7 +917,7 @@ export function ModelEditorPage({
       }
       setAddedLayerBlocks(nextBlocks);
       setSpaceVersion(spaceVersion + 1);
-      if (applied.newLayerNames.length > 0) setModel(applied.newLayerNames[0]);
+      if (applied.newLayerNames.length > 0) setModel(applied.newLayerNames[0] ?? null);
       sendSharedGesture({ source: text });
       setBanner({
         tone: "written",

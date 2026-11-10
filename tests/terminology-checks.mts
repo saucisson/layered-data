@@ -72,7 +72,7 @@ function parseValue(source: string, start: number): { value: DataValue; end: num
         key = source.slice(index + 1, keyEnd);
         index = keyEnd + 1;
       } else {
-        while (index < source.length && /[A-Za-z0-9_$\u00C0-\u00FF]/.test(source[index])) index++;
+        while (index < source.length && /[A-Za-z0-9_$\u00C0-\u00FF]/.test(source[index] ?? "")) index++;
         key = source.slice(keyStart, index);
       }
       index = skipInsignificant(source, index);
@@ -112,7 +112,7 @@ function parseValue(source: string, start: number): { value: DataValue; end: num
   if (match === null) {
     throw new Error("unparseable literal at offset " + position + ": " + source.slice(position, position + 40));
   }
-  const text = match[0];
+  const text = at(match, 0);
   return {
     value: text === "true" ? true : text === "false" ? false : text === "null" ? null : Number(text),
     end: position + text.length,
@@ -184,6 +184,15 @@ bilingualStringsOf(glossary as unknown as DataValue, "fr", frenchProse);
 // stratum 1 — the informatics words keep their adopted names
 // =====================================================================
 
+
+/** Indexed access in assertions: a missing element is a test failure,
+ * not a silent undefined. */
+function at<T>(list: readonly T[], index: number): T {
+  const value = list[index];
+  if (value === undefined) throw new Error("missing element at index " + index);
+  return value;
+}
+
 check(
   "the linter wears the industry's name in both tongues — la linteuse is retired",
   glossary["linter"] !== undefined &&
@@ -216,10 +225,10 @@ const retiredNarration: { word: string; pattern: RegExp }[] = [
 
 function stringLiteralsOf(source: string): string[] {
   const literals: string[] = [];
-  for (const match of source.matchAll(/"((?:[^"\\\n]|\\.)*)"/g)) literals.push(match[1]);
-  for (const match of source.matchAll(/'((?:[^'\\\n]|\\.)*)'/g)) literals.push(match[1]);
+  for (const match of source.matchAll(/"((?:[^"\\\n]|\\.)*)"/g)) literals.push(at(match, 1));
+  for (const match of source.matchAll(/'((?:[^'\\\n]|\\.)*)'/g)) literals.push(at(match, 1));
   for (const match of source.matchAll(/`((?:[^`\\]|\\.)*)`/g)) {
-    literals.push(match[1].replace(/\$\{[^}]*\}/g, "…"));
+    literals.push(at(match, 1).replace(/\$\{[^}]*\}/g, "…"));
   }
   return literals;
 }
@@ -264,7 +273,7 @@ function markedWordsOf(text: string): string[] {
   const words: string[] = [];
   let match: RegExpExecArray | null;
   const pattern = /⟪([^⟫]+)⟫/g;
-  while ((match = pattern.exec(text)) !== null) words.push(match[1].trim().toLowerCase());
+  while ((match = pattern.exec(text)) !== null) words.push(at(match, 1).trim().toLowerCase());
   return words;
 }
 

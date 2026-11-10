@@ -30,7 +30,7 @@ export function RouterProvider({ children }: RouterProviderProps) {
   useEffect(() => {
     const parseHash = () => {
       const hash = window.location.hash.slice(1) || "landing";
-      const [hashPage, ...hashSegments] = hash.split("/");
+      const [hashPage = "", ...hashSegments] = hash.split("/");
       if ((PAGES as readonly string[]).includes(hashPage)) {
         setPage(hashPage as Page);
         setParameter(hashSegments.join("/"));

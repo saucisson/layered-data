@@ -62,6 +62,7 @@ export function tokenizeFormula(source: string): FormulaToken[] {
   let index = 0;
   while (index < source.length) {
     const character = source[index];
+    if (character === undefined) break;
     if (/\s/.test(character)) {
       index++;
       continue;
@@ -79,7 +80,7 @@ export function tokenizeFormula(source: string): FormulaToken[] {
     }
     if (IDENTIFIER.test(character)) {
       let end = index;
-      while (end < source.length && IDENTIFIER.test(source[end])) end++;
+      while (end < source.length && IDENTIFIER.test(source[end] ?? "")) end++;
       tokens.push({ text: source.slice(index, end) });
       index = end;
       continue;
@@ -172,10 +173,12 @@ class FormulaParser {
     const domain = this.parseTerm();
     this.eat(":");
     let body = this.parseImplication();
+    const firstVariable = variables[0];
+    if (firstVariable === undefined) throw new Error("quantifier without variable");
     for (let index = variables.length - 1; index >= 1; index--) {
-      body = { kind: "quantifier", quantifier, variable: variables[index], domain, body };
+      body = { kind: "quantifier", quantifier, variable: variables[index] ?? firstVariable, domain, body };
     }
-    return { kind: "quantifier", quantifier, variable: variables[0], domain, body };
+    return { kind: "quantifier", quantifier, variable: firstVariable, domain, body };
   }
 
   private parseAtom(): Formula {
@@ -311,7 +314,7 @@ export function templateTermsOf(message: string): TemplateTerm[] | null {
   const pattern = /\{([^{}]*)\}/g;
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(message)) !== null) {
-    let body = match[1];
+    let body = match[1] ?? "";
     let address = false;
     if (body.endsWith("*")) {
       address = true;
@@ -493,7 +496,7 @@ export function renderJudgmentMessage({
   assignment: Record<string, AddressView>;
 }): string {
   const { resolve } = makeTermResolver({ space, view });
-  return message.replace(/\{([^{}]*)\}/g, (_whole, body: string) => {
+  return message.replace(/\{([^{}]*)\}/g, (_whole: string, body: string) => {
     let name = body;
     let address = false;
     if (name.endsWith("*")) {
@@ -507,7 +510,7 @@ export function renderJudgmentMessage({
       const value = resolve(term, assignment);
       if (value === null) return "?";
       if (address) return addressTupleRepr(concreteNodeOf({ space, view: value }));
-      return value.path.length ? value.path[value.path.length - 1] : value.layer;
+      return value.path.length ? (value.path[value.path.length - 1] ?? value.layer) : value.layer;
     } catch {
       return "?";
     }

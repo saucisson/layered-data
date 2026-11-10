@@ -75,7 +75,7 @@ function containerRuleOf({ space, record, key }: { space: Space; record: Address
   if (!(ruleNode instanceof AddressView)) return null;
   const rule = space.read({ layer: ruleNode.layer, path: ruleNode.path, key: "container" });
   if (!(rule instanceof AddressView) || rule.path.length === 0) return null;
-  return rule.path[rule.path.length - 1];
+  return rule.path[rule.path.length - 1] ?? null;
 }
 
 /** Does one root key DECLARE a collection (as opposed to citing other
@@ -295,10 +295,10 @@ function isAnySectionHeader({ line }: { line: string }): boolean {
  * end of the block. */
 function sectionRangeOf({ blockLines, container }: { blockLines: string[]; container: string }): SectionRange | null {
   for (let index = 0; index < blockLines.length; index++) {
-    if (isSectionHeader({ line: blockLines[index], container })) {
+    if (isSectionHeader({ line: blockLines[index] ?? "", container })) {
       let end = blockLines.length;
       for (let scan = index + 1; scan < blockLines.length; scan++) {
-        if (isAnySectionHeader({ line: blockLines[scan] })) {
+        if (isAnySectionHeader({ line: blockLines[scan] ?? "" })) {
           end = scan;
           break;
         }
@@ -339,10 +339,10 @@ function memberRangeOf({
   name: string;
 }): SectionRange | null {
   for (let index = section.start + 1; index < section.end; index++) {
-    if (isMemberHeader({ line: blockLines[index], name })) {
+    if (isMemberHeader({ line: blockLines[index] ?? "", name })) {
       let end = section.end;
       for (let scan = index + 1; scan < section.end; scan++) {
-        if (isAnyMemberHeader({ line: blockLines[scan] })) {
+        if (isAnyMemberHeader({ line: blockLines[scan] ?? "" })) {
           end = scan;
           break;
         }
@@ -473,7 +473,7 @@ export function draftMemberFieldEdition({
   const pending = new Map(Object.entries(fields));
   for (let index = member.start + 1; index < member.end; index++) {
     for (const [key, value] of [...pending.entries()]) {
-      if (isFieldLine({ line: edited[index], key })) {
+      if (isFieldLine({ line: edited[index] ?? "", key })) {
         edited[index] = FIELD_MARGIN + key + " = " + formatFieldValue({ value });
         pending.delete(key);
       }
