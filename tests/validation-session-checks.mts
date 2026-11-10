@@ -161,9 +161,9 @@ const editions: Edition[] = [
     expectVerdicts: 3,
   },
   {
-    label: "a contract's reading level changed (check-registry, peripheral)",
-    layerName: asLayerName("check-registry"),
-    mutate: (source) => source.replace('containers\n      level = "root"', 'containers\n      level = "instance"'),
+    label: "a contract's reading level changed (sperner-hypergraph, peripheral)",
+    layerName: asLayerName("sperner-hypergraph"),
+    mutate: (source) => source.replace('check sperner\n    level = "root"', 'check sperner\n    level = "instance"'),
     maxRebuiltWalks: 3,
     expectCheap: true,
   },
@@ -172,7 +172,7 @@ const editions: Edition[] = [
     layerName: asLayerName("users-draft"),
     mutate: (source) =>
       source.replace("expect places/philo1.think1/marking = 1", "expect places/philo1.think1/marking = 7"),
-    expectVerdicts: 4,
+    expectVerdicts: 5,
     maxRebuiltWalks: 1,
     expectCheap: true,
   },
