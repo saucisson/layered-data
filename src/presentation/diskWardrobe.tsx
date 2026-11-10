@@ -8,7 +8,11 @@
 import { useEffect, useState } from "react";
 import type { LayeredDataKernel } from "../application/corpus.ts";
 import { renderMessage, type Language } from "../domain/messages.ts";
-import { stageLayerAddition, applyStagedAddition, type StagingOutcome } from "../application/staging.ts";
+import {
+  stageLayerAddition,
+  applyStagedAddition,
+  type StagingOutcome,
+} from "../application/staging.ts";
 import { apiFetch } from "../infrastructure/wardrobeClient.ts";
 import { labelOf, say } from "./i18n.ts";
 
@@ -57,12 +61,20 @@ export function DiskWardrobe({
       } else if (response.status === 401) {
         setEntries([]);
         setMessage(
-          say({ language, en: "access code required — the quarry is closed", fr: "code d'accès requis — la carrière est fermée" }),
+          say({
+            language,
+            en: "access code required — the quarry is closed",
+            fr: "code d'accès requis — la carrière est fermée",
+          }),
         );
       } else {
         setEntries([]);
         setMessage(
-          say({ language, en: "response " + response.status + " from the proxy", fr: "réponse " + response.status + " du proxy" }),
+          say({
+            language,
+            en: "response " + response.status + " from the proxy",
+            fr: "réponse " + response.status + " du proxy",
+          }),
         );
       }
     } catch {
@@ -103,7 +115,9 @@ export function DiskWardrobe({
       }
     } catch {
       setSource("");
-      setMessage(say({ language, en: "without proxy — nothing to read", fr: "sans proxy — rien à lire" }));
+      setMessage(
+        say({ language, en: "without proxy — nothing to read", fr: "sans proxy — rien à lire" }),
+      );
     }
   }
 
@@ -157,7 +171,11 @@ export function DiskWardrobe({
         void refresh();
       } else if (response.status === 401) {
         setMessage(
-          say({ language, en: "access code required — the disk is protected", fr: "code d'accès requis — le disque est protégé" }),
+          say({
+            language,
+            en: "access code required — the disk is protected",
+            fr: "code d'accès requis — le disque est protégé",
+          }),
         );
       } else if (response.status === 403) {
         setMessage(
@@ -169,11 +187,21 @@ export function DiskWardrobe({
         );
       } else {
         setMessage(
-          say({ language, en: "response " + response.status + " from the proxy", fr: "réponse " + response.status + " du proxy" }),
+          say({
+            language,
+            en: "response " + response.status + " from the proxy",
+            fr: "réponse " + response.status + " du proxy",
+          }),
         );
       }
     } catch {
-      setMessage(say({ language, en: "without proxy — nothing gets laid", fr: "sans proxy — rien ne se pose" }));
+      setMessage(
+        say({
+          language,
+          en: "without proxy — nothing gets laid",
+          fr: "sans proxy — rien ne se pose",
+        }),
+      );
     }
   }
 
@@ -235,8 +263,16 @@ export function DiskWardrobe({
               }
               title={
                 entry.builtIn
-                  ? say({ language, en: "bedrock — read-only on the disk", fr: "socle — en lecture seule sur le disque" })
-                  : say({ language, en: "a visitor's layer — on the disk", fr: "couche d'un visiteur — sur le disque" })
+                  ? say({
+                      language,
+                      en: "bedrock — read-only on the disk",
+                      fr: "socle — en lecture seule sur le disque",
+                    })
+                  : say({
+                      language,
+                      en: "a visitor's layer — on the disk",
+                      fr: "couche d'un visiteur — sur le disque",
+                    })
               }
             >
               {entry.name}
@@ -260,7 +296,11 @@ export function DiskWardrobe({
               disabled={!source.trim()}
               className="rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
             >
-              {say({ language, en: "staging — load into the workshop", fr: "staging — charger dans l'atelier" })}
+              {say({
+                language,
+                en: "staging — load into the workshop",
+                fr: "staging — charger dans l'atelier",
+              })}
             </button>
             <span className="text-[10px] leading-4 text-slate-400">
               {say({
@@ -316,7 +356,9 @@ export function DiskWardrobe({
                 })}
               </div>
               {loadResult.errors.map((error, index) => (
-                <div key={index} className="font-mono">{error}</div>
+                <div key={index} className="font-mono">
+                  {error}
+                </div>
               ))}
             </div>
           )}
@@ -326,9 +368,13 @@ export function DiskWardrobe({
                 {say({
                   language,
                   en:
-                    "staging — " + loadResult.verdicts.length + " verdict(s), the entry is refused:",
+                    "staging — " +
+                    loadResult.verdicts.length +
+                    " verdict(s), the entry is refused:",
                   fr:
-                    "staging — " + loadResult.verdicts.length + " verdict(s), l'entrée est refusée :",
+                    "staging — " +
+                    loadResult.verdicts.length +
+                    " verdict(s), l'entrée est refusée :",
                 })}
               </div>
               {loadResult.verdicts.map((verdict, index) => (

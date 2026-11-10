@@ -32,7 +32,13 @@ export function dumpFlattenedLayer({
   const formatValue = (value: unknown): string => {
     if (value instanceof AddressView) return "@" + value.layer + "/" + value.path.join("/");
     if (isDictionary(value)) {
-      return "{" + Object.keys(value).map((key) => key + " = " + formatValue(value[key])).join(", ") + "}";
+      return (
+        "{" +
+        Object.keys(value)
+          .map((key) => key + " = " + formatValue(value[key]))
+          .join(", ") +
+        "}"
+      );
     }
     if (Array.isArray(value)) return "[" + value.map(formatValue).join(", ") + "]";
     const serialized = JSON.stringify(value);
@@ -50,7 +56,9 @@ export function dumpFlattenedLayer({
               say({ language, en: "abstract slot ∅", fr: "slot abstrait ∅" }) +
               ")"
           : "?";
-      lines.push("  ".repeat(depth) + entry.key + " = " + formatValue(entry.value) + "  ← " + provenance);
+      lines.push(
+        "  ".repeat(depth) + entry.key + " = " + formatValue(entry.value) + "  ← " + provenance,
+      );
       const child = entry.target !== null ? node.children[entry.key] : undefined;
       if (child) walk(child, depth + 1);
     }
@@ -66,7 +74,11 @@ export function dumpFlattenedLayer({
     flattened.keys +
     say({ language, en: " keys · ", fr: " clés · " }) +
     flattened.winners.length +
-    say({ language, en: " contributing layers · root chain: ", fr: " couches contributeurs · chaîne de racine : " }) +
+    say({
+      language,
+      en: " contributing layers · root chain: ",
+      fr: " couches contributeurs · chaîne de racine : ",
+    }) +
     flattened.chaîne +
     say({ language, en: " layers\n", fr: " couches\n" }) +
     lines.join("\n")
@@ -92,14 +104,16 @@ export function FlatView({
   const [filter, setFilter] = useState("");
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [copied, setCopied] = useState(false);
-  const flattened = useMemo(() => flattenLayer({ space, layer: asLayerName(layer) }), [space, layer]);
+  const flattened = useMemo(
+    () => flattenLayer({ space, layer: asLayerName(layer) }),
+    [space, layer],
+  );
   const needle = filter.trim().toLowerCase();
   const keyMatches = (key: string) => !needle || key.toLowerCase().includes(needle);
   const nodeMatches = (node: FlatNode): boolean =>
     node.entries.some(
       (entry) => (showSpecialKeys || !isSpecialKey(entry.key)) && keyMatches(entry.key),
-    ) ||
-    Object.values(node.children).some(nodeMatches);
+    ) || Object.values(node.children).some(nodeMatches);
   const folderKey = (address: Address) => address[0] + "::" + address[1].join("/");
   const isOpenAt = (node: FlatNode, depth: number) =>
     needle ? true : (expanded[folderKey(node.addr)] ?? depth < 2);
@@ -152,7 +166,11 @@ export function FlatView({
                     onClick={() =>
                       setExpanded({ ...expanded, [folderKey(child.addr)]: !childOpen })
                     }
-                    aria-label={childOpen ? say({ language, en: "collapse", fr: "replier" }) : say({ language, en: "expand", fr: "déplier" })}
+                    aria-label={
+                      childOpen
+                        ? say({ language, en: "collapse", fr: "replier" })
+                        : say({ language, en: "expand", fr: "déplier" })
+                    }
                     className="w-4 shrink-0 rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700"
                   >
                     {childOpen ? "▾" : "▸"}
@@ -214,10 +232,18 @@ export function FlatView({
                 <div className="ml-4 text-[10px] text-slate-400">
                   {"+ "}
                   {child.nAddrs}{" "}
-                  {say({ language, en: child.nAddrs > 1 ? "nodes" : "node", fr: "nœud" + (child.nAddrs > 1 ? "s" : "") })}
+                  {say({
+                    language,
+                    en: child.nAddrs > 1 ? "nodes" : "node",
+                    fr: "nœud" + (child.nAddrs > 1 ? "s" : ""),
+                  })}
                   {" · "}
                   {child.nKeys}{" "}
-                  {say({ language, en: child.nKeys > 1 ? "keys" : "key", fr: "clé" + (child.nKeys > 1 ? "s" : "") })}
+                  {say({
+                    language,
+                    en: child.nKeys > 1 ? "keys" : "key",
+                    fr: "clé" + (child.nKeys > 1 ? "s" : ""),
+                  })}
                 </div>
               )}
             </div>
@@ -251,10 +277,18 @@ export function FlatView({
       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
         <span className="text-slate-400">
           {layer} — {flattened.addrs}{" "}
-          {say({ language, en: flattened.addrs > 1 ? "nodes" : "node", fr: "nœud" + (flattened.addrs > 1 ? "s" : "") })}
+          {say({
+            language,
+            en: flattened.addrs > 1 ? "nodes" : "node",
+            fr: "nœud" + (flattened.addrs > 1 ? "s" : ""),
+          })}
           {" · "}
           {flattened.keys}{" "}
-          {say({ language, en: flattened.keys > 1 ? "keys" : "key", fr: "clé" + (flattened.keys > 1 ? "s" : "") })}
+          {say({
+            language,
+            en: flattened.keys > 1 ? "keys" : "key",
+            fr: "clé" + (flattened.keys > 1 ? "s" : ""),
+          })}
           {" · "}
           {flattened.winners.length}{" "}
           {say({ language, en: "contributing layers", fr: "couches contributeurs" })}
@@ -284,7 +318,11 @@ export function FlatView({
         <span className="text-slate-400">
           {say({ language, en: "root chain: ", fr: "chaîne de racine : " })}
           {flattened.chaîne}{" "}
-          {say({ language, en: flattened.chaîne > 1 ? "layers" : "layer", fr: "couche" + (flattened.chaîne > 1 ? "s" : "") })}
+          {say({
+            language,
+            en: flattened.chaîne > 1 ? "layers" : "layer",
+            fr: "couche" + (flattened.chaîne > 1 ? "s" : ""),
+          })}
         </span>
         <button
           onClick={copyDump}

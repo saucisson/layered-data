@@ -475,7 +475,8 @@ export function computeGraphLayout({
   const HORIZONTAL_GAP = 16; // horizontal gap between nodes of a band
   const ROW = 46; // height of one generation
 
-  const widthOf = (layerName: string) => Math.ceil(layerName.length * CHARACTER_WIDTH) + NODE_PADDING;
+  const widthOf = (layerName: string) =>
+    Math.ceil(layerName.length * CHARACTER_WIDTH) + NODE_PADDING;
   const maxRank = Math.max(...layerNames.map((layerName) => dag.rank(layerName)));
   const rows: string[][] = [];
   for (let rank = 0; rank <= maxRank; rank++) {
@@ -508,7 +509,9 @@ export function computeGraphLayout({
         };
       });
       scored.sort(
-        (first, second) => first.barycenter - second.barycenter || layerNames.indexOf(first.layerName) - layerNames.indexOf(second.layerName),
+        (first, second) =>
+          first.barycenter - second.barycenter ||
+          layerNames.indexOf(first.layerName) - layerNames.indexOf(second.layerName),
       );
       rows[rank] = scored.map((scoredNode) => scoredNode.layerName);
       placeRow(rows[rank] ?? []);
@@ -524,7 +527,9 @@ export function computeGraphLayout({
         };
       });
       scored.sort(
-        (first, second) => first.barycenter - second.barycenter || layerNames.indexOf(first.layerName) - layerNames.indexOf(second.layerName),
+        (first, second) =>
+          first.barycenter - second.barycenter ||
+          layerNames.indexOf(first.layerName) - layerNames.indexOf(second.layerName),
       );
       rows[rank] = scored.map((scoredNode) => scoredNode.layerName);
       placeRow(rows[rank] ?? []);
@@ -533,12 +538,16 @@ export function computeGraphLayout({
 
   // ---- center each band horizontally ----
   const rowWidths = rows.map((row) =>
-    (row ?? []).reduce((total, layerName) => total + widthOf(layerName) + HORIZONTAL_GAP, -HORIZONTAL_GAP),
+    (row ?? []).reduce(
+      (total, layerName) => total + widthOf(layerName) + HORIZONTAL_GAP,
+      -HORIZONTAL_GAP,
+    ),
   );
   const W = Math.max(...rowWidths) + 2;
   for (let rank = 0; rank <= maxRank; rank++) {
     const offset = (W - (rowWidths[rank] ?? 0)) / 2;
-    for (const layerName of rows[rank] ?? []) centerX[layerName] = (centerX[layerName] ?? 0) + offset;
+    for (const layerName of rows[rank] ?? [])
+      centerX[layerName] = (centerX[layerName] ?? 0) + offset;
   }
 
   const H = 30 + (maxRank + 1) * ROW + 14;
