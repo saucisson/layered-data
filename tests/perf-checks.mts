@@ -24,7 +24,12 @@ import { parseLanguage } from "../src/domain/language/parser.ts";
 import { compileLanguage } from "../src/domain/language/compiler.ts";
 import { validateSpace } from "../src/domain/validation.ts";
 import { Space } from "../src/domain/space.ts";
-import { asLayerName, asPathSegment, type LayerName, type LayerPath } from "../src/domain/identifiers.ts";
+import {
+  asLayerName,
+  asPathSegment,
+  type LayerName,
+  type LayerPath,
+} from "../src/domain/identifiers.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -37,7 +42,9 @@ function check(label: string, condition: boolean): void {
 }
 
 const median = (values: number[]): number =>
-  [...values].sort((first, second) => first - second)[Math.floor(values.length / 2)] ?? 0;
+  [...values].sort((first, second) => first - second)[
+    Math.floor(values.length / 2)
+  ] ?? 0;
 
 const elapsed = (action: () => void): number => {
   const start = performance.now();
@@ -54,7 +61,9 @@ const layerSources: Record<string, string> = Object.fromEntries(
     readFileSync(join(corpusDirectory, layerName + ".ld"), "utf8"),
   ]),
 );
-const languageSource = KERNEL_LAYER_NAMES.map((layerName) => layerSources[layerName]).join("");
+const languageSource = KERNEL_LAYER_NAMES.map(
+  (layerName) => layerSources[layerName],
+).join("");
 const parsed = parseLanguage(languageSource);
 const compiled = compileLanguage(parsed.layers);
 
@@ -95,12 +104,16 @@ for (let index = 0; index < 9; index += 1) {
   coldSamples.push(elapsed(() => readAll(coldSpace)));
 }
 const warmSamples: number[] = [];
-for (let index = 0; index < 9; index += 1) warmSamples.push(elapsed(() => readAll(coldSpace)));
+for (let index = 0; index < 9; index += 1)
+  warmSamples.push(elapsed(() => readAll(coldSpace)));
 const coldRead = median(coldSamples);
 const warmRead = median(warmSamples);
 check(
   "the memo pays: the warm read pass is at least 10x cheaper than the cold one (" +
-    coldRead.toFixed(2) + " ms vs " + warmRead.toFixed(2) + " ms)",
+    coldRead.toFixed(2) +
+    " ms vs " +
+    warmRead.toFixed(2) +
+    " ms)",
   warmRead * 10 <= coldRead,
 );
 
@@ -108,7 +121,11 @@ check(
 
 const walkedAddresses = coldSpace.closureMemo.size;
 check(
-  "the memo stays bounded: " + walkedAddresses + " entries for " + workload.length + " read targets",
+  "the memo stays bounded: " +
+    walkedAddresses +
+    " entries for " +
+    workload.length +
+    " read targets",
   walkedAddresses <= workload.length * 2,
 );
 
@@ -119,11 +136,15 @@ check(
 // must stay at the warm level, the invalidation must not cascade.
 coldSpace.touch({ layer: asLayerName("record"), path: [] });
 const touchedSamples: number[] = [];
-for (let index = 0; index < 9; index += 1) touchedSamples.push(elapsed(() => readAll(coldSpace)));
+for (let index = 0; index < 9; index += 1)
+  touchedSamples.push(elapsed(() => readAll(coldSpace)));
 const touchedRead = median(touchedSamples);
 check(
   "the touch is surgical: the re-read stays under 3x the warm pass (" +
-    touchedRead.toFixed(2) + " ms vs " + warmRead.toFixed(2) + " ms)",
+    touchedRead.toFixed(2) +
+    " ms vs " +
+    warmRead.toFixed(2) +
+    " ms)",
   touchedRead <= warmRead * 3,
 );
 
@@ -131,7 +152,12 @@ check(
 
 const fullValidation = (space: Space) =>
   elapsed(() =>
-    validateSpace({ space, parse: parsed, compilation: compiled, layerNames: KERNEL_LAYER_NAMES }),
+    validateSpace({
+      space,
+      parse: parsed,
+      compilation: compiled,
+      layerNames: KERNEL_LAYER_NAMES,
+    }),
   );
 
 const coldValidationSamples: number[] = [];
@@ -154,7 +180,10 @@ for (let index = 0; index < 7; index += 1) {
 const warmValidation = median(warmValidationSamples);
 check(
   "the validation is warm-cheap: at least 2x cheaper warm than cold (" +
-    coldValidation.toFixed(1) + " ms vs " + warmValidation.toFixed(1) + " ms)",
+    coldValidation.toFixed(1) +
+    " ms vs " +
+    warmValidation.toFixed(1) +
+    " ms)",
   warmValidation * 2 <= coldValidation,
 );
 
@@ -167,11 +196,15 @@ check(
 const scaledValidation = (copies: number): number => {
   const sources: Record<string, string> = {};
   const names = [...KERNEL_LAYER_NAMES];
-  for (const layerName of KERNEL_LAYER_NAMES) sources[layerName] = layerSources[layerName] ?? "";
+  for (const layerName of KERNEL_LAYER_NAMES)
+    sources[layerName] = layerSources[layerName] ?? "";
   for (let copy = 2; copy <= copies; copy += 1) {
     for (const layerName of KERNEL_LAYER_NAMES) {
       const clone = layerName + "-x" + copy;
-      sources[clone] = (layerSources[layerName] ?? "").replace("layer " + layerName, "layer " + clone);
+      sources[clone] = (layerSources[layerName] ?? "").replace(
+        "layer " + layerName,
+        "layer " + clone,
+      );
       names.push(asLayerName(clone));
     }
   }
@@ -187,11 +220,22 @@ const scaledValidation = (copies: number): number => {
     });
   });
 };
-const doubled = median([scaledValidation(2), scaledValidation(2), scaledValidation(2)]);
-const quadrupled = median([scaledValidation(4), scaledValidation(4), scaledValidation(4)]);
+const doubled = median([
+  scaledValidation(2),
+  scaledValidation(2),
+  scaledValidation(2),
+]);
+const quadrupled = median([
+  scaledValidation(4),
+  scaledValidation(4),
+  scaledValidation(4),
+]);
 check(
   "the validation stays sub-quadratic: x4 corpus at most 3x the x2 cost (" +
-    doubled.toFixed(0) + " ms vs " + quadrupled.toFixed(0) + " ms)",
+    doubled.toFixed(0) +
+    " ms vs " +
+    quadrupled.toFixed(0) +
+    " ms)",
   quadrupled <= doubled * 3,
 );
 
@@ -200,13 +244,16 @@ check(
 if (typeof (globalThis as any).gc === "function") {
   (globalThis as any).gc();
   const before = process.memoryUsage().heapUsed;
-  for (let index = 0; index < 20; index += 1) fullValidation(warmValidationSpace);
+  for (let index = 0; index < 20; index += 1)
+    fullValidation(warmValidationSpace);
   (globalThis as any).gc();
   const after = process.memoryUsage().heapUsed;
   check(
     "a session of 20 revalidations does not grow the heap beyond 2x (" +
-      Math.round(before / 1024) + " KiB vs " +
-      Math.round(after / 1024) + " KiB)",
+      Math.round(before / 1024) +
+      " KiB vs " +
+      Math.round(after / 1024) +
+      " KiB)",
     after <= before * 2,
   );
 }
@@ -215,7 +262,13 @@ if (typeof (globalThis as any).gc === "function") {
 // the ledger
 // =====================================================================
 
-console.log("perf checks: " + assertions + " assertions, " + failures.length + " failure(s)");
+console.log(
+  "perf checks: " +
+    assertions +
+    " assertions, " +
+    failures.length +
+    " failure(s)",
+);
 for (const failure of failures) {
   console.log("FAIL " + failure);
 }

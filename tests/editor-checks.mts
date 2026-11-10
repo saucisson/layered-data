@@ -20,10 +20,16 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { assembleLayeredDataKernel, KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
+import {
+  assembleLayeredDataKernel,
+  KERNEL_LAYER_NAMES,
+} from "../src/application/corpus.ts";
 import { asLayerName, asLayerPath } from "../src/domain/identifiers.ts";
 import { renderMessage } from "../src/domain/messages.ts";
-import { stageLayerAddition, applyStagedAddition } from "../src/application/staging.ts";
+import {
+  stageLayerAddition,
+  applyStagedAddition,
+} from "../src/application/staging.ts";
 import {
   stageLayerEdition,
   applyStagedEdition,
@@ -65,21 +71,33 @@ function addLayer({ draftSource }: { draftSource: string }) {
     livingLayerNames: [...livingLayerNames],
     readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   });
-  if (!staging.ok) throw new Error("the setup addition was refused: " + JSON.stringify(staging.verdicts));
+  if (!staging.ok)
+    throw new Error(
+      "the setup addition was refused: " + JSON.stringify(staging.verdicts),
+    );
   const applied = applyStagedAddition({
     space: kernel.space,
     staging,
     knownLayerNames: [...livingLayerNames],
     readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   });
-  livingAdditions.push({ source: draftSource.trim(), layerNames: [...applied.newLayerNames] });
+  livingAdditions.push({
+    source: draftSource.trim(),
+    layerNames: [...applied.newLayerNames],
+  });
   livingLayerNames.push(...applied.newLayerNames);
   return applied;
 }
 
 /** Edit a living layer the way the ✎ editor does: stage the edition
  * (the layer leaves the context, it is judged again). */
-function editLayer({ layerName, editedSource }: { layerName: string; editedSource: string }) {
+function editLayer({
+  layerName,
+  editedSource,
+}: {
+  layerName: string;
+  editedSource: string;
+}) {
   return stageLayerEdition({
     languageSource: kernel.languageSource,
     livingAdditions,
@@ -137,11 +155,20 @@ check(
   "(a) the child reads the inherited weight 1 before the edition (the diamond)",
   childWeightBefore === 1,
 );
-check("(a) no memo entry is stale before any edition", kernel.space.staleMemoKeys().length === 0);
+check(
+  "(a) no memo entry is stale before any edition",
+  kernel.space.staleMemoKeys().length === 0,
+);
 
 // the edition widens the refinement chain: @kahn-scheme joins the closure
-const widenedSource = parentSource.replace("refines @wb1", "refines @wb1 then @kahn-scheme");
-const widened = editLayer({ layerName: "draft-demo", editedSource: widenedSource });
+const widenedSource = parentSource.replace(
+  "refines @wb1",
+  "refines @wb1 then @kahn-scheme",
+);
+const widened = editLayer({
+  layerName: "draft-demo",
+  editedSource: widenedSource,
+});
 check(
   "(a) the sound edition is accepted: ok, no verdict, at the validation step",
   widened.ok === true &&
@@ -208,7 +235,8 @@ check(
 const treeBefore = kernel.space.layers["draft-demo"];
 const brokenEdition = editLayer({
   layerName: "draft-demo",
-  editedSource: "layer draft-demo refines @wb1\n  extend arcsAB\n    e3 = oops \x1b[[",
+  editedSource:
+    "layer draft-demo refines @wb1\n  extend arcsAB\n    e3 = oops \x1b[[",
 });
 check(
   "(b) the broken edition is refused at the syntax step, with readable errors",
@@ -234,7 +262,10 @@ const betrayingSource = [
   "      target = @wb1/right/b1",
   "      override weight = 7",
 ].join("\n");
-const betraying = editLayer({ layerName: "draft-demo", editedSource: betrayingSource });
+const betraying = editLayer({
+  layerName: "draft-demo",
+  editedSource: betrayingSource,
+});
 check(
   "(c) the betraying edition is refused at the validation step",
   betraying.ok === false && betraying.staging.step === "validation",
@@ -243,7 +274,10 @@ check(
   '(c) the betraying edition carries exactly the "attendu-trahi" verdict of the child layer',
   betraying.staging.verdicts.length === 1 &&
     at(betraying.staging.verdicts, 0).kind === "attendu-trahi" &&
-    renderMessage({ message: at(betraying.staging.verdicts, 0).fact, language: "en" }).includes("draft-child"),
+    renderMessage({
+      message: at(betraying.staging.verdicts, 0).fact,
+      language: "en",
+    }).includes("draft-child"),
 );
 check(
   "(c) the refused betrayal leaves the space intact — the tree is untouched",
@@ -266,8 +300,14 @@ check(
 // draft-demo here — the child is context, its parent target
 // stays), the edition guard refuses it: an edition edits, it
 // never renames
-const renamedSource = widenedSource.replace("layer draft-demo refines", "layer draft-renamed refines");
-const renamed = editLayer({ layerName: "draft-demo", editedSource: renamedSource });
+const renamedSource = widenedSource.replace(
+  "layer draft-demo refines",
+  "layer draft-renamed refines",
+);
+const renamed = editLayer({
+  layerName: "draft-demo",
+  editedSource: renamedSource,
+});
 check(
   "(d) the renamed edition is refused by the edition guard — the name must stay",
   renamed.ok === false && renamed.refusals.includes("couche-renomme") === true,
@@ -281,14 +321,18 @@ check(
 // (e) a layer smuggled alongside the edition is refused
 // =====================================================================
 
-const smuggledSource = widenedSource + "\n" + [
-  "layer draft-smuggled refines @wb1",
-  "  value = 1",
-].join("\n");
-const smuggled = editLayer({ layerName: "draft-demo", editedSource: smuggledSource });
+const smuggledSource =
+  widenedSource +
+  "\n" +
+  ["layer draft-smuggled refines @wb1", "  value = 1"].join("\n");
+const smuggled = editLayer({
+  layerName: "draft-demo",
+  editedSource: smuggledSource,
+});
 check(
   "(e) the smuggled edition is refused — an edition is not an addition",
-  smuggled.ok === false && smuggled.refusals.includes("couche-glissée") === true,
+  smuggled.ok === false &&
+    smuggled.refusals.includes("couche-glissée") === true,
 );
 check(
   "(e) the refused smuggling leaves the space intact — no new layer entered",
@@ -302,14 +346,18 @@ check(
 // =====================================================================
 
 const narrowedSource = parentSource; // back to @wb1 alone
-const narrowed = editLayer({ layerName: "draft-demo", editedSource: narrowedSource });
+const narrowed = editLayer({
+  layerName: "draft-demo",
+  editedSource: narrowedSource,
+});
 check(
   "(f) the narrowing edition is accepted — the setup for the missing touch",
   narrowed.ok === true,
 );
 
 // replace the tree WITHOUT the touch: the write is not declared
-kernel.space.layers["draft-demo"] = narrowed.staging.compiledLanguage!.layers["draft-demo"]!;
+kernel.space.layers["draft-demo"] =
+  narrowed.staging.compiledLanguage!.layers["draft-demo"]!;
 const closureWithoutTouch = kernel.space.closure({
   layer: asLayerName("draft-demo"),
   path: asLayerPath([]),
@@ -346,8 +394,9 @@ const bedrockEdition = editLayer({
   editedSource: 'layer record\n  specification\n    record = "réécrit"\n',
 });
 check(
-  '(g) the edition aimed at the bedrock layer is refused — the guard speaks before staging is convened',
-  bedrockEdition.ok === false && bedrockEdition.refusals.includes("socle-édité") === true,
+  "(g) the edition aimed at the bedrock layer is refused — the guard speaks before staging is convened",
+  bedrockEdition.ok === false &&
+    bedrockEdition.refusals.includes("socle-édité") === true,
 );
 const recordTreeBefore = kernel.space.layers["record"];
 const refusedTrunkApply = applyStagedEdition({
@@ -357,15 +406,22 @@ const refusedTrunkApply = applyStagedEdition({
   readonlyLayerNames: [...KERNEL_LAYER_NAMES],
 });
 check(
-  '(g) the act of edition never writes a bedrock layer — the tree is untouched, whoever calls the route (measured before ADR-0103: `record` was mutable in place)',
-  kernel.space.layers["record"] === recordTreeBefore && refusedTrunkApply.block === "",
+  "(g) the act of edition never writes a bedrock layer — the tree is untouched, whoever calls the route (measured before ADR-0103: `record` was mutable in place)",
+  kernel.space.layers["record"] === recordTreeBefore &&
+    refusedTrunkApply.block === "",
 );
 
 // =====================================================================
 // the ledger
 // =====================================================================
 
-console.log("editor checks: " + assertions + " assertions, " + failures.length + " failure(s)");
+console.log(
+  "editor checks: " +
+    assertions +
+    " assertions, " +
+    failures.length +
+    " failure(s)",
+);
 for (const failure of failures) {
   console.log("FAIL " + failure);
 }

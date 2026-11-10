@@ -14,9 +14,17 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-import { assembleLayeredDataKernel, KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
+import {
+  assembleLayeredDataKernel,
+  KERNEL_LAYER_NAMES,
+} from "../src/application/corpus.ts";
 import { fact } from "../src/domain/messages.ts";
-import { composeVerifiedLayerDraft, formatPenFeedback, type PenLoopOutcome, type PenRound } from "../src/application/penLoop.ts";
+import {
+  composeVerifiedLayerDraft,
+  formatPenFeedback,
+  type PenLoopOutcome,
+  type PenRound,
+} from "../src/application/penLoop.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -51,7 +59,17 @@ function scriptedPen({ scripts }: { scripts: string[] }) {
   return { propose, rounds };
 }
 
-function runLoop({ scripts, livingLayerNames = [...KERNEL_LAYER_NAMES], readonlyLayerNames = [...KERNEL_LAYER_NAMES], previousAdditionSources = [] }: { scripts: string[]; livingLayerNames?: string[]; readonlyLayerNames?: string[]; previousAdditionSources?: string[] }): Promise<PenLoopOutcome> {
+function runLoop({
+  scripts,
+  livingLayerNames = [...KERNEL_LAYER_NAMES],
+  readonlyLayerNames = [...KERNEL_LAYER_NAMES],
+  previousAdditionSources = [],
+}: {
+  scripts: string[];
+  livingLayerNames?: string[];
+  readonlyLayerNames?: string[];
+  previousAdditionSources?: string[];
+}): Promise<PenLoopOutcome> {
   return composeVerifiedLayerDraft({
     instruction: "une couche de démonstration",
     languageSource: kernel.languageSource,
@@ -87,23 +105,25 @@ function at<T>(list: readonly T[], index: number): T {
 
 check(
   "(a) a sound proposal is accepted first try: ok, one attempt, no refusal",
-  firstTry.ok === true && firstTry.attempts === 1 && firstTry.refusals.length === 0,
+  firstTry.ok === true &&
+    firstTry.attempts === 1 &&
+    firstTry.refusals.length === 0,
 );
 check(
   "(a) the accepted draft source is the proposal itself, staged",
-  firstTry.draftSource === soundDraft && firstTry.staging !== null && firstTry.staging.ok === true,
+  firstTry.draftSource === soundDraft &&
+    firstTry.staging !== null &&
+    firstTry.staging.ok === true,
 );
-check(
-  "(a) the first round carries no feedback",
-  firstTry.staging !== null,
-);
+check("(a) the first round carries no feedback", firstTry.staging !== null);
 
 // =====================================================================
 // (b) a syntax error is refused, the verdict travels back, the
 //     corrected proposal is accepted — the loop at work
 // =====================================================================
 
-const brokenDraft = "layer draft-demo refines @wb1\n  extend arcsAB\n    e3 = oops \x1b[[";
+const brokenDraft =
+  "layer draft-demo refines @wb1\n  extend arcsAB\n    e3 = oops \x1b[[";
 const correctivePen = scriptedPen({ scripts: [brokenDraft, soundDraft] });
 const secondTry = await composeVerifiedLayerDraft({
   instruction: "une couche de démonstration",
@@ -119,7 +139,9 @@ check(
 );
 check(
   "(b) the first round carried no feedback, the second carried the syntax refusal",
-  correctivePen.rounds.length === 2 && at(correctivePen.rounds, 0).feedback === null && at(correctivePen.rounds, 1).feedback !== null,
+  correctivePen.rounds.length === 2 &&
+    at(correctivePen.rounds, 0).feedback === null &&
+    at(correctivePen.rounds, 1).feedback !== null,
 );
 check(
   "(b) the refusal is a syntax step with readable errors",
@@ -143,7 +165,9 @@ check(
 // =====================================================================
 
 const orphanDraft = "layer draft-orphan refines @unknown-layer\n  value = 1\n";
-const stubbornPen = scriptedPen({ scripts: [orphanDraft, orphanDraft, orphanDraft] });
+const stubbornPen = scriptedPen({
+  scripts: [orphanDraft, orphanDraft, orphanDraft],
+});
 const thirdTry = await composeVerifiedLayerDraft({
   instruction: "une couche de démonstration",
   languageSource: kernel.languageSource,
@@ -154,7 +178,9 @@ const thirdTry = await composeVerifiedLayerDraft({
 });
 check(
   "(c) the stubborn geologist exhausts the budget: refused after three attempts",
-  thirdTry.ok === false && thirdTry.attempts === 3 && thirdTry.refusals.length === 3,
+  thirdTry.ok === false &&
+    thirdTry.attempts === 3 &&
+    thirdTry.refusals.length === 3,
 );
 check(
   "(c) a spent budget carries no draft and no staging",
@@ -162,7 +188,12 @@ check(
 );
 check(
   "(c) every refusal is the kernel's own verdict vocabulary (cible-inconnue), each attempt feeding back the previous one",
-  thirdTry.refusals.every((refusal) => refusal.step === "validation" && refusal.verdicts.length === 1 && at(refusal.verdicts, 0).kind === "cible-inconnue") &&
+  thirdTry.refusals.every(
+    (refusal) =>
+      refusal.step === "validation" &&
+      refusal.verdicts.length === 1 &&
+      at(refusal.verdicts, 0).kind === "cible-inconnue",
+  ) &&
     at(thirdTry.refusals, 1).feedback !== null &&
     at(stubbornPen.rounds, 2).feedback !== null,
 );
@@ -187,12 +218,16 @@ const fourthTry = await composeVerifiedLayerDraft({
 });
 check(
   "(d) the betrayed expectation is refused at the validation step, the measured layer is accepted next",
-  fourthTry.ok === true && fourthTry.attempts === 2 && at(fourthTry.refusals, 0).step === "validation",
+  fourthTry.ok === true &&
+    fourthTry.attempts === 2 &&
+    at(fourthTry.refusals, 0).step === "validation",
 );
 check(
   '(d) the refusal speaks the "expectation-betrayed" verdict and its fact',
   at(fourthTry.refusals, 0).verdicts.length >= 1 &&
-    at(fourthTry.refusals, 0).verdicts.some((verdict) => verdict.kind === "attendu-trahi") &&
+    at(fourthTry.refusals, 0).verdicts.some(
+      (verdict) => verdict.kind === "attendu-trahi",
+    ) &&
     at(fourthTry.refusals, 0).feedback.includes("expectation-betrayed"),
 );
 
@@ -225,7 +260,8 @@ check(
 // =====================================================================
 
 const userLayerSource = "layer userlayer refines @record\n  value = 1\n";
-const userLayerRefiningDraft = "layer draft-userlayer refines @userlayer\n  extra = 2\n";
+const userLayerRefiningDraft =
+  "layer draft-userlayer refines @userlayer\n  extra = 2\n";
 const sixthTry = await runLoop({
   scripts: [userLayerRefiningDraft],
   livingLayerNames: [...KERNEL_LAYER_NAMES, "userlayer"],
@@ -236,7 +272,11 @@ check(
   sixthTry.ok === true && sixthTry.attempts === 1,
 );
 const seventhTry = await runLoop({
-  scripts: [userLayerRefiningDraft, userLayerRefiningDraft, userLayerRefiningDraft],
+  scripts: [
+    userLayerRefiningDraft,
+    userLayerRefiningDraft,
+    userLayerRefiningDraft,
+  ],
   livingLayerNames: [...KERNEL_LAYER_NAMES],
   readonlyLayerNames: [...KERNEL_LAYER_NAMES],
   previousAdditionSources: [],
@@ -244,7 +284,9 @@ const seventhTry = await runLoop({
 check(
   "(f) the same proposal is refused without the layer — the gate is the living context, not the intention",
   seventhTry.ok === false &&
-    seventhTry.refusals.every((refusal) => refusal.verdicts.some((verdict) => verdict.kind === "cible-inconnue")),
+    seventhTry.refusals.every((refusal) =>
+      refusal.verdicts.some((verdict) => verdict.kind === "cible-inconnue"),
+    ),
 );
 
 // =====================================================================
@@ -253,8 +295,11 @@ check(
 //     corrected proposal — a refinement — is accepted
 // =====================================================================
 
-const bedrockClaimingDraft = 'layer record\n  specification\n    record = "volé"\n';
-const claimingThenSound = scriptedPen({ scripts: [bedrockClaimingDraft, soundDraft] });
+const bedrockClaimingDraft =
+  'layer record\n  specification\n    record = "volé"\n';
+const claimingThenSound = scriptedPen({
+  scripts: [bedrockClaimingDraft, soundDraft],
+});
 const eighthTry = await composeVerifiedLayerDraft({
   instruction: "une couche de démonstration",
   languageSource: kernel.languageSource,
@@ -286,7 +331,12 @@ const formatterRefusal = {
   verdicts: [
     {
       kind: "liaison-morte",
-      fact: fact("dead-binding", { layer: "draft", slot: "x", tag: "@nowhere/y", readingLayer: "wb1" }),
+      fact: fact("dead-binding", {
+        layer: "draft",
+        slot: "x",
+        tag: "@nowhere/y",
+        readingLayer: "wb1",
+      }),
     },
   ],
   proposal: "",
@@ -314,7 +364,13 @@ check(
 // the ledger
 // =====================================================================
 
-console.log("geologist loop checks: " + assertions + " assertions, " + failures.length + " failure(s)");
+console.log(
+  "geologist loop checks: " +
+    assertions +
+    " assertions, " +
+    failures.length +
+    " failure(s)",
+);
 for (const failure of failures) {
   console.log("FAIL " + failure);
 }
