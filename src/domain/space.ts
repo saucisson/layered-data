@@ -15,9 +15,23 @@
 // preserved) and the generic checks (containers, cardinality).
 // Out of scope: lens checks.
 
-import { type LayerName, type LayerPath, type PathSegment, asLayerName, asLayerPath } from "./identifiers.ts";
+import {
+  type LayerName,
+  type LayerPath,
+  type PathSegment,
+  asLayerName,
+  asLayerPath,
+} from "./identifiers.ts";
 import { fact, type MessageFact } from "./messages.ts";
-import { type Address, AddressView, LayerReference, PathReference, type RawTree, type RawValue, isDictionary,  } from "./addresses.ts";
+import {
+  type Address,
+  AddressView,
+  LayerReference,
+  PathReference,
+  type RawTree,
+  type RawValue,
+  isDictionary,
+} from "./addresses.ts";
 import { SPECIAL_KEYS } from "./specialKeys.ts";
 
 /** One trace event of a closure or resolution walk. */
@@ -187,7 +201,11 @@ export class Space {
    * stale? The same scan isMemoEntryValid applies to memo entries. */
   isObservationStale({ deps, gen }: { deps: Set<number>; gen: number }): boolean {
     const eventCount = this.touched.length + this.journalBase;
-    for (let eventIndex = Math.max(gen, this.journalBase); eventIndex < eventCount; eventIndex += 1) {
+    for (
+      let eventIndex = Math.max(gen, this.journalBase);
+      eventIndex < eventCount;
+      eventIndex += 1
+    ) {
       const eventId = this.touched[eventIndex - this.journalBase];
       if (eventId === undefined) continue;
       for (const dependency of deps) {
@@ -199,8 +217,17 @@ export class Space {
     return false;
   }
 
-  recordDiagnostic({ kind, address, fact }: { kind: string; address: Address; fact: MessageFact }): void {
-    const factKey = fact.code + "\u0001" + (fact.params === undefined ? "" : JSON.stringify(fact.params));
+  recordDiagnostic({
+    kind,
+    address,
+    fact,
+  }: {
+    kind: string;
+    address: Address;
+    fact: MessageFact;
+  }): void {
+    const factKey =
+      fact.code + "\u0001" + (fact.params === undefined ? "" : JSON.stringify(fact.params));
     const deduplicationKey =
       kind + "\u0001" + address[0] + "\u0001" + address[1].join("\u0001") + "\u0001" + factKey;
     if (this.seenDiagnostics.has(deduplicationKey)) return;
@@ -232,7 +259,8 @@ export class Space {
     if (node === undefined) {
       const sym = this.internSeg(layer);
       const rootChildren = this.nodeChild[0];
-      if (rootChildren === undefined) throw new Error("trie root missing: nodeChild[0] is always initialized");
+      if (rootChildren === undefined)
+        throw new Error("trie root missing: nodeChild[0] is always initialized");
       let layerNode: number | undefined = rootChildren.get(sym);
       if (layerNode === undefined) {
         layerNode = this.newTrieNode(0, sym);
@@ -244,7 +272,8 @@ export class Space {
     let current: number = node;
     for (const segment of path) {
       const children = this.nodeChild[current];
-      if (children === undefined) throw new Error("trie node missing: nodeChild[" + current + "] is always initialized");
+      if (children === undefined)
+        throw new Error("trie node missing: nodeChild[" + current + "] is always initialized");
       const sym = this.internSeg(segment);
       let child: number | undefined = children.get(sym);
       if (child === undefined) {
@@ -270,18 +299,23 @@ export class Space {
     if (typeof key === "number") return key;
     const bar = key.indexOf("|");
     const rest = key.slice(bar + 1);
-    return this.internPathId(asLayerName(key.slice(0, bar)), (rest === "" ? [] : rest.split("/")) as LayerPath);
+    return this.internPathId(
+      asLayerName(key.slice(0, bar)),
+      (rest === "" ? [] : rest.split("/")) as LayerPath,
+    );
   }
 
   /** The "layer|a/b" string of one interned id (addressKey format). */
   pathKeyOf(id: number): string {
     const syms: number[] = [];
-    for (let node = id; node !== 0; node = this.nodeParent[node] ?? 0) syms.push(this.nodeSeg[node] ?? -1);
+    for (let node = id; node !== 0; node = this.nodeParent[node] ?? 0)
+      syms.push(this.nodeSeg[node] ?? -1);
     syms.reverse();
     const [firstSym, ...restSyms] = syms;
     if (firstSym === undefined) return "|";
     let key = (this.segNames[firstSym] ?? "") + "|";
-    for (let i = 0; i < restSyms.length; i++) key += (i > 0 ? "/" : "") + (this.segNames[restSyms[i] ?? -1] ?? "");
+    for (let i = 0; i < restSyms.length; i++)
+      key += (i > 0 ? "/" : "") + (this.segNames[restSyms[i] ?? -1] ?? "");
     return key;
   }
 
@@ -315,7 +349,15 @@ export class Space {
   // Does the event (layer, pathPrefix) cover the dependency? The
   // prefix must be an exact path prefix, same layer; an empty path
   // covers the whole layer.
-  static eventCoversDependency({ event, eventPathLength, dependency }: { event: string; eventPathLength: number; dependency: string }): boolean {
+  static eventCoversDependency({
+    event,
+    eventPathLength,
+    dependency,
+  }: {
+    event: string;
+    eventPathLength: number;
+    dependency: string;
+  }): boolean {
     if (eventPathLength === 0) return dependency.startsWith(event);
     return dependency.startsWith(event + "\u0001") || dependency === event + "\u0002";
   }
@@ -407,12 +449,22 @@ export class Space {
   }
 
   // ---------------------------------------------------------- anchors
-  anchorsAt({ layer, path, tracer }: { layer: LayerName; path: LayerPath; tracer: Tracer | null }): string[] {
+  anchorsAt({
+    layer,
+    path,
+    tracer,
+  }: {
+    layer: LayerName;
+    path: LayerPath;
+    tracer: Tracer | null;
+  }): string[] {
     const key = this.internPathId(layer, path);
     if (this.frames.has(key)) return []; // in flight: unknown, skip
     const anchors: string[] = [];
     for (const [sourceLayer, sourcePath] of this.closure({ layer, path, tracer })) {
-      const anchor = sourcePath.length ? (sourcePath[sourcePath.length - 1] ?? sourceLayer) : sourceLayer;
+      const anchor = sourcePath.length
+        ? (sourcePath[sourcePath.length - 1] ?? sourceLayer)
+        : sourceLayer;
       if (!anchors.includes(anchor)) anchors.push(anchor);
     }
     return anchors;
@@ -459,7 +511,11 @@ export class Space {
       // path] — the pair being closed; reading special keys of the
       // flattened view (specification, bindings) can lead here:
       // the guard records, it does not decide.
-      this.recordDiagnostic({ kind: "garde-de-cycle", address: [layer, path], fact: fact("cycle-guard") });
+      this.recordDiagnostic({
+        kind: "garde-de-cycle",
+        address: [layer, path],
+        fact: fact("cycle-guard"),
+      });
       return [];
     }
     if (tracer) tracer.depth++;
@@ -505,7 +561,17 @@ export class Space {
     return [];
   }
 
-  private computeClosure({ layer, path, id, tracer }: { layer: LayerName; path: LayerPath; id: number; tracer: Tracer | null }): Address[] {
+  private computeClosure({
+    layer,
+    path,
+    id,
+    tracer,
+  }: {
+    layer: LayerName;
+    path: LayerPath;
+    id: number;
+    tracer: Tracer | null;
+  }): Address[] {
     const currentAddress: Address = [layer, path];
     tracer?.record({ kind: "start", addr: currentAddress });
 
@@ -595,7 +661,11 @@ export class Space {
         if (resolved === null) continue;
         const normalized = normalize(resolved[0]);
         if (normalized === null) {
-          this.recordDiagnostic({ kind: "entrée-ignorée", address: viewAddress, fact: fact("no-concrete-target") });
+          this.recordDiagnostic({
+            kind: "entrée-ignorée",
+            address: viewAddress,
+            fact: fact("no-concrete-target"),
+          });
           continue;
         }
         pushTarget(normalized, resolved[1]);
@@ -615,7 +685,11 @@ export class Space {
       if (resolved === null) continue;
       const normalized = normalize(resolved[0]);
       if (normalized === null) {
-        this.recordDiagnostic({ kind: "entrée-ignorée", address: currentAddress, fact: fact("no-concrete-target") });
+        this.recordDiagnostic({
+          kind: "entrée-ignorée",
+          address: currentAddress,
+          fact: fact("no-concrete-target"),
+        });
         continue;
       }
       pushTarget(normalized, resolved[1]);
@@ -629,7 +703,11 @@ export class Space {
         tracer?.record({ kind: "push", addr: baseAddress, via: "membre-du-père" });
       }
     }
-    tracer?.record({ kind: "done", addr: currentAddress, out: output.map((address) => [address[0], address[1]]) });
+    tracer?.record({
+      kind: "done",
+      addr: currentAddress,
+      out: output.map((address) => [address[0], address[1]]),
+    });
     return output;
   }
 
@@ -704,7 +782,9 @@ export class Space {
           (address) => address[0],
         );
         const anchorInChain = chain.includes(reference.anchor);
-        position = anchorInChain ? [holderLayer, asLayerPath([])] : [reference.anchor, asLayerPath([])];
+        position = anchorInChain
+          ? [holderLayer, asLayerPath([])]
+          : [reference.anchor, asLayerPath([])];
         search[search.length - 1].reroot = anchorInChain ? "vue-courante" : "couche-étrangère";
       } else {
         position = [holderLayer, prefix];
@@ -760,7 +840,13 @@ export class Space {
   }
 
   // Dedicated trace: resolution of one reference, outside a closure.
-  traceReferenceResolution({ reference, holder }: { reference: PathReference; holder: Address }): any {
+  traceReferenceResolution({
+    reference,
+    holder,
+  }: {
+    reference: PathReference;
+    holder: Address;
+  }): any {
     const tracer = new Tracer();
     tracer.depth++; // the events of this search are at depth 1
     const result = this.resolveReference({ reference, holder, tracer });
@@ -768,7 +854,19 @@ export class Space {
   }
 
   // -------------------------------------------------------- readings
-  private valueOf({ layer, path, key, raw, tracer }: { layer: LayerName; path: LayerPath; key: string; raw: RawValue; tracer: Tracer | null }): RawValue {
+  private valueOf({
+    layer,
+    path,
+    key,
+    raw,
+    tracer,
+  }: {
+    layer: LayerName;
+    path: LayerPath;
+    key: string;
+    raw: RawValue;
+    tracer: Tracer | null;
+  }): RawValue {
     if (isDictionary(raw)) return new AddressView(layer, [...path, key as PathSegment]);
     if (raw instanceof LayerReference) return new AddressView(raw.layer, asLayerPath([]));
     if (raw instanceof PathReference) {

@@ -39,7 +39,13 @@ export interface EditorSessionState {
  * a conflict (the baseVersion is stale — re-sync and retry). */
 export type GestureOutcome =
   | { ok: true; state: EditorSessionState }
-  | { ok: false; reason: "refused"; refusals: string[]; staging: StagingOutcome | null; state: EditorSessionState }
+  | {
+      ok: false;
+      reason: "refused";
+      refusals: string[];
+      staging: StagingOutcome | null;
+      state: EditorSessionState;
+    }
   | { ok: false; reason: "conflict"; state: EditorSessionState };
 
 /** The layer names declared by a source, in order of appearance —
@@ -77,7 +83,13 @@ export function createEditorSession({
 }): EditorSession {
   let state: EditorSessionState = initial ?? { version: 0, additions: [] };
 
-  function applyGesture({ source, baseVersion }: { source: string; baseVersion: number }): GestureOutcome {
+  function applyGesture({
+    source,
+    baseVersion,
+  }: {
+    source: string;
+    baseVersion: number;
+  }): GestureOutcome {
     if (baseVersion !== state.version) {
       return { ok: false, reason: "conflict", state: readState() };
     }

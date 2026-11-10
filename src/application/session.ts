@@ -58,12 +58,18 @@ export function writeSessionAddition({ addition }: { addition: SessionAddition }
  * duplicates it. An addition the staging would now refuse is
  * skipped, honestly: the corpus moved under the session, the page
  * stays readable, never a crash. */
-export function materializeSessionAdditions({ kernel }: { kernel: LayeredDataKernel }): MaterializedSession {
+export function materializeSessionAdditions({
+  kernel,
+}: {
+  kernel: LayeredDataKernel;
+}): MaterializedSession {
   const layerNames: string[] = [...kernel.layerNames];
   const blocks: Record<string, string> = {};
   const sources: string[] = [];
   for (const addition of SESSION_ADDITIONS) {
-    const alreadyMaterialized = addition.layerNames.some((layerName) => layerName in kernel.space.layers);
+    const alreadyMaterialized = addition.layerNames.some(
+      (layerName) => layerName in kernel.space.layers,
+    );
     if (alreadyMaterialized) {
       layerNames.push(...addition.layerNames);
       sources.push(addition.source);

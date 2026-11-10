@@ -67,7 +67,8 @@ const startsWith = ({ label, prefix }: { label: string; prefix: string }): boole
 
 // The note keys (`__note:key`) are internal data of the compilation —
 // never proposed as completions.
-const visibleKeys = ({ keys }: { keys: string[] }): string[] => keys.filter((key) => !key.startsWith("__note:"));
+const visibleKeys = ({ keys }: { keys: string[] }): string[] =>
+  keys.filter((key) => !key.startsWith("__note:"));
 
 // Layer declarations are read by a line scan, not by the parser: the
 // cursor usually sits on a half-written line the parser would refuse,
@@ -107,7 +108,12 @@ export function completeLanguage({
   const text = lines[lineIndex] ?? "";
   const prefix = text.slice(0, Math.min(Math.max(character, 0), text.length));
 
-  const allLayerNames = [...new Set([...layerNames, ...layerDeclarations({ source }).map((declaration) => declaration.name)])];
+  const allLayerNames = [
+    ...new Set([
+      ...layerNames,
+      ...layerDeclarations({ source }).map((declaration) => declaration.name),
+    ]),
+  ];
 
   // ---- `@…` — a reference: layers, then path segments
   const referenceMatch = /@([A-Za-z0-9_./-]*)$/.exec(prefix);
@@ -123,7 +129,9 @@ export function completeLanguage({
     const anchor = segments[0] ?? "";
     const pathPrefix = segments.slice(1, -1);
     const lastSegment = segments[segments.length - 1] ?? "";
-    return visibleKeys({ keys: space.keys({ layer: asLayerName(anchor), path: asLayerPath(pathPrefix) }) })
+    return visibleKeys({
+      keys: space.keys({ layer: asLayerName(anchor), path: asLayerPath(pathPrefix) }),
+    })
       .filter((key) => startsWith({ label: key, prefix: lastSegment }))
       .map((key) => suggestion({ label: key, kind: "key", language }));
   }
@@ -150,7 +158,9 @@ export function completeLanguage({
     // sits right after a "/").
     const pathPrefix = segments.slice(0, -1);
     const lastSegment = segments[segments.length - 1] ?? "";
-    return visibleKeys({ keys: space.keys({ layer: asLayerName(layer), path: asLayerPath(pathPrefix) }) })
+    return visibleKeys({
+      keys: space.keys({ layer: asLayerName(layer), path: asLayerPath(pathPrefix) }),
+    })
       .filter((key) => startsWith({ label: key, prefix: lastSegment }))
       .map((key) => suggestion({ label: key, kind: "key", language }));
   }
@@ -162,6 +172,10 @@ export function completeLanguage({
   return labels
     .filter((label) => startsWith({ label, prefix: word }))
     .map((label) =>
-      suggestion({ label, kind: BLOCK_ACTS.includes(label) || LAYER_ACTS.includes(label) ? "act" : "key", language }),
+      suggestion({
+        label,
+        kind: BLOCK_ACTS.includes(label) || LAYER_ACTS.includes(label) ? "act" : "key",
+        language,
+      }),
     );
 }

@@ -40,10 +40,21 @@
 // A renaming follows for free: the renaming formalism rebinds the slot.
 
 import { type LayerName, asPathSegment } from "./identifiers.ts";
-import { type Address, AddressView, type RawValue, addressesEqual, isDictionary,  } from "./addresses.ts";
+import {
+  type Address,
+  AddressView,
+  type RawValue,
+  addressesEqual,
+  isDictionary,
+} from "./addresses.ts";
 import { Space } from "./space.ts";
 import { designatedAddress } from "./desugaring.ts";
-import { canonicalFormula, evaluateFormula, renderJudgmentMessage, tryParseFormula } from "./formulas.ts";
+import {
+  canonicalFormula,
+  evaluateFormula,
+  renderJudgmentMessage,
+  tryParseFormula,
+} from "./formulas.ts";
 import { walkAddresses, type WalkedAddress } from "./views.ts";
 import { fact } from "./messages.ts";
 
@@ -53,7 +64,15 @@ import { fact } from "./messages.ts";
 // designated by the value is also designated by a member of the
 // container. The shortcut holds only for a direct child — port of the
 // original `member_of`.
-function isMemberOf({ space, value, container }: { space: Space; value: AddressView; container: AddressView }): boolean {
+function isMemberOf({
+  space,
+  value,
+  container,
+}: {
+  space: Space;
+  value: AddressView;
+  container: AddressView;
+}): boolean {
   const containerPath = container.path;
   if (
     value.layer === container.layer &&
@@ -104,8 +123,12 @@ function concreteNodeOf({ space, view }: { space: Space; view: AddressView }): A
 // The rendering of a (layer, path) tuple — the check messages quote it.
 function addressTupleRepr(address: Address): string {
   return (
-    "('" + address[0] + "', (" + address[1].map((segment) => "'" + segment + "'").join(", ") +
-    (address[1].length === 1 ? "," : "") + "))"
+    "('" +
+    address[0] +
+    "', (" +
+    address[1].map((segment) => "'" + segment + "'").join(", ") +
+    (address[1].length === 1 ? "," : "") +
+    "))"
   );
 }
 
@@ -116,7 +139,11 @@ function addressTupleRepr(address: Address): string {
 function checkContainers({ space, view }: { space: Space; view: AddressView }): string[] {
   const specification = space.read({ layer: view.layer, path: view.path, key: "specification" });
   if (!(specification instanceof AddressView)) return [];
-  const record = space.read({ layer: specification.layer, path: specification.path, key: "record" });
+  const record = space.read({
+    layer: specification.layer,
+    path: specification.path,
+    key: "record",
+  });
   if (!(record instanceof AddressView)) return [];
   const errors: string[] = [];
   for (const field of space.keys({ layer: record.layer, path: record.path })) {
@@ -132,7 +159,12 @@ function checkContainers({ space, view }: { space: Space; view: AddressView }): 
     if (value === null || !(value instanceof AddressView)) continue;
     if (!isMemberOf({ space, value, container })) {
       errors.push(
-        "conteneur: champ '" + field + "' = " + addressViewRepr(value) + " hors de " + addressViewRepr(container),
+        "conteneur: champ '" +
+          field +
+          "' = " +
+          addressViewRepr(value) +
+          " hors de " +
+          addressViewRepr(container),
       );
     }
   }
@@ -167,7 +199,15 @@ function checkCardinality({ space, view }: { space: Space; view: AddressView }):
 // ---- slot bindings ---------------------------------------------------
 
 // First-winner bound value of a slot across the closure of an address.
-function boundSlotValue({ space, view, slot }: { space: Space; view: AddressView; slot: string }): RawValue {
+function boundSlotValue({
+  space,
+  view,
+  slot,
+}: {
+  space: Space;
+  view: AddressView;
+  slot: string;
+}): RawValue {
   for (const [sourceLayer, sourcePath] of space.closure({ layer: view.layer, path: view.path })) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
     if (isDictionary(node) && isDictionary(node["bindings"])) {
@@ -186,7 +226,13 @@ function boundSlotValue({ space, view, slot }: { space: Space; view: AddressView
 // and the binding lives on the TYPE, not at the root: the type is in
 // the arc's closure, the root never is. Resolved at the arc address,
 // first-winner across its closure.
-function orderedEnds({ space, view }: { space: Space; view: AddressView }): [Address, Address] | null {
+function orderedEnds({
+  space,
+  view,
+}: {
+  space: Space;
+  view: AddressView;
+}): [Address, Address] | null {
   const sourceRole = boundSlotValue({ space, view, slot: "end-source" });
   const targetRole = boundSlotValue({ space, view, slot: "end-target" });
   if (sourceRole === null || targetRole === null) return null;
@@ -211,9 +257,17 @@ function checkOriented({ space, view }: { space: Space; view: AddressView }): st
       space,
       view: new AddressView(view.layer, [...container.path, asPathSegment(siblingKey)]),
     });
-    if (sibling !== null && addressesEqual(sibling[0], target) && addressesEqual(sibling[1], source)) {
+    if (
+      sibling !== null &&
+      addressesEqual(sibling[0], target) &&
+      addressesEqual(sibling[1], source)
+    ) {
       return [
-        "oriented: 2-cycle (" + addressTupleRepr(source) + " ⇝ " + addressTupleRepr(target) + " et inverse)",
+        "oriented: 2-cycle (" +
+          addressTupleRepr(source) +
+          " ⇝ " +
+          addressTupleRepr(target) +
+          " et inverse)",
       ];
     }
   }
@@ -242,7 +296,11 @@ function checkKPartite({ space, view }: { space: Space; view: AddressView }): st
     if (sourcePath.length === 1 && sourcePath[0] === "vertices") continue; // not a partition
     const key = sourceLayer + "\u0001" + sourcePath.join("\u0001");
     if (!classes.some((candidate) => candidate.key === key)) {
-      classes.push({ address: source, key, name: sourcePath[sourcePath.length - 1] ?? sourceLayer });
+      classes.push({
+        address: source,
+        key,
+        name: sourcePath[sourcePath.length - 1] ?? sourceLayer,
+      });
     }
   }
   if (!classes.length) return [];
@@ -274,7 +332,15 @@ function checkKPartite({ space, view }: { space: Space; view: AddressView }): st
     }
     for (const { count, name } of touchedClasses.values()) {
       if (count > 1) {
-        errors.push("k-partite: l'arête " + edgeKey + " touche " + count + " sommets de la classe '" + name + "'");
+        errors.push(
+          "k-partite: l'arête " +
+            edgeKey +
+            " touche " +
+            count +
+            " sommets de la classe '" +
+            name +
+            "'",
+        );
       }
     }
   }
@@ -293,15 +359,21 @@ function checkAcyclic({ space, view }: { space: Space; view: AddressView }): str
   while (stack.length) {
     const current = stack.pop()!;
     if (addressesEqual(current, source)) {
-      return ["dag: cycle (" + addressTupleRepr(source) + " ⇝ … ⇝ " + addressTupleRepr(target) + ")"];
+      return [
+        "dag: cycle (" + addressTupleRepr(source) + " ⇝ … ⇝ " + addressTupleRepr(target) + ")",
+      ];
     }
     const currentKey = current[0] + "\u0001" + current[1].join("\u0001");
     if (seen.has(currentKey)) continue;
     seen.add(currentKey);
     for (const siblingKey of space.keys({ layer: container.layer, path: container.path })) {
-      const siblingView = new AddressView(view.layer, [...container.path, asPathSegment(siblingKey)]);
+      const siblingView = new AddressView(view.layer, [
+        ...container.path,
+        asPathSegment(siblingKey),
+      ]);
       const siblingPair = orderedEnds({ space, view: siblingView });
-      if (siblingPair !== null && addressesEqual(siblingPair[0], current)) stack.push(siblingPair[1]);
+      if (siblingPair !== null && addressesEqual(siblingPair[0], current))
+        stack.push(siblingPair[1]);
     }
   }
   return [];
@@ -332,7 +404,12 @@ function checkConnected({ space, view }: { space: Space; view: AddressView }): s
   const adjacency = new Map<string, Set<string>>();
   for (const vertexKey of vertexKeys) {
     keyOfNode.set(
-      nodeKey(concreteNodeOf({ space, view: new AddressView(vertices.layer, [...vertices.path, asPathSegment(vertexKey)]) })),
+      nodeKey(
+        concreteNodeOf({
+          space,
+          view: new AddressView(vertices.layer, [...vertices.path, asPathSegment(vertexKey)]),
+        }),
+      ),
       vertexKey,
     );
     adjacency.set(vertexKey, new Set());
@@ -360,7 +437,10 @@ function checkConnected({ space, view }: { space: Space; view: AddressView }): s
   const unreachable = vertexKeys.filter((key) => !seen.has(key));
   if (unreachable.length) {
     return [
-      "arbre: non connexe — " + unreachable.join(", ") + " inatteignable(s) depuis " + vertexKeys[0],
+      "arbre: non connexe — " +
+        unreachable.join(", ") +
+        " inatteignable(s) depuis " +
+        vertexKeys[0],
     ];
   }
   return [];
@@ -397,8 +477,8 @@ export interface CheckContract {
   conditional?: {
     slot: string;
     operand?: string;
-    "true": Record<string, "root" | "instance">;
-    "false": Record<string, "root" | "instance">;
+    true: Record<string, "root" | "instance">;
+    false: Record<string, "root" | "instance">;
   };
 }
 
@@ -465,7 +545,9 @@ export interface VacantCheck {
 }
 
 function pathsEqual(first: string[], second: string[]): boolean {
-  return first.length === second.length && first.every((segment, index) => segment === second[index]);
+  return (
+    first.length === second.length && first.every((segment, index) => segment === second[index])
+  );
 }
 
 /** Inventory the vacant checks of a space, WITHOUT executing the
@@ -508,7 +590,9 @@ export function vacantChecksOf({
           address,
           keys: [],
           closure,
-          nodes: closure.map(([sourceLayer, sourcePath]) => space.raw({ layer: sourceLayer, path: sourcePath })),
+          nodes: closure.map(([sourceLayer, sourcePath]) =>
+            space.raw({ layer: sourceLayer, path: sourcePath }),
+          ),
         };
       }));
   const recordAt = (
@@ -523,7 +607,12 @@ export function vacantChecksOf({
       vacancies.push({ address, tag, slot, level, posed });
     }
   };
-  const recordContractAt = (address: Address, tag: string, contract: CheckContract, posed: boolean): void => {
+  const recordContractAt = (
+    address: Address,
+    tag: string,
+    contract: CheckContract,
+    posed: boolean,
+  ): void => {
     recordAt(address, tag, contract.required, posed);
     if (!contract.conditional) return;
     const view = new AddressView(address[0], address[1]);
@@ -542,7 +631,11 @@ export function vacantChecksOf({
     // instance slots are read at; without it the group is dormant
     const operandSlot = boundSlotValue({ space, view, slot: contract.conditional.operand });
     if (operandSlot === null) return;
-    const operandView = space.read({ layer: address[0], path: address[1], key: operandSlot as string });
+    const operandView = space.read({
+      layer: address[0],
+      path: address[1],
+      key: operandSlot as string,
+    });
     if (!(operandView instanceof AddressView)) return;
     for (const memberKey of space.keys({ layer: operandView.layer, path: operandView.path })) {
       recordAt(
@@ -563,7 +656,11 @@ export function vacantChecksOf({
       for (const [index, [sourceLayer, sourcePath]] of entry.closure.entries()) {
         const node = entry.nodes[index];
         if (!isDictionary(node)) continue;
-        if (sourceLayer === layer && pathsEqual(sourcePath, path) && Array.isArray(node["checks"])) {
+        if (
+          sourceLayer === layer &&
+          pathsEqual(sourcePath, path) &&
+          Array.isArray(node["checks"])
+        ) {
           posed = true;
         }
         for (const tag of (node["checks"] ?? []) as unknown[]) {
@@ -622,7 +719,10 @@ export function runChecks({ space, layer }: { space: Space; layer: LayerName }):
   for (const address of walkAddresses({ space, layer })) {
     const view = new AddressView(address[0], address[1]);
     const definitions = checkDefinitionsOf({ space, view });
-    for (const [sourceLayer, sourcePath] of space.closure({ layer: address[0], path: address[1] })) {
+    for (const [sourceLayer, sourcePath] of space.closure({
+      layer: address[0],
+      path: address[1],
+    })) {
       const node = space.raw({ layer: sourceLayer, path: sourcePath });
       if (!isDictionary(node)) continue;
       const tags = node["checks"] ?? [];
@@ -646,12 +746,20 @@ export function runChecks({ space, layer }: { space: Space; layer: LayerName }):
         }
         const contract = contracts[tag];
         if (!contract) {
-          space.recordDiagnostic({ kind: "étiquette-inconnue", address: [address[0], address[1]], fact: fact("label-unknown", { tag }) });
+          space.recordDiagnostic({
+            kind: "étiquette-inconnue",
+            address: [address[0], address[1]],
+            fact: fact("label-unknown", { tag }),
+          });
           continue;
         }
         const checkFunction = checkRegistry[tag];
         if (!checkFunction) {
-          space.recordDiagnostic({ kind: "algorithme-absent", address: [address[0], address[1]], fact: fact("algorithm-missing", { tag }) });
+          space.recordDiagnostic({
+            kind: "algorithme-absent",
+            address: [address[0], address[1]],
+            fact: fact("algorithm-missing", { tag }),
+          });
           continue;
         }
         for (const error of checkFunction({ space, view }) ?? []) {
@@ -666,7 +774,17 @@ export function runChecks({ space, layer }: { space: Space; layer: LayerName }):
 /** Execute one inline couple at an address: each judgment whose `when`
  * branch matches the condition is evaluated; a falsified sentence
  * ships its witnesses rendered on the message template. */
-function runCoupleAt({ space, view, tag, couple }: { space: Space; view: AddressView; tag: string; couple: CheckCouple }): string[] {
+function runCoupleAt({
+  space,
+  view,
+  tag,
+  couple,
+}: {
+  space: Space;
+  view: AddressView;
+  tag: string;
+  couple: CheckCouple;
+}): string[] {
   const errors: string[] = [];
   const conditionTrue =
     couple.condition !== null && boundSlotValue({ space, view, slot: couple.condition }) === true;
@@ -692,13 +810,14 @@ function runCoupleAt({ space, view, tag, couple }: { space: Space; view: Address
     }
     if (!evaluation.ok) {
       for (const failure of evaluation.failures) {
-        errors.push(renderJudgmentMessage({ space, view, message: judgment.message, assignment: failure }));
+        errors.push(
+          renderJudgmentMessage({ space, view, message: judgment.message, assignment: failure }),
+        );
       }
     }
   }
   return errors;
 }
-
 
 // ---- the declarative strate: the check couples (ADR-0105) ---------
 
@@ -753,7 +872,13 @@ export function checkCoupleOfRecord(record: RawValue): CheckCoupleRead | null {
  * the closure. The doublon rule (ADR-0105) is judged at validation:
  * an identical re-pose is tolerated, a divergent one is a verdict,
  * so the winner here is never ambiguous. */
-export function checkDefinitionsOf({ space, view }: { space: Space; view: AddressView }): Record<string, CheckCouple> {
+export function checkDefinitionsOf({
+  space,
+  view,
+}: {
+  space: Space;
+  view: AddressView;
+}): Record<string, CheckCouple> {
   const definitions: Record<string, CheckCouple> = {};
   for (const [sourceLayer, sourcePath] of space.closure({ layer: view.layer, path: view.path })) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
@@ -818,7 +943,10 @@ export function runChecksFO({ space, layer }: { space: Space; layer: LayerName }
     const view = new AddressView(address[0], address[1]);
     const definitions = checkDefinitionsOf({ space, view });
     if (Object.keys(definitions).length === 0) continue;
-    for (const [sourceLayer, sourcePath] of space.closure({ layer: address[0], path: address[1] })) {
+    for (const [sourceLayer, sourcePath] of space.closure({
+      layer: address[0],
+      path: address[1],
+    })) {
       const node = space.raw({ layer: sourceLayer, path: sourcePath });
       if (!isDictionary(node)) continue;
       const tags = node["checks"] ?? [];
@@ -831,7 +959,8 @@ export function runChecksFO({ space, layer }: { space: Space; layer: LayerName }
         if (seen.has(deduplicationKey)) continue;
         seen.add(deduplicationKey);
         const conditionTrue =
-          couple.condition !== null && boundSlotValue({ space, view, slot: couple.condition }) === true;
+          couple.condition !== null &&
+          boundSlotValue({ space, view, slot: couple.condition }) === true;
         for (const judgment of couple.judgments) {
           if (judgment.when !== null && (judgment.when === "true") !== conditionTrue) continue;
           const parsed = tryParseFormula(judgment.formula);
@@ -858,11 +987,18 @@ export function runChecksFO({ space, layer }: { space: Space; layer: LayerName }
                 address: [address[0], address[1]],
                 tag,
                 when: judgment.when,
-                message: renderJudgmentMessage({ space, view, message: judgment.message, assignment: failure }),
+                message: renderJudgmentMessage({
+                  space,
+                  view,
+                  message: judgment.message,
+                  assignment: failure,
+                }),
                 witnessKeys: Object.keys(failure).map((variable) => {
                   const witness = failure[variable];
                   if (witness === undefined) return "";
-                  return witness.path.length ? (witness.path[witness.path.length - 1] ?? witness.layer) : witness.layer;
+                  return witness.path.length
+                    ? (witness.path[witness.path.length - 1] ?? witness.layer)
+                    : witness.layer;
                 }),
                 steps: evaluation.steps,
               });

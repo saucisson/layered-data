@@ -60,9 +60,19 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
   },
   "ghost-declaration": {
     en: (p) =>
-      text(p, "where") + ' : "' + text(p, "key") + '" (' + text(p, "mode") + ") does not exist upstream",
+      text(p, "where") +
+      ' : "' +
+      text(p, "key") +
+      '" (' +
+      text(p, "mode") +
+      ") does not exist upstream",
     fr: (p) =>
-      text(p, "where") + " : « " + text(p, "key") + " » (" + text(p, "mode") + ") n'existe pas en amont",
+      text(p, "where") +
+      " : « " +
+      text(p, "key") +
+      " » (" +
+      text(p, "mode") +
+      ") n'existe pas en amont",
   },
   "unknown-label": {
     en: (p) => text(p, "layer") + ' : "' + text(p, "tag") + '"',
@@ -90,9 +100,19 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
   },
   "undeclared-shadow": {
     en: (p) =>
-      text(p, "layer") + "::" + text(p, "path") + ' : "' + text(p, "key") + '" overwrites the upstream outside the language',
+      text(p, "layer") +
+      "::" +
+      text(p, "path") +
+      ' : "' +
+      text(p, "key") +
+      '" overwrites the upstream outside the language',
     fr: (p) =>
-      text(p, "layer") + "::" + text(p, "path") + " : « " + text(p, "key") + " » écrase l'amont hors langage",
+      text(p, "layer") +
+      "::" +
+      text(p, "path") +
+      " : « " +
+      text(p, "key") +
+      " » écrase l'amont hors langage",
   },
   "expectation-betrayed": {
     en: (p) =>
@@ -146,7 +166,10 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
     en: (p) =>
       text(p, "layer") + ' : refines "' + text(p, "target") + '", layer unknown to the assembly',
     fr: (p) =>
-      text(p, "layer") + " : raffine « " + text(p, "target") + " », couche inconnue de l'assemblage",
+      text(p, "layer") +
+      " : raffine « " +
+      text(p, "target") +
+      " », couche inconnue de l'assemblage",
   },
 
   // ---- space diagnostics (space.ts) ----
@@ -233,14 +256,8 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " » n'est pas lié (ADR-0101)",
   },
   "check-betrayed": {
-    en: (p) =>
-      text(p, "where") +
-      " : the carried check refuses — " +
-      text(p, "error"),
-    fr: (p) =>
-      text(p, "where") +
-      " : le check porté refuse — " +
-      text(p, "error"),
+    en: (p) => text(p, "where") + " : the carried check refuses — " + text(p, "error"),
+    fr: (p) => text(p, "where") + " : le check porté refuse — " + text(p, "error"),
   },
   "algorithm-missing": {
     en: (p) =>
@@ -255,35 +272,95 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
   // ---- the declarative strate's facts (ADR-0105) ----
   "redefined-check": {
     en: (p) =>
-      text(p, "where") + " : the check « " + text(p, "name") + " » is re-posed divergently (" + text(p, "first") + " then " + text(p, "second") + ") — a couple is never replaced (ADR-0105)",
+      text(p, "where") +
+      " : the check « " +
+      text(p, "name") +
+      " » is re-posed divergently (" +
+      text(p, "first") +
+      " then " +
+      text(p, "second") +
+      ") — a couple is never replaced (ADR-0105)",
     fr: (p) =>
-      text(p, "where") + " : le check « " + text(p, "name") + " » est re-possé divergent (" + text(p, "first") + " puis " + text(p, "second") + ") — un couple n'est jamais remplacé (ADR-0105)",
+      text(p, "where") +
+      " : le check « " +
+      text(p, "name") +
+      " » est re-possé divergent (" +
+      text(p, "first") +
+      " puis " +
+      text(p, "second") +
+      ") — un couple n'est jamais remplacé (ADR-0105)",
   },
   "unsupported-level": {
     en: (p) =>
-      text(p, "where") + " : the check « " + text(p, "name") + " » judges at the level « " + text(p, "level") + " » — the reading strate judges at layer roots only",
+      text(p, "where") +
+      " : the check « " +
+      text(p, "name") +
+      " » judges at the level « " +
+      text(p, "level") +
+      " » — the reading strate judges at layer roots only",
     fr: (p) =>
-      text(p, "where") + " : le check « " + text(p, "name") + " » juge au niveau « " + text(p, "level") + " » — la strate de lecture ne juge qu'aux racines des couches",
+      text(p, "where") +
+      " : le check « " +
+      text(p, "name") +
+      " » juge au niveau « " +
+      text(p, "level") +
+      " » — la strate de lecture ne juge qu'aux racines des couches",
   },
   "missing-condition": {
     en: (p) =>
-      text(p, "where") + " : the judgment of « " + text(p, "name") + " » carries a « when » but the couple declares no condition",
+      text(p, "where") +
+      " : the judgment of « " +
+      text(p, "name") +
+      " » carries a « when » but the couple declares no condition",
     fr: (p) =>
-      text(p, "where") + " : le jugement de « " + text(p, "name") + " » porte un « when » mais le couple ne déclare pas de condition",
+      text(p, "where") +
+      " : le jugement de « " +
+      text(p, "name") +
+      " » porte un « when » mais le couple ne déclare pas de condition",
   },
   "unreadable-formula": {
-    en: (p) => "the check « " + text(p, "tag") + " » carries an unreadable formula: " + text(p, "detail") + " (ADR-0105)",
-    fr: (p) => "le check « " + text(p, "tag") + " » porte une formule illisible : " + text(p, "detail") + " (ADR-0105)",
+    en: (p) =>
+      "the check « " +
+      text(p, "tag") +
+      " » carries an unreadable formula: " +
+      text(p, "detail") +
+      " (ADR-0105)",
+    fr: (p) =>
+      "le check « " +
+      text(p, "tag") +
+      " » porte une formule illisible : " +
+      text(p, "detail") +
+      " (ADR-0105)",
   },
   "template-out-of-scope": {
     en: (p) =>
-      text(p, "where") + " : the message of « " + text(p, "name") + " » names « " + text(p, "term") + " », outside the judgment's quantified scope",
+      text(p, "where") +
+      " : the message of « " +
+      text(p, "name") +
+      " » names « " +
+      text(p, "term") +
+      " », outside the judgment's quantified scope",
     fr: (p) =>
-      text(p, "where") + " : le message de « " + text(p, "name") + " » nomme « " + text(p, "term") + " », hors de la portée quantifiée du jugement",
+      text(p, "where") +
+      " : le message de « " +
+      text(p, "name") +
+      " » nomme « " +
+      text(p, "term") +
+      " », hors de la portée quantifiée du jugement",
   },
   "exhausted-formula": {
-    en: (p) => "the check « " + text(p, "tag") + " » exhausted its budget (" + text(p, "steps") + " steps) — it never judges silently",
-    fr: (p) => "le check « " + text(p, "tag") + " » a épuisé son budget (" + text(p, "steps") + " pas) — il ne juge jamais en silence",
+    en: (p) =>
+      "the check « " +
+      text(p, "tag") +
+      " » exhausted its budget (" +
+      text(p, "steps") +
+      " steps) — it never judges silently",
+    fr: (p) =>
+      "le check « " +
+      text(p, "tag") +
+      " » a épuisé son budget (" +
+      text(p, "steps") +
+      " pas) — il ne juge jamais en silence",
   },
   "contract-without-algorithm": {
     en: (p) =>
@@ -357,7 +434,11 @@ export function renderMessage({
 /** Pick one of two ephemeral texts — English by default. Used for
  * compositions that never enter the kernel (syntax errors, geologist
  * feedback), where the pair is written at the call site. */
-export function parseText({ language = DEFAULT_LANGUAGE, en, fr }: {
+export function parseText({
+  language = DEFAULT_LANGUAGE,
+  en,
+  fr,
+}: {
   language?: Language;
   en: string;
   fr: string;
@@ -370,7 +451,7 @@ export function parseText({ language = DEFAULT_LANGUAGE, en, fr }: {
  * label; English translates it. */
 export const VOCABULARY: Record<string, { en: string; fr: string }> = {
   // ---- statuses ----
-  "fournit": { en: "provides", fr: "fournit" },
+  fournit: { en: "provides", fr: "fournit" },
   transparent: { en: "transparent", fr: "transparent" },
   absent: { en: "absent", fr: "absent" },
   "non atteint": { en: "not reached", fr: "non atteint" },
@@ -404,7 +485,7 @@ export const VOCABULARY: Record<string, { en: string; fr: string }> = {
   "refines-inversés": { en: "refines-inverted", fr: "refines-inversés" },
   "ombre-émergente": { en: "emerging-shadow", fr: "ombre-émergente" },
   ombre: { en: "shadow", fr: "ombre" },
-  "cible": { en: "target", fr: "cible" },
+  cible: { en: "target", fr: "cible" },
   propre: { en: "own", fr: "propre" },
   "membre-du-père": { en: "member-of-parent", fr: "membre-du-père" },
   union: { en: "union", fr: "union" },
@@ -416,7 +497,10 @@ export const VOCABULARY: Record<string, { en: string; fr: string }> = {
 
 /** Label of a kernel code in a language — statuses, kinds, steps.
  * An unknown code renders as itself, uppercase-neutral. */
-export function kernelLabel({ code, language = DEFAULT_LANGUAGE }: {
+export function kernelLabel({
+  code,
+  language = DEFAULT_LANGUAGE,
+}: {
   code: string;
   language?: Language;
 }): string {
