@@ -1,7 +1,6 @@
 // The layer badge: the corpus color of a layer, as a small pill
 // (panel ① uses it on every node, other panels on winners).
 
-import React from "react";
 import { LAYER_COLOR } from "./workshopInventory.ts";
 
 /** One layer as a colored badge. */

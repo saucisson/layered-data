@@ -276,6 +276,7 @@ export function glossaryIdOfTerm({ term, language }: { term: string; language: L
   const sought = term.toLowerCase();
   for (const id of glossaryIds()) {
     const entry = GLOSSARY[id];
+    if (entry === undefined) continue;
     if (
       entry.term.en.toLowerCase() === sought ||
       entry.term.fr.toLowerCase() === sought ||
@@ -300,8 +301,8 @@ export function NotionTip({
 }) {
   const [open, setOpen] = useState(false);
   const id = glossaryIdOfTerm({ term, language });
-  const entry = id === null ? null : GLOSSARY[id];
-  if (entry === null) return <span>{children ?? term}</span>;
+  const entry = id === null ? undefined : GLOSSARY[id];
+  if (entry === undefined) return <span>{children ?? term}</span>;
   const termText = localized({ language, text: entry.term });
   const definition = localized({ language, text: entry.definition });
   return (
@@ -331,7 +332,7 @@ export function NotionText({ text, language }: { text: string; language: Languag
       {chunks.map((chunk, index) => {
         const notionMatch = chunk.match(/^⟪([^⟫]*)⟫$/);
         if (notionMatch) {
-          return <NotionTip key={index} term={notionMatch[1]} language={language} />;
+          return <NotionTip key={index} term={notionMatch[1] ?? ""} language={language} />;
         }
         return <span key={index}>{chunk}</span>;
       })}

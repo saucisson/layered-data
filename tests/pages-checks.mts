@@ -65,10 +65,19 @@ const kernel = assembleLayeredDataKernel({ layerSources });
 
 const flatWb1 = writeFlattenedLayerSource({ space: kernel.space, layer: asLayerName("wb1") });
 const flatWb1Lines = flatWb1.split("\n");
+
+/** Indexed access in assertions: a missing element is a test failure,
+ * not a silent undefined. */
+function at<T>(list: readonly T[], index: number): T {
+  const value = list[index];
+  if (value === undefined) throw new Error("missing element at index " + index);
+  return value;
+}
+
 check(
   "(a) the flattened DSL names its view — layer wb1-flat, never a layer of the corpus",
   flatWb1Lines.some((line) => line === "layer wb1-flat") &&
-    flatWb1Lines[0].startsWith("// wb1 — the complete flattened formalism"),
+    at(flatWb1Lines, 0).startsWith("// wb1 — the complete flattened formalism"),
 );
 check(
   "(a) the diamond reads flattened: e1 carries weight = 3 provided by wb1, e2 inherits weight = 1 provided by weighted-hypergraph",

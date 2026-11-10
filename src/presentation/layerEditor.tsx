@@ -5,7 +5,7 @@
 // layer is invalidated, the panels re-read the space. The corpus
 // stays read-only: its layers never open here.
 
-import React, { useState } from "react";
+import { useState } from "react";
 import type { LayeredDataKernel } from "../application/corpus.ts";
 import { renderMessage, type Language } from "../domain/messages.ts";
 import {

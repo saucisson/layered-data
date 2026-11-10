@@ -98,7 +98,8 @@ try {
   }
   await reader.cancel();
   check("the stream opens with hello then state", sseText.includes("event: hello") && sseText.includes("event: state"));
-  const clientId = /event: hello\ndata: (\{[^}]*\})/.exec(sseText)?.[1] ? (JSON.parse(/event: hello\ndata: (\{[^}]*\})/.exec(sseText)![1]) as { clientId: string }).clientId : "";
+  const helloMatch = /event: hello\ndata: (\{[^}]*\})/.exec(sseText);
+  const clientId = helloMatch === null ? "" : (JSON.parse(helloMatch[1] ?? "") as { clientId: string }).clientId;
   check("hello carries a clientId", clientId.length > 0);
 
   // presence while the stream is still open (closing it drops the client)

@@ -31,8 +31,8 @@ export interface CompiledLanguage {
 
 const makeReference = (value: LanguageValue & { kind: "reference" }): any =>
   value.referenceClass === "LR"
-    ? new LayerReference(asLayerName(value.segments[0]))
-    : new PathReference(asLayerName(value.segments[0]), asLayerPath(value.segments.slice(1)));
+    ? new LayerReference(asLayerName(value.segments[0] ?? ""))
+    : new PathReference(asLayerName(value.segments[0] ?? ""), asLayerPath(value.segments.slice(1)));
 
 const makeValue = (value: LanguageValue): any => {
   if (value.kind === "literal") return value.value;
@@ -52,7 +52,7 @@ const noteKeyOfAct = (act: LanguageAct): string =>
   act.kind === "bind"
     ? act.slot
     : act.kind === "check"
-      ? act.labels[0]
+      ? (act.labels[0] ?? "")
       : act.kind === "check-definition"
         ? act.name
         : act.key;
@@ -203,17 +203,17 @@ export function expandCitations(
             let template: string | null = null;
             let cut = -1;
             let current: any = layerTrees[entry.anchor];
-            for (let index = 0; index < entry.path.length; index++) {
+            for (const [index, segment] of entry.path.entries()) {
               if (!isDictionary(current)) {
                 current = undefined;
                 break;
               }
-              current = current[entry.path[index]];
+              current = current[segment];
               if (current === undefined) break;
               if (index + 1 < entry.path.length) {
                 const templateOfTraversal = citationTemplateOf(current);
                 if (templateOfTraversal !== null) {
-                  citationKey = entry.path[index];
+                  citationKey = segment;
                   template = templateOfTraversal;
                   cut = index;
                   break;

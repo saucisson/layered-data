@@ -6,7 +6,7 @@
 // live here: the verdicts and recorded silences are read at the
 // formalism, not at the end of the page.
 
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type { LayeredDataKernel } from "../application/corpus.ts";
 import { asLayerName } from "../domain/identifiers.ts";
 import type { Language } from "../domain/messages.ts";

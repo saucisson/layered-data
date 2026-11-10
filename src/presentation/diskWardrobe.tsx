@@ -5,7 +5,7 @@
 // disk never bypasses the contract; local pens absent from the
 // disk can be put there with one button, visible to all.
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import type { LayeredDataKernel } from "../application/corpus.ts";
 import { renderMessage, type Language } from "../domain/messages.ts";
 import { stageLayerAddition, applyStagedAddition, type StagingOutcome } from "../application/staging.ts";

@@ -4,7 +4,6 @@
 // arrowhead — dashed when undressed). Pure rendering, no kernel
 // reads.
 
-import React from "react";
 
 /** One drawn vertex: the shape decided by the lens for its type,
  * the name inside, dashed when the lens knows nothing of it. */

@@ -9,7 +9,7 @@
 //   - the validator and the checks (walkAddresses).
 
 import { type LayerName, type LayerPath, asPathSegment } from "./identifiers.ts";
-import { type Address, type RawTree, AddressView, LayerReference, PathReference, type RawValue, addressesEqual, isDictionary,  } from "./addresses.ts";
+import { type Address, type RawTree, AddressView, LayerReference, PathReference, addressesEqual, isDictionary,  } from "./addresses.ts";
 import { Space } from "./space.ts";
 
 /** One walked address, observed ONCE: the address, its visible keys,

@@ -33,7 +33,7 @@ import { registryContractsOf, vacantChecksOf, checkDefinitionsOf } from "../doma
 import { declaredModeOf } from "../domain/validation.ts";
 import { walkAddresses } from "../domain/views.ts";
 import type { CompiledLanguage } from "../domain/language/compiler.ts";
-import { fact, type MessageFact } from "../domain/messages.ts";
+import { fact } from "../domain/messages.ts";
 import { formatAddress, orderConflictsOf } from "../domain/conflicts.ts";
 
 /** Everything the lint pass walks: the living space, its layer
@@ -65,17 +65,21 @@ function lintRefinesOrder({ space, layerNames }: LintingTarget): void {
       if (resolved !== null) targets.push(resolved[0][0]);
     }
     for (let i = 0; i < targets.length; i++) {
+      const targetI = targets[i];
+      if (targetI === undefined) continue;
       for (let j = i + 1; j < targets.length; j++) {
+        const targetJ = targets[j];
+        if (targetJ === undefined) continue;
         // target j refines target i => the generic i must precede
         // the specific j: inverted order, recorded before behavior
         const closureHasGeneric = space
-          .closure({ layer: asLayerName(targets[j]), path: asLayerPath([]) })
-          .some(([closureLayer]) => closureLayer === targets[i]);
+          .closure({ layer: asLayerName(targetJ), path: asLayerPath([]) })
+          .some(([closureLayer]) => closureLayer === targetI);
         if (closureHasGeneric) {
           space.recordDiagnostic({
             kind: "refines-inversés",
             address: [layerName, asLayerPath([])],
-            fact: fact("refines-inverted", { specific: targets[j], generic: targets[i] }),
+            fact: fact("refines-inverted", { specific: targetJ, generic: targetI }),
           });
         }
       }

@@ -5,7 +5,6 @@
 // bar only navigates — each tab keeps its own header and its own
 // state, exactly as when they were separate pages.
 
-import React from "react";
 import { useRouter } from "../components/Router";
 import { WorkshopPage } from "../WorkshopContainer";
 import { ModelEditorPage } from "../presentation/modelEditorPage";

@@ -39,12 +39,12 @@
 // on the TYPE: the type is in the arc's closure, the root never is.
 // A renaming follows for free: the renaming formalism rebinds the slot.
 
-import { type LayerName, type LayerPath, asLayerName, asPathSegment } from "./identifiers.ts";
+import { type LayerName, asPathSegment } from "./identifiers.ts";
 import { type Address, AddressView, type RawValue, addressesEqual, isDictionary,  } from "./addresses.ts";
 import { Space } from "./space.ts";
 import { designatedAddress } from "./desugaring.ts";
 import { canonicalFormula, evaluateFormula, renderJudgmentMessage, tryParseFormula } from "./formulas.ts";
-import { walkAddresses, walkLayerObserved, type WalkedAddress } from "./views.ts";
+import { walkAddresses, type WalkedAddress } from "./views.ts";
 import { fact } from "./messages.ts";
 
 // ---- address algebra (shared vocabulary of the checks) --------------
@@ -170,12 +170,9 @@ function checkCardinality({ space, view }: { space: Space; view: AddressView }):
 function boundSlotValue({ space, view, slot }: { space: Space; view: AddressView; slot: string }): RawValue {
   for (const [sourceLayer, sourcePath] of space.closure({ layer: view.layer, path: view.path })) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
-    if (
-      isDictionary(node) &&
-      isDictionary(node["bindings"]) &&
-      (node["bindings"] as Record<string, RawValue>)[slot] != null
-    ) {
-      return (node["bindings"] as Record<string, RawValue>)[slot];
+    if (isDictionary(node) && isDictionary(node["bindings"])) {
+      const value = (node["bindings"] as Record<string, RawValue>)[slot];
+      if (value != null) return value;
     }
   }
   return null;
@@ -185,27 +182,6 @@ function boundSlotValue({ space, view, slot }: { space: Space; view: AddressView
 
 // The ends of an edge = its arrows → vertices, deduplicated;
 // empty: the edge declares no visible arrow. The arrow and
-// vertex-role names are resolved by the CALLER (at the check's
-// invocation level) and passed as parameters — the edge address is
-// too deep to see the roots.
-function edgeEnds({ space, view, arrows, vertexRole }: { space: Space; view: AddressView; arrows: string; vertexRole: string }): { ends: Address[]; empty: boolean } {
-  const arrowPath = [...view.path, asPathSegment(arrows)];
-  const arrowKeys = space.keys({ layer: view.layer, path: arrowPath });
-  const ends: Address[] = [];
-  for (const arrowKey of arrowKeys) {
-    const vertex = space.read({
-      layer: view.layer,
-      path: [...arrowPath, asPathSegment(arrowKey)],
-      key: vertexRole,
-    });
-    if (vertex === null || !(vertex instanceof AddressView)) continue;
-    const concrete = concreteNodeOf({ space, view: vertex });
-    if (!ends.some((existing) => addressesEqual(existing, concrete))) ends.push(concrete);
-  }
-  return { ends, empty: arrowKeys.length === 0 };
-}
-
-// The ordered pair (source, target) — the multidigraph idiom. The role
 // names are bindings (`end-source` / `end-target`), never constants —
 // and the binding lives on the TYPE, not at the root: the type is in
 // the arc's closure, the root never is. Resolved at the arc address,
@@ -220,119 +196,6 @@ function orderedEnds({ space, view }: { space: Space; view: AddressView }): [Add
     return [concreteNodeOf({ space, view: source }), concreteNodeOf({ space, view: target })];
   }
   return null;
-}
-
-// ---- the extended checks ---------------------------------------------
-
-// simple (generalized): unique edges. Layer level; the view designated
-// by the `edges` binding (the alias, if any) is authoritative; ordered
-// (binding `ordered`) → ordered pair + loop (the "simple digraph");
-// else → set of ends + intra-edge repetition forbidden (an edge is a
-// SET of vertices, not a multiset).
-function checkSimple({ space, view }: { space: Space; view: AddressView }): string[] {
-  const edgesSlot = boundSlotValue({ space, view, slot: "edges" });
-  if (edgesSlot === null) {
-    space.recordDiagnostic({ kind: "check-vacant", address: [view.layer, view.path], fact: fact("edges-slot-unbound") });
-    return [];
-  }
-  const arrowsSlot = boundSlotValue({ space, view, slot: "arrows" });
-  const vertexSlot = boundSlotValue({ space, view, slot: "arrow-vertex" });
-  const edges = space.read({ layer: view.layer, path: view.path, key: edgesSlot as string });
-  if (!(edges instanceof AddressView)) return [];
-  // Order is a binding (true bound by multidigraph, false by the
-  // base) — no layer name is tested here.
-  const directed = boundSlotValue({ space, view, slot: "ordered" }) === true;
-  const errors: string[] = [];
-  const seen: { key: string; signature: string }[] = [];
-  for (const edgeKey of space.keys({ layer: edges.layer, path: edges.path })) {
-    const edgeView = new AddressView(edges.layer, [...edges.path, asPathSegment(edgeKey)]);
-    if (directed) {
-      const pair = orderedEnds({ space, view: edgeView });
-      if (pair === null) continue;
-      const [source, target] = pair;
-      if (addressesEqual(source, target)) {
-        errors.push("simple: boucle (" + edgeKey + " : " + addressTupleRepr(source) + ")");
-        continue;
-      }
-      const signature =
-        source[0] + "\u0001" + source[1].join("\u0001") + "\u0002" + target[0] + "\u0001" + target[1].join("\u0001");
-      const duplicate = seen.find((entry) => entry.signature === signature);
-      if (duplicate) {
-        errors.push(
-          "simple: arête multiple (" + duplicate.key + " == " + edgeKey + " : (" +
-            addressTupleRepr(source) + ", " + addressTupleRepr(target) + "))",
-        );
-      } else seen.push({ key: edgeKey, signature });
-    } else {
-      // Intra-edge repetition: the RAW arrows, before deduplication.
-      if (arrowsSlot === null || vertexSlot === null) {
-        space.recordDiagnostic({
-          kind: "check-vacant",
-          address: [view.layer, view.path],
-          fact: fact("slots-unbound", { slots: "arrows / arrow-vertex" }),
-        });
-        continue;
-      }
-      const arrowPath = [...edgeView.path, asPathSegment(arrowsSlot as string)];
-      const rawEnds: Address[] = [];
-      let repeated = false;
-      for (const arrowKey of space.keys({ layer: view.layer, path: arrowPath })) {
-        const vertex = space.read({
-          layer: view.layer,
-          path: [...arrowPath, asPathSegment(arrowKey)],
-          key: vertexSlot as string,
-        });
-        if (vertex === null || !(vertex instanceof AddressView)) continue;
-        const concrete = concreteNodeOf({ space, view: vertex });
-        if (rawEnds.some((existing) => addressesEqual(existing, concrete))) {
-          errors.push("simple: sommet répété (" + edgeKey + " : " + addressTupleRepr(concrete) + ")");
-          repeated = true;
-          break;
-        }
-        rawEnds.push(concrete);
-      }
-      if (repeated) continue;
-      const ends = edgeEnds({ space, view: edgeView, arrows: arrowsSlot as string, vertexRole: vertexSlot as string });
-      if (ends.empty) continue; // empty: that is the nonempty check
-      const signature = ends.ends
-        .map((address) => address[0] + "\u0001" + address[1].join("\u0001"))
-        .sort()
-        .join("\u0002");
-      const duplicate = seen.find((entry) => entry.signature === signature);
-      if (duplicate) {
-        errors.push(
-          "simple: arête multiple (" + duplicate.key + " == " + edgeKey + " : {" +
-            ends.ends.map(addressTupleRepr).join(", ") + "})",
-        );
-      } else seen.push({ key: edgeKey, signature });
-    }
-  }
-  return errors;
-}
-
-// nonempty: E is a set of non-empty parts — every edge has at least
-// one visible arrow.
-function checkNonempty({ space, view }: { space: Space; view: AddressView }): string[] {
-  const edgesSlot = boundSlotValue({ space, view, slot: "edges" });
-  const arrowsSlot = boundSlotValue({ space, view, slot: "arrows" });
-  const vertexSlot = boundSlotValue({ space, view, slot: "arrow-vertex" });
-  if (edgesSlot === null || arrowsSlot === null || vertexSlot === null) {
-    space.recordDiagnostic({
-      kind: "check-vacant",
-      address: [view.layer, view.path],
-      fact: fact("slots-unbound", { slots: "edges / arrows / arrow-vertex" }),
-    });
-    return [];
-  }
-  const edges = space.read({ layer: view.layer, path: view.path, key: edgesSlot as string });
-  if (!(edges instanceof AddressView)) return [];
-  const errors: string[] = [];
-  for (const edgeKey of space.keys({ layer: edges.layer, path: edges.path })) {
-    const edgeView = new AddressView(edges.layer, [...edges.path, asPathSegment(edgeKey)]);
-    const ends = edgeEnds({ space, view: edgeView, arrows: arrowsSlot as string, vertexRole: vertexSlot as string });
-    if (ends.empty) errors.push("nonempty: arête vide (" + edgeKey + ")");
-  }
-  return errors;
 }
 
 // oriented: no pair of opposite arcs — the strict sense of "oriented
@@ -356,54 +219,6 @@ function checkOriented({ space, view }: { space: Space; view: AddressView }): st
   }
   return [];
 }
-
-// sperner: antichain — no edge contains another.
-function checkSperner({ space, view }: { space: Space; view: AddressView }): string[] {
-  const edgesSlot = boundSlotValue({ space, view, slot: "edges" });
-  if (edgesSlot === null) {
-    space.recordDiagnostic({ kind: "check-vacant", address: [view.layer, view.path], fact: fact("edges-slot-unbound") });
-    return [];
-  }
-  const edges = space.read({ layer: view.layer, path: view.path, key: edgesSlot as string });
-  if (!(edges instanceof AddressView)) return [];
-  const sets: { key: string; endKeys: Set<string> }[] = [];
-  const arrowsSlot = boundSlotValue({ space, view, slot: "arrows" });
-  const vertexSlot = boundSlotValue({ space, view, slot: "arrow-vertex" });
-  for (const edgeKey of space.keys({ layer: edges.layer, path: edges.path })) {
-    const edgeView = new AddressView(edges.layer, [...edges.path, asPathSegment(edgeKey)]);
-    if (arrowsSlot === null) {
-      continue;
-    }
-    const ends = edgeEnds({ space, view: edgeView, arrows: arrowsSlot as string, vertexRole: vertexSlot as string });
-    if (ends.empty) continue;
-    sets.push({
-      key: edgeKey,
-      endKeys: new Set(ends.ends.map((address) => address[0] + "\u0001" + address[1].join("\u0001"))),
-    });
-  }
-  const errors: string[] = [];
-  for (const first of sets) {
-    for (const second of sets) {
-      if (first === second || first.endKeys.size <= second.endKeys.size) continue;
-      let isSuperset = true;
-      for (const endKey of second.endKeys) {
-        if (!first.endKeys.has(endKey)) {
-          isSuperset = false;
-          break;
-        }
-      }
-      if (isSuperset) errors.push("sperner: " + first.key + " contient " + second.key);
-    }
-  }
-  return errors;
-}
-
-// k-partite: the vertices partition into k classes — the concrete
-// sources of the `vertices` view (the partition alias: places/
-// transitions, left/right…); every edge touches at most one vertex
-// per class. Without a declared partition (a simple collection) the
-// check stays silent; a vertex outside the partition is the
-// containers' business.
 function checkKPartite({ space, view }: { space: Space; view: AddressView }): string[] {
   const verticesSlot = boundSlotValue({ space, view, slot: "vertices" });
   const edgesSlot = boundSlotValue({ space, view, slot: "edges" });
@@ -427,7 +242,7 @@ function checkKPartite({ space, view }: { space: Space; view: AddressView }): st
     if (sourcePath.length === 1 && sourcePath[0] === "vertices") continue; // not a partition
     const key = sourceLayer + "\u0001" + sourcePath.join("\u0001");
     if (!classes.some((candidate) => candidate.key === key)) {
-      classes.push({ address: source, key, name: sourcePath[sourcePath.length - 1] });
+      classes.push({ address: source, key, name: sourcePath[sourcePath.length - 1] ?? sourceLayer });
     }
   }
   if (!classes.length) return [];
@@ -534,7 +349,8 @@ function checkConnected({ space, view }: { space: Space; view: AddressView }): s
     }
   }
   const seen = new Set<string>();
-  const stack: string[] = [vertexKeys[0]];
+  const firstVertex = vertexKeys[0];
+  const stack: string[] = firstVertex === undefined ? [] : [firstVertex];
   while (stack.length) {
     const current = stack.pop()!;
     if (seen.has(current)) continue;
@@ -740,11 +556,11 @@ export function vacantChecksOf({
   for (const layerName of layerNames) {
     for (const entry of ownWalkedOf(layerName)) {
       const address = entry.address;
+      if (address === undefined) continue;
       const [layer, path] = address;
       let posed = false;
       const tags = new Set<string>();
-      for (let index = 0; index < entry.closure.length; index += 1) {
-        const [sourceLayer, sourcePath] = entry.closure[index];
+      for (const [index, [sourceLayer, sourcePath]] of entry.closure.entries()) {
         const node = entry.nodes[index];
         if (!isDictionary(node)) continue;
         if (sourceLayer === layer && pathsEqual(sourcePath, path) && Array.isArray(node["checks"])) {
@@ -756,6 +572,7 @@ export function vacantChecksOf({
       }
       for (const tag of tags) {
         const contract = ownContracts[tag];
+        if (contract === undefined) continue;
         if (posed) {
           recordContractAt(address, tag, contract, true);
         } else if (contract.level === "root" && path.length === 0) {
@@ -941,9 +758,9 @@ export function checkDefinitionsOf({ space, view }: { space: Space; view: Addres
   for (const [sourceLayer, sourcePath] of space.closure({ layer: view.layer, path: view.path })) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
     if (!isDictionary(node) || !isDictionary(node["check-definitions"])) continue;
-    for (const name of Object.keys(node["check-definitions"])) {
+    for (const [name, rawCouple] of Object.entries(node["check-definitions"])) {
       if (name.startsWith("__note:") || definitions[name] !== undefined) continue;
-      const read = checkCoupleOfRecord(node["check-definitions"][name]);
+      const read = checkCoupleOfRecord(rawCouple);
       if (read === null) continue;
       const level = read.level;
       if (level !== "root" && level !== "instance") continue;
@@ -1044,7 +861,8 @@ export function runChecksFO({ space, layer }: { space: Space; layer: LayerName }
                 message: renderJudgmentMessage({ space, view, message: judgment.message, assignment: failure }),
                 witnessKeys: Object.keys(failure).map((variable) => {
                   const witness = failure[variable];
-                  return witness.path.length ? witness.path[witness.path.length - 1] : witness.layer;
+                  if (witness === undefined) return "";
+                  return witness.path.length ? (witness.path[witness.path.length - 1] ?? witness.layer) : witness.layer;
                 }),
                 steps: evaluation.steps,
               });

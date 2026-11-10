@@ -10,7 +10,9 @@
       "node"
     ],
     "strict": true,
-    "noUnusedLocals": false,
+    "noUnusedLocals": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
     "skipLibCheck": true,
     "isolatedModules": true,
     "noEmit": true,

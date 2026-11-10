@@ -75,7 +75,7 @@ function spaceFromJoinOrder(order: readonly string[]): Space {
 function spaceFromSourcesMap(sources: Record<string, string>, order: readonly string[]): Space {
   const joined = order
     .map((layerName) =>
-      sources[layerName].endsWith("\n") ? sources[layerName] : sources[layerName] + "\n",
+      (sources[layerName] ?? "").endsWith("\n") ? (sources[layerName] ?? "") : (sources[layerName] ?? "") + "\n",
     )
     .join("");
   const parsed = parseLanguage(joined);
@@ -166,7 +166,7 @@ function spaceFromLayerTrees(trees: Record<string, Record<string, unknown>>): Sp
 
 /** String-keyed access to the raw tree of one layer. */
 function layerTreeOf(space: Space, layerName: string): Record<string, unknown> {
-  return (space.layers as never as Record<string, Record<string, unknown>>)[layerName];
+  return (space.layers as never as Record<string, Record<string, unknown>>)[layerName] ?? {};
 }
 
 // =====================================================================
@@ -194,9 +194,18 @@ for (const layerName of KERNEL_LAYER_NAMES) {
 
     // O2 — specificity: the own node, when it exists, comes first.
     if (bedrock.raw({ layer, path }) !== null && closure.length > 0) {
-      if (addressText(closure[0]) !== addressText(address)) ownNodeNotFirst++;
+      if (addressText(at(closure, 0)) !== addressText(address)) ownNodeNotFirst++;
     }
   }
+}
+
+
+/** Indexed access in assertions: a missing element is a test failure,
+ * not a silent undefined. */
+function at<T>(list: readonly T[], index: number): T {
+  const value = list[index];
+  if (value === undefined) throw new Error("missing element at index " + index);
+  return value;
 }
 
 check("C1 (O3): no closure of the bedrock corpus contains a duplicate address", closureDuplicates === 0);
@@ -311,7 +320,7 @@ for (const layerName of KERNEL_LAYER_NAMES) {
   for (const address of walkAddresses({ space: bedrock, layer: asLayerName(layerName) })) {
     const expected: string[] = [];
     for (const [sourceLayer, sourcePath] of bedrock.closure({ layer: address[0], path: address[1] })) {
-      const anchor = sourcePath.length ? sourcePath[sourcePath.length - 1] : sourceLayer;
+      const anchor = sourcePath.length ? (sourcePath[sourcePath.length - 1] ?? sourceLayer) : sourceLayer;
       if (!expected.includes(anchor)) expected.push(anchor);
     }
     const observed = bedrock.anchorsAt({ layer: address[0], path: address[1], tracer: null });
@@ -548,11 +557,13 @@ check(
 const bedrockSlotContracts = checkSlotContractsOf(bedrockContracts);
 check(
   "ADR-0102: the slot contracts derive from the data — one source",
-  Object.keys(bedrockSlotContracts).every(
-    (tag) =>
-      JSON.stringify(bedrockSlotContracts[tag]) ===
-      JSON.stringify(slotReadingLevelsOf(bedrockContracts[tag])),
-  ),
+  Object.keys(bedrockSlotContracts).every((tag) => {
+    const contract = bedrockContracts[tag];
+    return (
+      contract !== undefined &&
+      JSON.stringify(bedrockSlotContracts[tag]) === JSON.stringify(slotReadingLevelsOf(contract))
+    );
+  }),
 );
 
 // the bedrock corpus carries no vacant check: every carried tag can
@@ -566,7 +577,7 @@ check(
 // ADR-0109 moved the algorithmic contracts into the kernel, so the
 // detector reads them from registryContractsOf() directly.
 const variantSources = Object.fromEntries(
-  KERNEL_LAYER_NAMES.map((layerName) => [layerName, layerSources[layerName]]),
+  KERNEL_LAYER_NAMES.map((layerName) => [layerName, layerSources[layerName] ?? ""]),
 );
 const variantTrunk = spaceFromSourcesMap(variantSources, KERNEL_LAYER_NAMES);
 check(
@@ -684,21 +695,6 @@ const foProbeOrderedSource = [
   "      target = @fo-probe-ordered/vertices/v1",
 ].join("\n");
 
-/** The algorithmic strate's violations, counted per (address, tag) —
- * the error strings carry both, one per cause (the strate breaks at
- * the first finding). */
-function tsViolationsOf({ space, layer }: { space: Space; layer: LayerName }): Map<string, number> {
-  const counts = new Map<string, number>();
-  for (const error of runChecks({ space, layer })) {
-    const separator = error.indexOf(" — ");
-    const address = error.slice(0, separator);
-    const message = error.slice(separator + 3);
-    const key = address + "|" + message.slice(0, message.indexOf(": "));
-    counts.set(key, (counts.get(key) ?? 0) + 1);
-  }
-  return counts;
-}
-
 /** The declarative strate's violations, counted per (address, tag) —
  * every falsified assignment ships; two assignments with the same
  * UNORDERED witness keys are ONE violation (the symmetric pairs, the
@@ -781,7 +777,7 @@ check(
 );
 check(
   "T1 (confluence, the divergence probe): the inventory names the winner the order picked — the convention is observable, not blessed",
-  String(forkInventoryOf(forkAB)[0].winner[0]) === "branch-a" && String(forkInventoryOf(forkBA)[0].winner[0]) === "branch-b",
+  String(at(at(forkInventoryOf(forkAB), 0).winner, 0)) === "branch-a" && String(at(at(forkInventoryOf(forkBA), 0).winner, 0)) === "branch-b",
 );
 
 // T2 — CONSERVATIVITY. For each layer L of the bedrock: L's posterity
@@ -923,7 +919,7 @@ function validateWrittenSources(sources: readonly string[]) {
 }
 
 const identicalRePose = validateWrittenSources([
-  layerSources["record"],
+  layerSources["record"] ?? "",
   ...coupleSources,
   coupleHeirSource("forall s in slot: s/value", "containers: slot sans valeur"),
 ]);
@@ -932,7 +928,7 @@ check(
   identicalRePose.verdicts.length === 0 && identicalRePose.stats.couples === 2,
 );
 const divergentRePose = validateWrittenSources([
-  layerSources["record"],
+  layerSources["record"] ?? "",
   ...coupleSources,
   coupleHeirSource("forall s in slot: not s/value", "containers: autre lecture"),
 ]);

@@ -5,7 +5,7 @@
 // otherwise — degraded stream, deterministic, honestly labeled;
 // never a silent failure.
 
-import React, { useState } from "react";
+import { useState } from "react";
 import type { LayeredDataKernel } from "../application/corpus.ts";
 import { renderMessage, type Language } from "../domain/messages.ts";
 import {

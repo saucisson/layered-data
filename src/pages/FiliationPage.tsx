@@ -8,7 +8,6 @@
 // last section displays what the workshop adds and what it does not.
 // The companion document is docs/filiation.md, in the repository.
 
-import React from "react";
 import { useRouter } from "../components/Router";
 import { say } from "../presentation/i18n.ts";
 import { NotionText } from "../presentation/notions.tsx";

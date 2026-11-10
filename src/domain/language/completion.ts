@@ -78,7 +78,7 @@ const layerDeclarations = ({ source }: { source: string }): { name: string; line
   const declarations: { name: string; line: number }[] = [];
   source.split("\n").forEach((text, index) => {
     const match = LAYER_DECLARATION.exec(text);
-    if (match !== null) declarations.push({ name: match[1], line: index + 1 });
+    if (match !== null) declarations.push({ name: match[1] ?? "", line: index + 1 });
   });
   return declarations;
 };
@@ -112,7 +112,7 @@ export function completeLanguage({
   // ---- `@…` — a reference: layers, then path segments
   const referenceMatch = /@([A-Za-z0-9_./-]*)$/.exec(prefix);
   if (referenceMatch !== null) {
-    const typed = referenceMatch[1];
+    const typed = referenceMatch[1] ?? "";
     if (!typed.includes("/")) {
       return allLayerNames
         .filter((name) => startsWith({ label: name, prefix: typed }))
@@ -120,9 +120,9 @@ export function completeLanguage({
     }
     if (space === null) return [];
     const segments = typed.split("/");
-    const anchor = segments[0];
+    const anchor = segments[0] ?? "";
     const pathPrefix = segments.slice(1, -1);
-    const lastSegment = segments[segments.length - 1];
+    const lastSegment = segments[segments.length - 1] ?? "";
     return visibleKeys({ keys: space.keys({ layer: asLayerName(anchor), path: asLayerPath(pathPrefix) }) })
       .filter((key) => startsWith({ label: key, prefix: lastSegment }))
       .map((key) => suggestion({ label: key, kind: "key", language }));
@@ -131,7 +131,7 @@ export function completeLanguage({
   // ---- `refines` / `then` — the parents are layer references
   const refinesMatch = /(?:^|\s)(?:refines|then)\s+@?([A-Za-z0-9_.-]*)$/.exec(prefix);
   if (refinesMatch !== null) {
-    const typed = refinesMatch[1];
+    const typed = refinesMatch[1] ?? "";
     return allLayerNames
       .filter((name) => startsWith({ label: name, prefix: typed }))
       .map((name) => suggestion({ label: name, kind: "layer", language }));
@@ -143,13 +143,13 @@ export function completeLanguage({
     if (space === null) return [];
     const layer = layerAtLine({ source, line: lineIndex + 1 });
     if (layer === null) return [];
-    const typed = expectMatch[1];
+    const typed = expectMatch[1] ?? "";
     const segments = typed.split("/");
     // The last segment is the one being typed — the path prefix is
     // everything before it (an empty last segment means the cursor
     // sits right after a "/").
     const pathPrefix = segments.slice(0, -1);
-    const lastSegment = segments[segments.length - 1];
+    const lastSegment = segments[segments.length - 1] ?? "";
     return visibleKeys({ keys: space.keys({ layer: asLayerName(layer), path: asLayerPath(pathPrefix) }) })
       .filter((key) => startsWith({ label: key, prefix: lastSegment }))
       .map((key) => suggestion({ label: key, kind: "key", language }));

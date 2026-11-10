@@ -41,15 +41,6 @@ function check(label: string, condition: boolean): void {
   if (!condition) failures.push(label);
 }
 
-/** Every BilingualText-shaped value found in a parsed literal: the
- * parity contract is non-empty on both tongues. */
-function bilingualEntryOf(value: unknown): { en: string; fr: string } | null {
-  if (typeof value !== "object" || value === null) return null;
-  const candidate = value as { en?: unknown; fr?: unknown };
-  if (typeof candidate.en !== "string" || typeof candidate.fr !== "string") return null;
-  return { en: candidate.en, fr: candidate.fr };
-}
-
 // ---- the .tsx source reader ---------------------------------------
 //
 // A tiny parser for the object-literal subset the presentation
@@ -95,7 +86,7 @@ function parseValue(source: string, start: number): { value: DataValue; end: num
         key = source.slice(index + 1, keyEnd);
         index = keyEnd + 1;
       } else {
-        while (index < source.length && /[A-Za-z0-9_$\u00C0-\u00FF]/.test(source[index])) index++;
+        while (index < source.length && /[A-Za-z0-9_$\u00C0-\u00FF]/.test(source[index] ?? "")) index++;
         key = source.slice(keyStart, index);
       }
       index = skipInsignificant(source, index);
@@ -135,7 +126,7 @@ function parseValue(source: string, start: number): { value: DataValue; end: num
   if (match === null) {
     throw new Error("unparseable literal at offset " + position + ": " + source.slice(position, position + 40));
   }
-  const text = match[0];
+  const text = at(match, 0);
   return {
     value: text === "true" ? true : text === "false" ? false : text === "null" ? null : Number(text),
     end: position + text.length,
@@ -161,9 +152,18 @@ const presentationDirectory = join(import.meta.dirname, "..", "src", "presentati
 // the domain messages
 // =====================================================================
 
+
+/** Indexed access in assertions: a missing element is a test failure,
+ * not a silent undefined. */
+function at<T>(list: readonly T[], index: number): T {
+  const value = list[index];
+  if (value === undefined) throw new Error("missing element at index " + index);
+  return value;
+}
+
 check(
   "the workshop speaks exactly two languages, English by default",
-  DEFAULT_LANGUAGE === "en" && MESSAGE_LANGUAGES.length === 2 && MESSAGE_LANGUAGES[0] === "en" && MESSAGE_LANGUAGES[1] === "fr",
+  DEFAULT_LANGUAGE === "en" && MESSAGE_LANGUAGES.length === 2 && at(MESSAGE_LANGUAGES, 0) === "en" && at(MESSAGE_LANGUAGES, 1) === "fr",
 );
 
 const emptyRenderingCodes = new Set(["cycle-guard"]);
@@ -274,13 +274,19 @@ check(
 
 check(
   "the view tree notes cover every lens and viewpoint, bilingually",
-  [...LENS_LAYERS, ...VIEWPOINT_LAYERS].every((viewLayer) => bilingualParityOf(VIEW_NOTES[viewLayer])),
+  [...LENS_LAYERS, ...VIEWPOINT_LAYERS].every((viewLayer) => {
+    const notes = VIEW_NOTES[viewLayer];
+    return notes !== undefined && bilingualParityOf(notes);
+  }),
 );
 
 check(
   "the layer inventory describes every layer bilingually, layerRoleNames agrees with it",
   Object.keys(LAYER_ROLE).length === layerRoleNames().length &&
-    layerRoleNames().every((layerName) => bilingualParityOf(LAYER_ROLE[layerName])),
+    layerRoleNames().every((layerName) => {
+      const role = LAYER_ROLE[layerName];
+      return role !== undefined && bilingualParityOf(role);
+    }),
 );
 
 // =====================================================================
@@ -314,6 +320,7 @@ check(
   "every glossary entry carries a non-empty bilingual term and a translated definition",
   glossaryIds.every((id) => {
     const entry = glossary[id];
+    if (entry === undefined) return false;
     return (
       entry.term.en.length > 0 &&
       entry.term.fr.length > 0 &&
@@ -360,12 +367,13 @@ check(
     const knownTerms = new Set<string>();
     for (const id of glossaryIds) {
       const entry = glossary[id];
+      if (entry === undefined) continue;
       knownTerms.add(id.toLowerCase());
       knownTerms.add(entry.term.en.toLowerCase());
       knownTerms.add(entry.term.fr.toLowerCase());
     }
     const marks = [...tutorialMarkdownSource(language).matchAll(/⟪([^⟫]+)⟫/g)].map((match) =>
-      match[1].trim().toLowerCase(),
+      at(match, 1).trim().toLowerCase(),
     );
     return marks.length > 0 && marks.every((mark) => knownTerms.has(mark));
   }),
