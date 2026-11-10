@@ -33,8 +33,8 @@ Constitutional document (ADR-0010). Changing it requires a human decision.
    - the change is not on the escalation list (`docs/agents/escalation.md`).
 5. **End of day** - freeze merges, run `npm run verify`, `make smoke-test`,
    then the human tests and merges `daily` into `main`.
-6. **Mutation testing** - for TypeScript projects, consider using a mutation
-   testing framework like Stryker to ensure test quality (ADR-0013 equivalent).
+6. **Mutation testing** - the `mutation.yml` workflow runs Stryker on a daily
+   cron and fails on a low mutation score (owner decision 2026-11-10, #24).
 
 ## Integrating main into daily (ADR-0024)
 
