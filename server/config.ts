@@ -50,11 +50,13 @@ export const STRICT_CHECKS = process.env.PEN_STRICT_CHECKS === "1";
 export const KERNEL_DIRECTORY = join(import.meta.dirname, "..", "formalisms", "kernel");
 // LD_USERS_DIRECTORY / LD_DATA_DIRECTORY let the HTTP harness run
 // against throwaway directories instead of the real quarry.
-export const USERS_DIRECTORY = process.env.LD_USERS_DIRECTORY ?? join(import.meta.dirname, "..", "formalisms", "users");
+export const USERS_DIRECTORY =
+  process.env.LD_USERS_DIRECTORY ?? join(import.meta.dirname, "..", "formalisms", "users");
 export const DIST_DIRECTORY = join(import.meta.dirname, "..", "dist");
 // The persisted state of the shared editor session (ADR-0110) —
 // runtime data, never committed (data/ is gitignored).
-export const DATA_DIRECTORY = process.env.LD_DATA_DIRECTORY ?? join(import.meta.dirname, "..", "data");
+export const DATA_DIRECTORY =
+  process.env.LD_DATA_DIRECTORY ?? join(import.meta.dirname, "..", "data");
 export const EDITOR_SESSION_FILE = join(DATA_DIRECTORY, "editor-session.json");
 mkdirSync(USERS_DIRECTORY, { recursive: true });
 mkdirSync(DATA_DIRECTORY, { recursive: true });

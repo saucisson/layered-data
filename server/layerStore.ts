@@ -16,7 +16,11 @@ export type LayerName = string & { readonly [layerNameBrand]: never };
 const LAYER_NAME_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
 
 /** Accept a URL segment as a layer name, or explain the refusal. */
-export function asLayerName({ candidate }: { candidate: string }): { name: LayerName } | { reason: string } {
+export function asLayerName({
+  candidate,
+}: {
+  candidate: string;
+}): { name: LayerName } | { reason: string } {
   if (LAYER_NAME_PATTERN.test(candidate)) {
     return { name: candidate as LayerName };
   }
@@ -67,22 +71,31 @@ export function userLayerPath({ name }: { name: LayerName }): string {
  * The user quarry wins over the kernel — a visitor may shadow
  * a read-only name with their own writing. */
 export type LayerLookup =
-  | { found: false }
-  | { found: true; location: "kernel" | "users"; source: string };
+  { found: false } | { found: true; location: "kernel" | "users"; source: string };
 
 export function lookupLayer({ name }: { name: LayerName }): LayerLookup {
   if (existsSync(userLayerPath({ name }))) {
-    return { found: true, location: "users", source: readFileSync(userLayerPath({ name }), "utf8") };
+    return {
+      found: true,
+      location: "users",
+      source: readFileSync(userLayerPath({ name }), "utf8"),
+    };
   }
   if (KERNEL_LAYER_NAMES.includes(name)) {
-    return { found: true, location: "kernel", source: readFileSync(kernelLayerPath({ name }), "utf8") };
+    return {
+      found: true,
+      location: "kernel",
+      source: readFileSync(kernelLayerPath({ name }), "utf8"),
+    };
   }
   return { found: false };
 }
 
 /** Write a user layer (the kernel refuses). A trailing newline is
  * added: every layer file ends with one. */
-export function writeUserLayer({ name, source }: { name: LayerName; source: string }): { created: boolean } {
+export function writeUserLayer({ name, source }: { name: LayerName; source: string }): {
+  created: boolean;
+} {
   const created = !existsSync(userLayerPath({ name }));
   const normalized = source.endsWith("\n") ? source : source + "\n";
   writeFileSync(userLayerPath({ name }), normalized);
