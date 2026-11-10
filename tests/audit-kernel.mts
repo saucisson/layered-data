@@ -2,16 +2,20 @@
 //
 // The kernel behavior is a contract: every observable read over the
 // whole bedrock corpus, dumped deterministically and compared bit by
-// bit against tests/baseline-kernel.txt. The baseline was captured
-// before the refactoring; any difference is a regression. Run from
-// the repository root:
+// bit against tests/baseline-kernel.txt.gz (gzip -9, ~0.7 Mo instead of
+// 13.8 Mo of plain text). Any difference is a regression. Run from the
+// repository root:
 //
-//     npm test
-//     node tests/audit-kernel.mts > /tmp/dump.txt
-//     diff tests/baseline-kernel.txt /tmp/dump.txt
+//     npm test                       (compares against the baseline)
+//     AUDIT_DUMP=1 node tests/audit-kernel.mts > /tmp/dump.txt
+//
+// Regenerate the baseline after an intentional kernel change:
+//
+//     AUDIT_DUMP=1 node tests/audit-kernel.mts | gzip -9 > tests/baseline-kernel.txt.gz
 
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { gunzipSync } from "node:zlib";
 
 import { assembleLayeredDataKernel, KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
 import { MESSAGE_LANGUAGES, renderMessage, type Language } from "../src/domain/messages.ts";
@@ -110,7 +114,23 @@ function dumpOf(language: Language): string[] {
   return dumpLines;
 }
 
-for (const language of MESSAGE_LANGUAGES) {
-  console.log("=== language " + language + " ===");
-  console.log(dumpOf(language).join("\n"));
+const dumpText =
+  MESSAGE_LANGUAGES.map(
+    (language) => "=== language " + language + " ===\n" + dumpOf(language).join("\n"),
+  ).join("\n") + "\n";
+
+if (process.env.AUDIT_DUMP === "1") {
+  process.stdout.write(dumpText);
+} else {
+  const baselinePath = join(import.meta.dirname, "baseline-kernel.txt.gz");
+  const baselineText = gunzipSync(readFileSync(baselinePath)).toString("utf8");
+  if (dumpText !== baselineText) {
+    const dumpLines = dumpText.split("\n");
+    const baselineLines = baselineText.split("\n");
+    const differing = dumpLines.filter((line, index) => line !== baselineLines[index]);
+    console.error("kernel audit: dump differs from tests/baseline-kernel.txt.gz (" + differing.length + " differing lines)");
+    for (const line of differing.slice(0, 20)) console.error("  " + line);
+    process.exit(1);
+  }
+  console.log("kernel audit: dump identical to tests/baseline-kernel.txt.gz");
 }
