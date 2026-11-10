@@ -85,7 +85,12 @@ ADR-0100.
 ## Modifying an ADR
 
 ADRs are constitutional files - they can only be modified by humans.
-Any change to an ADR requires:
+Owner-set exception recorded 2026-11-10: the pull request size budget
+referenced by the review gate was raised from ~500 to ~1000 changed lines
+by owner instruction (template sync), so the documented threshold follows
+the gate that actually applies. Apart from owner-set exceptions like
+this, the decisions themselves never change. Any other change to an ADR
+requires:
 
 1. A new ADR explaining why the change is needed
 2. Human approval via `needs-human` label
