@@ -92,7 +92,11 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
 
           <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-slate-800">
-              {say({ language, en: "One Model, Several Formalisms", fr: "Un modèle, plusieurs formalismes" })}
+              {say({
+                language,
+                en: "One Model, Several Formalisms",
+                fr: "Un modèle, plusieurs formalismes",
+              })}
             </h3>
             <p className="text-sm text-slate-600">
               {say({

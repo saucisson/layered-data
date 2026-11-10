@@ -54,7 +54,9 @@ function SourceText({ source, maxHeightClass }: { source: string; maxHeightClass
     >
       {source.split("\n").map((line, index) => (
         <div key={index} className="flex">
-          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-300">{index + 1}</span>
+          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-300">
+            {index + 1}
+          </span>
           <span className="whitespace-pre">
             {highlightSourceLine(line).map((span, spanIndex) => (
               <span key={spanIndex} className={SPAN_CLASSES[span.kind]}>
@@ -71,7 +73,13 @@ function SourceText({ source, maxHeightClass }: { source: string; maxHeightClass
 /** One key of a section in the fold state: the path of indices from
  * the root — the fold is a set of keys, never an index in a flat
  * list (a sibling never renames its brothers). */
-function collectSectionKeys({ sections, prefix }: { sections: FlattenedSection[]; prefix: string }): string[] {
+function collectSectionKeys({
+  sections,
+  prefix,
+}: {
+  sections: FlattenedSection[];
+  prefix: string;
+}): string[] {
   const keys: string[] = [];
   sections.forEach((section, index) => {
     const key = prefix + index;
@@ -89,8 +97,8 @@ function collectSectionKeys({ sections, prefix }: { sections: FlattenedSection[]
  * either. The line numbers are those of the complete text: what
  * folds hides lines, it never renumbers them. */
 function FlattenedText({ text, language }: { text: FlattenedLayerText; language: Language }) {
-  const [folded, setFolded] = useState<Set<string>>(() =>
-    new Set(collectSectionKeys({ sections: text.sections, prefix: "" })),
+  const [folded, setFolded] = useState<Set<string>>(
+    () => new Set(collectSectionKeys({ sections: text.sections, prefix: "" })),
   );
   const lineNumbers = useMemo(() => {
     const numbers = new Map<string, number>();
@@ -134,7 +142,9 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
     const isFolded = folded.has(key);
     const nodes: React.ReactNode[] = [
       <div key={key} className="flex">
-        <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-300">{lineNumbers.get(key)}</span>
+        <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-300">
+          {lineNumbers.get(key)}
+        </span>
         {hasSections ? (
           <button
             onClick={() => {
@@ -154,7 +164,9 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
           <span className="mr-1 w-4 shrink-0" />
         )}
         <span className="flex-1" style={{ paddingLeft: (depth - 1) * 12 }}>
-          <span className={hasSections ? "font-semibold" : undefined}>{lineOf({ line: section.line })}</span>
+          <span className={hasSections ? "font-semibold" : undefined}>
+            {lineOf({ line: section.line })}
+          </span>
           {isFolded && (
             <span className="ml-2 font-sans text-[10px] text-slate-400">
               {"+ " +
@@ -183,7 +195,9 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
           {say({ language, en: "unfold all", fr: "tout déplier" })}
         </button>
         <button
-          onClick={() => setFolded(new Set(collectSectionKeys({ sections: text.sections, prefix: "" })))}
+          onClick={() =>
+            setFolded(new Set(collectSectionKeys({ sections: text.sections, prefix: "" })))
+          }
           className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
         >
           {say({ language, en: "fold all", fr: "tout replier" })}
@@ -191,11 +205,15 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
       </div>
       {text.headerLines.map((line, index) => (
         <div key={"head" + index} className="flex">
-          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-300">{index + 1}</span>
+          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-300">
+            {index + 1}
+          </span>
           <span className="whitespace-pre text-slate-400">{line}</span>
         </div>
       ))}
-      {text.sections.map((section, index) => renderSection({ section, key: String(index), depth: 1 }))}
+      {text.sections.map((section, index) =>
+        renderSection({ section, key: String(index), depth: 1 }),
+      )}
     </div>
   );
 }
@@ -210,11 +228,11 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
       {look.edges.map((edge) => {
         const from =
           edge.from !== null
-            ? look.vertices.find((vertex) => vertex.name === edge.from)?.position ?? null
+            ? (look.vertices.find((vertex) => vertex.name === edge.from)?.position ?? null)
             : null;
         const to =
           edge.to !== null
-            ? look.vertices.find((vertex) => vertex.name === edge.to)?.position ?? null
+            ? (look.vertices.find((vertex) => vertex.name === edge.to)?.position ?? null)
             : null;
         if (!from || !to) return null;
         return (
@@ -226,9 +244,7 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
             from={from}
             to={to}
             selected={selectedGlyph === edge.name}
-            onPick={() =>
-              setSelectedGlyph(selectedGlyph === edge.name ? null : edge.name)
-            }
+            onPick={() => setSelectedGlyph(selectedGlyph === edge.name ? null : edge.name)}
           />
         );
       })}
@@ -241,9 +257,7 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
             shape={vertex.drawn ? vertex.drawn.spec : null}
             position={vertex.position}
             selected={selectedGlyph === vertex.name}
-            onPick={() =>
-              setSelectedGlyph(selectedGlyph === vertex.name ? null : vertex.name)
-            }
+            onPick={() => setSelectedGlyph(selectedGlyph === vertex.name ? null : vertex.name)}
           />
         );
       })}
@@ -266,7 +280,9 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
     () => new RefinementDag({ space: KERNEL.space, layerNames: livingLayerNames }),
     [livingLayerNames],
   );
-  const selectedLayer = livingLayerNames.includes(asLayerName(layer)) ? layer : DEFAULT_FORMALISM_LAYER;
+  const selectedLayer = livingLayerNames.includes(asLayerName(layer))
+    ? layer
+    : DEFAULT_FORMALISM_LAYER;
   const inCorpus = KERNEL.layerNames.includes(asLayerName(selectedLayer));
   const needle = search.trim().toLowerCase();
   const matchedLayerNames = livingLayerNames.filter(
@@ -298,7 +314,11 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
     () =>
       LENS_LAYERS.map((lens) => ({
         lens,
-        look: buildWorkshopLook({ space: KERNEL.space, selectedView: lens, currentLayer: selectedLayer }),
+        look: buildWorkshopLook({
+          space: KERNEL.space,
+          selectedView: lens,
+          currentLayer: selectedLayer,
+        }),
       })),
     [selectedLayer],
   );
@@ -402,7 +422,11 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                     : "border-slate-200 bg-white hover:border-slate-500")
                 }
               >
-                <span className={"h-2 w-2 shrink-0 rounded-full " + (LAYER_COLOR[layerName] ?? "bg-slate-300")} />
+                <span
+                  className={
+                    "h-2 w-2 shrink-0 rounded-full " + (LAYER_COLOR[layerName] ?? "bg-slate-300")
+                  }
+                />
                 {layerName}
               </button>
             ))}
@@ -419,7 +443,9 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs leading-5 text-slate-600">{localized({ language, text: role })}</p>
+          <p className="mt-1 text-xs leading-5 text-slate-600">
+            {localized({ language, text: role })}
+          </p>
           <div className="mt-2 space-y-1 text-[11px]">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="font-semibold text-slate-500">
@@ -434,7 +460,12 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                     onClick={() => navigate("formalism", parentName)}
                     className="underline decoration-slate-300 hover:text-slate-900"
                   >
-                    <span className={"mr-1 inline-block h-2 w-2 rounded-full " + (LAYER_COLOR[parentName] ?? "bg-slate-300")} />
+                    <span
+                      className={
+                        "mr-1 inline-block h-2 w-2 rounded-full " +
+                        (LAYER_COLOR[parentName] ?? "bg-slate-300")
+                      }
+                    />
                     {parentName}
                   </button>
                 ))
@@ -454,7 +485,12 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                   onClick={() => navigate("formalism", closureName)}
                   className="underline decoration-slate-300 hover:text-slate-900"
                 >
-                  <span className={"mr-1 inline-block h-2 w-2 rounded-full " + (LAYER_COLOR[closureName] ?? "bg-slate-300")} />
+                  <span
+                    className={
+                      "mr-1 inline-block h-2 w-2 rounded-full " +
+                      (LAYER_COLOR[closureName] ?? "bg-slate-300")
+                    }
+                  />
                   {closureName}
                 </button>
               ))}
@@ -535,7 +571,12 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                     : "border-slate-200 bg-white hover:border-slate-500")
                 }
               >
-                <span className={"mr-1 inline-block h-2 w-2 rounded-full " + (LAYER_COLOR[lens] ?? "bg-slate-300")} />
+                <span
+                  className={
+                    "mr-1 inline-block h-2 w-2 rounded-full " +
+                    (LAYER_COLOR[lens] ?? "bg-slate-300")
+                  }
+                />
                 {lens}
                 {" — "}
                 {look.applicability.total === -1
@@ -553,7 +594,9 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                 <p className="text-slate-600">
                   {localized({
                     language,
-                    text: VIEW_NOTES[selectedLookEntry.lens] ?? ({ en: selectedLookEntry.lens, fr: selectedLookEntry.lens } as BilingualText),
+                    text:
+                      VIEW_NOTES[selectedLookEntry.lens] ??
+                      ({ en: selectedLookEntry.lens, fr: selectedLookEntry.lens } as BilingualText),
                   })}
                 </p>
                 <p className="text-slate-500">

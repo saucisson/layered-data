@@ -14,11 +14,7 @@ import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import { materializeSessionAdditions } from "../application/session.ts";
 import { loadKernelLayerSources } from "../infrastructure/corpusLoader.ts";
 import { AddressView } from "../domain/addresses.ts";
-import {
-  bindingOf,
-  VIEW_NOTES,
-  VIEWPOINT_LAYERS,
-} from "../presentation/viewTree.ts";
+import { bindingOf, VIEW_NOTES, VIEWPOINT_LAYERS } from "../presentation/viewTree.ts";
 import {
   computeGraphLayout,
   LAYER_COLOR,
@@ -53,8 +49,14 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
   const [scale, setScale] = useState(1);
 
   const focus = hovered;
-  const ancestors = useMemo(() => (focus !== null ? dag.ancestorsOf(focus) : new Set<string>()), [dag, focus]);
-  const descendants = useMemo(() => (focus !== null ? dag.descendantsOf(focus) : new Set<string>()), [dag, focus]);
+  const ancestors = useMemo(
+    () => (focus !== null ? dag.ancestorsOf(focus) : new Set<string>()),
+    [dag, focus],
+  );
+  const descendants = useMemo(
+    () => (focus !== null ? dag.descendantsOf(focus) : new Set<string>()),
+    [dag, focus],
+  );
   const needle = search.trim().toLowerCase();
   const refinementCount = layerNames.reduce(
     (total, layerName) => total + dag.targetsOf(layerName).length,
@@ -74,10 +76,24 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
       edges.push(
         <path
           key={layerName + "⇢" + parentName}
-          d={"M " + (from.x + from.w / 2) + " " + (from.y + 2) +
-             " C " + (from.x + from.w / 2) + " " + midHeight +
-             " " + (to.x + to.w / 2) + " " + midHeight +
-             " " + (to.x + to.w / 2) + " " + (to.y + 22)}
+          d={
+            "M " +
+            (from.x + from.w / 2) +
+            " " +
+            (from.y + 2) +
+            " C " +
+            (from.x + from.w / 2) +
+            " " +
+            midHeight +
+            " " +
+            (to.x + to.w / 2) +
+            " " +
+            midHeight +
+            " " +
+            (to.x + to.w / 2) +
+            " " +
+            (to.y + 22)
+          }
           fill="none"
           stroke={onChain ? "#1e293b" : "#cbd5e1"}
           strokeWidth={onChain ? 2 : 1}
@@ -176,10 +192,18 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
           </span>
           <span className="text-[11px] text-slate-400">
             {layerNames.length + " "}
-            {say({ language, en: layerNames.length > 1 ? "layers" : "layer", fr: layerNames.length > 1 ? "couches" : "couche" })}
+            {say({
+              language,
+              en: layerNames.length > 1 ? "layers" : "layer",
+              fr: layerNames.length > 1 ? "couches" : "couche",
+            })}
             {" · "}
             {refinementCount + " "}
-            {say({ language, en: refinementCount > 1 ? "refinements" : "refinement", fr: refinementCount > 1 ? "raffinements" : "raffinement" })}
+            {say({
+              language,
+              en: refinementCount > 1 ? "refinements" : "refinement",
+              fr: refinementCount > 1 ? "raffinements" : "raffinement",
+            })}
             {" · "}
             {layout.rows.length + " "}
             {say({ language, en: "generations", fr: "générations" })}
@@ -199,9 +223,20 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                 transformOrigin: "top left",
               }}
             >
-              <svg width={layout.W} height={layout.H} style={{ position: "absolute", left: 0, top: 0 }}>
+              <svg
+                width={layout.W}
+                height={layout.H}
+                style={{ position: "absolute", left: 0, top: 0 }}
+              >
                 <defs>
-                  <marker id="hierarchy-arrow" markerWidth="7" markerHeight="7" refX="6" refY="3" orient="auto">
+                  <marker
+                    id="hierarchy-arrow"
+                    markerWidth="7"
+                    markerHeight="7"
+                    refX="6"
+                    refY="3"
+                    orient="auto"
+                  >
                     <path d="M0,0 L6,3 L0,6 Z" fill="#64748b" />
                   </marker>
                 </defs>
@@ -229,7 +264,12 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                     onClick={() => navigate("formalism", layerName)}
                     onMouseEnter={() => setHovered(layerName)}
                     onMouseLeave={() => setHovered(null)}
-                    style={{ position: "absolute", left: position.x, top: position.y + 2, width: position.w }}
+                    style={{
+                      position: "absolute",
+                      left: position.x,
+                      top: position.y + 2,
+                      width: position.w,
+                    }}
                     title={localized({
                       language,
                       text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName },
@@ -252,7 +292,12 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                               : "opacity-20")
                     }
                   >
-                    <span className={"h-2 w-2 shrink-0 rounded-full " + (LAYER_COLOR[layerName] ?? "bg-slate-300")} />
+                    <span
+                      className={
+                        "h-2 w-2 shrink-0 rounded-full " +
+                        (LAYER_COLOR[layerName] ?? "bg-slate-300")
+                      }
+                    />
                     {layerName}
                   </button>
                 );
@@ -280,15 +325,24 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
               const modelBinding = bindingOf({ space: KERNEL.space, view, key: "model" }).value;
               const modelLayer = modelBinding instanceof AddressView ? modelBinding.layer : null;
               const displayBinding = bindingOf({ space: KERNEL.space, view, key: "display" }).value;
-              const displayLayer = displayBinding instanceof AddressView ? displayBinding.layer : null;
+              const displayLayer =
+                displayBinding instanceof AddressView ? displayBinding.layer : null;
               return (
-                <div key={view} className="rounded-md border border-slate-100 bg-slate-50 p-2 text-[11px] leading-4">
+                <div
+                  key={view}
+                  className="rounded-md border border-slate-100 bg-slate-50 p-2 text-[11px] leading-4"
+                >
                   <div className="flex flex-wrap items-center gap-1.5">
                     <button
                       onClick={() => navigate("formalism", view)}
                       className="font-mono font-semibold underline decoration-slate-300 hover:text-slate-900"
                     >
-                      <span className={"mr-1 inline-block h-2 w-2 rounded-full " + (LAYER_COLOR[view] ?? "bg-slate-300")} />
+                      <span
+                        className={
+                          "mr-1 inline-block h-2 w-2 rounded-full " +
+                          (LAYER_COLOR[view] ?? "bg-slate-300")
+                        }
+                      />
                       {view}
                     </button>
                     {modelLayer !== null && (
