@@ -22,7 +22,13 @@
 // supplements + candidate) without touching the loaded globals.
 
 import { type LayerName, type LayerPath, asLayerName } from "./identifiers.ts";
-import { AddressView, LayerReference, PathReference, type RawValue, isDictionary } from "./addresses.ts";
+import {
+  AddressView,
+  LayerReference,
+  PathReference,
+  type RawValue,
+  isDictionary,
+} from "./addresses.ts";
 import { Space } from "./space.ts";
 import {
   type CheckContract,
@@ -74,16 +80,30 @@ export interface ValidationOutcome {
 export function checkSlotContractsOf(
   contracts: Record<string, CheckContract>,
 ): Record<string, Record<string, "root" | "instance">> {
-  return Object.fromEntries(Object.entries(contracts).map(([tag, contract]) => [tag, slotReadingLevelsOf(contract)]));
+  return Object.fromEntries(
+    Object.entries(contracts).map(([tag, contract]) => [tag, slotReadingLevelsOf(contract)]),
+  );
 }
 
 /** Whether a layer carries an inline couple definition for a tag
  * (ADR-0105/0027): the tag is known through its formula, not through
  * a built-in contract. */
-function layerHasCoupleDefinition({ space, layer, tag }: { space: Space; layer: LayerName; tag: string }): boolean {
+function layerHasCoupleDefinition({
+  space,
+  layer,
+  tag,
+}: {
+  space: Space;
+  layer: LayerName;
+  tag: string;
+}): boolean {
   for (const [sourceLayer, sourcePath] of space.closure({ layer, path: [] })) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
-    if (isDictionary(node) && isDictionary(node["check-definitions"]) && tag in node["check-definitions"]) {
+    if (
+      isDictionary(node) &&
+      isDictionary(node["check-definitions"]) &&
+      tag in node["check-definitions"]
+    ) {
       return true;
     }
   }
@@ -221,7 +241,12 @@ export function* streamValidation({
 }: ValidationInput): Generator<ValidationChunk, ValidationOutcome, void> {
   const verdicts: Verdict[] = [];
   let emittedVerdicts = 0;
-  const emit = (phase: string, layer: LayerName | null, done: number, total: number): ValidationChunk => {
+  const emit = (
+    phase: string,
+    layer: LayerName | null,
+    done: number,
+    total: number,
+  ): ValidationChunk => {
     const chunk: ValidationChunk = {
       phase,
       layer,
@@ -302,7 +327,10 @@ export function* streamValidation({
   // ---- (a) declarations against the closures
   for (const [declarationIndex, declaration] of compilation.declarations.entries()) {
     let existsUpstream = false;
-    for (const [sourceLayer, sourcePath] of space.closure({ layer: declaration.layer, path: declaration.path as LayerPath })) {
+    for (const [sourceLayer, sourcePath] of space.closure({
+      layer: declaration.layer,
+      path: declaration.path as LayerPath,
+    })) {
       if (
         sourceLayer === declaration.layer &&
         sourcePath.length === declaration.path.length &&
@@ -328,7 +356,12 @@ export function* streamValidation({
         fact: fact("ghost-declaration", { where, key: declaration.key, mode: declaration.mode }),
       });
     } else stats.declOK++;
-    yield emit("déclarations", declaration.layer, declarationIndex + 1, compilation.declarations.length);
+    yield emit(
+      "déclarations",
+      declaration.layer,
+      declarationIndex + 1,
+      compilation.declarations.length,
+    );
   }
 
   // ---- the contracts: built-in for the algorithmic tags (ADR-0109),
@@ -516,7 +549,12 @@ export function* streamValidation({
           redefinitions.add(confrontation);
           verdicts.push({
             kind: "check-redéfini",
-            fact: fact("redefined-check", { where: first.pose, name, first: pose, second: first.pose }),
+            fact: fact("redefined-check", {
+              where: first.pose,
+              name,
+              first: pose,
+              second: first.pose,
+            }),
           });
         }
       }
@@ -567,7 +605,10 @@ export function* streamValidation({
             if (templates === null) {
               verdicts.push({
                 kind: "formule-illisible",
-                fact: fact("unreadable-formula", { tag: name, detail: "gabarit : « " + judgment.message + " »" }),
+                fact: fact("unreadable-formula", {
+                  tag: name,
+                  detail: "gabarit : « " + judgment.message + " »",
+                }),
               });
               continue;
             }
@@ -575,7 +616,13 @@ export function* streamValidation({
               if (!scope.includes(template.term.variable)) {
                 verdicts.push({
                   kind: "gabarit-hors-de-portée",
-                  fact: fact("template-out-of-scope", { where, name, term: template.term.variable + (template.term.segments.length ? "/" + template.term.segments.join("/") : "") }),
+                  fact: fact("template-out-of-scope", {
+                    where,
+                    name,
+                    term:
+                      template.term.variable +
+                      (template.term.segments.length ? "/" + template.term.segments.join("/") : ""),
+                  }),
                 });
               }
             }

@@ -23,12 +23,7 @@
 // Everything here is pure: the space arrives as a parameter, the
 // kernel is only read, never written.
 
-import {
-  LayerReference,
-  PathReference,
-  type Address,
-  isDictionary,
-} from "./addresses.ts";
+import { LayerReference, PathReference, type Address, isDictionary } from "./addresses.ts";
 import type { LayerName } from "./identifiers.ts";
 import { walkAddresses } from "./views.ts";
 import type { Space } from "./space.ts";
@@ -86,7 +81,13 @@ export function formatAddress(address: Address): string {
  * incomparable provider with a different laid value conflicts.
  * Vertical providers (the loser in the winner's closure) are
  * specificity, not order — skipped. */
-export function orderConflictsAt({ space, address }: { space: Space; address: Address }): Omit<OrderConflict, "address">[] {
+export function orderConflictsAt({
+  space,
+  address,
+}: {
+  space: Space;
+  address: Address;
+}): Omit<OrderConflict, "address">[] {
   const conflicts: Omit<OrderConflict, "address">[] = [];
   const [layer, path] = address;
   const closure = space.closure({ layer, path });

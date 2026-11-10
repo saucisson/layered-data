@@ -9,7 +9,15 @@
 //   - the validator and the checks (walkAddresses).
 
 import { type LayerName, type LayerPath, asPathSegment } from "./identifiers.ts";
-import { type Address, type RawTree, AddressView, LayerReference, PathReference, addressesEqual, isDictionary,  } from "./addresses.ts";
+import {
+  type Address,
+  type RawTree,
+  AddressView,
+  LayerReference,
+  PathReference,
+  addressesEqual,
+  isDictionary,
+} from "./addresses.ts";
 import { Space } from "./space.ts";
 
 /** One walked address, observed ONCE: the address, its visible keys,
@@ -29,7 +37,13 @@ export interface WalkedAddress {
  * the closure/nodes of every address, captured during the single
  * walk. The address order is walkAddresses' order (byte-identical):
  * the root first, children in stack order. */
-export function walkLayerObserved({ space, layer }: { space: Space; layer: LayerName }): WalkedAddress[] {
+export function walkLayerObserved({
+  space,
+  layer,
+}: {
+  space: Space;
+  layer: LayerName;
+}): WalkedAddress[] {
   const output: WalkedAddress[] = [];
   const stack: Address[] = [[layer, []]];
   while (stack.length) {
@@ -66,7 +80,13 @@ export interface DrawnShape {
 }
 
 // Addresses candidates for a display entry: first level + specification.
-export function displayCandidatePaths({ space, lens }: { space: Space; lens: LayerName }): LayerPath[] {
+export function displayCandidatePaths({
+  space,
+  lens,
+}: {
+  space: Space;
+  lens: LayerName;
+}): LayerPath[] {
   const paths: LayerPath[] = [];
   for (const key of space.keys({ layer: lens, path: [] })) paths.push([asPathSegment(key)]);
   for (const key of space.keys({ layer: lens, path: [asPathSegment("specification")] })) {
@@ -77,7 +97,15 @@ export function displayCandidatePaths({ space, lens }: { space: Space; lens: Lay
 
 // Raw display template at the first defining source (not via read():
 // a dict value there comes back as a value view).
-export function readDisplayTemplate({ space, lens, path }: { space: Space; lens: LayerName; path: LayerPath }): any {
+export function readDisplayTemplate({
+  space,
+  lens,
+  path,
+}: {
+  space: Space;
+  lens: LayerName;
+  path: LayerPath;
+}): any {
   for (const [sourceLayer, sourcePath] of space.closure({ layer: lens, path })) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
     if (isDictionary(node) && "display" in node) {
@@ -90,7 +118,13 @@ export function readDisplayTemplate({ space, lens, path }: { space: Space; lens:
 // Drawing entries: (path, template, dressed types) — the dressed
 // types are the closure sources with the same final segment, never
 // the layer roots, never a node carrying a display of its own.
-export function lensDrawingEntries({ space, lens }: { space: Space; lens: LayerName }): LensDrawingEntry[] {
+export function lensDrawingEntries({
+  space,
+  lens,
+}: {
+  space: Space;
+  lens: LayerName;
+}): LensDrawingEntry[] {
   const entries: LensDrawingEntry[] = [];
   for (const path of displayCandidatePaths({ space, lens })) {
     const spec = readDisplayTemplate({ space, lens, path });
@@ -199,15 +233,27 @@ export function viewShape({
 
 // Mirror of the domain check check_view_lens: how many vertices of
 // the model does the lens dress?
-export function dressingApplicability({ space, lens, model }: { space: Space; lens: LayerName; model: LayerName }): { dressed: number; total: number } {
+export function dressingApplicability({
+  space,
+  lens,
+  model,
+}: {
+  space: Space;
+  lens: LayerName;
+  model: LayerName;
+}): { dressed: number; total: number } {
   const vertices = space.read({ layer: model, path: [], key: "vertices" });
   if (!(vertices instanceof AddressView)) return { dressed: -1, total: -1 };
   const vertexKeys = space.keys({ layer: model, path: vertices.path });
   let dressed = 0;
   for (const vertexKey of vertexKeys) {
     if (
-      drawnShape({ space, lens, layer: model, path: [...vertices.path, asPathSegment(vertexKey)] }) !==
-      null
+      drawnShape({
+        space,
+        lens,
+        layer: model,
+        path: [...vertices.path, asPathSegment(vertexKey)],
+      }) !== null
     ) {
       dressed++;
     }

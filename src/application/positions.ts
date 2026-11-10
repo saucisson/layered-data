@@ -28,7 +28,8 @@ export function resolvePositionAt({
 
   let baseX = 0;
   let baseY = 0;
-  const readAt = (key: string) => space.read({ layer: asLayerName(layer), path: asLayerPath(path), key });
+  const readAt = (key: string) =>
+    space.read({ layer: asLayerName(layer), path: asLayerPath(path), key });
   const relativeTo = readAt("relative_to");
   if (relativeTo instanceof AddressView) {
     const upstream = resolvePositionAt({
