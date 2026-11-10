@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "bench": "node --expose-gc benchmarks/kernel.mts",
-    "test": "npm run test:audit && npm run test:specification && npm run test:staging && npm run test:pen-loop && npm run test:editor && npm run test:pages && npm run test:model-editor && npm run test:editor-session && npm run test:i18n && npm run i18n:check && npm run test:terminology && npm run test:stream",
+    "test": "npm run test:audit && npm run test:specification && npm run test:staging && npm run test:pen-loop && npm run test:editor && npm run test:pages && npm run test:model-editor && npm run test:editor-session && npm run test:i18n && npm run i18n:check && npm run test:terminology && npm run test:stream && npm run test:perf && npm run test:validation-session && npm run test:vscode",
     "test:audit": "node tests/audit-kernel.mts | diff tests/baseline-kernel.txt -",
     "test:specification": "node tests/specification-properties.mts",
     "test:staging": "node tests/staging-checks.mts",
@@ -26,7 +26,10 @@
     "test:terminology": "node tests/terminology-checks.mts",
     "i18n:extract": "npx i18next-parser && node scripts/i18n-check.mjs",
     "i18n:check": "node scripts/i18n-check.mjs",
-    "test:stream": "node tests/validation-stream-checks.mts"
+    "test:stream": "node tests/validation-stream-checks.mts",
+    "test:perf": "node tests/perf-checks.mts",
+    "test:validation-session": "node tests/validation-session-checks.mts",
+    "test:vscode": "node tests/vscode-checks.mts"
   },
   "dependencies": {
     "i18next": "^27.1.0",
