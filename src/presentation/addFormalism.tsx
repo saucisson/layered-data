@@ -104,7 +104,9 @@ export function AddFormalismComposer({
           detail.slice(0, 180) +
           say({ language, en: " ; simulated AI of the canvas", fr: " ; IA simulée du canvas" });
       }
-    } catch {}
+    } catch {
+      // simulated AI: the proposal is best-effort
+    }
     setProposalOrigin(origin);
     setDraftSource(text);
     setComposerResult(null);

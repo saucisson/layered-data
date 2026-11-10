@@ -213,7 +213,9 @@ export function WorkshopPage({
       (globalThis as any).navigator?.clipboard?.writeText?.(
         addressText([layer, path]) + (selectedKey ? " :: " + selectedKey : ""),
       );
-    } catch {}
+    } catch {
+      // clipboard unavailable: the copy is best-effort
+    }
     setCopied(true);
   }
 
@@ -1561,4 +1563,3 @@ export function WorkshopPage({
   );
 }
 
-export default WorkshopPage;

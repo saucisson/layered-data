@@ -1,6 +1,6 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import App from "./App";
+import { App } from "./App";
 import { initI18n } from "./infrastructure/i18n";
 import { readWorkshopLanguage } from "./infrastructure/browserLanguage";
 import "./index.css";

@@ -50,6 +50,9 @@ jobs:
       - name: Presentation structure
         run: npm run check:structure
 
+      - name: Lint (ESLint: boundaries, no-console, named exports)
+        run: npm run lint
+
       - name: The harnesses (audit, specification, staging, i18n)
         run: npm test
 
