@@ -1,11 +1,11 @@
-# ADR-0019: Registry as data — the meta-model comes home
+# ADR-0102: Registry as data — the meta-model comes home
 
 - Status: accepted
 - Date: 2026-11-05
 
 ## Context
 
-ADR-0018 made the closed registry honest: every check tag declares its
+ADR-0101 made the closed registry honest: every check tag declares its
 contract — where it judges, which slots it must read — and the
 verdicts, the lint and the strict arm all read that declaration.
 Measured on the trunk corpus:
@@ -31,7 +31,7 @@ workshop's own inventory had no node for the thing that decides what
 the inventory's checks mean.
 
 Rejected diagnosis: "the table works, leave it in TypeScript". The
-same diagnosis was rejected for the checks' semantics (ADR-0018); the
+same diagnosis was rejected for the checks' semantics (ADR-0101); the
 registry's SEMANTICS deserves the same home the layers' semantics
 found: the corpus.
 
@@ -50,8 +50,8 @@ found: the corpus.
   the trunk anyway; a second assembly means two spaces to keep
   coherent, two closure orders, two audit treaties, for a table of
   nine contracts. The kernel's own space can read its own registry.
-- **Keep the TypeScript table** (ADR-0018's status quo): REJECTED —
-  superseded. ADR-0018 made the closed registry honest; this ADR
+- **Keep the TypeScript table** (ADR-0101's status quo): REJECTED —
+  superseded. ADR-0101 made the closed registry honest; this ADR
   gives the honest registry a home the language can see.
 - **The registry as a standing layer, read as data** (chosen): the
   contracts become a kernel layer; existence in the registry is
@@ -90,7 +90,7 @@ found: the corpus.
    unreadable contract (« contrat-illisible »). Measured on the
    trunk: 0/0/0 — the seam is sound.
 5. **A new audit treaty**: the executed-constraints contract of
-   ADR-0018's follow-up stays out; but the registry layer enters the
+   ADR-0101's follow-up stays out; but the registry layer enters the
    trunk, so the frozen baseline is REGENERATED (couches 46 → 47).
    The baseline is a treaty; changing the trunk changes the treaty.
 

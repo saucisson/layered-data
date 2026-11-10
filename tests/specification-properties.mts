@@ -1,7 +1,7 @@
 // The executable specification of the kernel.
 //
 // docs/specification.md is normative: obligations O1–O18 and
-// conformance requirements C1–C8 — and, since ADR-0023, the
+// conformance requirements C1–C8 — and, since ADR-0106, the
 // two-regime theorems T1–T3 (§14). This file checks them as
 // properties — over the whole bedrock corpus (every observable
 // address, the same walk as the audit harness) and over dedicated
@@ -70,7 +70,7 @@ function spaceFromJoinOrder(order: readonly string[]): Space {
 }
 
 /** A space assembled from a VARIANT of the corpus sources — the
- * data-driven semantics check (ADR-0019) edits the registry layer
+ * data-driven semantics check (ADR-0102) edits the registry layer
  * itself, the rest of the bedrock joins unchanged. */
 function spaceFromSourcesMap(sources: Record<string, string>, order: readonly string[]): Space {
   const joined = order
@@ -242,7 +242,7 @@ for (const layerName of KERNEL_LAYER_NAMES) {
       const value = bedrock.read({ layer, path, key, scan });
 
       // O8 — the statuses are exactly the three documented ones
-      // (the mask retired with ADR-0023: fournit, transparent, absent).
+      // (the mask retired with ADR-0106: fournit, transparent, absent).
       const statuses = scan.map((observation) => observation.status);
       for (const status of statuses) {
         if (!["fournit", "transparent", "absent"].includes(status)) statusAnomalies++;
@@ -524,21 +524,21 @@ check(
 );
 
 // =====================================================================
-// the built-in contracts (ADR-0027) — the algorithmic tags
+// the built-in contracts (ADR-0109) — the algorithmic tags
 // =====================================================================
 
-// ADR-0027 retired the check-registry layer: first-order checks carry
+// ADR-0109 retired the check-registry layer: first-order checks carry
 // their formula inline. The algorithmic tags (strate 2) keep a
 // built-in contract in the kernel.
 const bedrockContracts = registryContractsOf();
 check(
-  "ADR-0027: the built-in contracts cover the algorithmic tags",
+  "ADR-0109: the built-in contracts cover the algorithmic tags",
   Object.keys(bedrockContracts).join(",") === "containers,cardinality,oriented,dag,arbre,k-partite",
 );
 
 // every kernel algorithm has a built-in contract 1:1
 check(
-  "ADR-0027: every kernel algorithm has a built-in contract",
+  "ADR-0109: every kernel algorithm has a built-in contract",
   Object.keys(checkRegistry).every((tag) => bedrockContracts[tag] !== undefined) &&
     Object.keys(bedrockContracts).length === Object.keys(checkRegistry).length,
 );
@@ -547,7 +547,7 @@ check(
 // derived from the data's contracts, never re-declared
 const bedrockSlotContracts = checkSlotContractsOf(bedrockContracts);
 check(
-  "ADR-0019: the slot contracts derive from the data — one source",
+  "ADR-0102: the slot contracts derive from the data — one source",
   Object.keys(bedrockSlotContracts).every(
     (tag) =>
       JSON.stringify(bedrockSlotContracts[tag]) ===
@@ -558,25 +558,25 @@ check(
 // the bedrock corpus carries no vacant check: every carried tag can
 // judge (measured: 79 contract judgments, 0 vacancies)
 check(
-  "ADR-0018: the bedrock corpus carries no vacant check — every carried tag can judge",
+  "ADR-0101: the bedrock corpus carries no vacant check — every carried tag can judge",
   vacantChecksOf({ space: bedrock, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
 );
 
 // the built-in contract check: a variant bedrock is not needed —
-// ADR-0027 moved the algorithmic contracts into the kernel, so the
+// ADR-0109 moved the algorithmic contracts into the kernel, so the
 // detector reads them from registryContractsOf() directly.
 const variantSources = Object.fromEntries(
   KERNEL_LAYER_NAMES.map((layerName) => [layerName, layerSources[layerName]]),
 );
 const variantTrunk = spaceFromSourcesMap(variantSources, KERNEL_LAYER_NAMES);
 check(
-  "ADR-0027: the variant bedrock (no registry layer) carries no vacant check",
+  "ADR-0109: the variant bedrock (no registry layer) carries no vacant check",
   vacantChecksOf({ space: variantTrunk, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
 );
 
 
 // =====================================================================
-// the declarative strate (ADR-0022): the couples of hypergraph, judged
+// the declarative strate (ADR-0105): the couples of hypergraph, judged
 // by the reading interpreter, measured against the algorithmic strate
 // — the same violations, address by address, on two probes written in
 // the language. The witnesses are the free witnesses: the algorithmic
@@ -600,7 +600,7 @@ const bedrockValidated = validateSpace({
   layerNames: [...KERNEL_LAYER_NAMES],
 });
 check(
-  "ADR-0022/0027: the bedrock poses its three inline couples and the validation stays silent",
+  "ADR-0105/0027: the bedrock poses its three inline couples and the validation stays silent",
   bedrockValidated.stats.couples === 3 && bedrockValidated.verdicts.every((v) => v.kind === "déclaration-fantôme"),
 );
 
@@ -609,7 +609,7 @@ check(
 // and the declarative one agrees, without ever exhausting)
 const bedrockAlgorithmic = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
 check(
-  "ADR-0022: the bedrock's algorithmic judgments are unchanged — nothing to judge",
+  "ADR-0105: the bedrock's algorithmic judgments are unchanged — nothing to judge",
   KERNEL_LAYER_NAMES.every((layerName) => runChecks({ space: bedrockAlgorithmic, layer: layerName }).length === 0),
 );
 const bedrockDeclarative = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
@@ -617,7 +617,7 @@ const bedrockFoJudgments = KERNEL_LAYER_NAMES.flatMap((layerName) =>
   runChecksFO({ space: bedrockDeclarative, layer: layerName }),
 );
 check(
-  "ADR-0022: the bedrock's declarative strate agrees — no violation, no exhaustion",
+  "ADR-0105: the bedrock's declarative strate agrees — no violation, no exhaustion",
   bedrockFoJudgments.length === 0 &&
     bedrockDeclarative.diagnostics.every(
       (diagnostic) => diagnostic.kind !== "formule-illisible" && diagnostic.kind !== "formule-épuisée",
@@ -711,7 +711,7 @@ function foViolationsOf({ space, layer }: { space: Space; layer: LayerName }): M
     if (!witnesses.has(key)) witnesses.set(key, new Set());
     witnesses.get(key)!.add([...judgment.witnessKeys].sort().join(","));
     check(
-      "ADR-0022: the declarative judgment carries its measured cost",
+      "ADR-0105: the declarative judgment carries its measured cost",
       judgment.steps > 0 && space.diagnostics.every((diagnostic) => diagnostic.kind !== "formule-épuisée"),
     );
   }
@@ -726,21 +726,21 @@ for (const [probeName, probeSource, expected] of [
 ] as const) {
   const probeOrder = [...KERNEL_LAYER_NAMES, probeName];
   const probeSources = { ...layerSources, [probeName]: probeSource };
-  // ADR-0027: runChecks executes the inline couples directly. The
+  // ADR-0109: runChecks executes the inline couples directly. The
   // declarative walk counts UNIQUE witness sets per (address, tag) —
   // the symmetric pairs fold into one cause.
   const probeSpace = spaceFromSourcesMap(probeSources, probeOrder);
   const counts = foViolationsOf({ space: probeSpace, layer: asLayerName(probeName) });
   const where = probeName + "::.";
   check(
-    "ADR-0022/0027: probe " + probeName + " — the inline formulas judge the expected causes",
+    "ADR-0105/0027: probe " + probeName + " — the inline formulas judge the expected causes",
     (counts.get(where + "|simple") ?? 0) === expected.simple &&
       (counts.get(where + "|nonempty") ?? 0) === expected.nonempty,
   );
 }
 
 // =====================================================================
-// ADR-0023 — THE TWO-REGIME THEOREMS (specification §14): the
+// ADR-0106 — THE TWO-REGIME THEOREMS (specification §14): the
 // guarantees mask and assume used to buy, measured now that no
 // gesture can buy them — confluence (T1), conservativity (T2),
 // monotony (T3)
@@ -748,11 +748,11 @@ for (const [probeName, probeSource, expected] of [
 
 // T1 — CONFLUENCE. (a) The census: zero leaf-value conflict anywhere
 // on the bedrock — specificity is the only judge that ever fires,
-// and no signature can hide one anymore (ADR-0017's census, a
-// standing property since ADR-0023).
+// and no signature can hide one anymore (ADR-0100's census, a
+// standing property since ADR-0106).
 const confluentBedrock = spaceFromJoinOrder(KERNEL_LAYER_NAMES);
 check(
-  "T1 (confluence, the census): the bedrock carries zero leaf-value order conflicts — ADR-0017's census, now a standing property",
+  "T1 (confluence, the census): the bedrock carries zero leaf-value order conflicts — ADR-0100's census, now a standing property",
   orderConflictsOf({ space: confluentBedrock, layerNames: [...KERNEL_LAYER_NAMES] }).length === 0,
 );
 
@@ -885,7 +885,7 @@ check(
 
 // T3's couple clause — the mechanism: a check couple is never
 // replaced. The probe space carries the registry as data
-// (check-registry, ADR-0019 — the same route as the bedrock) and a
+// (check-registry, ADR-0102 — the same route as the bedrock) and a
 // couple on « containers », the generic tag with no required slot:
 // the identical re-pose is tolerated — the original survives, the
 // validation stays silent; the divergent re-pose is a verdict at

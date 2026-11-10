@@ -82,7 +82,7 @@ and label `needs-human` first:
 - constitutional files: this file, `docs/agents/`, `docs/decisions/`,
   `docs/architecture.md`, `docs/branching.md`, `docs/review-checklist.md`,
   lint, type and coverage configuration, the `.vibe/` runtime profile
-  (ADR-0019), branch protections;
+  (ADR-0102), branch protections;
 - any decision worth an ADR (you may draft one in a PR; the human
   accepts it).
 

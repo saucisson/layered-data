@@ -1,11 +1,11 @@
-# ADR-0027: Inline checks, English-first formalisms, i18next for translations
+# ADR-0109: Inline checks, English-first formalisms, i18next for translations
 
 - Status: proposed
 - Date: 2026-11-09
 
 ## Context
 
-ADR-0022 made check behavior writable in the language (the "couple" —
+ADR-0105 made check behavior writable in the language (the "couple" —
 `check name { level, condition, judgment { when, formula, message } }`),
 but only `hypergraph` poses its checks that way. The other seven tags
 (`dag`, `arbre`, `oriented`, `sperner`, `k-partite`, `containers`,
@@ -24,7 +24,7 @@ test.
 ## Options considered
 
 - **Keep the registry + algorithm table** (status quo): rejected — the
-  indirection is the cost ADR-0022 already paid to remove; the registry
+  indirection is the cost ADR-0105 already paid to remove; the registry
   duplicates what an inline formula states directly;
 - **Codes as translation keys** (`check.simple.repeated-vertex`):
   rejected — opaque at reading time; the English string inline in the

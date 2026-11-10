@@ -1,4 +1,4 @@
-# ADR-0020: The immutable trunk — read-only by protocol, not by convention
+# ADR-0103: The immutable trunk — read-only by protocol, not by convention
 
 - Status: accepted
 - Date: 2026-11-05
@@ -43,7 +43,7 @@ the server returns 403 — the trunk is protected enough". The workshop
 is not the only client: the staging and edition routes are the
 workshop's protocol, the pen's gate and the harnesses' tool. A rule
 that lives only in the UI is a convention; a rule that lives in the
-route is a protocol. ADR-0018 made the contracts explicit, ADR-0019
+route is a protocol. ADR-0101 made the contracts explicit, ADR-0102
 gave the registry a home — the trunk deserves its own rule in the
 routes that could touch it.
 
@@ -63,7 +63,7 @@ routes that could touch it.
   token space honest about what the draft would do.
 - **Keep the UI filter and the 403, document the convention**:
   REJECTED — that is the status quo; a convention that every caller
-  must remember is the displaced meta-model's cousin (ADR-0019): the
+  must remember is the displaced meta-model's cousin (ADR-0102): the
   rule about the data living outside the protocols that touch the
   data.
 - **Every mutation route carries the trunk's signature and enforces

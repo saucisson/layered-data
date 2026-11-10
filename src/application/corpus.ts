@@ -4,7 +4,7 @@
 // in a fixed order. The assembly itself is order-neutral for the
 // space (desugaring sorts topologically), the order only fixes the
 // workshop layer list — and, for byte-identical dumps, the join
-// order of the source text. ADR-0027 retired the check-registry layer:
+// order of the source text. ADR-0109 retired the check-registry layer:
 // first-order checks carry their formula inline; the algorithmic tags
 // keep a built-in contract in the kernel.
 

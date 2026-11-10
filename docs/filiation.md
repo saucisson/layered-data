@@ -43,7 +43,7 @@ le tour. L'atelier
 répond avec la donnée : l'ordre de spécificité n'est pas une heuristique
 du moteur, c'est la liste `refines` de la couche qui le porte — le
 conflit d'ordre est tranché par la donnée, jamais par le code
-(ADR-0017) — et la lecture termine sur tout espace sans cycle (garde
+(ADR-0100) — et la lecture termine sur tout espace sans cycle (garde
 de cycle O5, vérifiée par propriété).
 
 ### Les mixins, les traits et CLOS : la linéarisation
@@ -60,12 +60,12 @@ plusieurs sources, un ordre, la première qui parle. Deux différences :
 la linéarisation du CLOS est **calculée par le moteur** depuis la
 déclaration, quand ici l'ordre est **posé dans la donnée** (la liste
 `refines`), lu tel quel — et le conflit d'ordre entre sources
-incomparables est refusé en mode strict (ADR-0017), quand CLOS en
+incomparables est refusé en mode strict (ADR-0100), quand CLOS en
 sélectionne un silencieusement. Et le protocole à méta-objets
 (Kiczales, des Rivières & Bobrow, *The Art of the Metaobject
 Protocol*, MIT Press, 1991) ouvrait déjà le moteur lui-même comme une
 donnée éditable — la filiation la plus proche du registre des checks
-(ADR-0019), dont l'atelier retient le geste et laisse la
+(ADR-0102), dont l'atelier retient le geste et laisse la
 machinerie réflexive.
 
 ### Les prototypes : Self
@@ -124,7 +124,7 @@ premier-gagné tranche, l'ordre posé dans la donnée. L'histoire pèse
 sur ce choix : GCL, la langue de configuration de Google dont CUE
 descend, avait choisi un héritage par surcharge, et sa complexité a
 rendu l'outillage prévu intractable. L'atelier répond à la même mise
-en garde par la mesure : le mode strict (ADR-0017) refuse les
+en garde par la mesure : le mode strict (ADR-0100) refuse les
 conflits d'ordre non signés, et la non-commutativité est un prix
 affiché (§3) — le pari reste celui de GCL, tenu par des contrats
 mesurés plutôt que par une sémantique commutative.
@@ -192,7 +192,7 @@ Les classes répondent par des règles du langage ; l'atelier répond
 par la donnée : l'ordre de la liste `refines` tranche, la première
 branche parle — mesuré sur le diamant pondéré de la grande hiérarchie,
 et le conflit d'ordre est refusé sans signature en mode strict
-(ADR-0017).
+(ADR-0100).
 
 ### Les feature models : FODA
 
@@ -220,7 +220,7 @@ philosophes — chaque formalisme du papier, une famille de couches.
   donnée, sans saut de niveau.
 - **L'ordre comme sémantique.** Le conflit d'héritage est tranché par
   la donnée (la liste `refines`), jamais par le moteur — et le refus
-  de conflit non signé est mesuré (ADR-0017).
+  de conflit non signé est mesuré (ADR-0100).
 - **Une spécification normative vérifiée par propriété.** Les
   obligations O1–O18
   et conformités C1–C8 de `docs/specification.md` sont vérifiées comme
@@ -229,8 +229,8 @@ philosophes — chaque formalisme du papier, une famille de couches.
   l'audit du noyau est octet-identique à sa ligne de base (725
   déclarations comparées à chaque passage).
 - **Des contrats portés par les données.** Les checks voyagent dans
-  les couches (ADR-0018), le registre des checks est lui-même une
-  couche (ADR-0019), le socle est immuable par protocole (ADR-0020) —
+  les couches (ADR-0101), le registre des checks est lui-même une
+  couche (ADR-0102), le socle est immuable par protocole (ADR-0103) —
   la vérification est de la donnée, pas du code.
 - **Un protocole d'écriture assistée.** Le géologue propose, le
   staging juge : la proposition est une couche stagée, jamais une

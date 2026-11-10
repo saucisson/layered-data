@@ -47,7 +47,7 @@ Click the `abstract minimum` line: the card says "declared by collection, provid
 
 ### checks — inline formulas
 
-Since ADR-0027, a ⟪check⟫ carries its formula inline: `check simple { level, judgment { formula, message } }` — the constraint's behavior is written in the language itself (ADR-0022). The tags that need transitive closure (`dag`, `arbre`) keep a built-in algorithm in the kernel until strate 2.
+Since ADR-0109, a ⟪check⟫ carries its formula inline: `check simple { level, judgment { formula, message } }` — the constraint's behavior is written in the language itself (ADR-0105). The tags that need transitive closure (`dag`, `arbre`) keep a built-in algorithm in the kernel until strate 2.
 
 ## graph — the base metamodel
 

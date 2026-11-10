@@ -8,7 +8,7 @@
 //   2. the AI geologist — a thin proxy to Mistral that carries the
 //      access key server-side and grounds the model in the real
 //      state of the corpus;
-//   3. the shared editor session (ADR-0028) — the versioned living
+//   3. the shared editor session (ADR-0110) — the versioned living
 //      additions of the graphical editor, judged by the same staging,
 //      broadcast to every connected editor over SSE, persisted as
 //      JSON on disk;
@@ -35,7 +35,7 @@ import { randomUUID } from "node:crypto";
 // The verified geologist loop lives in the application layer — a pure
 // use case, injected with the model call. The canonical layer
 // order is the one of the corpus assembly. The shared editor session
-// (ADR-0028) is application logic too: the transport below only wires
+// (ADR-0110) is application logic too: the transport below only wires
 // it to HTTP/SSE and to the JSON file.
 import { KERNEL_LAYER_NAMES as CANONICAL_LAYER_NAMES } from "./src/application/corpus.ts";
 import { composeVerifiedLayerDraft } from "./src/application/penLoop.ts";
@@ -74,12 +74,12 @@ const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? "codestral-latest";
 // The verified geologist loop: the number of proposals the staging may
 // judge before the route gives up and answers 422.
 const MAX_PEN_ATTEMPTS = Math.max(1, Number(process.env.PEN_MAX_ATTEMPTS ?? 3));
-// The strict arm of the loop (ADR-0017, retired as a semantics by
-// ADR-0023): the geologist may no longer propose a read the refines
+// The strict arm of the loop (ADR-0100, retired as a semantics by
+// ADR-0106): the geologist may no longer propose a read the refines
 // order settles between incomparable sources — resolving it is
 // restructuring, never signing — set PEN_STRICT_CONFLICTS=1 to arm it.
 const STRICT_CONFLICTS = process.env.PEN_STRICT_CONFLICTS === "1";
-// The strict arm of the loop for the carried checks (ADR-0018): the
+// The strict arm of the loop for the carried checks (ADR-0101): the
 // geologist may no longer propose a layer whose checks refuse it — set
 // PEN_STRICT_CHECKS=1 to arm it.
 const STRICT_CHECKS = process.env.PEN_STRICT_CHECKS === "1";
@@ -95,7 +95,7 @@ const STRICT_CHECKS = process.env.PEN_STRICT_CHECKS === "1";
 const KERNEL_DIRECTORY = join(import.meta.dirname, "formalisms", "kernel");
 const USERS_DIRECTORY = join(import.meta.dirname, "formalisms", "users");
 const DIST_DIRECTORY = join(import.meta.dirname, "dist");
-// The persisted state of the shared editor session (ADR-0028) —
+// The persisted state of the shared editor session (ADR-0110) —
 // runtime data, never committed (data/ is gitignored).
 const DATA_DIRECTORY = join(import.meta.dirname, "data");
 const EDITOR_SESSION_FILE = join(DATA_DIRECTORY, "editor-session.json");
@@ -303,7 +303,7 @@ function penInstructions(language: "en" | "fr" = "en"): string {
 }
 
 // ------------------------------------------------------------
-// 5b. THE SHARED EDITOR SESSION (ADR-0028)
+// 5b. THE SHARED EDITOR SESSION (ADR-0110)
 //
 // The graphical editor's living additions, kept as ONE versioned
 // state: every gesture is a layer source judged by the same staging
@@ -636,7 +636,7 @@ const server = createServer(async (request, response) => {
         }
       }
 
-      // ---- the shared editor session (ADR-0028) ----
+      // ---- the shared editor session (ADR-0110) ----
       if (url.pathname === "/api/editor/session" && request.method === "GET") {
         const clientId = randomUUID();
         response.writeHead(200, {

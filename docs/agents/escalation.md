@@ -14,7 +14,7 @@ These changes are **never** decided by agents, at any severity - they are
 - a schema or data migration,
 - any constitutional file: `AGENTS.md`, `docs/agents/`, `docs/decisions/`,
   `docs/architecture.md`, `docs/branching.md`, lint/type/coverage config,
-  the `.vibe/` runtime profile (ADR-0019), branch protections,
+  the `.vibe/` runtime profile (ADR-0102), branch protections,
 - any decision worth an ADR (rule of thumb: would a future agent ask "why?"
   -> draft an ADR in the PR and label it `needs-human`).
 

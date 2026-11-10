@@ -3,9 +3,9 @@
 // Every diagnostic becomes a VERDICT before execution: (a) every
 // declared act against the closure of its node (implicit override,
 // phantom declaration), (b) every check tag against the registry —
-// the data of the check-registry layer since ADR-0019,
+// the data of the check-registry layer since ADR-0102,
 // (b2) the vacant checks — a check carried but unable to judge,
-// its required slots unbound (ADR-0018),
+// its required slots unbound (ADR-0101),
 // (c) every binding at the level where its check reads it (the trap:
 // an instance-level slot bound at a root is dead for every reading
 // layer that descends from it), (d) the shadow confrontation: every
@@ -13,7 +13,7 @@
 // expected-reads contract replays — a betrayed read, wherever it
 // lives, is a verdict, (f) the check couples — a divergent
 // re-pose, an unsupported level, an unreadable formula, a template
-// out of its judgment's quantified scope (ADR-0022).
+// out of its judgment's quantified scope (ADR-0105).
 //
 // The verdict KINDS and the stat KEYS are kernel behavior — the panels
 // display them — they stay in French. Everything here is pure: the
@@ -52,7 +52,7 @@ export interface ValidationOutcome {
 // their READING LEVEL — root (layer check) or instance (arc check:
 // the type is in the arc's closure). A type-level binding posed at a
 // root (silently vacant check) is unwritable there. Derived from the
-// registry's contracts — one source since ADR-0019: the contracts
+// registry's contracts — one source since ADR-0102: the contracts
 // the DATA declares, read from the `check-registry` layer.
 export function checkSlotContractsOf(
   contracts: Record<string, CheckContract>,
@@ -61,7 +61,7 @@ export function checkSlotContractsOf(
 }
 
 /** Whether a layer carries an inline couple definition for a tag
- * (ADR-0022/0027): the tag is known through its formula, not through
+ * (ADR-0105/0027): the tag is known through its formula, not through
  * a built-in contract. */
 function layerHasCoupleDefinition({ space, layer, tag }: { space: Space; layer: LayerName; tag: string }): boolean {
   for (const [sourceLayer, sourcePath] of space.closure({ layer, path: [] })) {
@@ -183,7 +183,7 @@ export interface ValidationInput {
 /** One chunk of a streamed validation: the verdicts produced since
  * the previous chunk, the phase and the layer being judged, and the
  * progress within the phase. The chunks concatenated are exactly
- * the full validation's verdicts, in order (ADR-0026). */
+ * the full validation's verdicts, in order (ADR-0108). */
 export interface ValidationChunk {
   phase: string;
   layer: LayerName | null;
@@ -230,7 +230,7 @@ export function* streamValidation({
     trahis: 0,
     couples: 0,
   };
-  // The declaration modes are three since ADR-0023: new, extend,
+  // The declaration modes are three since ADR-0106: new, extend,
   // override — the gestures the ontology measured, nothing else.
   for (const declaration of compilation.declarations) {
     if (declaration.mode === "new") stats.nouveau++;
@@ -316,8 +316,8 @@ export function* streamValidation({
     yield emit("déclarations", declaration.layer, declarationIndex + 1, compilation.declarations.length);
   }
 
-  // ---- the contracts: built-in for the algorithmic tags (ADR-0027),
-  // inline couples for the first-order ones (ADR-0022). A tag is known
+  // ---- the contracts: built-in for the algorithmic tags (ADR-0109),
+  // inline couples for the first-order ones (ADR-0105). A tag is known
   // if it has a built-in contract OR a readable couple definition.
   const contracts = registryContractsOf();
   const slotContracts = checkSlotContractsOf(contracts);
@@ -334,7 +334,7 @@ export function* streamValidation({
     yield emit("étiquettes", layer, layerIndex + 1, layerNames.length);
   }
 
-  // ---- (b2) the vacant checks (ADR-0018): a check carried but
+  // ---- (b2) the vacant checks (ADR-0101): a check carried but
   // unable to judge — a required slot unbound at the address the
   // contract makes it judge. The verdict answers for the acts that
   // CAN answer: a local POSE (the tag carried at the very address —
@@ -460,7 +460,7 @@ export function* streamValidation({
     }
     yield emit("tests", layer, layerIndex + 1, layerNames.length);
   }
-  // ---- (f) the check couples (ADR-0022): the declarative strate is
+  // ---- (f) the check couples (ADR-0105): the declarative strate is
   // data too — it is judged at assembly, never at execution. A couple
   // is never REPLACED: per name, per address, the sources of the
   // closure confront each other — a re-pose is tolerated only up to
@@ -588,7 +588,7 @@ export function* streamValidation({
 
 /** The API form of the validation: drain every chunk synchronously
  * and return the full outcome — exactly what validateSpace always
- * answered (ADR-0026). */
+ * answered (ADR-0108). */
 export function collectValidation(
   stream: Generator<ValidationChunk, ValidationOutcome, void>,
 ): ValidationOutcome {
