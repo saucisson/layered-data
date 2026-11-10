@@ -18,7 +18,12 @@ import type { BilingualText } from "./i18n.ts";
 export const LENS_LAYERS = ["graph-display", "petrinet-display", "kahn-display"];
 
 /** The viewpoint layers of the workshop. */
-export const VIEWPOINT_LAYERS = ["petrinet-view", "pn-philosophers-5-course", "kahn-course", "wb-course"];
+export const VIEWPOINT_LAYERS = [
+  "petrinet-view",
+  "pn-philosophers-5-course",
+  "kahn-course",
+  "wb-course",
+];
 
 /** The description of each look — bilingual UI data. */
 export const VIEW_NOTES: Record<string, BilingualText> = {
@@ -69,11 +74,19 @@ export function parentWithinGroup({
   members: string[];
 }): string | null {
   try {
-    const refinements: any = space.read({ layer: asLayerName(layer), path: asLayerPath([]), key: "refines" });
+    const refinements: any = space.read({
+      layer: asLayerName(layer),
+      path: asLayerPath([]),
+      key: "refines",
+    });
     if (!Array.isArray(refinements)) return null;
     for (const entry of refinements) {
       if (entry instanceof LayerReference && members.includes(entry.layer)) return entry.layer;
-      if (entry instanceof PathReference && entry.path.length === 0 && members.includes(entry.anchor)) {
+      if (
+        entry instanceof PathReference &&
+        entry.path.length === 0 &&
+        members.includes(entry.anchor)
+      ) {
         return entry.anchor;
       }
     }
@@ -107,7 +120,13 @@ export function groupTree({ space, members }: { space: Space; members: string[] 
 /** Circle layout: when the viewpoint decides no positions, the
  * drawing stays readable — every vertex on a circle of the frame
  * (270×220), one lone vertex at the center. */
-export function circlePosition({ index, total }: { index: number; total: number }): { x: number; y: number } | null {
+export function circlePosition({
+  index,
+  total,
+}: {
+  index: number;
+  total: number;
+}): { x: number; y: number } | null {
   if (total <= 0) return null;
   if (total === 1) return { x: 135, y: 110 };
   const angle = -Math.PI / 2 + (2 * Math.PI * index) / total;
@@ -140,7 +159,15 @@ export function resolvedPosition({
 
 /** The resolved position of a named object within one source
  * layer's `positions` collection. */
-export function positionOf({ space, source, name }: { space: Space; source: string; name: string }): {
+export function positionOf({
+  space,
+  source,
+  name,
+}: {
+  space: Space;
+  source: string;
+  name: string;
+}): {
   x: number;
   y: number;
 } | null {

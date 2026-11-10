@@ -23,7 +23,11 @@ export function AccessCodeForm({ language }: { language: Language }) {
         );
       } else if (response.status === 401) {
         setStateMessage(
-          say({ language, en: "code refused — the proxy is protected", fr: "code refusé — le proxy est protégé" }),
+          say({
+            language,
+            en: "code refused — the proxy is protected",
+            fr: "code refusé — le proxy est protégé",
+          }),
         );
       } else {
         setStateMessage(

@@ -28,8 +28,14 @@ export function ValidationPanel({
         <span className="ml-1 font-normal text-slate-400">
           {say({
             language,
-            en: "the single source — " + stats.couches + " declared layers, " + stats.decl + " acts",
-            fr: "la source unique — " + stats.couches + " couches déclarées, " + stats.decl + " actes",
+            en:
+              "the single source — " + stats.couches + " declared layers, " + stats.decl + " acts",
+            fr:
+              "la source unique — " +
+              stats.couches +
+              " couches déclarées, " +
+              stats.decl +
+              " actes",
           })}
         </span>
       </h3>
@@ -103,7 +109,11 @@ export function ValidationPanel({
         </span>
         <span>
           <span className="font-semibold text-slate-700">{stats.surcharge}</span>{" "}
-          {say({ language, en: "overrides (declared shadows)", fr: "surcharges (ombres déclarées)" })}
+          {say({
+            language,
+            en: "overrides (declared shadows)",
+            fr: "surcharges (ombres déclarées)",
+          })}
         </span>
         <span>
           <span className="font-semibold text-slate-700">{stats.ombresDeclarées}</span>{" "}

@@ -14,10 +14,7 @@ import React, { useMemo, useState } from "react";
 import type { LayerName } from "../domain/identifiers.ts";
 import type { Space } from "../domain/space.ts";
 import type { Language } from "../domain/messages.ts";
-import {
-  countListingLines,
-  listingVisibleLines,
-} from "./tutorialMarkdown.ts";
+import { countListingLines, listingVisibleLines } from "./tutorialMarkdown.ts";
 import {
   writeFlattenedLayerSections,
   type FlattenedSection,
@@ -37,7 +34,13 @@ const OPEN_LISTING_LINES = 250;
 
 /** The fold key of every section that has children, in walk order —
  * the fold is a set of keys, never an index in a flat list. */
-function collectFoldKeys({ sections, prefix }: { sections: FlattenedSection[]; prefix: string }): string[] {
+function collectFoldKeys({
+  sections,
+  prefix,
+}: {
+  sections: FlattenedSection[];
+  prefix: string;
+}): string[] {
   const keys: string[] = [];
   sections.forEach((section, index) => {
     const key = prefix + index;
@@ -63,7 +66,9 @@ export function TutorialListing({
   const text = useMemo(() => writeFlattenedLayerSections({ space, layer }), [space, layer]);
   const visible = useMemo(() => listingVisibleLines({ sections: text.sections }), [text]);
   const [folded, setFolded] = useState<Set<string>>(() =>
-    visible > OPEN_LISTING_LINES ? new Set(collectFoldKeys({ sections: text.sections, prefix: "" })) : new Set(),
+    visible > OPEN_LISTING_LINES
+      ? new Set(collectFoldKeys({ sections: text.sections, prefix: "" }))
+      : new Set(),
   );
   const [cascade, setCascade] = useState<SourceLineTarget[]>([]);
 
@@ -159,7 +164,9 @@ export function TutorialListing({
   return (
     <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-1.5">
-        <span className="font-mono text-xs font-semibold text-slate-700">{"layer " + layer + "-flat"}</span>
+        <span className="font-mono text-xs font-semibold text-slate-700">
+          {"layer " + layer + "-flat"}
+        </span>
         <span className="flex items-center gap-2">
           <button
             onClick={() => setFolded(new Set())}
@@ -179,7 +186,9 @@ export function TutorialListing({
       </div>
       <div className="max-h-[32rem] overflow-auto px-3 py-2 font-mono text-[11px] leading-5">
         <p className="mb-1 text-slate-400">{text.headerLines[1]}</p>
-        {text.sections.map((section, index) => renderSection({ section, key: String(index), depth: 0 }))}
+        {text.sections.map((section, index) =>
+          renderSection({ section, key: String(index), depth: 0 }),
+        )}
       </div>
       {cascade.length > 0 && (
         <div className="border-t border-slate-200 bg-slate-50 p-2">

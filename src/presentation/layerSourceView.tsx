@@ -16,8 +16,14 @@ import type { Language } from "../domain/messages.ts";
 /** The acts of the grammar, as highlighted: keywords, references,
  * strings, numbers, comments, identifiers, punctuation. */
 const LANGUAGE_KEYWORDS = new Set([
-  "layer", "refines", "extend", "override", "bind", "check",
-  "abstract", "then",
+  "layer",
+  "refines",
+  "extend",
+  "override",
+  "bind",
+  "check",
+  "abstract",
+  "then",
 ]);
 
 /** Where a written line points: the address (layer + path) and,
@@ -31,7 +37,11 @@ export interface SourceLineTarget {
 /** The line-target table: each line of the layer source designates the
  * address it writes. The acts carry their line; the walk is pure,
  * at load time, over the parsed layers. */
-export function buildSourceLineTargets({ parsedLanguage }: { parsedLanguage: ParsedLanguage }): Map<number, SourceLineTarget> {
+export function buildSourceLineTargets({
+  parsedLanguage,
+}: {
+  parsedLanguage: ParsedLanguage;
+}): Map<number, SourceLineTarget> {
   const targets = new Map<number, SourceLineTarget>();
   for (const parsedLayer of parsedLanguage.layers) {
     targets.set(parsedLayer.line, { layer: parsedLayer.name, path: [], key: null });
@@ -97,7 +107,8 @@ export function highlightSourceLine(line: string): { text: string; kind: string 
       let end = index + 1;
       while (end < line.length && /[A-Za-z0-9_-]/.test(line[end] ?? "")) end++;
       while (
-        line[end] === "/" && line[end + 1] !== undefined &&
+        line[end] === "/" &&
+        line[end + 1] !== undefined &&
         /[A-Za-z0-9_-]/.test(line[end + 1] ?? "")
       ) {
         end++;
@@ -184,19 +195,25 @@ export function LayerSourceView({
       <div className="max-h-80 overflow-auto rounded-md border border-slate-100 bg-slate-50/50 p-2 font-mono text-[11px] leading-4">
         {block === null ? (
           <div className="py-1 text-xs text-slate-400">
-            {say({ language, en: "layer unknown to the geologist", fr: "couche inconnue du géologue" })}
+            {say({
+              language,
+              en: "layer unknown to the geologist",
+              fr: "couche inconnue du géologue",
+            })}
           </div>
         ) : (
           block.split("\n").map((line, index) => {
             // Displayed line `index` (0-based) is the source line
             // parsedLayer.line + index: the block is extracted from
             // its "layer" line.
-            const lineTarget = parsedLayer !== null ? sourceLineTargets.get(parsedLayer.line + index) : undefined;
+            const lineTarget =
+              parsedLayer !== null ? sourceLineTargets.get(parsedLayer.line + index) : undefined;
             return (
               <div
                 key={index}
                 className={
-                  "flex " + (lineTarget !== undefined ? "cursor-pointer hover:bg-slate-100 rounded" : "")
+                  "flex " +
+                  (lineTarget !== undefined ? "cursor-pointer hover:bg-slate-100 rounded" : "")
                 }
                 onClick={lineTarget !== undefined ? () => onLine(lineTarget) : undefined}
                 title={
@@ -205,12 +222,16 @@ export function LayerSourceView({
                         language,
                         en:
                           "open what this line writes — address " +
-                          lineTarget.layer + "/" + (lineTarget.path.length ? lineTarget.path.join("/") : "()") +
+                          lineTarget.layer +
+                          "/" +
+                          (lineTarget.path.length ? lineTarget.path.join("/") : "()") +
                           (lineTarget.key !== null ? " :: " + lineTarget.key : "") +
                           " : the cascade opens there",
                         fr:
                           "ouvrir ce que cette ligne écrit — adresse " +
-                          lineTarget.layer + "/" + (lineTarget.path.length ? lineTarget.path.join("/") : "()") +
+                          lineTarget.layer +
+                          "/" +
+                          (lineTarget.path.length ? lineTarget.path.join("/") : "()") +
                           (lineTarget.key !== null ? " :: " + lineTarget.key : "") +
                           " : la cascade s'y ouvre",
                       })

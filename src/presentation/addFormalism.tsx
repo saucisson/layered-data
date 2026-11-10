@@ -52,7 +52,9 @@ export function AddFormalismComposer({
   const [proposalOrigin, setProposalOrigin] = useState<string | null>(null);
   const [composerResult, setComposerResult] = useState<ComposerResult | null>(null);
   const [busy, setBusy] = useState(false);
-  const [stagingProgress, setStagingProgress] = useState<{ done: number; total: number } | null>(null);
+  const [stagingProgress, setStagingProgress] = useState<{ done: number; total: number } | null>(
+    null,
+  );
 
   async function requestProposal() {
     setBusy(true);
@@ -239,7 +241,9 @@ export function AddFormalismComposer({
                 })}
               </div>
               {composerResult.errors.map((error, index) => (
-                <div key={index} className="font-mono">{error}</div>
+                <div key={index} className="font-mono">
+                  {error}
+                </div>
               ))}
             </div>
           )}

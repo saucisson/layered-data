@@ -82,10 +82,15 @@ export function buildWorkshopLook({
   // relative), otherwise the circle layout takes over.
   const viewpointDecidesPositions =
     !isLens &&
-    space.read({ layer: asLayerName(selectedView), path: asLayerPath([]), key: "positions" }) instanceof AddressView;
+    space.read({
+      layer: asLayerName(selectedView),
+      path: asLayerPath([]),
+      key: "positions",
+    }) instanceof AddressView;
   const modelCarriesPositions =
     lens !== null &&
-    space.read({ layer: asLayerName(model), path: asLayerPath([]), key: "positions" }) instanceof AddressView;
+    space.read({ layer: asLayerName(model), path: asLayerPath([]), key: "positions" }) instanceof
+      AddressView;
   const positionOfName = (name: string, index: number, all: string[]) =>
     (viewpointDecidesPositions ? positionOf({ space, source: selectedView, name }) : null) ??
     (modelCarriesPositions ? positionOf({ space, source: model, name }) : null) ??
@@ -155,8 +160,10 @@ export function buildWorkshopLook({
             name,
             drawn,
             weight,
-            from: source instanceof AddressView ? (source.path[source.path.length - 1] ?? null) : null,
-            to: target instanceof AddressView ? (target.path[target.path.length - 1] ?? null) : null,
+            from:
+              source instanceof AddressView ? (source.path[source.path.length - 1] ?? null) : null,
+            to:
+              target instanceof AddressView ? (target.path[target.path.length - 1] ?? null) : null,
           };
         })
       : [];
