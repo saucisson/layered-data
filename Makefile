@@ -25,7 +25,10 @@ help:
 	@echo "  vscode-install - Package the VS Code extension (.vsix via vsce/npx) and install it locally"
 
 # Quality gates (ADR-0008)
-verify: typecheck test build
+check-structure:
+	npm run check:structure
+
+verify: typecheck check-structure test build
 
 verify-ci:
 	npm run typecheck
@@ -93,7 +96,8 @@ day-report:
 	@echo ""
 	@echo "Current status of daily branch:"
 	@npm run verify 2>&1 | tail -5
-	smoke-test:
+
+smoke-test:
 	@echo "Running smoke tests..."
 	@npm run verify
 	@echo "Smoke tests complete."
