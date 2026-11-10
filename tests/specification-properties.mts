@@ -850,7 +850,7 @@ for (const removed of KERNEL_LAYER_NAMES) {
 }
 check(
   "T2 (conservativity): removing any layer with its whole posterity disturbs nothing outside — closures, keys, reads identical (measured: 0 disturbances)",
-  conservativityDisturbances === 0,
+  conservativityDisturbances === 0 && conservativityComparisons > 0,
 );
 
 // T3 — MONOTONY. Growing the assembly from the most recent layers up
@@ -876,7 +876,7 @@ for (let step = 1; step < assemblyOrder.length; step++) {
 }
 check(
   "T3 (monotony): growing the assembly can only grow the enumeration — no arrival removes a key at any old address (measured: 0 removals)",
-  monotonyRemovals === 0,
+  monotonyRemovals === 0 && monotonyComparisons > 0,
 );
 
 // T3's couple clause — the mechanism: a check couple is never

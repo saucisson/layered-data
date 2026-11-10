@@ -202,7 +202,9 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
       (globalThis as any).navigator?.clipboard?.writeText?.(
         addressText([layer, path]) + (selectedKey ? " :: " + selectedKey : "")
       );
-    } catch {}
+    } catch {
+      // clipboard unavailable: the copy is best-effort
+    }
     setCopied(true);
   }
 
@@ -1492,4 +1494,3 @@ export function WorkshopPage({ language, onChooseLanguage }: { language: Languag
   );
 }
 
-export default WorkshopPage;

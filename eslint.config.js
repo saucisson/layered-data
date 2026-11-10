@@ -5,11 +5,23 @@
 import js from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+import reactHooks from "eslint-plugin-react-hooks";
 
 // The onion: src/domain <- src/application <- src/presentation <- src/App.tsx.
 // Each zone may import the zones to its LEFT (inward), never its right.
 const ZONES = [
-  { zone: "src/domain", forbid: ["application", "presentation", "pages", "components", "infrastructure", "App.tsx", "WorkshopContainer.tsx"] },
+  {
+    zone: "src/domain",
+    forbid: [
+      "application",
+      "presentation",
+      "pages",
+      "components",
+      "infrastructure",
+      "App.tsx",
+      "WorkshopContainer.tsx",
+    ],
+  },
   { zone: "src/application", forbid: ["presentation", "pages", "components", "App.tsx", "WorkshopContainer.tsx"] },
   { zone: "src/presentation", forbid: ["App.tsx", "WorkshopContainer.tsx"] },
   { zone: "src/pages", forbid: ["App.tsx", "WorkshopContainer.tsx"] },
@@ -40,6 +52,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ["src/**/*.{ts,tsx}", "server/**/*.ts", "tests/**/*.mts"],
+    plugins: { "react-hooks": reactHooks },
     languageOptions: {
       globals: { ...globals.browser, ...globals.node },
       parserOptions: {
@@ -49,7 +62,6 @@ export default tseslint.config(
     },
     rules: {
       // ---- the house rules, mechanical ----
-      "no-console": "error",
       "no-restricted-syntax": [
         "error",
         {
@@ -59,7 +71,13 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      ...reactHooks.configs.recommended.rules,
     },
+  },
+  {
+    // console is the harnesses' report channel in tests/; banned in src/ and server/
+    files: ["src/**/*.{ts,tsx}", "server/**/*.ts"],
+    rules: { "no-console": "error" },
   },
   ...boundaryBlocks,
 );
