@@ -22,14 +22,35 @@ import {
   messageCodes,
   renderMessage,
 } from "../src/domain/messages.ts";
-import { bilingualParityOf, editionRefusalLabel, EDITION_REFUSAL_LABEL, localized, say } from "../src/presentation/i18n.ts";
+import {
+  bilingualParityOf,
+  editionRefusalLabel,
+  EDITION_REFUSAL_LABEL,
+  localized,
+  say,
+} from "../src/presentation/i18n.ts";
 import { WORKSHOP_SCENARIOS } from "../src/presentation/scenarios.ts";
-import { LENS_LAYERS, shapeLabel, VIEWPOINT_LAYERS, VIEW_NOTES } from "../src/presentation/viewTree.ts";
-import { LAYER_ROLE, layerRoleNames } from "../src/presentation/workshopInventory.ts";
-import { detectBrowserLanguage, readWorkshopLanguage, writeWorkshopLanguage } from "../src/infrastructure/browserLanguage.ts";
+import {
+  LENS_LAYERS,
+  shapeLabel,
+  VIEWPOINT_LAYERS,
+  VIEW_NOTES,
+} from "../src/presentation/viewTree.ts";
+import {
+  LAYER_ROLE,
+  layerRoleNames,
+} from "../src/presentation/workshopInventory.ts";
+import {
+  detectBrowserLanguage,
+  readWorkshopLanguage,
+  writeWorkshopLanguage,
+} from "../src/infrastructure/browserLanguage.ts";
 import { asLayerName } from "../src/domain/identifiers.ts";
 import { TUTORIAL_LAYER_NAMES } from "../src/application/corpus.ts";
-import { listingLayersOf, parseTutorialMarkdown } from "../src/presentation/tutorialMarkdown.ts";
+import {
+  listingLayersOf,
+  parseTutorialMarkdown,
+} from "../src/presentation/tutorialMarkdown.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -49,13 +70,20 @@ function check(label: string, condition: boolean): void {
 // literal or a computed value throws: the data stays plain on
 // purpose, and anything fancier deserves a loud failure.
 
-type DataValue = string | number | boolean | null | DataValue[] | { [key: string]: DataValue };
+type DataValue =
+  string | number | boolean | null | DataValue[] | { [key: string]: DataValue };
 
 function skipInsignificant(source: string, position: number): number {
   let index = position;
   while (index < source.length) {
     const character = source[index];
-    if (character === " " || character === "\n" || character === "\r" || character === "\t" || character === ",") {
+    if (
+      character === " " ||
+      character === "\n" ||
+      character === "\r" ||
+      character === "\t" ||
+      character === ","
+    ) {
       index++;
       continue;
     }
@@ -72,7 +100,10 @@ function skipInsignificant(source: string, position: number): number {
   return index;
 }
 
-function parseValue(source: string, start: number): { value: DataValue; end: number } {
+function parseValue(
+  source: string,
+  start: number,
+): { value: DataValue; end: number } {
   const position = skipInsignificant(source, start);
   const character = source[position];
   if (character === "{") {
@@ -86,7 +117,11 @@ function parseValue(source: string, start: number): { value: DataValue; end: num
         key = source.slice(index + 1, keyEnd);
         index = keyEnd + 1;
       } else {
-        while (index < source.length && /[A-Za-z0-9_$\u00C0-\u00FF]/.test(source[index] ?? "")) index++;
+        while (
+          index < source.length &&
+          /[A-Za-z0-9_$\u00C0-\u00FF]/.test(source[index] ?? "")
+        )
+          index++;
         key = source.slice(keyStart, index);
       }
       index = skipInsignificant(source, index);
@@ -122,18 +157,38 @@ function parseValue(source: string, start: number): { value: DataValue; end: num
     }
     return { value: text, end: index + 1 };
   }
-  const match = /^(?:true|false|null|-?[0-9][0-9_.]*)/.exec(source.slice(position));
+  const match = /^(?:true|false|null|-?[0-9][0-9_.]*)/.exec(
+    source.slice(position),
+  );
   if (match === null) {
-    throw new Error("unparseable literal at offset " + position + ": " + source.slice(position, position + 40));
+    throw new Error(
+      "unparseable literal at offset " +
+        position +
+        ": " +
+        source.slice(position, position + 40),
+    );
   }
   const text = at(match, 0);
   return {
-    value: text === "true" ? true : text === "false" ? false : text === "null" ? null : Number(text),
+    value:
+      text === "true"
+        ? true
+        : text === "false"
+          ? false
+          : text === "null"
+            ? null
+            : Number(text),
     end: position + text.length,
   };
 }
 
-function readExportedData({ file, declaration }: { file: string; declaration: string }): DataValue {
+function readExportedData({
+  file,
+  declaration,
+}: {
+  file: string;
+  declaration: string;
+}): DataValue {
   const source = readFileSync(file, "utf8");
   const exported = source.indexOf("export const " + declaration);
   const plain = source.indexOf("const " + declaration);
@@ -141,17 +196,23 @@ function readExportedData({ file, declaration }: { file: string; declaration: st
   if (start === -1) throw new Error("declaration not found: " + declaration);
   const equals = source.indexOf("=", start);
   const open = Math.min(
-    ...[source.indexOf("{", equals), source.indexOf("[", equals)].filter((index) => index !== -1),
+    ...[source.indexOf("{", equals), source.indexOf("[", equals)].filter(
+      (index) => index !== -1,
+    ),
   );
   return parseValue(source, open).value;
 }
 
-const presentationDirectory = join(import.meta.dirname, "..", "src", "presentation");
+const presentationDirectory = join(
+  import.meta.dirname,
+  "..",
+  "src",
+  "presentation",
+);
 
 // =====================================================================
 // the domain messages
 // =====================================================================
-
 
 /** Indexed access in assertions: a missing element is a test failure,
  * not a silent undefined. */
@@ -163,7 +224,10 @@ function at<T>(list: readonly T[], index: number): T {
 
 check(
   "the workshop speaks exactly two languages, English by default",
-  DEFAULT_LANGUAGE === "en" && MESSAGE_LANGUAGES.length === 2 && at(MESSAGE_LANGUAGES, 0) === "en" && at(MESSAGE_LANGUAGES, 1) === "fr",
+  DEFAULT_LANGUAGE === "en" &&
+    MESSAGE_LANGUAGES.length === 2 &&
+    at(MESSAGE_LANGUAGES, 0) === "en" &&
+    at(MESSAGE_LANGUAGES, 1) === "fr",
 );
 
 const emptyRenderingCodes = new Set(["cycle-guard"]);
@@ -179,22 +243,31 @@ check(
 
 check(
   "an unknown message code renders as itself with its parameters — total, never an exception",
-  renderMessage({ message: fact("no-such-code", { layer: "wb1" }), language: "en" }) ===
-    'no-such-code {"layer":"wb1"}' &&
-    renderMessage({ message: fact("no-such-code"), language: "fr" }) === "no-such-code",
+  renderMessage({
+    message: fact("no-such-code", { layer: "wb1" }),
+    language: "en",
+  }) === 'no-such-code {"layer":"wb1"}' &&
+    renderMessage({ message: fact("no-such-code"), language: "fr" }) ===
+      "no-such-code",
 );
 
 check(
   "the kernel vocabulary keeps the historic code as its French label and translates it in English",
   Object.entries(VOCABULARY).every(
-    ([code, entry]) => entry.fr === code && entry.en.length > 0 && kernelLabel({ code, language: "fr" }) === code,
+    ([code, entry]) =>
+      entry.fr === code &&
+      entry.en.length > 0 &&
+      kernelLabel({ code, language: "fr" }) === code,
   ),
 );
 
 check(
   "kernelLabel renders the vocabulary in both tongues and an unknown code as itself",
-  Object.keys(VOCABULARY).every((code) => kernelLabel({ code, language: "en" }).length > 0) &&
-    kernelLabel({ code: "code-hors-vocabulaire", language: "en" }) === "code-hors-vocabulaire",
+  Object.keys(VOCABULARY).every(
+    (code) => kernelLabel({ code, language: "en" }).length > 0,
+  ) &&
+    kernelLabel({ code: "code-hors-vocabulaire", language: "en" }) ===
+      "code-hors-vocabulaire",
 );
 
 // The codes the panels display: the statuses of the closure, the
@@ -226,18 +299,30 @@ check(
 
 check(
   "say picks the tongue and localized renders a bilingual entry, English by default",
-  say({ language: "en", en: "the workshop", fr: "l'atelier" }) === "the workshop" &&
-    say({ language: "fr", en: "the workshop", fr: "l'atelier" }) === "l'atelier" &&
-    localized({ language: "en", text: { en: "the layers", fr: "les couches" } }) === "the layers" &&
-    localized({ language: "fr", text: { en: "the layers", fr: "les couches" } }) === "les couches",
+  say({ language: "en", en: "the workshop", fr: "l'atelier" }) ===
+    "the workshop" &&
+    say({ language: "fr", en: "the workshop", fr: "l'atelier" }) ===
+      "l'atelier" &&
+    localized({
+      language: "en",
+      text: { en: "the layers", fr: "les couches" },
+    }) === "the layers" &&
+    localized({
+      language: "fr",
+      text: { en: "the layers", fr: "les couches" },
+    }) === "les couches",
 );
 
 check(
   "the edition refusals carry a bilingual label, unknown codes render as themselves",
-  Object.entries(EDITION_REFUSAL_LABEL).every(([code, entry]) =>
-    bilingualParityOf(entry) &&
-    editionRefusalLabel({ code, language: "en" }) !== editionRefusalLabel({ code, language: "fr" }),
-  ) && editionRefusalLabel({ code: "code-inconnu", language: "en" }) === "code-inconnu",
+  Object.entries(EDITION_REFUSAL_LABEL).every(
+    ([code, entry]) =>
+      bilingualParityOf(entry) &&
+      editionRefusalLabel({ code, language: "en" }) !==
+        editionRefusalLabel({ code, language: "fr" }),
+  ) &&
+    editionRefusalLabel({ code: "code-inconnu", language: "en" }) ===
+      "code-inconnu",
 );
 
 check(
@@ -246,9 +331,12 @@ check(
     shapeLabel({ shape: null, language: "fr" }) === "sans forme" &&
     shapeLabel({ shape: { shape: "circle" }, language: "en" }) === "circle" &&
     shapeLabel({ shape: { shape: "circle" }, language: "fr" }) === "cercle" &&
-    shapeLabel({ shape: { shape: "line", ports: 2 }, language: "en" }) === "2-port arc" &&
-    shapeLabel({ shape: { shape: "line", ports: 2 }, language: "fr" }) === "arc à 2 ports" &&
-    shapeLabel({ shape: { shape: "unknown-kind" }, language: "fr" }) === "unknown-kind",
+    shapeLabel({ shape: { shape: "line", ports: 2 }, language: "en" }) ===
+      "2-port arc" &&
+    shapeLabel({ shape: { shape: "line", ports: 2 }, language: "fr" }) ===
+      "arc à 2 ports" &&
+    shapeLabel({ shape: { shape: "unknown-kind" }, language: "fr" }) ===
+      "unknown-kind",
 );
 
 check(
@@ -265,10 +353,11 @@ check(
 check(
   "the guided tour keeps its fourteen scenarios, bilingual in label and text",
   WORKSHOP_SCENARIOS.length === 14 &&
-    WORKSHOP_SCENARIOS.every((scenario, index) =>
-      scenario.id === "S" + (index + 1) &&
-      bilingualParityOf(scenario.label) &&
-      bilingualParityOf(scenario.text),
+    WORKSHOP_SCENARIOS.every(
+      (scenario, index) =>
+        scenario.id === "S" + (index + 1) &&
+        bilingualParityOf(scenario.label) &&
+        bilingualParityOf(scenario.text),
     ),
 );
 
@@ -293,8 +382,14 @@ check(
 // the glossary, the tutorial, the diagnostics fold (parsed sources)
 // =====================================================================
 
-const glossary = readExportedData({ file: join(presentationDirectory, "notions.tsx"), declaration: "GLOSSARY" }) as {
-  [id: string]: { term: { en: string; fr: string }; definition: { en: string; fr: string } };
+const glossary = readExportedData({
+  file: join(presentationDirectory, "notions.tsx"),
+  declaration: "GLOSSARY",
+}) as {
+  [id: string]: {
+    term: { en: string; fr: string };
+    definition: { en: string; fr: string };
+  };
 };
 const glossaryIds = Object.keys(glossary);
 check(
@@ -339,17 +434,25 @@ check(
 // tutorial corpus at run time — never a frozen copy.
 
 const tutorialMarkdownSource = (language: string) =>
-  readFileSync(join(presentationDirectory, "tutorial." + language + ".md"), "utf8");
+  readFileSync(
+    join(presentationDirectory, "tutorial." + language + ".md"),
+    "utf8",
+  );
 const tutorialBlocks = (language: string) =>
   parseTutorialMarkdown({ source: tutorialMarkdownSource(language) });
 const tutorialShape = (language: string) =>
   tutorialBlocks(language).map((block) =>
-    block.kind === "heading" ? "h" + block.level : block.kind === "listing" ? "listing:" + block.layer : block.kind,
+    block.kind === "heading"
+      ? "h" + block.level
+      : block.kind === "listing"
+        ? "listing:" + block.layer
+        : block.kind,
   );
 
 check(
   "the tutorial markdown pair parses — both tongues exist and non-empty",
-  tutorialMarkdownSource("en").length > 0 && tutorialMarkdownSource("fr").length > 0,
+  tutorialMarkdownSource("en").length > 0 &&
+    tutorialMarkdownSource("fr").length > 0,
 );
 check(
   "the tutorial walks the same route in both tongues — the block shapes agree, listing by listing",
@@ -357,9 +460,13 @@ check(
 );
 check(
   "every tutorial listing names a layer of the tutorial corpus, and every tutorial layer gets its listing",
-  listingLayersOf({ blocks: tutorialBlocks("en") }).every((layer) => TUTORIAL_LAYER_NAMES.includes(asLayerName(layer))) &&
+  listingLayersOf({ blocks: tutorialBlocks("en") }).every((layer) =>
+    TUTORIAL_LAYER_NAMES.includes(asLayerName(layer)),
+  ) &&
     [...TUTORIAL_LAYER_NAMES].sort().join(",") ===
-      [...new Set(listingLayersOf({ blocks: tutorialBlocks("en") }))].sort().join(","),
+      [...new Set(listingLayersOf({ blocks: tutorialBlocks("en") }))]
+        .sort()
+        .join(","),
 );
 check(
   "every ⟪…⟫ mark in the tutorial cites the glossary, in the tongue's own term",
@@ -372,20 +479,29 @@ check(
       knownTerms.add(entry.term.en.toLowerCase());
       knownTerms.add(entry.term.fr.toLowerCase());
     }
-    const marks = [...tutorialMarkdownSource(language).matchAll(/⟪([^⟫]+)⟫/g)].map((match) =>
-      at(match, 1).trim().toLowerCase(),
-    );
+    const marks = [
+      ...tutorialMarkdownSource(language).matchAll(/⟪([^⟫]+)⟫/g),
+    ].map((match) => at(match, 1).trim().toLowerCase());
     return marks.length > 0 && marks.every((mark) => knownTerms.has(mark));
   }),
 );
 
-const diagnosticLabels = readExportedData({ file: join(presentationDirectory, "diagnosticsPanel.tsx"), declaration: "DIAGNOSTIC_LABELS" }) as {
-  [kind: string]: { label: { en: string; fr: string }; note: { en: string; fr: string } };
+const diagnosticLabels = readExportedData({
+  file: join(presentationDirectory, "diagnosticsPanel.tsx"),
+  declaration: "DIAGNOSTIC_LABELS",
+}) as {
+  [kind: string]: {
+    label: { en: string; fr: string };
+    note: { en: string; fr: string };
+  };
 };
 check(
   "the diagnostics fold labels every kind bilingually, label and note, and every kind lives in the vocabulary",
-  Object.entries(diagnosticLabels).every(([kind, entry]) =>
-    bilingualParityOf(entry.label) && bilingualParityOf(entry.note) && VOCABULARY[kind] !== undefined,
+  Object.entries(diagnosticLabels).every(
+    ([kind, entry]) =>
+      bilingualParityOf(entry.label) &&
+      bilingualParityOf(entry.note) &&
+      VOCABULARY[kind] !== undefined,
   ),
 );
 
@@ -393,21 +509,33 @@ check(
 // the geologist's instructions (server source — both tongues follow VERSION)
 // =====================================================================
 
-const promptsSource = readFileSync(join(import.meta.dirname, "..", "server", "geologistPrompts.ts"), "utf8");
-const configSource = readFileSync(join(import.meta.dirname, "..", "server", "config.ts"), "utf8");
+const promptsSource = readFileSync(
+  join(import.meta.dirname, "..", "server", "geologistPrompts.ts"),
+  "utf8",
+);
+const configSource = readFileSync(
+  join(import.meta.dirname, "..", "server", "config.ts"),
+  "utf8",
+);
 check(
   "the geologist's system prompt speaks both workshop tongues, English by default, both following VERSION",
   promptsSource.includes("PEN_INSTRUCTIONS_EN") &&
     promptsSource.includes("PEN_INSTRUCTIONS_FR") &&
     promptsSource.includes('penInstructions("en")') &&
-    configSource.includes("const VERSION = \"2.25.0\";"),
+    configSource.includes('const VERSION = "2.25.0";'),
 );
 
 // =====================================================================
 // the ledger
 // =====================================================================
 
-console.log("i18n checks: " + assertions + " assertions, " + failures.length + " failure(s)");
+console.log(
+  "i18n checks: " +
+    assertions +
+    " assertions, " +
+    failures.length +
+    " failure(s)",
+);
 for (const failure of failures) {
   console.log("FAIL " + failure);
 }

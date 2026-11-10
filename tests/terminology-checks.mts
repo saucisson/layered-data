@@ -35,13 +35,20 @@ function check(label: string, condition: boolean): void {
 // (no JSX stripping), and the data sections are plain literals —
 // the check reads exactly what the components render.
 
-type DataValue = string | number | boolean | null | DataValue[] | { [key: string]: DataValue };
+type DataValue =
+  string | number | boolean | null | DataValue[] | { [key: string]: DataValue };
 
 function skipInsignificant(source: string, position: number): number {
   let index = position;
   while (index < source.length) {
     const character = source[index];
-    if (character === " " || character === "\n" || character === "\r" || character === "\t" || character === ",") {
+    if (
+      character === " " ||
+      character === "\n" ||
+      character === "\r" ||
+      character === "\t" ||
+      character === ","
+    ) {
       index++;
       continue;
     }
@@ -58,7 +65,10 @@ function skipInsignificant(source: string, position: number): number {
   return index;
 }
 
-function parseValue(source: string, start: number): { value: DataValue; end: number } {
+function parseValue(
+  source: string,
+  start: number,
+): { value: DataValue; end: number } {
   const position = skipInsignificant(source, start);
   const character = source[position];
   if (character === "{") {
@@ -72,7 +82,11 @@ function parseValue(source: string, start: number): { value: DataValue; end: num
         key = source.slice(index + 1, keyEnd);
         index = keyEnd + 1;
       } else {
-        while (index < source.length && /[A-Za-z0-9_$\u00C0-\u00FF]/.test(source[index] ?? "")) index++;
+        while (
+          index < source.length &&
+          /[A-Za-z0-9_$\u00C0-\u00FF]/.test(source[index] ?? "")
+        )
+          index++;
         key = source.slice(keyStart, index);
       }
       index = skipInsignificant(source, index);
@@ -108,18 +122,38 @@ function parseValue(source: string, start: number): { value: DataValue; end: num
     }
     return { value: text, end: index + 1 };
   }
-  const match = /^(?:true|false|null|-?[0-9][0-9_.]*)/.exec(source.slice(position));
+  const match = /^(?:true|false|null|-?[0-9][0-9_.]*)/.exec(
+    source.slice(position),
+  );
   if (match === null) {
-    throw new Error("unparseable literal at offset " + position + ": " + source.slice(position, position + 40));
+    throw new Error(
+      "unparseable literal at offset " +
+        position +
+        ": " +
+        source.slice(position, position + 40),
+    );
   }
   const text = at(match, 0);
   return {
-    value: text === "true" ? true : text === "false" ? false : text === "null" ? null : Number(text),
+    value:
+      text === "true"
+        ? true
+        : text === "false"
+          ? false
+          : text === "null"
+            ? null
+            : Number(text),
     end: position + text.length,
   };
 }
 
-function readExportedData({ file, declaration }: { file: string; declaration: string }): DataValue {
+function readExportedData({
+  file,
+  declaration,
+}: {
+  file: string;
+  declaration: string;
+}): DataValue {
   const source = readFileSync(file, "utf8");
   const exported = source.indexOf("export const " + declaration);
   const plain = source.indexOf("const " + declaration);
@@ -127,7 +161,9 @@ function readExportedData({ file, declaration }: { file: string; declaration: st
   if (start === -1) throw new Error("declaration not found: " + declaration);
   const equals = source.indexOf("=", start);
   const open = Math.min(
-    ...[source.indexOf("{", equals), source.indexOf("[", equals)].filter((index) => index !== -1),
+    ...[source.indexOf("{", equals), source.indexOf("[", equals)].filter(
+      (index) => index !== -1,
+    ),
   );
   return parseValue(source, open).value;
 }
@@ -139,21 +175,34 @@ const presentationDirectory = join(rootDirectory, "src", "presentation");
 // the treaty's ledger — the glossary and the tutorial, parsed sources
 // =====================================================================
 
-const glossary = readExportedData({ file: join(presentationDirectory, "notions.tsx"), declaration: "GLOSSARY" }) as {
-  [id: string]: { term: { en: string; fr: string }; definition: { en: string; fr: string } };
+const glossary = readExportedData({
+  file: join(presentationDirectory, "notions.tsx"),
+  declaration: "GLOSSARY",
+}) as {
+  [id: string]: {
+    term: { en: string; fr: string };
+    definition: { en: string; fr: string };
+  };
 };
 const glossaryIds = Object.keys(glossary);
 
 // The tutorial is a markdown pair now — the prose each tongue renders
 // is the file itself, read whole.
 const tutorialMarkdownSource = (language: string) =>
-  readFileSync(join(presentationDirectory, "tutorial." + language + ".md"), "utf8");
+  readFileSync(
+    join(presentationDirectory, "tutorial." + language + ".md"),
+    "utf8",
+  );
 
 // The per-tongue prose: every string a tongue renders, walked from
 // the parsed data — { en: … } values feed the English corpus, { fr: … }
 // values the French one, the rest recurses (code blocks feed both —
 // they are the artifact, not the narration).
-function bilingualStringsOf(value: DataValue, tongue: string, into: string[]): void {
+function bilingualStringsOf(
+  value: DataValue,
+  tongue: string,
+  into: string[],
+): void {
   if (typeof value === "string") {
     into.push(value);
     return;
@@ -184,7 +233,6 @@ bilingualStringsOf(glossary as unknown as DataValue, "fr", frenchProse);
 // stratum 1 — the informatics words keep their adopted names
 // =====================================================================
 
-
 /** Indexed access in assertions: a missing element is a test failure,
  * not a silent undefined. */
 function at<T>(list: readonly T[], index: number): T {
@@ -202,7 +250,8 @@ check(
 
 check(
   "staging keeps its borrowed name inside French prose — la scène is retired",
-  frenchProse.some((text) => text.includes("staging")) && !frenchProse.some((text) => /\bscène\b/.test(text)),
+  frenchProse.some((text) => text.includes("staging")) &&
+    !frenchProse.some((text) => /\bscène\b/.test(text)),
 );
 
 // The retired narration words, measured over EVERY string literal of
@@ -225,8 +274,10 @@ const retiredNarration: { word: string; pattern: RegExp }[] = [
 
 function stringLiteralsOf(source: string): string[] {
   const literals: string[] = [];
-  for (const match of source.matchAll(/"((?:[^"\\\n]|\\.)*)"/g)) literals.push(at(match, 1));
-  for (const match of source.matchAll(/'((?:[^'\\\n]|\\.)*)'/g)) literals.push(at(match, 1));
+  for (const match of source.matchAll(/"((?:[^"\\\n]|\\.)*)"/g))
+    literals.push(at(match, 1));
+  for (const match of source.matchAll(/'((?:[^'\\\n]|\\.)*)'/g))
+    literals.push(at(match, 1));
   for (const match of source.matchAll(/`((?:[^`\\]|\\.)*)`/g)) {
     literals.push(at(match, 1).replace(/\$\{[^}]*\}/g, "…"));
   }
@@ -238,7 +289,8 @@ function sourceFilesUnder(directory: string): string[] {
   for (const entry of readdirSync(directory, { withFileTypes: true })) {
     const file = join(directory, entry.name);
     if (entry.isDirectory()) files.push(...sourceFilesUnder(file));
-    else if (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx")) files.push(file);
+    else if (entry.name.endsWith(".ts") || entry.name.endsWith(".tsx"))
+      files.push(file);
   }
   return files;
 }
@@ -258,29 +310,42 @@ everyLiteral.push(tutorialMarkdownSource("en"), tutorialMarkdownSource("fr"));
 
 check(
   "the retired story words appear in no string literal — the identifiers keep their names, the rendered text speaks the treaty",
-  everyLiteral.every((literal) => retiredNarration.every(({ pattern }) => !pattern.test(literal))),
+  everyLiteral.every((literal) =>
+    retiredNarration.every(({ pattern }) => !pattern.test(literal)),
+  ),
 );
 
 // =====================================================================
 // stratum 2 — the ⟪…⟫ marks cite the glossary, each tongue its term
 // =====================================================================
 
-const differingTerms = Object.values(glossary).filter((entry) => entry.term.en.toLowerCase() !== entry.term.fr.toLowerCase());
-const frenchCitedTerms = new Set(differingTerms.map((entry) => entry.term.fr.toLowerCase()));
-const englishCitedTerms = new Set(differingTerms.map((entry) => entry.term.en.toLowerCase()));
+const differingTerms = Object.values(glossary).filter(
+  (entry) => entry.term.en.toLowerCase() !== entry.term.fr.toLowerCase(),
+);
+const frenchCitedTerms = new Set(
+  differingTerms.map((entry) => entry.term.fr.toLowerCase()),
+);
+const englishCitedTerms = new Set(
+  differingTerms.map((entry) => entry.term.en.toLowerCase()),
+);
 
 function markedWordsOf(text: string): string[] {
   const words: string[] = [];
   let match: RegExpExecArray | null;
   const pattern = /⟪([^⟫]+)⟫/g;
-  while ((match = pattern.exec(text)) !== null) words.push(at(match, 1).trim().toLowerCase());
+  while ((match = pattern.exec(text)) !== null)
+    words.push(at(match, 1).trim().toLowerCase());
   return words;
 }
 
 check(
   "each tongue cites the glossary in its own term — a French word never wears the ⟪…⟫ marks inside English prose, nor the reverse",
-  englishProse.every((text) => markedWordsOf(text).every((word) => !frenchCitedTerms.has(word))) &&
-    frenchProse.every((text) => markedWordsOf(text).every((word) => !englishCitedTerms.has(word))),
+  englishProse.every((text) =>
+    markedWordsOf(text).every((word) => !frenchCitedTerms.has(word)),
+  ) &&
+    frenchProse.every((text) =>
+      markedWordsOf(text).every((word) => !englishCitedTerms.has(word)),
+    ),
 );
 
 // =====================================================================
@@ -322,7 +387,8 @@ check(
   EDITION_REFUSAL_LABEL["socle-édité"] !== undefined &&
     EDITION_REFUSAL_LABEL["socle-édité"].en.includes("bedrock") &&
     EDITION_REFUSAL_LABEL["socle-édité"].fr.includes("socle") &&
-    EDITION_REFUSAL_LABEL["socle-édité"].en !== EDITION_REFUSAL_LABEL["socle-édité"].fr &&
+    EDITION_REFUSAL_LABEL["socle-édité"].en !==
+      EDITION_REFUSAL_LABEL["socle-édité"].fr &&
     EDITION_REFUSAL_LABEL["tronc-édité"] === undefined,
 );
 
@@ -334,7 +400,10 @@ check(
     !tutorialMarkdownSource("en").includes("plume"),
 );
 
-const serverSource = [join(rootDirectory, "server.ts"), ...sourceFilesUnder(join(rootDirectory, "server"))]
+const serverSource = [
+  join(rootDirectory, "server.ts"),
+  ...sourceFilesUnder(join(rootDirectory, "server")),
+]
   .map((file) => readFileSync(file, "utf8"))
   .join("\n");
 
@@ -346,7 +415,8 @@ check(
 
 check(
   "the server announces the quarry and guards the bedrock at its protocol",
-  serverSource.includes("carrière Layered Data") && serverSource.includes("le socle est en lecture seule"),
+  serverSource.includes("carrière Layered Data") &&
+    serverSource.includes("le socle est en lecture seule"),
 );
 
 check(
@@ -358,7 +428,13 @@ check(
 // the ledger
 // =====================================================================
 
-console.log("terminology checks: " + assertions + " assertions, " + failures.length + " failure(s)");
+console.log(
+  "terminology checks: " +
+    assertions +
+    " assertions, " +
+    failures.length +
+    " failure(s)",
+);
 for (const failure of failures) {
   console.log("FAIL " + failure);
 }
