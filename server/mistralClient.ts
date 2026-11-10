@@ -24,9 +24,18 @@ export class PenInfraFailure {
 /** One call to the upstream model. The feedback of a previous
  * refusal travels with the instruction — the correction happens in
  * the model's own writing, the verdict vocabulary speaks to it. */
-export async function generateLayer({ instruction, feedback }: { instruction: string; feedback: string | null }): Promise<{ statusCode: number; body: string }> {
+export async function generateLayer({
+  instruction,
+  feedback,
+}: {
+  instruction: string;
+  feedback: string | null;
+}): Promise<{ statusCode: number; body: string }> {
   if (!MISTRAL_API_KEY) {
-    throw new PenInfraFailure({ statusCode: 500, body: "pas de clé Mistral configurée (MISTRAL_API_KEY) — le géologue reste local" });
+    throw new PenInfraFailure({
+      statusCode: 500,
+      body: "pas de clé Mistral configurée (MISTRAL_API_KEY) — le géologue reste local",
+    });
   }
   let upstreamResponse: Response;
   try {
@@ -37,21 +46,33 @@ export async function generateLayer({ instruction, feedback }: { instruction: st
         model: MISTRAL_MODEL,
         messages: [
           { role: "system", content: buildSystemPrompt() },
-          { role: "user", content: feedback === null ? instruction : instruction + "\n\n" + feedback },
+          {
+            role: "user",
+            content: feedback === null ? instruction : instruction + "\n\n" + feedback,
+          },
         ],
       }),
     });
   } catch (error) {
-    throw new PenInfraFailure({ statusCode: 502, body: "amont injoignable (" + MISTRAL_URL + ") : " + String((error as Error)?.message ?? error) });
+    throw new PenInfraFailure({
+      statusCode: 502,
+      body:
+        "amont injoignable (" + MISTRAL_URL + ") : " + String((error as Error)?.message ?? error),
+    });
   }
   if (!upstreamResponse.ok) {
     // The upstream error is passed through verbatim — a refused
     // key, an unknown model or an exhausted quota must not
     // disguise itself as a mute "bad gateway".
     const detail = (await upstreamResponse.text()).replace(/\s+/g, " ").slice(0, 300);
-    throw new PenInfraFailure({ statusCode: 502, body: "amont a répondu " + upstreamResponse.status + " (" + MISTRAL_MODEL + ") : " + detail });
+    throw new PenInfraFailure({
+      statusCode: 502,
+      body: "amont a répondu " + upstreamResponse.status + " (" + MISTRAL_MODEL + ") : " + detail,
+    });
   }
-  const data = (await upstreamResponse.json()) as { choices?: { message?: { content?: string } }[] };
+  const data = (await upstreamResponse.json()) as {
+    choices?: { message?: { content?: string } }[];
+  };
   const proposal = data?.choices?.[0]?.message?.content ?? "";
   if (!proposal.trim()) {
     throw new PenInfraFailure({ statusCode: 502, body: "le géologue n'a rien écrit" });
