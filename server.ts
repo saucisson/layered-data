@@ -29,7 +29,15 @@
 // ============================================================
 import { existsSync } from "node:fs";
 
-import { VERSION, PORT, HOST, API_TOKEN, MISTRAL_API_KEY, MAX_PEN_ATTEMPTS, environmentFilePath } from "./server/config.ts";
+import {
+  VERSION,
+  PORT,
+  HOST,
+  API_TOKEN,
+  MISTRAL_API_KEY,
+  MAX_PEN_ATTEMPTS,
+  environmentFilePath,
+} from "./server/config.ts";
 import { KERNEL_LAYER_NAMES } from "./server/layerStore.ts";
 import { createQuarryServer } from "./server/routes.ts";
 
@@ -37,9 +45,18 @@ const server = createQuarryServer();
 
 server.listen(PORT, HOST, () => {
   console.log("carrière Layered Data v" + VERSION + " sur http://" + HOST + ":" + PORT);
-  console.log("socle : " + KERNEL_LAYER_NAMES.length + " couches ; géologue vérifié : jusqu'à " + MAX_PEN_ATTEMPTS + " propositions jugées par le staging" + (MISTRAL_API_KEY ? "" : " (MISTRAL_API_KEY absente — le géologue reste local)"));
+  console.log(
+    "socle : " +
+      KERNEL_LAYER_NAMES.length +
+      " couches ; géologue vérifié : jusqu'à " +
+      MAX_PEN_ATTEMPTS +
+      " propositions jugées par le staging" +
+      (MISTRAL_API_KEY ? "" : " (MISTRAL_API_KEY absente — le géologue reste local)"),
+  );
   if (API_TOKEN === "changez-moi") {
-    console.log("ATTENTION : code d'accès par défaut « changez-moi » encore en place — posez API_TOKEN dans .env");
+    console.log(
+      "ATTENTION : code d'accès par défaut « changez-moi » encore en place — posez API_TOKEN dans .env",
+    );
   }
   if (existsSync(environmentFilePath)) {
     console.log(".env lu : " + environmentFilePath);
