@@ -9,7 +9,7 @@
 //   - `anchors` / `defaults` — anchor prefixes and default values;
 //   - `checks` — the check tags the node carries;
 //   - `check-definitions` — the check couples the node declares
-//     (ADR-0022): a check is a name, a level, its judgments — closed
+//     (ADR-0105): a check is a name, a level, its judgments — closed
 //     sentences in the reading language — and their message
 //     templates. The container is INTERNAL: the surface language
 //     fills it through the `check` act alone, it is never addressed

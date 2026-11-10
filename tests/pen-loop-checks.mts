@@ -239,7 +239,7 @@ check(
 );
 
 // =====================================================================
-// (g) the geologist cannot replace the bedrock (ADR-0020): a proposal
+// (g) the geologist cannot replace the bedrock (ADR-0103): a proposal
 //     claiming a bedrock name is refused « socle-occupé », the
 //     corrected proposal — a refinement — is accepted
 // =====================================================================

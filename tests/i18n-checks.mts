@@ -292,7 +292,7 @@ const glossary = readExportedData({ file: join(presentationDirectory, "notions.t
 };
 const glossaryIds = Object.keys(glossary);
 check(
-  "the glossary keeps its thirty-five ids — the French keys the tutorial cites, the ADR-0018 registry and the ADR-0021 story terms included (the assume entry retired with ADR-0023)",
+  "the glossary keeps its thirty-five ids — the French keys the tutorial cites, the ADR-0101 registry and the ADR-0104 story terms included (the assume entry retired with ADR-0106)",
   glossaryIds.length === 35 &&
     [
       "adresse",

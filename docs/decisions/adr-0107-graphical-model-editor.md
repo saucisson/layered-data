@@ -1,4 +1,4 @@
-# ADR-0026: A graphical model editor, generic by formalism data
+# ADR-0107: A graphical model editor, generic by formalism data
 
 - Status: proposed (awaiting the human owner's acceptance)
 - Date: 2026-11-09
@@ -82,7 +82,7 @@ betrays nothing the staging can see.
 
 ## Consequences
 
-- The bedrock stays read-only by protocol (ADR-0020): only
+- The bedrock stays read-only by protocol (ADR-0103): only
   runtime-added layers open in the editor; the guards (`socle-édité`,
   `couche-renomme`, `couche-glissée`) apply to every gesture.
 - A formalism without collections (a non-graph layer) answers an

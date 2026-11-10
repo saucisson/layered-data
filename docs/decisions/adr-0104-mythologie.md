@@ -1,4 +1,4 @@
-# ADR-0021: The vocabulary's treaty — three strata, one story
+# ADR-0104: The vocabulary's treaty — three strata, one story
 
 - Status: accepted
 - Date: 2026-11-05
@@ -24,7 +24,7 @@ server's prompts), the accretion shows its seams:
   linter. The glossary declared `registry`/`registre` translated,
   yet invented a name where the field has one;
 - **One word, two concepts.** « Le tronc » named BOTH the immutable
-  kernel corpus (ADR-0020) and "the trunk of the graphs" — the
+  kernel corpus (ADR-0103) and "the trunk of the graphs" — the
   generic base formalism of the graph family (scenario S13, "the
   recast trunk") — while the body text of both tongues already said
   "the base"/« la base » for the second;

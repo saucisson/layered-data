@@ -36,8 +36,8 @@ export const EDITION_REFUSAL_LABEL: Record<string, BilingualText> = {
     fr: "l'édition glisse une couche en plus — une édition n'est pas un ajout",
   },
   "socle-édité": {
-    en: "the edition aims at the bedrock — the bedrock is read-only, its layers never re-enter the staging (ADR-0020)",
-    fr: "l'édition vise le socle — le socle est en lecture seule, ses couches ne repassent jamais au staging (ADR-0020)",
+    en: "the edition aims at the bedrock — the bedrock is read-only, its layers never re-enter the staging (ADR-0103)",
+    fr: "l'édition vise le socle — le socle est en lecture seule, ses couches ne repassent jamais au staging (ADR-0103)",
   },
 };
 

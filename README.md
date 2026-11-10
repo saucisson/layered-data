@@ -104,11 +104,11 @@ lecture, pose, effacement) : c'est un alias d'héritage, les nouvelles
 intégrations parlent `api/layers`.
 
 Le socle (les 47 couches du corpus) est en lecture seule : `PUT` et
-`DELETE` y répondent 403 — et depuis l'ADR-0020, la règle vit dans le
+`DELETE` y répondent 403 — et depuis l'ADR-0103, la règle vit dans le
 protocole lui-même, pas seulement à la porte de la carrière : staging et
 édition portent la signature du socle et refusent eux-mêmes d'y
 toucher (« socle-occupé », « socle-édité »). Le vocabulaire du produit
-suit le traité de l'ADR-0021 : trois strates, un seul récit.
+suit le traité de l'ADR-0104 : trois strates, un seul récit.
 
 ## Le géologue et le contrat
 
@@ -125,13 +125,13 @@ rendue telle quelle dans la réponse, jamais muette.
 l'atelier (syntaxe, cible inconnue, attendus trahis…) ; un refus
 revient au modèle avec ses verdicts, jusqu'à `PEN_MAX_ATTEMPTS`
 propositions (3 par défaut). `PEN_STRICT_CONFLICTS=1` arme le bras
-strict (ADR-0017, retiré comme sémantique par l'ADR-0023) : le
+strict (ADR-0100, retiré comme sémantique par l'ADR-0106) : le
 géologue ne peut plus proposer une lecture que l'ordre des refines
 tranche entre sources incomparables — la résoudre, c'est
 restructurer, jamais signer. `PEN_STRICT_CHECKS=1` arme le
-second bras strict (ADR-0018) : les checks portés par la candidate
+second bras strict (ADR-0101) : les checks portés par la candidate
 s'exécutent enfin, et le géologue ne peut plus proposer une couche que
-ses propres contraintes refusent (« check-trahi »). Depuis l'ADR-0019,
+ses propres contraintes refusent (« check-trahi »). Depuis l'ADR-0102,
 le registre des checks est lui-même une couche du socle
 (`formalisms/kernel/check-registry.ld`) : les contrats sont des
 données, l'existence d'une étiquette est l'existence dans les
@@ -172,7 +172,7 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    (indépendance de l'ordre d'appel, invariance par permutation des 47
    couches), garde de cycle, liaison tardive, désucrage (ordre
    topologique, idempotence), protocole d'invalidation exact — et,
-   depuis l'ADR-0023, les théorèmes de l'algèbre deux-régimes (§14 :
+   depuis l'ADR-0106, les théorèmes de l'algèbre deux-régimes (§14 :
    confluence, conservativité, monotonie), mesurés retrait par
    retrait et croissance par croissance.
 3. **Les checks de staging** (`npm run test:staging`,
@@ -180,11 +180,11 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    sain accepté et appliqué, syntaxe cassée refusée à l'étape « syntaxe »,
    cible inconnue refusée (« cible-inconnue »), attendu trahi
    (« attendu-trahi »), conflit d'ordre refusé en mode strict sans
-   exception (« conflit-d'ordre », ADR-0017 retiré comme sémantique
-   par l'ADR-0023), check posé mais incapable de juger refusé
-   (« check-vacant », ADR-0018), et checks portés exécutés en mode
+   exception (« conflit-d'ordre », ADR-0100 retiré comme sémantique
+   par l'ADR-0106), check posé mais incapable de juger refusé
+   (« check-vacant », ADR-0101), et checks portés exécutés en mode
    strict (« check-trahi »). Brouillon réclamant un nom du socle
-   refusé (« socle-occupé », ADR-0020) — le vol nommé, la pièce
+   refusé (« socle-occupé », ADR-0103) — le vol nommé, la pièce
    forgée jamais jugée.
 4. **La boucle du géologue** (`npm run test:pen-loop`,
    `tests/pen-loop-checks.mts`) vérifie la boucle côté serveur
@@ -193,7 +193,7 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    budget épuisé (3 refus), géologue muet refusé, proposition raffinant
    une couche d'utilisateur acceptée quand la carrière est dans le contexte,
    proposition réclamant le nom d'une couche du socle refusée
-   (« socle-occupé », ADR-0020) puis corrigée vers un raffinement accepté.
+   (« socle-occupé », ADR-0103) puis corrigée vers un raffinement accepté.
 5. **Les checks de l'éditeur vivant** (`npm run test:editor`,
    `tests/editor-checks.mts`) figent le protocole des éditions
    (`src/application/edition.ts`) : la couche vivante quitte le
@@ -204,7 +204,7 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    de l'enfant qui la lit (O18 à travers la chaîne de raffinement) ;
    renommage refusé, couche glissée dans l'édition refusée, attendu
    trahi d'une autre couche refusé (l'espace reste intact), édition
-   visant le socle refusée (« socle-édité », ADR-0020) — et sans
+   visant le socle refusée (« socle-édité », ADR-0103) — et sans
    le touch, la fermeture mémoïsée sert l'ancienne chaîne en silence :
    le protocole est obligatoire.
 6. **Les checks de l'atelier bilingue** (`npm run test:i18n`,
@@ -217,7 +217,7 @@ Sept fronts, tous sous Node nu (type stripping natif) — la CI
    instructions du géologue) porte ses deux textes, mesurés par le
    harnais. Les formalismes `.ld` du corpus restent dans leur langue.
 7. **Les checks du vocabulaire du traité** (`npm run test:terminology`,
-   `tests/terminology-checks.mts`) figent le traité de l'ADR-0021 :
+   `tests/terminology-checks.mts`) figent le traité de l'ADR-0104 :
    trois strates, un seul récit. Les mots de l'informatique gardent
    leur nom adopté (staging, linter — « la linteuse » est retirée),
    les marques ⟪…⟫ citent le glossaire dans la langue de chacun, et

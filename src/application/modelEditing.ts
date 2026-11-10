@@ -17,7 +17,7 @@
 // Every gesture is drafted as SOURCE TEXT for the living layer's
 // block, then judged by the staging (stageLayerEdition): the editor
 // proposes, the tribunal decides — the block is the only truth, the
-// canvas is a reading of it. The bedrock is never edited (ADR-0020):
+// canvas is a reading of it. The bedrock is never edited (ADR-0103):
 // only runtime-added layers open here.
 
 import { asLayerName, asLayerPath, type LayerName, type LayerPath } from "../domain/identifiers.ts";

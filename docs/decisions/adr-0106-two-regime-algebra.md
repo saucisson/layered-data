@@ -1,11 +1,11 @@
-# ADR-0023: The two-regime algebra — mask and assume retire, the guarantees become theorems
+# ADR-0106: The two-regime algebra — mask and assume retire, the guarantees become theorems
 
 - Status: accepted
 - Date: 2026-11-05
 
 ## Context
 
-The replacement ontology, measured on the bedrock (ADR-0022's census):
+The replacement ontology, measured on the bedrock (ADR-0105's census):
 LEAVES are first-winner tips — 78 `override`, 2 `override abstract`,
 declared by gesture (`new`, `extend`, `override`); MEMBERS re-merge
 cumulatively, the union motif, insertion order preserved; NAMES are
@@ -20,9 +20,9 @@ Two channels of the grammar carry NOTHING, measured:
   ontology's story: the first-winner already refuses an undeclared
   shadow (« ombre-non-déclarée »), and the specs' discipline (no
   absence without a name) never needed to erase anything;
-- **`assume`** — 0 acts in the whole bedrock corpus. ADR-0017 made the
+- **`assume`** — 0 acts in the whole bedrock corpus. ADR-0100 made the
   refines order a SIGNABLE convention: `assume key` blesses the
-  order-decided read between incomparable providers. But ADR-0017's
+  order-decided read between incomparable providers. But ADR-0100's
   own census measured ZERO leaf divergences on the trunk — the order
   never decides a value; specificity (the `refines` structure) always
   does. The signature exists to bless a convention that never fires:
@@ -56,7 +56,7 @@ sequence, the determinism (O16).
    - **MEMBERS merge cumulatively** — union, insertion order
      preserved, re-merged on every read. A member is never replaced
      and never removed; a re-pose is a doublon the validation judges
-     (ADR-0022 for the checks, the same motif for every container);
+     (ADR-0105 for the checks, the same motif for every container);
    - **LEAVES are declared tips** — first-winner by SPECIFICITY, the
      `refines` structure the only judge. The gestures name themselves:
      `new` (a leaf that must not exist upstream), `extend` (a leaf
@@ -67,7 +67,7 @@ sequence, the determinism (O16).
    they judge declarations, not values.
 3. **`assume` retires.** The order stops claiming value semantics
    (O2 retires as such). An incomparable leaf divergence stays what
-   ADR-0017 made observable — a lint inventory (« conflit-d'ordre », to
+   ADR-0100 made observable — a lint inventory (« conflit-d'ordre », to
    inspect) and, in exacting spaces, a strict staging refusal — but
    it can no longer be BLESSED: an exacting space must restructure
    (make the providers comparable, or diverge them into different
@@ -93,7 +93,7 @@ sequence, the determinism (O16).
    (f) (« assume-fantôme ») and the `masque` stat, the shadow
    confrontation's mask arm, the strict staging's unsigned-conflict
    escape, the tutorial's and glossary's `assume` entries, and the
-   ADR-0017 references that describe the signature as living. Until
+   ADR-0100 references that describe the signature as living. Until
    that patch, the channels carry nothing — the bedrock measures
    zero of both — so the decision costs nothing to state now and
    everything to state late.
@@ -112,7 +112,7 @@ sequence, the determinism (O16).
 - The kernel's reading semantics does not change on the bedrock: zero
   `mask`, zero `assume`, the audit baseline is untouched by the
   decision itself;
-- ADR-0017's visibility and refusal layers stand unchanged — this
+- ADR-0100's visibility and refusal layers stand unchanged — this
   ADR retires only the SIGNATURE, the third of its three layers;
 - Negative, assumed: a future corpus that genuinely needs "hide this
   member from below" must come back with a measured case and a new
@@ -126,5 +126,5 @@ sequence, the determinism (O16).
   in the specification's terms, once the retirement patch lands
   (delivered: specification §14 states them with their measured
   proof sketches; the property harness measures them as T1/T2/T3);
-- ADR-0017's « signed crossings » view retires with the signature —
+- ADR-0100's « signed crossings » view retires with the signature —
   the lint's inventory is the whole story now.

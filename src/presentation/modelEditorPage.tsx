@@ -6,7 +6,7 @@
 // and every gesture is drafted as SOURCE TEXT for the living layer,
 // then judged by the staging: the gesture proposes, the tribunal
 // decides, the block is the only truth, the canvas is a reading of
-// it. The corpus stays read-only (ADR-0020): only the layers added
+// it. The corpus stays read-only (ADR-0103): only the layers added
 // at runtime open here, and the kernel judges declared
 // expectations — the palette's citation guard is an AFFORDANCE, not
 // a second tribunal (the message names the citing arcs, the
@@ -124,7 +124,7 @@ export function ModelEditorPage({
 }) {
   // ---- the kernel, the frame -----------------------------------------
   // Assembled from the corpus files — the same single source the
-  // workshop reads. In shared mode (ADR-0028) the kernel is REPLACED
+  // workshop reads. In shared mode (ADR-0110) the kernel is REPLACED
   // by a fresh assembly + the server's additions on every state
   // event, so the server stays the single writer; locally the space
   // is mutated in place by each accepted gesture.
@@ -134,7 +134,7 @@ export function ModelEditorPage({
   const [additions, setAdditions] = useState<LivingAddition[]>([]);
   const [addedLayerBlocks, setAddedLayerBlocks] = useState<Record<string, string>>({});
   const [spaceVersion, setSpaceVersion] = useState(0);
-  // ---- the shared session (ADR-0028): connected to the server's
+  // ---- the shared session (ADR-0110): connected to the server's
   // SSE stream, or local when the server is absent ----
   const [shared, setShared] = useState(false);
   const [presence, setPresence] = useState<{ id: string; focus: string | null }[]>([]);
@@ -305,7 +305,7 @@ export function ModelEditorPage({
     return { vertices, arcs };
   }, [model, lens, spaceVersion, vertexContainers, arcContainers, positionContainer]);
 
-  // ---- the shared session (ADR-0028) ----------------------------------
+  // ---- the shared session (ADR-0110) ----------------------------------
 
   /** Rebuild the kernel from the corpus and re-apply the given
    * additions in order — the server's snapshot becomes the local

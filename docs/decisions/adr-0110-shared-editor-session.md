@@ -1,11 +1,11 @@
-# ADR-0028: A shared editor session — SSE state, judged gestures, optimistic locking
+# ADR-0110: A shared editor session — SSE state, judged gestures, optimistic locking
 
 - Status: proposed (awaiting the human owner's acceptance)
 - Date: 2026-11-09
 
 ## Context
 
-ADR-0026 gave the workshop a graphical model editor, but it lives
+ADR-0107 gave the workshop a graphical model editor, but it lives
 alone in the browser: the living additions (the models being edited)
 exist only in the tab's memory, and two editors on two machines never
 see each other. The server (`server.ts`) already persists layers in
@@ -19,7 +19,7 @@ forbids adding one unilaterally) — the transport is plain node `http`
 with Server-Sent Events; the access code keeps travelling in the
 `x-access-code` header (which is why the client reads the SSE stream
 over `fetch`, not `EventSource`); the bedrock stays read-only
-(ADR-0020); the workshop still works with no server at all.
+(ADR-0103); the workshop still works with no server at all.
 
 ## Decision
 

@@ -45,7 +45,7 @@ export function buildSourceLineTargets({ parsedLanguage }: { parsedLanguage: Par
           targets.set(act.line, { layer: parsedLayer.name, path, key: "checks" });
           continue;
         }
-        // a definition is also a pose (ADR-0022): the line designates
+        // a definition is also a pose (ADR-0105): the line designates
         // the checks container, like a plain check
         if (act.kind === "check-definition") {
           targets.set(act.line, { layer: parsedLayer.name, path, key: "checks" });

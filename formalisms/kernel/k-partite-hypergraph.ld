@@ -8,7 +8,7 @@
 //      partition in the view and stays silent if the alias does not
 //      exist. Bipartite is the k = 2 specialization:
 //      bipartite-digraph refines [multidigraph, k-partite-hypergraph].
-//      NOTE (ADR-0022 strate 2): "same class" is not first-order; the
+//      NOTE (ADR-0105 strate 2): "same class" is not first-order; the
 //      check stays algorithmic until strate 2 lands.
 layer k-partite-hypergraph refines @multihypergraph
   check k-partite
