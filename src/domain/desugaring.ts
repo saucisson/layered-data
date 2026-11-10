@@ -6,7 +6,14 @@
 // workbench reads the space immutably).
 
 import { type LayerName, type LayerPath, asPathSegment } from "./identifiers.ts";
-import { type Address, LayerReference, PathReference, type RawTree, type RawValue, isDictionary,  } from "./addresses.ts";
+import {
+  type Address,
+  LayerReference,
+  PathReference,
+  type RawTree,
+  type RawValue,
+  isDictionary,
+} from "./addresses.ts";
 import { SPECIAL_KEYS } from "./specialKeys.ts";
 import { Space } from "./space.ts";
 
@@ -45,7 +52,9 @@ export function rawTreeWalk(node: RawTree, path: LayerPath = []): [LayerPath, Ra
 // deduplicate while desugaring; structural equality of the references.
 export function refinementEntriesEqual(first: RawValue, second: RawValue): boolean {
   if (first instanceof PathReference && second instanceof PathReference) {
-    return first.anchor === second.anchor && first.path.join("\u0001") === second.path.join("\u0001");
+    return (
+      first.anchor === second.anchor && first.path.join("\u0001") === second.path.join("\u0001")
+    );
   }
   if (first instanceof LayerReference && second instanceof LayerReference) {
     return first.layer === second.layer;
@@ -86,7 +95,15 @@ export function desugarLayer({ space, layer }: { space: Space; layer: LayerName 
 
 // The concrete node designated by an address: the first source of its
 // closure (the own raw node if it exists, else the first ancestor).
-export function designatedAddress({ space, layer, path }: { space: Space; layer: LayerName; path: LayerPath }): Address | null {
+export function designatedAddress({
+  space,
+  layer,
+  path,
+}: {
+  space: Space;
+  layer: LayerName;
+  path: LayerPath;
+}): Address | null {
   const sources = space.closure({ layer, path });
   return sources.length ? (sources[0] ?? null) : null;
 }

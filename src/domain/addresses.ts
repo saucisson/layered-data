@@ -54,14 +54,7 @@ export class AddressView {
 /** The raw tree of one layer, as the compiler emits it. */
 export type RawTree = { [key: string]: RawValue };
 export type RawValue =
-  | RawTree
-  | RawValue[]
-  | PathReference
-  | LayerReference
-  | string
-  | number
-  | boolean
-  | null;
+  RawTree | RawValue[] | PathReference | LayerReference | string | number | boolean | null;
 
 /** Narrow test: a plain mutable dictionary — not an array, not a
  * reference class, not an address view (those are objects too, but

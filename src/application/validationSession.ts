@@ -51,7 +51,11 @@ export interface ValidationSession {
    * assignment, then the touch), the parse and compilation are the
    * CALLER's fresh ones (an edition recompiles the whole corpus),
    * and the validation runs over the session's walks. */
-  applyEdition({ layerName, parse, compilation }: {
+  applyEdition({
+    layerName,
+    parse,
+    compilation,
+  }: {
     layerName: LayerName;
     parse: ParsedLanguage;
     compilation: CompiledLanguage;

@@ -7,7 +7,7 @@
 // this file is the parse boundary of the whole space.
 
 import { type LayerName, asLayerName, asLayerPath, asPathSegment } from "../identifiers.ts";
-import { LayerReference, PathReference, type RawTree, isDictionary,  } from "../addresses.ts";
+import { LayerReference, PathReference, type RawTree, isDictionary } from "../addresses.ts";
 import { SPECIAL_KEYS } from "../specialKeys.ts";
 import { type LanguageAct, type LanguageLayer, type LanguageValue } from "./parser.ts";
 
@@ -117,7 +117,10 @@ const emit = (
     declarations.push({ layer, path, key: act.key, mode: act.mode });
     if (act.block !== null) {
       const childNode: RawTree = {};
-      if (act.refines) childNode.refines = act.refines.map((reference) => makeReference(reference as LanguageValue & { kind: "reference" }));
+      if (act.refines)
+        childNode.refines = act.refines.map((reference) =>
+          makeReference(reference as LanguageValue & { kind: "reference" }),
+        );
       output[act.key] = childNode;
       emit(act.block, childNode, layer, [...path, act.key], layerRoot, declarations);
     } else {
@@ -190,7 +193,10 @@ export function expandCitations(
     for (const layerName of Object.keys(layerTrees)) {
       const walk = (node: any, path: string[]): void => {
         if (!isDictionary(node)) return;
-        if (Array.isArray(node["refines"]) && !generatedNodes.has(layerName + "::" + path.join("/"))) {
+        if (
+          Array.isArray(node["refines"]) &&
+          !generatedNodes.has(layerName + "::" + path.join("/"))
+        ) {
           const kept: any[] = [];
           for (const entry of node["refines"]) {
             if (!(entry instanceof PathReference) || entry.path.length === 0) {
@@ -266,17 +272,33 @@ export function expandCitations(
               // the template, marking and identifier descend by
               // closure.
               const generated: RawTree = {
-                refines: [new PathReference(entry.anchor, asLayerPath([...entry.path.slice(0, cut + 1), ...windowPath, asPathSegment(memberKey)]))],
+                refines: [
+                  new PathReference(
+                    entry.anchor,
+                    asLayerPath([
+                      ...entry.path.slice(0, cut + 1),
+                      ...windowPath,
+                      asPathSegment(memberKey),
+                    ]),
+                  ),
+                ],
               };
               if (isDictionary(member)) {
                 for (const memberField of Object.keys(member)) {
                   if (memberField === "refines") continue;
                   const value = member[memberField];
-                  if (value instanceof PathReference && value.anchor === template && value.path.length > 0) {
-                    generated[memberField] = new PathReference(asLayerName(layerName), asLayerPath([
-                      ...value.path.slice(0, -1),
-                      asPathSegment(citationKey + "." + value.path[value.path.length - 1]),
-                    ]));
+                  if (
+                    value instanceof PathReference &&
+                    value.anchor === template &&
+                    value.path.length > 0
+                  ) {
+                    generated[memberField] = new PathReference(
+                      asLayerName(layerName),
+                      asLayerPath([
+                        ...value.path.slice(0, -1),
+                        asPathSegment(citationKey + "." + value.path[value.path.length - 1]),
+                      ]),
+                    );
                     declarations.push({
                       layer: asLayerName(layerName),
                       path: [...path, generatedKey],
@@ -288,7 +310,12 @@ export function expandCitations(
               }
               node[generatedKey] = generated;
               generatedNodes.add(layerName + "::" + [...path, generatedKey].join("/"));
-              declarations.push({ layer: asLayerName(layerName), path, key: generatedKey, mode: "new" });
+              declarations.push({
+                layer: asLayerName(layerName),
+                path,
+                key: generatedKey,
+                mode: "new",
+              });
               changed = true;
             }
           }

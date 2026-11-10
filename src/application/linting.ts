@@ -99,7 +99,10 @@ function lintShadow({ space, layerNames, compilation }: LintingTarget): void {
       for (const key of space.keys({ layer: addressLayer, path: addressPath })) {
         // how many sources provide the key at this address
         let sourceCount = 0;
-        for (const [sourceLayer, sourcePath] of space.closure({ layer: addressLayer, path: addressPath })) {
+        for (const [sourceLayer, sourcePath] of space.closure({
+          layer: addressLayer,
+          path: addressPath,
+        })) {
           const node = space.raw({ layer: sourceLayer, path: sourcePath });
           if (isDictionary(node) && key in node && node[key] !== null) sourceCount += 1;
         }
@@ -108,7 +111,10 @@ function lintShadow({ space, layerNames, compilation }: LintingTarget): void {
         // the first winner of the confrontation — its declaration
         // decides whether the shadow is an act of the language
         let winner: Address | null = null;
-        for (const [sourceLayer, sourcePath] of space.closure({ layer: addressLayer, path: addressPath })) {
+        for (const [sourceLayer, sourcePath] of space.closure({
+          layer: addressLayer,
+          path: addressPath,
+        })) {
           const node = space.raw({ layer: sourceLayer, path: sourcePath });
           if (isDictionary(node) && key in node && node[key] !== null) {
             winner = [sourceLayer, sourcePath];
@@ -150,13 +156,20 @@ function lintTags({ space, layerNames }: LintingTarget): void {
       const [addressLayer, addressPath] = address;
       const view = new AddressView(addressLayer, addressPath);
       const definitions = checkDefinitionsOf({ space, view });
-      for (const [sourceLayer, sourcePath] of space.closure({ layer: addressLayer, path: addressPath })) {
+      for (const [sourceLayer, sourcePath] of space.closure({
+        layer: addressLayer,
+        path: addressPath,
+      })) {
         const node = space.raw({ layer: sourceLayer, path: sourcePath });
         if (!isDictionary(node)) continue;
         for (const tag of (node["checks"] ?? []) as unknown[]) {
           if (typeof tag !== "string") continue;
           if (!contracts[tag] && !definitions[tag]) {
-            space.recordDiagnostic({ kind: "étiquette-inconnue", address, fact: fact("label-unknown", { tag }) });
+            space.recordDiagnostic({
+              kind: "étiquette-inconnue",
+              address,
+              fact: fact("label-unknown", { tag }),
+            });
           }
         }
       }

@@ -4,10 +4,7 @@
 // (domain/validation.ts); this driver only paces it — the outcome is
 // the stream's return value, identical to a synchronous drain.
 
-import {
-  type ValidationChunk,
-  type ValidationOutcome,
-} from "../domain/validation.ts";
+import { type ValidationChunk, type ValidationOutcome } from "../domain/validation.ts";
 
 export interface ScheduledValidation {
   /** Resolves with the full outcome once every chunk has run. */
