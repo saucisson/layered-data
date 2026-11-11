@@ -61,11 +61,19 @@ export function layerNamesOfSource({ source }: { source: string }): string[] {
   return names;
 }
 
-/** The shared editor session: a versioned state plus the one
- * sanctioned mutation, the judged gesture. */
+/** The shared editor session: a versioned state plus the two
+ * sanctioned mutations — the judged gesture and the restore of a
+ * past version (ADR-0111: undo/redo survives a reload). */
 export interface EditorSession {
   readState(): EditorSessionState;
   applyGesture({ source, baseVersion }: { source: string; baseVersion: number }): GestureOutcome;
+  restore({
+    additions,
+    baseVersion,
+  }: {
+    additions: SessionAdditionEntry[];
+    baseVersion: number;
+  }): GestureOutcome;
 }
 
 /** Create a session over the bedrock corpus. The kernel sources are
@@ -82,6 +90,37 @@ export function createEditorSession({
   initial?: EditorSessionState | undefined;
 }): EditorSession {
   let state: EditorSessionState = initial ?? { version: 0, additions: [] };
+
+  /** The tribunal: re-stage every candidate addition in order over a
+   * fresh bedrock — the deterministic replay of their acceptance.
+   * On success the version moves and the candidate becomes the state. */
+  function tribunal({ candidate }: { candidate: SessionAdditionEntry[] }): GestureOutcome {
+    const kernel = assembleLayeredDataKernel({ layerSources: kernelLayerSources });
+    const livingLayerNames: string[] = [...kernel.layerNames];
+    const previousAdditionSources: string[] = [];
+    for (const addition of candidate) {
+      const staging = stageLayerAddition({
+        languageSource: kernel.languageSource,
+        previousAdditionSources,
+        draftSource: addition.source,
+        livingLayerNames,
+        readonlyLayerNames: [...kernel.layerNames],
+      });
+      if (!staging.ok) {
+        return { ok: false, reason: "refused", refusals: [], staging, state: readState() };
+      }
+      const applied = applyStagedAddition({
+        space: kernel.space,
+        staging,
+        knownLayerNames: [...livingLayerNames],
+        readonlyLayerNames: [...kernel.layerNames],
+      });
+      livingLayerNames.push(...applied.newLayerNames);
+      previousAdditionSources.push(addition.source);
+    }
+    state = { version: state.version + 1, additions: candidate };
+    return { ok: true, state: readState() };
+  }
 
   function applyGesture({
     source,
@@ -134,40 +173,43 @@ export function createEditorSession({
         candidate.push({ name, source: block });
       }
     }
-    // the tribunal: re-stage every candidate addition in order over a
-    // fresh bedrock — the deterministic replay of their acceptance
-    const kernel = assembleLayeredDataKernel({ layerSources: kernelLayerSources });
-    const livingLayerNames: string[] = [...kernel.layerNames];
-    const previousAdditionSources: string[] = [];
-    for (const addition of candidate) {
-      const staging = stageLayerAddition({
-        languageSource: kernel.languageSource,
-        previousAdditionSources,
-        draftSource: addition.source,
-        livingLayerNames,
-        readonlyLayerNames: [...kernel.layerNames],
-      });
-      if (!staging.ok) {
-        return { ok: false, reason: "refused", refusals: [], staging, state: readState() };
-      }
-      const applied = applyStagedAddition({
-        space: kernel.space,
-        staging,
-        knownLayerNames: [...livingLayerNames],
-        readonlyLayerNames: [...kernel.layerNames],
-      });
-      livingLayerNames.push(...applied.newLayerNames);
-      previousAdditionSources.push(addition.source);
+    return tribunal({ candidate });
+  }
+
+  /** Restore a past version: the target additions REPLACE the current
+   * ones (not merged) and are re-judged by the same tribunal — a
+   * restore is a new version, never a silent rewind. */
+  function restore({
+    additions,
+    baseVersion,
+  }: {
+    additions: SessionAdditionEntry[];
+    baseVersion: number;
+  }): GestureOutcome {
+    if (baseVersion !== state.version) {
+      return { ok: false, reason: "conflict", state: readState() };
     }
-    state = { version: state.version + 1, additions: candidate };
-    return { ok: true, state: readState() };
+    const candidate = additions.map((entry) => ({ ...entry }));
+    const stolen = candidate
+      .map((entry) => entry.name)
+      .filter((name) => kernelLayerNames.includes(asLayerName(name)));
+    if (stolen.length > 0) {
+      return {
+        ok: false,
+        reason: "refused",
+        refusals: ["socle-occupé: " + stolen.join(", ")],
+        staging: null,
+        state: readState(),
+      };
+    }
+    return tribunal({ candidate });
   }
 
   function readState(): EditorSessionState {
     return { version: state.version, additions: state.additions.map((entry) => ({ ...entry })) };
   }
 
-  return { readState, applyGesture };
+  return { readState, applyGesture, restore };
 }
 
 /** Serialize a state for the JSON persistence file. */

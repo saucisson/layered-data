@@ -41,6 +41,7 @@ import {
 } from "./server/config.ts";
 import { KERNEL_LAYER_NAMES } from "./server/layerStore.ts";
 import { createQuarryStoresFromEnv, initQuarryStores } from "./server/stores.ts";
+import { initializeEditorSession } from "./server/editorSessionServer.ts";
 import { createQuarryServer } from "./server/routes.ts";
 
 // The persistent stores are verified BEFORE the server listens:
@@ -51,7 +52,8 @@ const stores = createQuarryStoresFromEnv();
 try {
   await initQuarryStores({ stores });
   const server = createQuarryServer({ stores });
-    server.listen(PORT, HOST, () => {
+  await initializeEditorSession();
+  server.listen(PORT, HOST, () => {
     console.log("carrière Layered Data v" + VERSION + " sur http://" + HOST + ":" + PORT);
     console.log(
       "socle : " +
@@ -68,10 +70,10 @@ try {
     }
     if (!DATABASE_URL) {
       console.log(
-        "ATTENTION : DATABASE_URL absent — rate limiting désactivé, couches des visiteurs sur disque (compteurs PostgreSQL requis en production)",
+        "ATTENTION : DATABASE_URL absent — rate limiting désactivé, couches et session éditeur sur disque (compteurs PostgreSQL requis en production)",
       );
     } else {
-      console.log("stockage PostgreSQL actif (couches des visiteurs, rate limiting)");
+      console.log("stockage PostgreSQL actif (couches, session éditeur, rate limiting)");
     }
     if (existsSync(environmentFilePath)) {
       console.log(".env lu : " + environmentFilePath);
