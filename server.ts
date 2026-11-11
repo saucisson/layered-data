@@ -40,33 +40,47 @@ import {
   environmentFilePath,
 } from "./server/config.ts";
 import { KERNEL_LAYER_NAMES } from "./server/layerStore.ts";
+import { createQuarryStoresFromEnv, initQuarryStores } from "./server/stores.ts";
 import { createQuarryServer } from "./server/routes.ts";
 
-const server = createQuarryServer();
-
-server.listen(PORT, HOST, () => {
-  console.log("carrière Layered Data v" + VERSION + " sur http://" + HOST + ":" + PORT);
-  console.log(
-    "socle : " +
-      KERNEL_LAYER_NAMES.length +
-      " couches ; géologue vérifié : jusqu'à " +
-      MAX_PEN_ATTEMPTS +
-      " propositions jugées par le staging" +
-      (MISTRAL_API_KEY ? "" : " (MISTRAL_API_KEY absente — le géologue reste local)"),
-  );
-  if (API_TOKEN === "changez-moi") {
+// The persistent stores are verified BEFORE the server listens:
+// with DATABASE_URL set, an unreachable PostgreSQL is a fail-fast
+// boot error (ADR-0111) — never a silent disk fallback, which would
+// split the instances between disk and base.
+const stores = createQuarryStoresFromEnv();
+try {
+  await initQuarryStores({ stores });
+  const server = createQuarryServer({ stores });
+    server.listen(PORT, HOST, () => {
+    console.log("carrière Layered Data v" + VERSION + " sur http://" + HOST + ":" + PORT);
     console.log(
-      "ATTENTION : code d'accès par défaut « changez-moi » encore en place — posez API_TOKEN dans .env",
+      "socle : " +
+        KERNEL_LAYER_NAMES.length +
+        " couches ; géologue vérifié : jusqu'à " +
+        MAX_PEN_ATTEMPTS +
+        " propositions jugées par le staging" +
+        (MISTRAL_API_KEY ? "" : " (MISTRAL_API_KEY absente — le géologue reste local)"),
     );
-  }
-  if (!DATABASE_URL) {
-    console.log(
-      "ATTENTION : DATABASE_URL absent — rate limiting désactivé (compteurs PostgreSQL requis en production)",
-    );
-  }
-  if (existsSync(environmentFilePath)) {
-    console.log(".env lu : " + environmentFilePath);
-  } else {
-    console.log("aucun .env trouvé — variables prises de l'environnement");
-  }
-});
+    if (API_TOKEN === "changez-moi") {
+      console.log(
+        "ATTENTION : code d'accès par défaut « changez-moi » encore en place — posez API_TOKEN dans .env",
+      );
+    }
+    if (!DATABASE_URL) {
+      console.log(
+        "ATTENTION : DATABASE_URL absent — rate limiting désactivé, couches des visiteurs sur disque (compteurs PostgreSQL requis en production)",
+      );
+    } else {
+      console.log("stockage PostgreSQL actif (couches des visiteurs, rate limiting)");
+    }
+    if (existsSync(environmentFilePath)) {
+      console.log(".env lu : " + environmentFilePath);
+    } else {
+      console.log("aucun .env trouvé — variables prises de l'environnement");
+    }
+  });
+} catch (error) {
+  // fail fast (ADR-0111): a store that cannot serve stops the boot
+  console.error("ÉCHEC au démarrage — arrêt : " + String((error as Error)?.message ?? error));
+  process.exit(1);
+}

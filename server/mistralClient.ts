@@ -7,7 +7,7 @@
 // retries it: the route passes it through.
 // ============================================================
 import { MISTRAL_API_KEY, MISTRAL_URL, MISTRAL_MODEL } from "./config.ts";
-import { buildSystemPrompt } from "./geologistPrompts.ts";
+import { buildSystemPrompt, type VisitorLayer } from "./geologistPrompts.ts";
 
 /** An infrastructure failure of the geologist — not a verdict, the loop
  * never retries it: the route passes it through with its status. */
@@ -27,9 +27,11 @@ export class PenInfraFailure {
 export async function generateLayer({
   instruction,
   feedback,
+  visitorLayers,
 }: {
   instruction: string;
   feedback: string | null;
+  visitorLayers: VisitorLayer[];
 }): Promise<{ statusCode: number; body: string }> {
   if (!MISTRAL_API_KEY) {
     throw new PenInfraFailure({
@@ -45,7 +47,7 @@ export async function generateLayer({
       body: JSON.stringify({
         model: MISTRAL_MODEL,
         messages: [
-          { role: "system", content: buildSystemPrompt() },
+          { role: "system", content: buildSystemPrompt({ visitorLayers }) },
           {
             role: "user",
             content: feedback === null ? instruction : instruction + "\n\n" + feedback,
