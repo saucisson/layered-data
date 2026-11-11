@@ -530,6 +530,7 @@ export function WorkshopPage({
       )}
 
       <main
+        id="main-content"
         className={
           graphView
             ? "grid grid-cols-1 gap-3 p-4"
@@ -537,9 +538,9 @@ export function WorkshopPage({
         }
       >
         {/* ① the layers */}
-        <section className="space-y-3">
+        <section className="space-y-3" role="region" aria-labelledby="panel-layers-heading">
           <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <h2 className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800">
+            <h2 id="panel-layers-heading" className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800">
               {say({ language, fr: "① Les couches", en: "① The layers" })}
               <span className="font-normal text-slate-400">
                 {graphView
@@ -758,9 +759,9 @@ export function WorkshopPage({
         </section>
 
         {/* ③ the flattened view */}
-        <section className="space-y-3">
+        <section className="space-y-3" role="region" aria-labelledby="panel-flat-heading">
           <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <h2 className="mb-2 text-sm font-bold text-slate-800">
+            <h2 id="panel-flat-heading" className="mb-2 text-sm font-bold text-slate-800">
               {say({ language, fr: "③ Les données aplaties", en: "③ The flattened data" })}
               <span className="ml-1 font-normal text-slate-400">
                 {say({ language, fr: "lecture à une adresse", en: "reading at an address" })}
@@ -795,7 +796,7 @@ export function WorkshopPage({
               </button>
               <LayerBadge layer={layer} />
               <span className="text-slate-400">::</span>
-              <button type="button" className="text-slate-400 hover:text-slate-600" onClick={() => setPath([])}>
+              <button type="button" className="text-slate-400 hover:text-slate-600" onClick={() => setPath([])} aria-label={say({ language, fr: "réinitialiser le chemin", en: "reset path" })}>
                 ()
               </button>
               {path.map((segment, index) => (
@@ -912,9 +913,9 @@ export function WorkshopPage({
 
         {/* ③ the reading and its resolution —
             the mechanism comes before the cascade */}
-        <section className="space-y-3">
+        <section className="space-y-3" role="region" aria-labelledby="panel-mechanism-heading">
           <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <h2 className="mb-1 text-sm font-bold text-slate-800">
+            <h2 id="panel-mechanism-heading" className="mb-1 text-sm font-bold text-slate-800">
               {say({ language, fr: "③ Le mécanisme", en: "③ The mechanism" })}
               <span className="ml-1 font-normal text-slate-400">
                 {say({
@@ -1075,6 +1076,7 @@ export function WorkshopPage({
             <button type="button"
               className="flex w-full items-center justify-between gap-2 text-left text-xs font-bold text-slate-800"
               onClick={() => setShowClosureCalculation(!showClosureCalculation)}
+              aria-expanded={showClosureCalculation}
             >
               <span>
                 {say({
@@ -1096,8 +1098,8 @@ export function WorkshopPage({
         </section>
       </main>
 
-      <section className="mx-4 mt-3 rounded-lg border border-slate-200 bg-white p-4">
-        <h2 className="text-sm font-bold text-slate-800">
+      <section className="mx-4 mt-3 rounded-lg border border-slate-200 bg-white p-4" role="region" aria-labelledby="panel-viewpoint-heading">
+        <h2 id="panel-viewpoint-heading" className="text-sm font-bold text-slate-800">
           {say({ language, fr: "④ Le point de vue", en: "④ The point of view" })}
           <span className="ml-1 font-normal text-slate-400">
             {say({

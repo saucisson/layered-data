@@ -1132,6 +1132,7 @@ export function ModelEditorPage({
           onClick={undo}
           disabled={history.length === 0}
           title={t("undo (Ctrl+Z)")}
+          aria-label={t("undo (Ctrl+Z)")}
           className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
         >
           ↶
@@ -1140,6 +1141,7 @@ export function ModelEditorPage({
           onClick={redo}
           disabled={future.length === 0}
           title={t("redo (Ctrl+Shift+Z)")}
+          aria-label={t("redo (Ctrl+Shift+Z)")}
           className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
         >
           ↷
