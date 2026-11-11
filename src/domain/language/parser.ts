@@ -19,14 +19,18 @@ export type LanguageValue =
 // ADR-0106 — the ones the ontology measured, nothing else.
 export type DeclarationMode = "new" | "extend" | "override";
 
-/** A display guard (strate 1 — presence / closed set, no
- * comparisons): `when mark` tests the presence of the key path on
- * the dressed node; `when mark in [1, 2]` its membership in a closed
- * set. The strate-2 comparison form (`when (mark > 0)`) is a
- * declared next strate, not parsed here. */
+/** A display guard: `when mark` (presence), `when mark in [1, 2]`
+ * (closed set — strate 1, no comparisons), or `when (mark > 0)`
+ * (comparison — strate 2). */
 export type DisplayGuard =
   | { kind: "presence"; path: string[] }
-  | { kind: "member"; path: string[]; values: LanguageValue[] };
+  | { kind: "member"; path: string[]; values: LanguageValue[] }
+  | {
+      kind: "compare";
+      path: string[];
+      op: ">" | "<" | ">=" | "<=" | "=" | "!=";
+      value: LanguageValue;
+    };
 
 export type LanguageAct =
   | { kind: "bind"; slot: string; value: LanguageValue; line: number; notes?: string[] }
@@ -233,9 +237,51 @@ export function parseLanguage(
     );
   };
 
-  // A display guard: `when mark` (presence) or `when mark in [1, 2]`
-  // (closed set) — strate 1, no comparisons.
+  // A display guard: `when mark` (presence), `when mark in [1, 2]`
+  // (closed set — strate 1), or `when (mark > 0)` (comparison —
+  // strate 2).
   const parseGuard = (): DisplayGuard => {
+    // The strate-2 comparison form: ( path op value )
+    if (peek()?.kind === "(") {
+      position++;
+      const segments = [eat("id").text];
+      while (peek()?.kind === "/") {
+        position++;
+        segments.push(eat("id").text);
+      }
+      const opToken = peek();
+      if (
+        opToken === undefined ||
+        (opToken.kind !== ">" &&
+          opToken.kind !== "<" &&
+          opToken.kind !== ">=" &&
+          opToken.kind !== "<=" &&
+          opToken.kind !== "=" &&
+          opToken.kind !== "!=")
+      ) {
+        throw new Error(
+          parseText({
+            language,
+            en:
+              "l." +
+              (opToken?.line ?? 0) +
+              " : comparison operator expected, got '" +
+              (opToken?.text ?? "end") +
+              "'",
+            fr:
+              "l." +
+              (opToken?.line ?? 0) +
+              " : opérateur de comparaison attendu, obtenu '" +
+              (opToken?.text ?? "fin") +
+              "'",
+          }),
+        );
+      }
+      position++;
+      const value = parseValue();
+      eat(")");
+      return { kind: "compare", path: segments, op: opToken.kind, value };
+    }
     const segments = [eat("id").text];
     while (peek()?.kind === "/") {
       position++;

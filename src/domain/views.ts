@@ -133,12 +133,20 @@ export function asGlyphList(value: unknown): Glyph[] {
   return [];
 }
 
-/** A display guard, narrowed from its raw form — strate 1: presence
- * of a key path on the dressed node, or membership in a closed set.
- * No comparisons (strate 2 is a declared next strate). */
+/** A display guard, narrowed from its raw form — presence of a key
+ * path on the dressed node, membership in a closed set (strate 1),
+ * or a comparison (strate 2). */
 export type DisplayGuard =
   | { kind: "presence"; path: string[] }
-  | { kind: "member"; path: string[]; values: unknown[] };
+  | { kind: "member"; path: string[]; values: unknown[] }
+  | {
+      kind: "compare";
+      path: string[];
+      op: ">" | "<" | ">=" | "<=" | "=" | "!=";
+      value: unknown;
+    };
+
+const COMPARE_OPS = [">", "<", ">=", "<=", "=", "!="] as const;
 
 /** Narrow a raw `__when:display` value to a guard — anything else is
  * no guard (the entry is then the unguarded default). */
@@ -155,6 +163,12 @@ export function asDisplayGuard(value: unknown): DisplayGuard | null {
     const values = value["values"];
     if (!Array.isArray(values)) return null;
     return { kind: "member", path: guardPath, values };
+  }
+  if (kind === "compare") {
+    const op = value["op"];
+    if (typeof op !== "string" || !(COMPARE_OPS as readonly string[]).includes(op)) return null;
+    const compareOp = op as ">" | "<" | ">=" | "<=" | "=" | "!=";
+    return { kind: "compare", path: guardPath, op: compareOp, value: value["value"] ?? null };
   }
   return null;
 }
@@ -324,10 +338,11 @@ function readGuardPath({
   return { found: false, value: null };
 }
 
-/** Does the guard hold on the dressed node? Strate 1: presence of
- * the key path, or membership in the closed set. A guard citing an
- * absent key does not hold — the entry is not retained, never a
- * crash (the kernel stays total). */
+/** Does the guard hold on the dressed node? Presence of the key
+ * path, membership in the closed set (strate 1), or a comparison
+ * (strate 2 — ordering operators need numbers, = / != work on any
+ * value). A guard citing an absent key does not hold — the entry is
+ * not retained, never a crash (the kernel stays total). */
 export function guardHolds({
   space,
   layer,
@@ -342,7 +357,26 @@ export function guardHolds({
   const read = readGuardPath({ space, layer, path, segments: guard.path });
   if (!read.found) return false;
   if (guard.kind === "presence") return true;
-  return guard.values.some((expected) => expected === read.value);
+  if (guard.kind === "member") return guard.values.some((expected) => expected === read.value);
+  const left = read.value;
+  const right = guard.value;
+  switch (guard.op) {
+    case "=":
+      return left === right;
+    case "!=":
+      return left !== right;
+    case ">":
+    case "<":
+    case ">=":
+    case "<=":
+      if (typeof left !== "number" || typeof right !== "number") return false;
+      if (guard.op === ">") return left > right;
+      if (guard.op === "<") return left < right;
+      if (guard.op === ">=") return left >= right;
+      return left <= right;
+    default:
+      return false;
+  }
 }
 
 // The entries dressing one node (in the harness order).
