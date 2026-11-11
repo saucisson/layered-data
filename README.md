@@ -71,12 +71,20 @@ npm run check:structure        # équilibre JSX/tsx (filet, sans compilateur)
 ### Avec Docker
 
 ```bash
-docker compose up --build      # build l'image et sert l'atelier sur 0.0.0.0:8791
+cp .env.example .env           # puis éditez API_TOKEN, POSTGRES_USER, POSTGRES_PASSWORD
+docker compose up --build      # atelier sur 0.0.0.0:8791 + PostgreSQL (rate limiting actif)
 ```
 
-`API_TOKEN` doit être défini dans l'environnement ou `.env` (compose refuse
-de démarrer sinon). Voir [docs/deployment.md](docs/deployment.md) pour le
-déploiement derrière un reverse proxy.
+Le `docker-compose.yml` déploie deux services : `postgres` (volume nommé
+`postgres-data`, schéma initialisé au premier démarrage via
+`docker-entrypoint-initdb.d/`) et `atelier`, qui attend la base et reçoit
+`DATABASE_URL` — les compteurs du rate limiting vivent alors en base.
+Sans base (dev local) : `DATABASE_URL= docker compose up --no-deps --build atelier`.
+
+`API_TOKEN`, `POSTGRES_USER` et `POSTGRES_PASSWORD` doivent être définis
+dans l'environnement ou `.env` (compose refuse de démarrer sinon). Voir
+[docs/deployment.md](docs/deployment.md) pour le déploiement derrière un
+reverse proxy.
 
 ## Coloration syntaxique dans VS Code
 

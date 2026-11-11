@@ -1,4 +1,22 @@
 services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:?Set POSTGRES_USER in .env or the environment}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env or the environment}
+      - POSTGRES_DB=${POSTGRES_DB:-layered_data}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      # Schéma initial au premier démarrage (table rate_limit, issue #85 ;
+      # les tables de l'issue #109 s'ajouteront ici).
+      - ./docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    restart: unless-stopped
+
   atelier:
     build: .
     ports:
@@ -9,9 +27,19 @@ services:
       - API_TOKEN=${API_TOKEN:?Set API_TOKEN in .env or the environment — never use the default}
       - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
       - MISTRAL_MODEL=${MISTRAL_MODEL:-codestral-latest}
+      # Rate limiting partagé entre instances (issue #85) : les compteurs
+      # vivent dans PostgreSQL. Une DATABASE_URL posée dans l'environnement
+      # l'emporte sur cette valeur. Déploiement sans base (dev local) :
+      #   DATABASE_URL= docker compose up --no-deps --build atelier
+      # (le rate limiting est alors désactivé, comme sans DATABASE_URL).
+      - DATABASE_URL=${DATABASE_URL-postgres://${POSTGRES_USER:?Set POSTGRES_USER in .env or the environment}:${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env or the environment}@postgres:5432/${POSTGRES_DB:-layered_data}}
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
       - atelier-data:/app/data
     restart: unless-stopped
 
 volumes:
   atelier-data:
+  postgres-data:
