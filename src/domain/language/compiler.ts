@@ -50,11 +50,14 @@ const makeValue = (value: LanguageValue): any => {
 // template itself stays a clean glyph dict.
 const guardToRaw = (guard: DisplayGuard): RawTree => {
   if (guard.kind === "presence") return { kind: "presence", path: guard.path };
-  return {
-    kind: "member",
-    path: guard.path,
-    values: guard.values.map(makeValue),
-  };
+  if (guard.kind === "member") {
+    return {
+      kind: "member",
+      path: guard.path,
+      values: guard.values.map(makeValue),
+    };
+  }
+  return { kind: "compare", path: guard.path, op: guard.op, value: makeValue(guard.value) };
 };
 
 // The comment becomes DATA — each written line arrives with its raw
