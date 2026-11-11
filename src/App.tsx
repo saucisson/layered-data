@@ -5,6 +5,7 @@
 
 import { lazy, Suspense, useEffect, useState } from "react";
 import { RouterProvider, useRouter } from "./components/Router";
+import { ToastProvider } from "./components/Toast";
 import { readWorkshopLanguage, writeWorkshopLanguage } from "./infrastructure/browserLanguage";
 import { setI18nLanguage } from "./infrastructure/i18n";
 import type { Language } from "./domain/messages";
@@ -126,15 +127,17 @@ function AppContent() {
 export function App() {
   return (
     <RouterProvider>
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-slate-800 focus:px-3 focus:py-2 focus:text-sm focus:text-white"
-      >
-        Aller au contenu principal / Skip to main content
-      </a>
-      {/* Live region for screen reader announcements (WCAG 4.1.3) */}
-      <div aria-live="polite" aria-atomic="true" className="sr-only" id="sr-announcer" />
-      <AppContent />
+      <ToastProvider>
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-slate-800 focus:px-3 focus:py-2 focus:text-sm focus:text-white"
+        >
+          Aller au contenu principal / Skip to main content
+        </a>
+        {/* Live region for screen reader announcements (WCAG 4.1.3) */}
+        <div aria-live="polite" aria-atomic="true" className="sr-only" id="sr-announcer" />
+        <AppContent />
+      </ToastProvider>
     </RouterProvider>
   );
 }
