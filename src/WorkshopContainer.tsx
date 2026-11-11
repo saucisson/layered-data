@@ -397,7 +397,7 @@ export function WorkshopPage({
   // ---- the render --------------------------------------------------
   return (
     <div
-      className="min-h-screen bg-slate-100 text-slate-900"
+      className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900"
       onKeyDown={(event: any) => {
         // Ctrl+K / ⌘K: bring the focus back on the search, from
         // anywhere — without useEffect, timer or context (the
@@ -409,7 +409,7 @@ export function WorkshopPage({
         }
       }}
     >
-      <header className="border-b border-slate-200 bg-white px-5 py-4">
+      <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h1 className="text-lg font-bold">
             {say({
@@ -430,7 +430,7 @@ export function WorkshopPage({
                   "rounded border px-1.5 py-0.5 font-bold uppercase " +
                   (language === choice
                     ? "border-slate-800 bg-slate-800 text-white"
-                    : "border-slate-300 bg-white text-slate-500 hover:border-slate-500")
+                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 hover:border-slate-500")
                 }
               >
                 {choice}
@@ -461,7 +461,7 @@ export function WorkshopPage({
                 "Entrée : y aller · Ctrl+K",
               en: "Search — layer, or key of the current address; " + "Enter: go there · Ctrl+K",
             })}
-            className="min-w-[240px] flex-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none"
+            className="min-w-[240px] flex-1 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none"
           />
           <button type="button"
             onClick={() => setGuidedTourOpen(!guidedTourOpen)}
@@ -475,7 +475,7 @@ export function WorkshopPage({
               "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
               (guidedTourOpen
                 ? "border-slate-800 bg-slate-800 text-white"
-                : "border-slate-300 bg-white text-slate-600 hover:border-slate-500")
+                : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 hover:border-slate-500")
             }
           >
             {say({ language, fr: "Visite guidée S1–S14", en: "Guided tour S1–S14" })}{" "}
@@ -493,7 +493,7 @@ export function WorkshopPage({
                   "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
                   (scenarioIndex === index
                     ? "border-slate-800 bg-slate-800 text-white"
-                    : "border-slate-300 bg-white text-slate-600 hover:border-slate-500")
+                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 hover:border-slate-500")
                 }
               >
                 {scenario.id} · {localized({ language, text: scenario.label })}
@@ -509,7 +509,7 @@ export function WorkshopPage({
               the artifact) */}
 
       {activeScenario && (
-        <div className="mx-4 mt-3 rounded-lg border border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm">
+        <div className="mx-4 mt-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm leading-6 text-slate-700 dark:text-slate-200 shadow-sm">
           <div className="mb-1 flex items-center gap-2">
             <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
               {activeScenario.id}
@@ -518,7 +518,7 @@ export function WorkshopPage({
               {localized({ language, text: activeScenario.label })}
             </span>
             <button type="button"
-              className="ml-auto rounded px-2 text-slate-600 hover:bg-slate-100 hover:text-slate-700"
+              className="ml-auto rounded px-2 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-700 dark:text-slate-200"
               onClick={() => setScenarioIndex(-1)}
               aria-label={say({ language, fr: "fermer le scénario", en: "close the scenario" })}
             >
@@ -539,8 +539,8 @@ export function WorkshopPage({
       >
         {/* ① the layers */}
         <section className="space-y-3" role="region" aria-labelledby="panel-layers-heading">
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <h2 id="panel-layers-heading" className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+            <h2 id="panel-layers-heading" className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
               {say({ language, fr: "① Les couches", en: "① The layers" })}
               <span className="font-normal text-slate-600">
                 {graphView
@@ -551,14 +551,14 @@ export function WorkshopPage({
                     })
                   : say({ language, fr: "et leurs bruts", en: "and their raws" })}
               </span>
-              <span className="ml-auto flex overflow-hidden rounded border border-slate-300 text-[10px] leading-4">
+              <span className="ml-auto flex overflow-hidden rounded border border-slate-300 dark:border-slate-600 text-[10px] leading-4">
                 <button type="button"
                   onClick={() => setGraphView(false)}
                   className={
                     "px-2 " +
                     (!graphView
                       ? "bg-slate-800 text-white"
-                      : "bg-white text-slate-500 hover:bg-slate-50")
+                      : "bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:bg-slate-900")
                   }
                 >
                   {say({ language, fr: "liste", en: "list" })}
@@ -569,7 +569,7 @@ export function WorkshopPage({
                     "px-2 " +
                     (graphView
                       ? "bg-slate-800 text-white"
-                      : "bg-white text-slate-500 hover:bg-slate-50")
+                      : "bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:bg-slate-900")
                   }
                 >
                   {say({ language, fr: "graphe", en: "graph" })}
@@ -590,7 +590,7 @@ export function WorkshopPage({
                   "ml-1 rounded-full border px-2 text-sm font-bold leading-5 " +
                   (composerOpen
                     ? "border-emerald-600 bg-emerald-600 text-white"
-                    : "border-slate-300 bg-white text-slate-500 hover:border-emerald-500 hover:text-emerald-600")
+                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 hover:border-emerald-500 hover:text-emerald-600")
                 }
               >
                 ＋
@@ -685,8 +685,8 @@ export function WorkshopPage({
                           className={
                             "flex flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-xs transition-colors " +
                             (layerName === layer
-                              ? "bg-slate-100 ring-1 ring-slate-400"
-                              : "hover:bg-slate-50") +
+                              ? "bg-slate-100 dark:bg-slate-800 ring-1 ring-slate-400"
+                              : "hover:bg-slate-50 dark:bg-slate-900") +
                             (inClosure ? " font-semibold" : "")
                           }
                         >
@@ -770,8 +770,8 @@ export function WorkshopPage({
 
         {/* ③ the flattened view */}
         <section className="space-y-3" role="region" aria-labelledby="panel-flat-heading">
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <h2 id="panel-flat-heading" className="mb-2 text-sm font-bold text-slate-800">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+            <h2 id="panel-flat-heading" className="mb-2 text-sm font-bold text-slate-800 dark:text-slate-100">
               {say({ language, fr: "③ Les données aplaties", en: "③ The flattened data" })}
               <span className="ml-1 font-normal text-slate-600">
                 {say({ language, fr: "lecture à une adresse", en: "reading at an address" })}
@@ -798,7 +798,7 @@ export function WorkshopPage({
                 className={
                   "rounded px-1.5 py-0.5 font-bold " +
                   (history.length
-                    ? "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                    ? "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200"
                     : "text-slate-500")
                 }
               >
@@ -813,7 +813,7 @@ export function WorkshopPage({
                 <span key={index} className="flex items-center gap-1">
                   <span className="text-slate-500">/</span>
                   <button type="button"
-                    className="font-mono font-medium text-slate-700 hover:underline"
+                    className="font-mono font-medium text-slate-700 dark:text-slate-200 hover:underline"
                     onClick={() => setPath(path.slice(0, index + 1))}
                   >
                     {segment}
@@ -836,7 +836,7 @@ export function WorkshopPage({
                   "ml-auto rounded px-1.5 py-0.5 text-[10px] " +
                   (copied
                     ? "bg-emerald-50 text-emerald-700"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200")
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200")
                 }
               >
                 {copied
@@ -873,7 +873,7 @@ export function WorkshopPage({
                     }
                   >
                     <button type="button"
-                      className="min-w-24 text-left font-mono font-semibold text-slate-800 hover:underline"
+                      className="min-w-24 text-left font-mono font-semibold text-slate-800 dark:text-slate-100 hover:underline"
                       onClick={() => {
                         setSelectedKey(active ? null : info.key);
                         if (!active) setShowClosureCalculation(true);
@@ -893,7 +893,7 @@ export function WorkshopPage({
                     </span>
                     {isNode && (
                       <button type="button"
-                        className="ml-auto shrink-0 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800"
+                        className="ml-auto shrink-0 rounded border border-slate-300 dark:border-slate-600 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800 dark:text-slate-100"
                         onClick={() =>
                           goto((info.value as AddressView).layer, (info.value as AddressView).path)
                         }
@@ -924,8 +924,8 @@ export function WorkshopPage({
         {/* ③ the reading and its resolution —
             the mechanism comes before the cascade */}
         <section className="space-y-3" role="region" aria-labelledby="panel-mechanism-heading">
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <h2 id="panel-mechanism-heading" className="mb-1 text-sm font-bold text-slate-800">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+            <h2 id="panel-mechanism-heading" className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
               {say({ language, fr: "③ Le mécanisme", en: "③ The mechanism" })}
               <span className="ml-1 font-normal text-slate-600">
                 {say({
@@ -973,7 +973,7 @@ export function WorkshopPage({
                       {index}
                     </span>
                     <LayerBadge layer={address[0]} small />
-                    <span className="font-mono text-slate-700">
+                    <span className="font-mono text-slate-700 dark:text-slate-200">
                       {address[1].length ? address[1].join("/") : "()"}
                     </span>
                     {status && (
@@ -986,9 +986,9 @@ export function WorkshopPage({
               })}
             </div>
             {selectedKey && (
-              <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-slate-50 px-2 py-1.5 text-[11px]">
+              <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-slate-50 dark:bg-slate-900 px-2 py-1.5 text-[11px]">
                 <span className="text-slate-500">
-                  <span className="font-mono font-semibold text-slate-700">{selectedKey}</span> =
+                  <span className="font-mono font-semibold text-slate-700 dark:text-slate-200">{selectedKey}</span> =
                 </span>
                 <KernelValue
                   value={selectedKeyDetail ? selectedKeyDetail.value : null}
@@ -996,7 +996,7 @@ export function WorkshopPage({
                 />
                 {selectedKeyDetail && selectedKeyDetail.value instanceof AddressView && (
                   <button type="button"
-                    className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600"
+                    className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600"
                     onClick={() =>
                       goto(
                         (selectedKeyDetail!.value as AddressView).layer,
@@ -1033,8 +1033,8 @@ export function WorkshopPage({
               last step, it moves left and the new one opens on
               the right; the second-to-last/last pair is
               highlighted, the story scrolls, older steps fading */}
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <h2 className="mb-2 text-sm font-bold text-slate-800">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+            <h2 className="mb-2 text-sm font-bold text-slate-800 dark:text-slate-100">
               {say({ language, fr: "③ La cascade de résolution", en: "③ The resolution cascade" })}
               <span className="ml-1 font-normal text-slate-600">
                 {cascade.length +
@@ -1082,9 +1082,9 @@ export function WorkshopPage({
 
           {/* The calculation folds under the mechanism — opened
               automatically by the click on a key */}
-          <div className="rounded-lg border border-slate-200 bg-white p-3">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
             <button type="button"
-              className="flex w-full items-center justify-between gap-2 text-left text-xs font-bold text-slate-800"
+              className="flex w-full items-center justify-between gap-2 text-left text-xs font-bold text-slate-800 dark:text-slate-100"
               onClick={() => setShowClosureCalculation(!showClosureCalculation)}
               aria-expanded={showClosureCalculation}
             >
@@ -1108,8 +1108,8 @@ export function WorkshopPage({
         </section>
       </main>
 
-      <section className="mx-4 mt-3 rounded-lg border border-slate-200 bg-white p-4" role="region" aria-labelledby="panel-viewpoint-heading">
-        <h2 id="panel-viewpoint-heading" className="text-sm font-bold text-slate-800">
+      <section className="mx-4 mt-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
+        <h2 id="panel-viewpoint-heading" className="text-sm font-bold text-slate-800 dark:text-slate-100">
           {say({ language, fr: "④ Le point de vue", en: "④ The point of view" })}
           <span className="ml-1 font-normal text-slate-600">
             {say({
@@ -1166,7 +1166,7 @@ export function WorkshopPage({
                           "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
                           (selectedView === viewLayer
                             ? "bg-slate-800 text-white"
-                            : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100")
+                            : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 ring-1 ring-slate-200 hover:bg-slate-100 dark:bg-slate-800")
                         }
                         onClick={() => {
                           setSelectedView(viewLayer);
@@ -1200,7 +1200,7 @@ export function WorkshopPage({
                           "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
                           (selectedView === viewLayer
                             ? "bg-slate-800 text-white"
-                            : "bg-white text-slate-700 ring-1 ring-slate-200 hover:bg-slate-100")
+                            : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 ring-1 ring-slate-200 hover:bg-slate-100 dark:bg-slate-800")
                         }
                         onClick={() => {
                           setSelectedView(viewLayer);
@@ -1227,7 +1227,7 @@ export function WorkshopPage({
           </div>
           {/* The drawing: the model "seen through" the lens, the
               header says what is imposed, decided or fallback */}
-          <div className="rounded-lg border border-slate-200 bg-slate-50 p-2 md:col-span-2">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-2 md:col-span-2">
             <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[11px]">
               <LayerBadge layer={look.model} small />
               <span className="text-slate-500">
@@ -1263,7 +1263,7 @@ export function WorkshopPage({
                         })}
               </span>
             </div>
-            <svg viewBox={look.frame ?? "0 0 270 220"} className="w-full rounded bg-white">
+            <svg viewBox={look.frame ?? "0 0 270 220"} className="w-full rounded bg-white dark:bg-slate-800">
               {look.lens !== null &&
                 look.edges.map((edge) => {
                   const from =
@@ -1434,7 +1434,7 @@ export function WorkshopPage({
                 best = match;
             }
             return (
-              <div className="mt-3 rounded-lg border border-slate-300 bg-slate-50 p-3">
+              <div className="mt-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-3">
                 <div className="mb-1 flex items-center gap-2">
                   <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
                     {selectedGlyph.name}
@@ -1445,7 +1445,7 @@ export function WorkshopPage({
                     <span className="font-medium">{look.lens}</span>
                   </span>
                   <button type="button"
-                    className="ml-auto rounded px-2 text-slate-600 hover:bg-slate-100 hover:text-slate-700"
+                    className="ml-auto rounded px-2 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-700 dark:text-slate-200"
                     onClick={() => setSelectedGlyph(null)}
                   >
                     ×
@@ -1472,10 +1472,10 @@ export function WorkshopPage({
                         key={index}
                         className={
                           "flex flex-wrap items-center gap-1.5 rounded-md px-2 py-1 text-[11px] " +
-                          (isBest ? "bg-emerald-50 ring-1 ring-emerald-300" : "bg-white")
+                          (isBest ? "bg-emerald-50 ring-1 ring-emerald-300" : "bg-white dark:bg-slate-800")
                         }
                       >
-                        <span className="font-semibold text-slate-800">
+                        <span className="font-semibold text-slate-800 dark:text-slate-100">
                           {shapeLabel({ shape: match.spec, language })}
                         </span>
                         <span className="text-slate-600">

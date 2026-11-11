@@ -78,7 +78,7 @@ export function RefinesGraph({
   }
   return (
     <div>
-      <div className="overflow-auto rounded border border-slate-200 bg-white">
+      <div className="overflow-auto rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
         <div style={{ position: "relative", width: layout.W, height: layout.H }}>
           <svg width={layout.W} height={layout.H} style={{ position: "absolute", left: 0, top: 0 }}>
             <defs>
@@ -126,7 +126,7 @@ export function RefinesGraph({
                     ? "border-slate-900 ring-2 ring-slate-900 "
                     : inAncestors
                       ? "border-slate-500 "
-                      : "border-slate-300 ") +
+                      : "border-slate-300 dark:border-slate-600 ") +
                   (!matches
                     ? "opacity-10"
                     : inAncestors

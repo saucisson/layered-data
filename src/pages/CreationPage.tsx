@@ -63,8 +63,8 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="border-b border-slate-200 bg-white px-5 py-4">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
+      <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h1 className="text-lg font-bold">
             {say({
@@ -85,7 +85,7 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
                   "rounded border px-1.5 py-0.5 font-bold uppercase " +
                   (language === choice
                     ? "border-slate-800 bg-slate-800 text-white"
-                    : "border-slate-300 bg-white text-slate-500 hover:border-slate-500")
+                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 hover:border-slate-500")
                 }
               >
                 {choice}
@@ -96,19 +96,19 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
         <div className="mt-2 flex flex-wrap gap-2 text-xs">
           <button type="button"
             onClick={() => navigate("landing")}
-            className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
+            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
             {say({ language, en: "← home", fr: "← accueil" })}
           </button>
           <button type="button"
             onClick={() => navigate("hierarchy")}
-            className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
+            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
             {say({ language, en: "the hierarchy →", fr: "la hiérarchie →" })}
           </button>
           <button type="button"
             onClick={() => navigate("workshop")}
-            className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
+            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
             {say({ language, en: "the workshop →", fr: "l'atelier →" })}
           </button>
@@ -116,8 +116,8 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
       </header>
 
       <main className="mx-auto max-w-4xl p-6">
-        <section className="mb-4 rounded-lg border border-slate-200 bg-white p-4 text-sm leading-6 text-slate-600">
-          <h2 className="mb-2 text-base font-bold text-slate-800">
+        <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-sm leading-6 text-slate-600">
+          <h2 className="mb-2 text-base font-bold text-slate-800 dark:text-slate-100">
             {say({ language, en: "The protocol", fr: "Le protocole" })}
           </h2>
           <p>
@@ -161,8 +161,8 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
           />
         </section>
 
-        <section className="mb-4 rounded-lg border border-slate-200 bg-white p-4">
-          <h2 className="mb-2 text-sm font-bold text-slate-800">
+        <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
+          <h2 className="mb-2 text-sm font-bold text-slate-800 dark:text-slate-100">
             {say({
               language,
               en: "The formalisms of this session",
@@ -189,13 +189,13 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
                   <span className="font-mono font-semibold">{layerName}</span>
                   <button type="button"
                     onClick={() => navigate("formalism", layerName)}
-                    className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
+                    className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
                   >
                     {say({ language, en: "understand it →", fr: "le comprendre →" })}
                   </button>
                   <button type="button"
                     onClick={() => navigate("hierarchy")}
-                    className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
+                    className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
                   >
                     {say({
                       language,
@@ -209,8 +209,8 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
           )}
         </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white p-4 text-[11px] leading-5 text-slate-500">
-          <h2 className="mb-1 text-sm font-bold text-slate-800">
+        <section className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-[11px] leading-5 text-slate-500">
+          <h2 className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
             {say({ language, en: "The gestures of the language", fr: "Les gestes du langage" })}
           </h2>
           <p>
@@ -222,7 +222,7 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
           </p>
           <button type="button"
             onClick={() => navigate("tutorial")}
-            className="mt-2 rounded border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
+            className="mt-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-[11px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
           >
             {say({ language, en: "the tutorial →", fr: "le tutoriel →" })}
           </button>

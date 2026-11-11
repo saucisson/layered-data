@@ -35,7 +35,7 @@ export function WorkshopHomePage({
   const { navigate } = useRouter();
   return (
     <div>
-      <nav className="border-b border-slate-200 bg-white">
+      <nav className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-1 px-4 pt-3">
           {TABS.map((candidate) => (
             <button type="button"
@@ -44,8 +44,8 @@ export function WorkshopHomePage({
               aria-current={candidate === tab ? "page" : undefined}
               className={
                 candidate === tab
-                  ? "rounded-t-lg border border-b-0 border-slate-200 bg-slate-50 px-4 py-2 text-sm font-semibold text-slate-800"
-                  : "rounded-t-lg border border-transparent px-4 py-2 text-sm text-slate-500 hover:bg-slate-50 hover:text-slate-700"
+                  ? "rounded-t-lg border border-b-0 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-800 dark:text-slate-100"
+                  : "rounded-t-lg border border-transparent px-4 py-2 text-sm text-slate-500 hover:bg-slate-50 dark:bg-slate-900 hover:text-slate-700 dark:text-slate-200"
               }
             >
               {candidate === "workshop" ? t("the workshop") : t("the graphical model editor")}

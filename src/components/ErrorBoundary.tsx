@@ -41,7 +41,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
           <p className="text-lg">{t("something went wrong — the atelier hit an unexpected error")}</p>
           <button
             type="button"
-            className="rounded border border-slate-400 px-4 py-2 hover:bg-slate-100"
+            className="rounded border border-slate-400 px-4 py-2 hover:bg-slate-100 dark:bg-slate-800"
             onClick={() => window.location.reload()}
           >
             {t("reload")}

@@ -1079,7 +1079,7 @@ export function ModelEditorPage({
         <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
           ✎
         </span>
-        <span className="text-sm font-semibold text-slate-700">
+        <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
           {t("the graphical model editor")}
         </span>
         {shared ? (
@@ -1090,7 +1090,7 @@ export function ModelEditorPage({
             {t("shared — {{editors}} other editor(s) online", { editors: presence.length })}
           </span>
         ) : (
-          <span className="rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[11px] text-slate-500">
+          <span className="rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 text-[11px] text-slate-500">
             {t("local — no shared session")}
           </span>
         )}
@@ -1103,7 +1103,7 @@ export function ModelEditorPage({
             setTool({ kind: "select" });
             setBanner(null);
           }}
-          className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs"
         >
           <option value="">{t("no model")}</option>
           {editableModels.map((name) => (
@@ -1115,7 +1115,7 @@ export function ModelEditorPage({
         <select
           value={lens}
           onChange={(event) => setLens(event.target.value)}
-          className="rounded border border-slate-300 bg-white px-2 py-1 text-xs"
+          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs"
         >
           {LENS_LAYERS.map((lensName) => (
             <option key={lensName} value={lensName}>
@@ -1134,7 +1134,7 @@ export function ModelEditorPage({
           disabled={history.length === 0}
           title={t("undo (Ctrl+Z)")}
           aria-label={t("undo (Ctrl+Z)")}
-          className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
         >
           ↶
         </button>
@@ -1143,7 +1143,7 @@ export function ModelEditorPage({
           disabled={future.length === 0}
           title={t("redo (Ctrl+Shift+Z)")}
           aria-label={t("redo (Ctrl+Shift+Z)")}
-          className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
         >
           ↷
         </button>
@@ -1151,7 +1151,7 @@ export function ModelEditorPage({
           onClick={() => setShowSource((previous) => !previous)}
           disabled={model === null}
           title={t("show the model's source block")}
-          className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
         >
           {t("source")}
         </button>
@@ -1159,14 +1159,14 @@ export function ModelEditorPage({
           onClick={exportModel}
           disabled={model === null}
           title={t("download the model as .ld")}
-          className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
         >
           {t("export .ld")}
         </button>
         <button type="button"
           onClick={() => importInputRef.current?.click()}
           title={t("import a .ld draft — judged by the staging")}
-          className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900"
         >
           {t("import .ld")}
         </button>
@@ -1179,7 +1179,7 @@ export function ModelEditorPage({
         />
         <button type="button"
           onClick={() => onChooseLanguage(language === "fr" ? "en" : "fr")}
-          className="ml-auto rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
+          className="ml-auto rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900"
         >
           {language === "fr" ? "EN" : "FR"}
         </button>
@@ -1197,14 +1197,14 @@ export function ModelEditorPage({
               value={creationName}
               onChange={(event) => setCreationName(event.target.value)}
               placeholder={t("model name")}
-              className="rounded border border-slate-300 px-2 py-1 text-xs"
+              className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs"
             />
             <span className="text-xs text-slate-600">refines</span>
             <input
               value={creationRefines}
               onChange={(event) => setCreationRefines(event.target.value)}
               spellCheck={false}
-              className="w-72 rounded border border-slate-300 px-2 py-1 font-mono text-xs"
+              className="w-72 rounded border border-slate-300 dark:border-slate-600 px-2 py-1 font-mono text-xs"
             />
             <button type="button"
               onClick={handleCreateModel}
@@ -1219,7 +1219,7 @@ export function ModelEditorPage({
 
       <div className="grid grid-cols-12 gap-4">
         {/* the palette: read from the formalism, never hardcoded */}
-        <div className="col-span-2 rounded-lg border border-slate-200 bg-white p-2">
+        <div className="col-span-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
             {t("palette")}
           </div>
@@ -1235,7 +1235,7 @@ export function ModelEditorPage({
                 "rounded px-2 py-1 text-left text-[11px] " +
                 (tool.kind === "select"
                   ? "bg-sky-600 text-white"
-                  : "bg-slate-100 text-slate-600 hover:bg-slate-200")
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200")
               }
             >
               {t("pointer")}
@@ -1248,7 +1248,7 @@ export function ModelEditorPage({
                   "rounded px-2 py-1 text-left text-[11px] " +
                   (tool.kind === "sommet" && tool.container === container.name
                     ? "bg-sky-600 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200")
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200")
                 }
                 title={container.name + " — " + container.annotationKeys.join(", ")}
               >
@@ -1262,7 +1262,7 @@ export function ModelEditorPage({
                   "rounded px-2 py-1 text-left text-[11px] " +
                   (tool.kind === "arc"
                     ? "bg-sky-600 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200")
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200")
                 }
                 title={t(
                   "drag from a vertex to another — pre or post, the formalism's rules decide",
@@ -1283,7 +1283,7 @@ export function ModelEditorPage({
             aria-label={t(
               "model canvas — drag vertices to move them, pull an arc from a vertex to another",
             )}
-            className="w-full touch-none select-none rounded-lg border border-slate-200 bg-white"
+            className="w-full touch-none select-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={() => setGesture(null)}
@@ -1371,7 +1371,7 @@ export function ModelEditorPage({
                 "mt-2 rounded-md border px-2 py-1.5 text-[11px] leading-4 " +
                 (banner.tone === "refused"
                   ? "border-amber-200 bg-amber-50 text-amber-800"
-                  : "border-sky-200 bg-white text-sky-700")
+                  : "border-sky-200 bg-white dark:bg-slate-800 text-sky-700")
               }
             >
               {banner.text}
@@ -1382,7 +1382,7 @@ export function ModelEditorPage({
         {/* the source panel: the block the canvas reads — shown beside
             the canvas on demand, the only truth made visible */}
         {showSource && model !== null && (
-          <div className="col-span-2 rounded-lg border border-slate-200 bg-white p-2">
+          <div className="col-span-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
               {t("source — the only truth")}
             </div>
@@ -1393,7 +1393,7 @@ export function ModelEditorPage({
         )}
 
         {/* the inspector: the selected member and its declared keys */}
-        <div className="col-span-3 rounded-lg border border-slate-200 bg-white p-2">
+        <div className="col-span-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
             {t("inspector")}
           </div>
@@ -1405,7 +1405,7 @@ export function ModelEditorPage({
             </p>
           ) : (
             <div>
-              <div className="mb-1 font-mono text-[11px] font-semibold text-slate-700">
+              <div className="mb-1 font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-200">
                 {selected.container + "/" + selected.name}
               </div>
               {/* the arc's ends are editable references: type
@@ -1439,7 +1439,7 @@ export function ModelEditorPage({
                           if (event.key === "Enter")
                             commitField({ key, text: event.currentTarget.value });
                         }}
-                        className="w-40 rounded border border-slate-200 px-1 py-0.5 font-mono text-[11px]"
+                        className="w-40 rounded border border-slate-200 dark:border-slate-700 px-1 py-0.5 font-mono text-[11px]"
                       />
                     </label>
                   );
@@ -1470,7 +1470,7 @@ export function ModelEditorPage({
                         if (event.key === "Enter")
                           commitField({ key, text: event.currentTarget.value });
                       }}
-                      className="w-24 rounded border border-slate-200 px-1 py-0.5 font-mono text-[11px]"
+                      className="w-24 rounded border border-slate-200 dark:border-slate-700 px-1 py-0.5 font-mono text-[11px]"
                     />
                   </label>
                 );
