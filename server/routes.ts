@@ -23,6 +23,7 @@ import {
   RATE_LIMIT_WINDOW_SECONDS,
   GENERATE_MAX_REQUESTS,
   POST_MAX_REQUESTS,
+  EDITOR_SESSION_HISTORY_DEPTH,
 } from "./config.ts";
 import {
   KERNEL_LAYER_NAMES,
@@ -36,7 +37,10 @@ import { PenInfraFailure, generateLayer } from "./mistralClient.ts";
 import {
   editorSession,
   editorClients,
+  ensureEditorSessionLoaded,
   persistEditorSession,
+  editorSessionHistory,
+  setEditorSessionStore,
   sendEvent,
   sessionSnapshot,
   broadcastEditorState,
@@ -90,6 +94,7 @@ export function createQuarryServer({
 }: {
   stores?: QuarryStores;
 } = {}) {
+  setEditorSessionStore({ editorSessionStore: stores.editorSession });
   const rateLimiters = createApiRateLimiters();
   return createServer(async (request, response) => {
     applySecurityHeaders({ response });
@@ -338,6 +343,7 @@ export function createQuarryServer({
 
         // ---- the shared editor session (ADR-0110) ----
         if (url.pathname === "/api/editor/session" && request.method === "GET") {
+          await ensureEditorSessionLoaded();
           const clientId = randomUUID();
           response.writeHead(200, {
             "Content-Type": "text/event-stream; charset=utf-8",
@@ -361,6 +367,7 @@ export function createQuarryServer({
         }
 
         if (url.pathname === "/api/editor/presence" && request.method === "POST") {
+          await ensureEditorSessionLoaded();
           const body = JSON.parse((await readRequestBody({ request })) || "{}") as {
             clientId?: unknown;
             focus?: unknown;
@@ -375,6 +382,7 @@ export function createQuarryServer({
         }
 
         if (url.pathname === "/api/editor/gesture" && request.method === "POST") {
+          await ensureEditorSessionLoaded();
           const body = JSON.parse((await readRequestBody({ request })) || "{}") as {
             source?: unknown;
             baseVersion?: unknown;
@@ -390,17 +398,94 @@ export function createQuarryServer({
               body: { erreur: 'corps JSON attendu : { "source": "…", "baseVersion": 0 }' },
             });
           }
-          const outcome = editorSession.applyGesture({
+          const outcome = editorSession().applyGesture({
             source: body.source,
             baseVersion: body.baseVersion,
           });
           if (outcome.ok) {
-            persistEditorSession();
+            await persistEditorSession();
             broadcastEditorState();
             return sendJson({
               response,
               statusCode: 200,
               body: { ok: true, ...sessionSnapshot() },
+            });
+          }
+          if (outcome.reason === "conflict") {
+            return sendJson({
+              response,
+              statusCode: 409,
+              body: { ok: false, reason: "conflict", ...sessionSnapshot() },
+            });
+          }
+          return sendJson({
+            response,
+            statusCode: 422,
+            body: {
+              ok: false,
+              reason: "refused",
+              refusals: outcome.refusals,
+              staging: outcome.staging,
+              ...sessionSnapshot(),
+            },
+          });
+        }
+
+        // ---- the session journal (ADR-0111): history + restore ----
+        if (url.pathname === "/api/editor/history" && request.method === "GET") {
+          await ensureEditorSessionLoaded();
+          const limitParam = Number(url.searchParams.get("limit") ?? EDITOR_SESSION_HISTORY_DEPTH);
+          const limit = Number.isFinite(limitParam)
+            ? Math.min(Math.max(1, Math.floor(limitParam)), EDITOR_SESSION_HISTORY_DEPTH)
+            : EDITOR_SESSION_HISTORY_DEPTH;
+          const entries = await editorSessionHistory({ limit });
+          return sendJson({
+            response,
+            statusCode: 200,
+            body: {
+              entries: entries.map((entry) => ({
+                version: entry.version,
+                additions: entry.state.additions,
+              })),
+            },
+          });
+        }
+
+        if (url.pathname === "/api/editor/restore" && request.method === "POST") {
+          await ensureEditorSessionLoaded();
+          const body = JSON.parse((await readRequestBody({ request })) || "{}") as {
+            version?: unknown;
+            baseVersion?: unknown;
+          };
+          if (typeof body?.version !== "number" || typeof body?.baseVersion !== "number") {
+            return sendJson({
+              response,
+              statusCode: 400,
+              body: { erreur: 'corps JSON attendu : { "version": 1, "baseVersion": 2 }' },
+            });
+          }
+          const entries = await editorSessionHistory({ limit: EDITOR_SESSION_HISTORY_DEPTH });
+          const target = entries.find((entry) => entry.version === body.version);
+          if (target === undefined) {
+            return sendJson({
+              response,
+              statusCode: 404,
+              body: { erreur: "version inconnue dans le journal : " + body.version },
+            });
+          }
+          // the restore is re-judged by the same staging as a gesture
+          // and becomes a NEW version — never a silent rewind
+          const outcome = editorSession().restore({
+            additions: target.state.additions,
+            baseVersion: body.baseVersion,
+          });
+          if (outcome.ok) {
+            await persistEditorSession();
+            broadcastEditorState();
+            return sendJson({
+              response,
+              statusCode: 200,
+              body: { ok: true, restoredVersion: body.version, ...sessionSnapshot() },
             });
           }
           if (outcome.reason === "conflict") {
