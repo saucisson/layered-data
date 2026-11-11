@@ -107,7 +107,7 @@ function addressViewRepr(view: AddressView): string {
 }
 
 // Minimal %r-style rendering (check parameters are integers).
-function valueRepr(value: any): string {
+function valueRepr(value: unknown): string {
   if (typeof value === "boolean") return value ? "True" : "False";
   if (typeof value === "string") return "'" + value + "'";
   return String(value);
