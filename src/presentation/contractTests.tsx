@@ -70,7 +70,7 @@ export function LayerContractTests({
   const betrayed = rows.filter((row) => !row.matching).length;
   return (
     <div className="mb-3 rounded-lg border border-slate-200 bg-white p-3">
-      <button
+      <button type="button"
         className="flex w-full items-center justify-between gap-2 text-left text-sm font-bold text-slate-800"
         onClick={() => setOpen(!open)}
       >

@@ -137,7 +137,7 @@ export function DiagnosticsPanel({
   const verdicts = validation.verdicts;
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-3">
-      <button
+      <button type="button"
         className="flex w-full items-center justify-between gap-2 text-left text-sm font-bold text-slate-800"
         onClick={() => setOpen(!open)}
       >

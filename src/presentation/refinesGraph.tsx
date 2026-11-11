@@ -105,7 +105,7 @@ export function RefinesGraph({
             const inDescendants = descendants.has(layerName);
             const matches = !needle || layerName.toLowerCase().includes(needle);
             return (
-              <button
+              <button type="button"
                 key={layerName}
                 onClick={() => onPick(layerName)}
                 onMouseEnter={() => setHovered(layerName)}

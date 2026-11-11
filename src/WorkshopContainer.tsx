@@ -423,7 +423,7 @@ export function WorkshopPage({
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
-              <button
+              <button type="button"
                 key={choice}
                 onClick={() => onChooseLanguage(choice)}
                 className={
@@ -463,7 +463,7 @@ export function WorkshopPage({
             })}
             className="min-w-[240px] flex-1 rounded-md border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none"
           />
-          <button
+          <button type="button"
             onClick={() => setGuidedTourOpen(!guidedTourOpen)}
             aria-expanded={guidedTourOpen}
             title={say({
@@ -485,7 +485,7 @@ export function WorkshopPage({
         {guidedTourOpen && (
           <div className="mt-3 flex flex-wrap gap-2">
             {WORKSHOP_SCENARIOS.map((scenario, index) => (
-              <button
+              <button type="button"
                 key={scenario.id}
                 onClick={() => activateScenario(index)}
                 title={localized({ language, text: scenario.text }).slice(0, 120) + "…"}
@@ -517,7 +517,7 @@ export function WorkshopPage({
             <span className="font-semibold">
               {localized({ language, text: activeScenario.label })}
             </span>
-            <button
+            <button type="button"
               className="ml-auto rounded px-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
               onClick={() => setScenarioIndex(-1)}
               aria-label={say({ language, fr: "fermer le scénario", en: "close the scenario" })}
@@ -551,7 +551,7 @@ export function WorkshopPage({
                   : say({ language, fr: "et leurs bruts", en: "and their raws" })}
               </span>
               <span className="ml-auto flex overflow-hidden rounded border border-slate-300 text-[10px] leading-4">
-                <button
+                <button type="button"
                   onClick={() => setGraphView(false)}
                   className={
                     "px-2 " +
@@ -562,7 +562,7 @@ export function WorkshopPage({
                 >
                   {say({ language, fr: "liste", en: "list" })}
                 </button>
-                <button
+                <button type="button"
                   onClick={() => setGraphView(true)}
                   className={
                     "px-2 " +
@@ -574,7 +574,7 @@ export function WorkshopPage({
                   {say({ language, fr: "graphe", en: "graph" })}
                 </button>
               </span>
-              <button
+              <button type="button"
                 onClick={() => setComposerOpen(!composerOpen)}
                 title={say({
                   language,
@@ -665,7 +665,7 @@ export function WorkshopPage({
                   return (
                     <div key={layerName} style={{ marginLeft: depth * 10 }}>
                       <div className="flex items-center gap-1">
-                        <button
+                        <button type="button"
                           onClick={() => goto(layerName, [])}
                           title={localized({
                             language,
@@ -699,7 +699,7 @@ export function WorkshopPage({
                           </span>
                         </button>
                         {editableLayerSet.has(layerName) && (
-                          <button
+                          <button type="button"
                             onClick={() =>
                               setEditorLayer(editorLayer === layerName ? null : layerName)
                             }
@@ -767,7 +767,7 @@ export function WorkshopPage({
               </span>
             </h2>
             <div className="flex flex-wrap items-center gap-1 text-xs">
-              <button
+              <button type="button"
                 onClick={goBack}
                 disabled={!history.length}
                 title={
@@ -795,13 +795,13 @@ export function WorkshopPage({
               </button>
               <LayerBadge layer={layer} />
               <span className="text-slate-400">::</span>
-              <button className="text-slate-400 hover:text-slate-600" onClick={() => setPath([])}>
+              <button type="button" className="text-slate-400 hover:text-slate-600" onClick={() => setPath([])}>
                 ()
               </button>
               {path.map((segment, index) => (
                 <span key={index} className="flex items-center gap-1">
                   <span className="text-slate-300">/</span>
-                  <button
+                  <button type="button"
                     className="font-mono font-medium text-slate-700 hover:underline"
                     onClick={() => setPath(path.slice(0, index + 1))}
                   >
@@ -809,7 +809,7 @@ export function WorkshopPage({
                   </button>
                 </span>
               ))}
-              <button
+              <button type="button"
                 onClick={copyAddress}
                 title={say({
                   language,
@@ -861,7 +861,7 @@ export function WorkshopPage({
                       (active ? "rounded-md bg-sky-50 px-1 ring-1 ring-sky-200" : "")
                     }
                   >
-                    <button
+                    <button type="button"
                       className="min-w-24 text-left font-mono font-semibold text-slate-800 hover:underline"
                       onClick={() => {
                         setSelectedKey(active ? null : info.key);
@@ -881,7 +881,7 @@ export function WorkshopPage({
                       <KernelValue value={info.value} language={language} />
                     </span>
                     {isNode && (
-                      <button
+                      <button type="button"
                         className="ml-auto shrink-0 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800"
                         onClick={() =>
                           goto((info.value as AddressView).layer, (info.value as AddressView).path)
@@ -984,7 +984,7 @@ export function WorkshopPage({
                   language={language}
                 />
                 {selectedKeyDetail && selectedKeyDetail.value instanceof AddressView && (
-                  <button
+                  <button type="button"
                     className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600"
                     onClick={() =>
                       goto(
@@ -1072,7 +1072,7 @@ export function WorkshopPage({
           {/* The calculation folds under the mechanism — opened
               automatically by the click on a key */}
           <div className="rounded-lg border border-slate-200 bg-white p-3">
-            <button
+            <button type="button"
               className="flex w-full items-center justify-between gap-2 text-left text-xs font-bold text-slate-800"
               onClick={() => setShowClosureCalculation(!showClosureCalculation)}
             >
@@ -1149,7 +1149,7 @@ export function WorkshopPage({
                 {groupTree({ space: KERNEL.space, members: LENS_LAYERS }).map(
                   ({ layer: viewLayer, depth }) => (
                     <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
-                      <button
+                      <button type="button"
                         className={
                           "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
                           (selectedView === viewLayer
@@ -1183,7 +1183,7 @@ export function WorkshopPage({
                 {groupTree({ space: KERNEL.space, members: VIEWPOINT_LAYERS }).map(
                   ({ layer: viewLayer, depth }) => (
                     <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
-                      <button
+                      <button type="button"
                         className={
                           "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
                           (selectedView === viewLayer
@@ -1432,7 +1432,7 @@ export function WorkshopPage({
                     {say({ language, fr: "habillage par", en: "dressing by" })}{" "}
                     <span className="font-medium">{look.lens}</span>
                   </span>
-                  <button
+                  <button type="button"
                     className="ml-auto rounded px-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
                     onClick={() => setSelectedGlyph(null)}
                   >

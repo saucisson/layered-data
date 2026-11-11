@@ -55,7 +55,7 @@ export function FormalismPanel({
         </h2>
         <div className="flex gap-1">
           {tabs.map(([tab, label]) => (
-            <button
+            <button type="button"
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={
