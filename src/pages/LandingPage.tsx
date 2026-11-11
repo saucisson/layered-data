@@ -13,8 +13,8 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
   const { navigate } = useRouter();
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
-      <header className="border-b border-slate-200 bg-white px-5 py-4">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
+      <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <h1 className="text-lg font-bold">
             {say({
@@ -35,7 +35,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
                   "rounded border px-1.5 py-0.5 font-bold uppercase " +
                   (language === choice
                     ? "border-slate-800 bg-slate-800 text-white"
-                    : "border-slate-300 bg-white text-slate-500 hover:border-slate-500")
+                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 hover:border-slate-500")
                 }
               >
                 {choice}
@@ -47,7 +47,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
 
       <main className="mx-auto max-w-4xl p-8">
         <section className="text-center">
-          <h2 className="mb-4 text-3xl font-bold text-slate-800">
+          <h2 className="mb-4 text-3xl font-bold text-slate-800 dark:text-slate-100">
             {say({
               language,
               en: "Data in Strata",
@@ -64,8 +64,8 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
         </section>
 
         <section className="mt-12 grid gap-6 md:grid-cols-3">
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-3 text-lg font-semibold text-slate-800">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+            <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({ language, en: "Incremental Definitions", fr: "Définitions incrémentales" })}
             </h3>
             <p className="text-sm text-slate-600">
@@ -77,8 +77,8 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-3 text-lg font-semibold text-slate-800">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+            <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({ language, en: "First-Wins Reading", fr: "La première définition l'emporte" })}
             </h3>
             <p className="text-sm text-slate-600">
@@ -90,8 +90,8 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-3 text-lg font-semibold text-slate-800">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+            <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({
                 language,
                 en: "One Model, Several Formalisms",
@@ -109,8 +109,8 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
         </section>
 
         <section className="mt-12 grid gap-6 md:grid-cols-3">
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-3 text-lg font-semibold text-slate-800">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+            <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({ language, en: "Visualize the Hierarchy", fr: "Visualisez la hiérarchie" })}
             </h3>
             <p className="text-sm text-slate-600">
@@ -122,14 +122,14 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             </p>
             <button type="button"
               onClick={() => navigate("hierarchy")}
-              className="mt-4 rounded-lg border-2 border-slate-400 px-4 py-2 text-sm text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+              className="mt-4 rounded-lg border-2 border-slate-400 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:bg-slate-900 transition-colors"
             >
               {say({ language, en: "Visualize the hierarchy →", fr: "Visualisez la hiérarchie →" })}
             </button>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-3 text-lg font-semibold text-slate-800">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+            <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({ language, en: "Create a Formalism", fr: "Créez un formalisme" })}
             </h3>
             <p className="text-sm text-slate-600">
@@ -147,8 +147,8 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             </button>
           </div>
 
-          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-            <h3 className="mb-3 text-lg font-semibold text-slate-800">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+            <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({ language, en: "Study and Understand", fr: "Étudiez et comprenez" })}
             </h3>
             <p className="text-sm text-slate-600">
@@ -176,7 +176,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
           </button>
           <button type="button"
             onClick={() => navigate("filiation")}
-            className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
+            className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:bg-slate-900 transition-colors"
           >
             {say({ language, en: "Filiation & comparison →", fr: "Filiation & comparaison →" })}
           </button>
@@ -194,7 +194,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
           </button>
         </section>
 
-        <footer className="mt-16 pt-6 border-t border-slate-200 text-center text-xs text-slate-600">
+        <footer className="mt-16 pt-6 border-t border-slate-200 dark:border-slate-700 text-center text-xs text-slate-600">
           {say({
             language,
             en: "Layered Data — A formalism design workshop where definitions are data",

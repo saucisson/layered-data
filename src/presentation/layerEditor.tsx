@@ -95,7 +95,7 @@ export function LayerEditor({
     <div className="mb-3 rounded-lg border border-sky-200 bg-sky-50/40 p-3">
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
         <span className="rounded bg-sky-600 px-1.5 py-0.5 text-[11px] font-bold text-white">✎</span>
-        <span className="text-xs font-semibold text-slate-700">
+        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
           {say({
             language,
             en: "edit the living layer « " + layerName + " »",
@@ -109,7 +109,7 @@ export function LayerEditor({
             en: "close the editor — nothing is written into the space",
             fr: "fermer l'éditeur — rien n'est écrit dans l'espace",
           })}
-          className="ml-auto rounded px-1.5 py-0.5 text-[11px] text-slate-600 hover:text-slate-700"
+          className="ml-auto rounded px-1.5 py-0.5 text-[11px] text-slate-600 hover:text-slate-700 dark:text-slate-200"
         >
           ✕
         </button>
@@ -126,7 +126,7 @@ export function LayerEditor({
         onChange={(event) => setSource(event.target.value)}
         spellCheck={false}
         rows={10}
-        className="mb-2 w-full rounded border border-slate-200 bg-white p-2 font-mono text-[11px] leading-4"
+        className="mb-2 w-full rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 font-mono text-[11px] leading-4"
       />
       <div className="flex flex-wrap items-center gap-2">
         <button type="button"
@@ -210,7 +210,7 @@ export function LayerEditor({
         </div>
       )}
       {result !== null && result.applied && (
-        <div className="mt-2 rounded-md border border-sky-200 bg-white px-2 py-1.5 text-[11px] leading-4 text-sky-700">
+        <div className="mt-2 rounded-md border border-sky-200 bg-white dark:bg-slate-800 px-2 py-1.5 text-[11px] leading-4 text-sky-700">
           {say({
             language,
             en:

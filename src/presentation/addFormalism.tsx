@@ -161,7 +161,7 @@ export function AddFormalismComposer({
         <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
           ＋
         </span>
-        <span className="text-xs font-semibold text-slate-700">
+        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
           {say({ language, en: "one more formalism", fr: "un formalisme de plus" })}
         </span>
         <span className="text-[11px] leading-4 text-slate-500">
@@ -181,7 +181,7 @@ export function AddFormalismComposer({
             en: "intention — « a net whose arcs carry a charge »",
             fr: "intention — « un réseau dont les arcs portent une charge »",
           })}
-          className="min-w-40 flex-1 rounded border border-slate-200 px-2 py-1 text-xs"
+          className="min-w-40 flex-1 rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
         />
         <button type="button"
           onClick={() => {
@@ -205,7 +205,7 @@ export function AddFormalismComposer({
         spellCheck={false}
         rows={8}
         placeholder={"layer mon-axe refines @graph\n  …"}
-        className="mb-2 w-full rounded border border-slate-200 bg-white p-2 font-mono text-[11px] leading-4"
+        className="mb-2 w-full rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 font-mono text-[11px] leading-4"
       />
       <div className="flex flex-wrap items-center gap-2">
         <button type="button"
@@ -290,7 +290,7 @@ export function AddFormalismComposer({
             </div>
           )}
           {composerResult.ok && (composerResult.newLayerNames ?? []).length === 0 && (
-            <div className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] leading-4 text-slate-600">
+            <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 text-[11px] leading-4 text-slate-600">
               {say({
                 language,
                 en: "staging: 0 verdict — but these layers are already in the space: nothing to add.",

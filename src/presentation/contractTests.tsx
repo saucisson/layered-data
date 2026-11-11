@@ -69,9 +69,9 @@ export function LayerContractTests({
   if (expectations.length === 0) return null;
   const betrayed = rows.filter((row) => !row.matching).length;
   return (
-    <div className="mb-3 rounded-lg border border-slate-200 bg-white p-3">
+    <div className="mb-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
       <button type="button"
-        className="flex w-full items-center justify-between gap-2 text-left text-sm font-bold text-slate-800"
+        className="flex w-full items-center justify-between gap-2 text-left text-sm font-bold text-slate-800 dark:text-slate-100"
         onClick={() => setOpen(!open)}
       >
         <span>
@@ -104,7 +104,7 @@ export function LayerContractTests({
               <span className={row.matching ? "text-emerald-600" : "text-red-600"}>
                 {row.matching ? "✓" : "✗"}
               </span>{" "}
-              <span className="text-slate-700">{row.expectation.address}</span>
+              <span className="text-slate-700 dark:text-slate-200">{row.expectation.address}</span>
               <span className="text-slate-600">
                 {" " +
                   say({ language, en: "— expected ", fr: "— attendu " }) +

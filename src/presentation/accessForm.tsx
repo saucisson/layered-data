@@ -55,12 +55,12 @@ export function AccessCodeForm({ language }: { language: Language }) {
     }
   }
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
       <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
         <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
           {say({ language, en: "key", fr: "clé" })}
         </span>
-        <span className="text-xs font-semibold text-slate-700">
+        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
           {say({ language, en: "site access code", fr: "code d'accès du site" })}
         </span>
         <span className="text-[11px] leading-4 text-slate-500">
@@ -77,7 +77,7 @@ export function AccessCodeForm({ language }: { language: Language }) {
           value={accessCode}
           onChange={(event) => setAccessCode(event.target.value)}
           placeholder={say({ language, en: "access code", fr: "code d'accès" })}
-          className="min-w-40 flex-1 rounded border border-slate-200 px-2 py-1 text-xs"
+          className="min-w-40 flex-1 rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
         />
         <button type="button"
           onClick={() => {

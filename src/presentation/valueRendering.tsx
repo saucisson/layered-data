@@ -50,7 +50,7 @@ export function KernelValue({ value, language }: { value: any; language: Languag
 export function FlatValue({ value, language }: { value: any; language: Language }) {
   if (isDictionary(value)) {
     return (
-      <span className="font-medium text-slate-700">
+      <span className="font-medium text-slate-700 dark:text-slate-200">
         {Object.keys(value).map((slot, index) => (
           <span key={slot}>
             {index > 0 ? ", " : ""}
@@ -88,7 +88,7 @@ function prefixText(prefix: string[], language: Language): string {
 export function TraceEventRow({ event, language }: { event: any; language: Language }) {
   if (event.kind === "base") {
     return (
-      <div className="text-slate-700">
+      <div className="text-slate-700 dark:text-slate-200">
         <span className="font-semibold">① base</span>{" "}
         {say({ language, en: "— own node: ", fr: "— nœud propre : " })}
         {event.own ? (
@@ -112,7 +112,7 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
   if (event.kind === "entries") {
     if (!event.entries.length) {
       return (
-        <div className="text-slate-700">
+        <div className="text-slate-700 dark:text-slate-200">
           <span className="font-semibold">② refines</span>{" "}
           {say({
             language,
@@ -123,7 +123,7 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
       );
     }
     return (
-      <div className="text-slate-700">
+      <div className="text-slate-700 dark:text-slate-200">
         <span className="font-semibold">② refines</span>{" "}
         {say({ language, en: "— defined by ", fr: "— définis par " })}
         {event.from ? addressText(event.from) : "—"}
@@ -142,7 +142,7 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
   if (event.kind === "refsearch") {
     const result = Array.isArray(event.result) ? addressText(event.result) : String(event.result);
     return (
-      <div className="text-slate-700">
+      <div className="text-slate-700 dark:text-slate-200">
         <span className="font-semibold text-sky-700">
           {say({ language, en: "⟦resolution⟧", fr: "⟦résolution⟧" })}
         </span>{" "}
@@ -155,7 +155,7 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
           {event.search.map((searchStep: any, index: number) => (
             <div key={index}>
               {say({ language, en: "prefix ", fr: "préfixe " })}
-              <span className="font-medium text-slate-700">
+              <span className="font-medium text-slate-700 dark:text-slate-200">
                 {prefixText(searchStep.prefix, language)}
               </span>{" "}
               {say({ language, en: "→ anchors ", fr: "→ ancres " })}
@@ -191,14 +191,14 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
         </div>
         <div className="ml-3 text-[11px]">
           {say({ language, en: "result: ", fr: "résultat : " })}
-          <span className="font-medium text-slate-800">{result}</span>
+          <span className="font-medium text-slate-800 dark:text-slate-100">{result}</span>
         </div>
       </div>
     );
   }
   if (event.kind === "push") {
     return (
-      <div className="text-slate-700">
+      <div className="text-slate-700 dark:text-slate-200">
         <span className="font-semibold">③ + source</span>{" "}
         <span className="font-medium">{addressText(event.addr)}</span>{" "}
         <span className="text-slate-600">({labelOf({ code: event.via, language })})</span>
@@ -214,8 +214,8 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
 const STATUS_STYLE: Record<string, string> = {
   fournit: "bg-emerald-50 text-emerald-700 border-emerald-200",
   transparent: "bg-amber-50 text-amber-700 border-amber-200",
-  absent: "bg-slate-50 text-slate-500 border-slate-200",
-  "non atteint": "bg-slate-50 text-slate-500 border-slate-100",
+  absent: "bg-slate-50 dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700",
+  "non atteint": "bg-slate-50 dark:bg-slate-900 text-slate-500 border-slate-100",
 };
 
 /** A shape prefix so the status is not conveyed by color alone (WCAG 1.4.1). */

@@ -3,11 +3,29 @@
 // (the workshop and the editor are ONE page, two tabs — the hash
 // picks the tab), #hierarchy, #creation, #formalism/<layer>
 
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { RouterProvider, useRouter } from "./components/Router";
 import { readWorkshopLanguage, writeWorkshopLanguage } from "./infrastructure/browserLanguage";
 import { setI18nLanguage } from "./infrastructure/i18n";
 import type { Language } from "./domain/messages";
+
+/** Dark mode: follows the system preference by default, can be
+ *  toggled manually. The choice is persisted in localStorage and
+ *  applied as a .dark class on <html>. */
+function useDarkMode() {
+  const [dark, setDark] = useState<boolean>(() => {
+    const stored = localStorage.getItem("ld-dark-mode");
+    if (stored !== null) return stored === "true";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    localStorage.setItem("ld-dark-mode", String(dark));
+  }, [dark]);
+
+  return { dark, toggleDark: () => setDark((previous) => !previous) };
+}
 
 // Every page is lazy: the initial bundle carries only the router and
 // the shell, each route loads its own chunk on demand (issue #90).
@@ -46,6 +64,7 @@ function PageFallback() {
 function AppContent() {
   const { page, parameter } = useRouter();
   const [language, setLanguage] = useState<Language>(() => readWorkshopLanguage());
+  const { dark, toggleDark } = useDarkMode();
 
   const handleChooseLanguage = (next: Language) => {
     setLanguage(next);
@@ -55,6 +74,15 @@ function AppContent() {
 
   return (
     <Suspense fallback={<PageFallback />}>
+      <button
+        type="button"
+        onClick={toggleDark}
+        aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+        title={dark ? "Light mode" : "Dark mode"}
+        className="fixed right-3 top-3 z-50 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-600 shadow-sm hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+      >
+        {dark ? "☀ Light" : "☾ Dark"}
+      </button>
       {(() => {
         switch (page) {
           case "tutorial":
