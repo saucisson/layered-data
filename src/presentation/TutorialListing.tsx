@@ -107,7 +107,7 @@ export function TutorialListing({
     const nodes: React.ReactNode[] = [
       <div key={key} className="flex items-start gap-1" style={{ paddingLeft: depth * 12 }}>
         {hasSections ? (
-          <button
+          <button type="button"
             onClick={() => {
               setFolded((previous) => {
                 const next = new Set(previous);
@@ -124,7 +124,7 @@ export function TutorialListing({
         ) : (
           <span className="w-4 shrink-0" />
         )}
-        <button
+        <button type="button"
           onClick={() => openTarget(section.target)}
           title={say({
             language,
@@ -135,7 +135,7 @@ export function TutorialListing({
         >
           {renderLine(display)}
         </button>
-        <button
+        <button type="button"
           onClick={() => openTarget(section.target)}
           title={say({
             language,
@@ -168,13 +168,13 @@ export function TutorialListing({
           {"layer " + layer + "-flat"}
         </span>
         <span className="flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={() => setFolded(new Set())}
             className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
           >
             {say({ language, en: "unfold all", fr: "tout déplier" })}
           </button>
-          <button
+          <button type="button"
             onClick={() =>
               setFolded(new Set(collectFoldKeys({ sections: text.sections, prefix: "" })))
             }
@@ -200,7 +200,7 @@ export function TutorialListing({
                 fr: "la parenté de la ligne — cliquez encore pour marcher plus loin",
               })}
             </p>
-            <button
+            <button type="button"
               onClick={() => setCascade([])}
               className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
             >

@@ -146,7 +146,7 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
       <header className="border-b border-slate-200 bg-white px-5 py-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div className="flex items-center gap-4">
-            <button
+            <button type="button"
               onClick={() => navigate("landing")}
               className="rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
@@ -161,7 +161,7 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
-              <button
+              <button type="button"
                 key={choice}
                 onClick={() => onChooseLanguage(choice)}
                 className={
@@ -200,19 +200,19 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
         </section>
 
         <div className="mt-12 flex justify-center gap-4">
-          <button
+          <button type="button"
             onClick={() => navigate("landing")}
             className="rounded-lg border-2 border-slate-300 px-6 py-3 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
           >
             {say({ language, en: "← Landing", fr: "← Accueil" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("filiation")}
             className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
           >
             {say({ language, en: "Filiation & comparison →", fr: "Filiation & comparaison →" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("workshop")}
             className="rounded-lg bg-sky-600 px-6 py-3 text-white font-semibold hover:bg-sky-500 transition-colors"
           >

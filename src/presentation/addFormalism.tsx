@@ -183,7 +183,7 @@ export function AddFormalismComposer({
           })}
           className="min-w-40 flex-1 rounded border border-slate-200 px-2 py-1 text-xs"
         />
-        <button
+        <button type="button"
           onClick={() => {
             void requestProposal();
           }}
@@ -208,7 +208,7 @@ export function AddFormalismComposer({
         className="mb-2 w-full rounded border border-slate-200 bg-white p-2 font-mono text-[11px] leading-4"
       />
       <div className="flex flex-wrap items-center gap-2">
-        <button
+        <button type="button"
           onClick={() => {
             void validateAndAdd();
           }}
