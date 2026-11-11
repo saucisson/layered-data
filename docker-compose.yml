@@ -1,0 +1,17 @@
+services:
+  atelier:
+    build: .
+    ports:
+      - "8791:8791"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=8791
+      - API_TOKEN=${API_TOKEN:?Set API_TOKEN in .env or the environment — never use the default}
+      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      - MISTRAL_MODEL=${MISTRAL_MODEL:-codestral-latest}
+    volumes:
+      - atelier-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  atelier-data:
