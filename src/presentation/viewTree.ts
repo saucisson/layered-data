@@ -187,20 +187,36 @@ export function bindingOf({ space, view, key }: { space: Space; view: string; ke
   return { value, winner: last && last.status === "fournit" ? last.source : null };
 }
 
-/** One drawing shape as text (for the "shapes" readouts), in the
- * workshop language. */
-export function shapeLabel({ shape, language }: { shape: Glyph | null; language: Language }): string {
-  if (!shape) return say({ language, en: "no shape", fr: "sans forme" });
-  if (shape.shape === "circle") return say({ language, en: "circle", fr: "cercle" });
-  if (shape.shape === "ellipse") return say({ language, en: "ellipse", fr: "ellipse" });
-  if (shape.shape === "rectangle") return say({ language, en: "rectangle", fr: "rectangle" });
-  if (shape.shape === "box") {
-    return say({ language, en: "box (" + shape.label + ")", fr: "boîte (" + shape.label + ")" });
+/** One glyph as text, in the workshop language. */
+function glyphLabel({ glyph, language }: { glyph: Glyph; language: Language }): string {
+  if (glyph.shape === "circle") return say({ language, en: "circle", fr: "cercle" });
+  if (glyph.shape === "ellipse") return say({ language, en: "ellipse", fr: "ellipse" });
+  if (glyph.shape === "rectangle") return say({ language, en: "rectangle", fr: "rectangle" });
+  if (glyph.shape === "box") {
+    return say({
+      language,
+      en: "box (" + (glyph.label ?? "") + ")",
+      fr: "boîte (" + (glyph.label ?? "") + ")",
+    });
   }
-  if (shape.shape === "line") {
-    return shape.ports === 2
+  if (glyph.shape === "line") {
+    return glyph.ports === 2
       ? say({ language, en: "2-port arc", fr: "arc à 2 ports" })
       : say({ language, en: "line", fr: "trait" });
   }
   return say({ language, en: "unknown shape", fr: "forme inconnue" });
+}
+
+/** The drawing shape as text (for the "shapes" readouts), in the
+ * workshop language — a multi-glyph template reads as its overlaid
+ * glyphs joined by "+". */
+export function shapeLabel({
+  shape,
+  language,
+}: {
+  shape: Glyph[] | null;
+  language: Language;
+}): string {
+  if (!shape || shape.length === 0) return say({ language, en: "no shape", fr: "sans forme" });
+  return shape.map((glyph) => glyphLabel({ glyph, language })).join(" + ");
 }

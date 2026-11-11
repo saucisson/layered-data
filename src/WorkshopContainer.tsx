@@ -1411,7 +1411,7 @@ export function WorkshopPage({
             });
             let best: {
               path: string[];
-              spec: Glyph;
+              spec: Glyph[];
               hit: ReturnType<typeof dressingEntries>[number]["hit"];
             } | null = null;
             for (const match of matches) {

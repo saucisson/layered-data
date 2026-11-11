@@ -70,7 +70,7 @@ const MINIMUM_SCALE = 0.3;
 
 /** The shape template of a lens entry, as the glyphs read it (null:
  * the lens knows nothing of the type, the dashed fallback). */
-type ShapeSpec = Glyph | null;
+type ShapeSpec = Glyph[] | null;
 
 /** The tool in the hand: the plain pointer, one vertex container, or
  * the SINGLE arc tool — pre or post is never the user's question,
@@ -1520,51 +1520,71 @@ function EditorVertexGlyph({
   onPointerDown: (event: React.PointerEvent<SVGGElement>) => void;
 }) {
   const { x, y } = position;
-  const shapeKind = shape ? shape.shape : null;
-  const stroke = shape ? shape.stroke : "#94a3b8";
-  const fill = shape && shape.shape !== "line" && shape.fill ? shape.fill : "none";
+  const glyphs = shape ?? [];
+  const shapeKind = glyphs.length > 0 ? (glyphs[0]?.shape ?? null) : null;
+  const stroke = "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
   return (
     <g onPointerDown={onPointerDown} style={{ cursor: "grab" }}>
-      {shapeKind === "circle" && (
-        <circle cx={x} cy={y} r={16} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
-      )}
-      {shapeKind === "ellipse" && (
-        <ellipse
-          cx={x}
-          cy={y}
-          rx={24}
-          ry={14}
-          fill={fill}
-          stroke={stroke}
-          strokeWidth={strokeWidth}
-        />
-      )}
-      {shapeKind === "rectangle" && (
-        <rect
-          x={x - 22}
-          y={y - 12}
-          width={44}
-          height={24}
-          rx={2}
-          fill={fill}
-          stroke={stroke}
-          strokeWidth={strokeWidth}
-        />
-      )}
-      {shapeKind === "box" && (
-        <rect
-          x={x - 26}
-          y={y - 12}
-          width={52}
-          height={24}
-          rx={3}
-          fill="#ffffff"
-          stroke="#455555"
-          strokeWidth={strokeWidth}
-        />
-      )}
-      {!shape && (
+      {glyphs.map((glyph, index) => {
+        const glyphStroke = glyph.stroke ?? stroke;
+        const glyphFill = glyph.shape !== "line" && glyph.fill ? glyph.fill : "none";
+        if (glyph.shape === "circle")
+          return (
+            <circle
+              key={index}
+              cx={x}
+              cy={y}
+              r={16}
+              fill={glyphFill}
+              stroke={glyphStroke}
+              strokeWidth={strokeWidth}
+            />
+          );
+        if (glyph.shape === "ellipse")
+          return (
+            <ellipse
+              key={index}
+              cx={x}
+              cy={y}
+              rx={24}
+              ry={14}
+              fill={glyphFill}
+              stroke={glyphStroke}
+              strokeWidth={strokeWidth}
+            />
+          );
+        if (glyph.shape === "rectangle")
+          return (
+            <rect
+              key={index}
+              x={x - 22}
+              y={y - 12}
+              width={44}
+              height={24}
+              rx={2}
+              fill={glyphFill}
+              stroke={glyphStroke}
+              strokeWidth={strokeWidth}
+            />
+          );
+        if (glyph.shape === "box")
+          return (
+            <rect
+              key={index}
+              x={x - 26}
+              y={y - 12}
+              width={52}
+              height={24}
+              rx={3}
+              fill="#ffffff"
+              stroke="#455555"
+              strokeWidth={strokeWidth}
+            />
+          );
+        return null;
+      })}
+      {glyphs.length === 0 && (
         <circle
           cx={x}
           cy={y}

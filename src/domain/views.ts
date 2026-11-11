@@ -101,19 +101,51 @@ export function asGlyph(value: unknown): Glyph | null {
   return null;
 }
 
+/** Narrow a raw display template to its ordered list of glyphs. A
+ * single-glyph template (`display` with direct fields) yields a
+ * one-element list; a multi-glyph template poses a `glyphs` sub-block
+ * whose members are the overlaid glyphs, in the order written
+ * (insertion order — the compiler preserves it); a raw array (the
+ * kernel-level form) is read item by item. Invalid glyphs are
+ * dropped, never a crash. */
+export function asGlyphList(value: unknown): Glyph[] {
+  if (isDictionary(value)) {
+    const glyphsBlock = value["glyphs"];
+    if (isDictionary(glyphsBlock)) {
+      const glyphs: Glyph[] = [];
+      for (const key of Object.keys(glyphsBlock)) {
+        const glyph = asGlyph(glyphsBlock[key]);
+        if (glyph !== null) glyphs.push(glyph);
+      }
+      return glyphs;
+    }
+    const glyph = asGlyph(value);
+    return glyph === null ? [] : [glyph];
+  }
+  if (Array.isArray(value)) {
+    const glyphs: Glyph[] = [];
+    for (const item of value) {
+      const glyph = asGlyph(item);
+      if (glyph !== null) glyphs.push(glyph);
+    }
+    return glyphs;
+  }
+  return [];
+}
+
 /** One lens drawing entry: where the template lives, and which types
  * it dresses (concrete closure sources — never the layer roots,
  * never a node carrying a display of its own). */
 export interface LensDrawingEntry {
   path: LayerPath;
-  spec: Glyph;
+  spec: Glyph[];
   types: Address[];
 }
 
 /** The shape drawn for one node: the winning entry and the types it
  * matched on the node's chain. */
 export interface DrawnShape {
-  spec: Glyph;
+  spec: Glyph[];
   hit: Address[];
 }
 
@@ -134,7 +166,8 @@ export function displayCandidatePaths({
 }
 
 // Raw display template at the first defining source (not via read():
-// a dict value there comes back as a value view), narrowed to a glyph.
+// a dict value there comes back as a value view), narrowed to its
+// ordered list of glyphs.
 export function readDisplayTemplate({
   space,
   lens,
@@ -143,12 +176,12 @@ export function readDisplayTemplate({
   space: Space;
   lens: LayerName;
   path: LayerPath;
-}): Glyph | null {
+}): Glyph[] | null {
   for (const [sourceLayer, sourcePath] of space.closure({ layer: lens, path })) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
     if (isDictionary(node) && "display" in node) {
       const display = node["display"];
-      if (display !== null) return asGlyph(display);
+      if (display !== null) return asGlyphList(display);
     }
   }
   return null;
@@ -167,7 +200,7 @@ export function lensDrawingEntries({
   const entries: LensDrawingEntry[] = [];
   for (const path of displayCandidatePaths({ space, lens })) {
     const spec = readDisplayTemplate({ space, lens, path });
-    if (spec === null) continue;
+    if (spec === null || spec.length === 0) continue;
     const types: Address[] = [];
     for (const source of space.closure({ layer: lens, path })) {
       const [sourceLayer, sourcePath] = source;
@@ -218,9 +251,9 @@ export function dressingEntries({
   lens: LayerName;
   layer: LayerName;
   path: LayerPath;
-}): { path: LayerPath; spec: Glyph; hit: Address[] }[] {
+}): { path: LayerPath; spec: Glyph[]; hit: Address[] }[] {
   const chain = space.closure({ layer, path });
-  const matches: { path: LayerPath; spec: Glyph; hit: Address[] }[] = [];
+  const matches: { path: LayerPath; spec: Glyph[]; hit: Address[] }[] = [];
   for (const entry of lensDrawingEntries({ space, lens })) {
     const hit = entry.types.filter((type) => chain.some((member) => addressesEqual(member, type)));
     if (hit.length) matches.push({ path: entry.path, spec: entry.spec, hit });
@@ -243,7 +276,7 @@ export function drawnShape({
   layer: LayerName;
   path: LayerPath;
 }): DrawnShape | null {
-  let best: { path: LayerPath; spec: Glyph; hit: Address[] } | null = null;
+  let best: { path: LayerPath; spec: Glyph[]; hit: Address[] } | null = null;
   for (const match of dressingEntries({ space, lens, layer, path })) {
     if (best === null || coversAddresses({ space, covering: match.hit, covered: best.hit })) {
       best = match;

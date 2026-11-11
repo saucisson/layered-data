@@ -88,6 +88,21 @@ The same `graph`, read as an automaton: the vertices become states, the edges be
 ```ldflat:automaton
 ```
 
+## multi-glyph display — one template, several overlaid glyphs
+
+A lens `display` template is usually a single glyph (`shape`, `fill`, `stroke`…). When one shape is not enough — a token drawn as a double circle — the template poses a `glyphs` sub-block: each member is one glyph, overlaid in the order written. One grammar rule instead of a new named glyph per composed shape.
+
+```ld
+extend display
+  glyphs
+    ring
+      shape = "circle"
+      fill = "none"
+      stroke = "#455555"
+    dot
+      shape = "circle"
+```
+
 ## state-space — the parameterized state space
 
 Refines the automaton, **parameterized by the net**: the `net` slot refines the whole `petrinet` layer — nobody lays it here. A state's type refines the slot: every marking of the net will read inside the state. And the binding (`binding_type`) points at the transitions **through** the slot: ⟪late binding⟫, resolved by the layer that reads, never by the layer that writes. The ⟪parameter⟫ is an address like any other.
