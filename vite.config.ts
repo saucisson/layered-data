@@ -8,6 +8,18 @@ import tailwindcss from "@tailwindcss/vite";
 // delegates /api to it.
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  build: {
+    rollupOptions: {
+      output: {
+        // The vendor (React, i18next, …) is one chunk, the app code
+        // another — pages are already split by the lazy imports of
+        // App.tsx (issue #90).
+        manualChunks(id) {
+          if (id.includes("node_modules")) return "vendor";
+        },
+      },
+    },
+  },
   server: {
     // The .ld corpus lives in ../formalisms (single source of truth,
     // shared with the Node harnesses) — allow the dev server to read it.

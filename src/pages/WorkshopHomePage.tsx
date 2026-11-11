@@ -5,11 +5,19 @@
 // bar only navigates — each tab keeps its own header and its own
 // state, exactly as when they were separate pages.
 
+import { lazy, Suspense } from "react";
 import { useRouter } from "../components/Router";
-import { WorkshopPage } from "../WorkshopContainer";
-import { ModelEditorPage } from "../presentation/modelEditorPage";
 import { t } from "../infrastructure/i18n";
 import type { Language } from "../domain/messages";
+
+// Each tab is its own chunk: the atelier and the editor never load
+// together (issue #90).
+const WorkshopPage = lazy(() =>
+  import("../WorkshopContainer").then((module) => ({ default: module.WorkshopPage })),
+);
+const ModelEditorPage = lazy(() =>
+  import("../presentation/modelEditorPage").then((module) => ({ default: module.ModelEditorPage })),
+);
 
 type WorkshopTab = "workshop" | "editor";
 
@@ -45,11 +53,19 @@ export function WorkshopHomePage({
           ))}
         </div>
       </nav>
-      {tab === "workshop" ? (
-        <WorkshopPage language={language} onChooseLanguage={onChooseLanguage} />
-      ) : (
-        <ModelEditorPage language={language} onChooseLanguage={onChooseLanguage} />
-      )}
+      <Suspense
+        fallback={
+          <div className="flex min-h-screen items-center justify-center" aria-busy="true">
+            <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-700" />
+          </div>
+        }
+      >
+        {tab === "workshop" ? (
+          <WorkshopPage language={language} onChooseLanguage={onChooseLanguage} />
+        ) : (
+          <ModelEditorPage language={language} onChooseLanguage={onChooseLanguage} />
+        )}
+      </Suspense>
     </div>
   );
 }
