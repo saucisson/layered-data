@@ -35,7 +35,7 @@ import {
 import { SPECIAL_KEYS } from "./specialKeys.ts";
 
 /** One trace event of a closure or resolution walk. */
-export type TraceEvent = { kind: string; depth?: number } & Record<string, any>;
+export type TraceEvent = { kind: string; depth?: number } & Record<string, unknown>;
 
 // ------------------------------------------------------------ trace
 /** Collects the events of one traced computation (panel ③ reads them). */
@@ -50,7 +50,7 @@ export class Tracer {
 
 /** Formats a refinement entry for a trace event — references become
  * plain data, so traces stay serializable and inspectable. */
-export function formatEntryForTrace(entry: RawValue): any {
+export function formatEntryForTrace(entry: RawValue): RawValue {
   if (entry instanceof PathReference) return { ref: [entry.anchor, entry.path] };
   if (entry instanceof LayerReference) return { lref: entry.layer };
   return entry;
@@ -124,7 +124,7 @@ class ClosureMemoView {
 export interface ReadObservation {
   source: Address;
   status: string;
-  raw?: any;
+  raw?: RawValue;
 }
 
 /** One diagnostic of the total kernel — observed, never thrown. */
@@ -424,7 +424,7 @@ export class Space {
     // of the entry being computed — and of any open observation.
     this.observationDeps?.add(this.internPathId(layer, path));
     this.currentFrame()?.collectedDependencies.add(this.internPathId(layer, path));
-    let node: any = this.layers[layer];
+    let node: RawValue | undefined = this.layers[layer];
     if (node === undefined) return null;
     for (const segment of path) {
       if (!isDictionary(node)) return null;
@@ -767,8 +767,13 @@ export class Space {
   }): Address | RawValue | null {
     const holderLayer = holder[0];
     const holderPath = holder[1];
-    const search: any[] = [];
-    const result: any = "introuvable";
+    const search: Array<{
+      prefix: LayerPath;
+      anchors: string[];
+      hit: boolean;
+      reroot?: string;
+    }> = [];
+    const result = "introuvable";
     for (let prefixLength = holderPath.length; prefixLength >= 0; prefixLength--) {
       const prefix = holderPath.slice(0, prefixLength);
       const anchors = this.anchorsAt({ layer: holderLayer, path: prefix, tracer });
@@ -785,7 +790,7 @@ export class Space {
         position = anchorInChain
           ? [holderLayer, asLayerPath([])]
           : [reference.anchor, asLayerPath([])];
-        search[search.length - 1].reroot = anchorInChain ? "vue-courante" : "couche-étrangère";
+        search[search.length - 1]!.reroot = anchorInChain ? "vue-courante" : "couche-étrangère";
       } else {
         position = [holderLayer, prefix];
       }
@@ -846,7 +851,7 @@ export class Space {
   }: {
     reference: PathReference;
     holder: Address;
-  }): any {
+  }): { result: Address | RawValue | null; events: TraceEvent[] } {
     const tracer = new Tracer();
     tracer.depth++; // the events of this search are at depth 1
     const result = this.resolveReference({ reference, holder, tracer });

@@ -7,7 +7,13 @@
 // this file is the parse boundary of the whole space.
 
 import { type LayerName, asLayerName, asLayerPath, asPathSegment } from "../identifiers.ts";
-import { LayerReference, PathReference, type RawTree, isDictionary } from "../addresses.ts";
+import {
+  LayerReference,
+  PathReference,
+  type RawTree,
+  type RawValue,
+  isDictionary,
+} from "../addresses.ts";
 import { SPECIAL_KEYS } from "../specialKeys.ts";
 import {
   type DisplayGuard,
@@ -34,12 +40,12 @@ export interface CompiledLanguage {
 
 // ---- written values → kernel values -----------------------------------
 
-const makeReference = (value: LanguageValue & { kind: "reference" }): any =>
+const makeReference = (value: LanguageValue & { kind: "reference" }): LayerReference | PathReference =>
   value.referenceClass === "LR"
     ? new LayerReference(asLayerName(value.segments[0] ?? ""))
     : new PathReference(asLayerName(value.segments[0] ?? ""), asLayerPath(value.segments.slice(1)));
 
-const makeValue = (value: LanguageValue): any => {
+const makeValue = (value: LanguageValue): RawValue => {
   if (value.kind === "literal") return value.value;
   if (value.kind === "reference") return makeReference(value);
   return value.items.map(makeValue);
@@ -196,7 +202,7 @@ export function expandCitations(
   // A citation: a dict whose refines is a single layer reference,
   // with the identifier set — the cited piece is the window
   // designated by the path that follows.
-  const citationTemplateOf = (node: any): string | null => {
+  const citationTemplateOf = (node: unknown): string | null => {
     if (!isDictionary(node) || !Array.isArray(node["refines"])) return null;
     const refinements = node["refines"];
     if (refinements.length !== 1 || !(refinements[0] instanceof LayerReference)) return null;
@@ -212,13 +218,13 @@ export function expandCitations(
   while (changed && guard++ < 8) {
     changed = false;
     for (const layerName of Object.keys(layerTrees)) {
-      const walk = (node: any, path: string[]): void => {
+      const walk = (node: unknown, path: string[]): void => {
         if (!isDictionary(node)) return;
         if (
           Array.isArray(node["refines"]) &&
           !generatedNodes.has(layerName + "::" + path.join("/"))
         ) {
-          const kept: any[] = [];
+          const kept: RawValue[] = [];
           for (const entry of node["refines"]) {
             if (!(entry instanceof PathReference) || entry.path.length === 0) {
               kept.push(entry);
@@ -229,7 +235,7 @@ export function expandCitations(
             let citationKey = "";
             let template: string | null = null;
             let cut = -1;
-            let current: any = layerTrees[entry.anchor];
+            let current: RawValue | undefined = layerTrees[entry.anchor];
             for (const [index, segment] of entry.path.entries()) {
               if (!isDictionary(current)) {
                 current = undefined;
@@ -252,7 +258,7 @@ export function expandCitations(
               continue;
             }
             const windowPath = entry.path.slice(cut + 1);
-            let window: any = layerTrees[template];
+            let window: RawValue | undefined = layerTrees[template];
             for (const segment of windowPath) {
               if (!isDictionary(window)) {
                 window = undefined;

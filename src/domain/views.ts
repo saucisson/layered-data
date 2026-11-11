@@ -12,6 +12,7 @@ import { type LayerName, type LayerPath, asPathSegment } from "./identifiers.ts"
 import {
   type Address,
   type RawTree,
+  type RawValue,
   AddressView,
   LayerReference,
   PathReference,
@@ -506,32 +507,48 @@ export function dressingApplicability({
 // __ref, __lref, __addr) — driver-independent, so the kernel
 // stays testable without one.
 
-export function serializableValue(value: any): any {
+/** A value rendered as plain JSON-compatible data: references become
+ * `__ref` / `__lref` / `__addr` markers, dictionaries and lists recurse. */
+export type SerializableValue =
+  | string
+  | number
+  | boolean
+  | null
+  | SerializableValue[]
+  | { [key: string]: SerializableValue };
+
+export function serializableValue(value: RawValue): SerializableValue {
   if (value instanceof PathReference) return { __ref: [value.anchor, ...value.path] };
   if (value instanceof LayerReference) return { __lref: value.layer };
   if (Array.isArray(value)) return value.map(serializableValue);
   if (isDictionary(value)) {
-    const serialized: any = {};
-    for (const key of Object.keys(value)) serialized[key] = serializableValue(value[key]);
+    const serialized: Record<string, SerializableValue> = {};
+    for (const key of Object.keys(value)) {
+      const entry = value[key];
+      if (entry !== undefined) serialized[key] = serializableValue(entry);
+    }
     return serialized;
   }
   return value;
 }
 
-export function normalizedValue(value: any): any {
+export function normalizedValue(value: RawValue | AddressView): SerializableValue {
   if (value instanceof AddressView) return { __addr: [value.layer, value.path] };
   return serializableValue(value);
 }
 
 // Deep clone of a layers value (references recreated: two spaces
 // share nothing).
-export function deepCloneValue(value: any): any {
+export function deepCloneValue(value: RawValue): RawValue {
   if (value instanceof PathReference) return new PathReference(value.anchor, [...value.path]);
   if (value instanceof LayerReference) return new LayerReference(value.layer);
   if (Array.isArray(value)) return value.map(deepCloneValue);
   if (isDictionary(value)) {
-    const clone: any = {};
-    for (const key of Object.keys(value)) clone[key] = deepCloneValue(value[key]);
+    const clone: RawTree = {};
+    for (const key of Object.keys(value)) {
+      const entry = value[key];
+      if (entry !== undefined) clone[key] = deepCloneValue(entry);
+    }
     return clone;
   }
   return value;
@@ -561,10 +578,22 @@ export function walkAddresses({ space, layer }: { space: Space; layer: LayerName
 // One golden entry: closure, keys, reads — the unit of measurement. The
 // audit harness consumes it; the workbench itself reads the space
 // through the panels.
-export function fullObservation({ space, address }: { space: Space; address: Address }): any {
+export interface FullObservation {
+  closure: Address[];
+  keys: string[];
+  reads: Record<string, SerializableValue>;
+}
+
+export function fullObservation({
+  space,
+  address,
+}: {
+  space: Space;
+  address: Address;
+}): FullObservation {
   const closure = space.closure({ layer: address[0], path: address[1] });
   const keys = space.keys({ layer: address[0], path: address[1] });
-  const reads: any = {};
+  const reads: Record<string, SerializableValue> = {};
   for (const key of keys) {
     reads[key] = normalizedValue(space.read({ layer: address[0], path: address[1], key }));
   }
