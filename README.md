@@ -91,6 +91,9 @@ grammaire contre tout le corpus `.ld`.
 
 ## L'API de la carrière
 
+Voir [docs/deployment.md](docs/deployment.md) pour le déploiement en
+production (reverse proxy, HTTPS, checklist).
+
 Le code d'accès passe dans l'en-tête `x-access-code` (le `Authorization:
 Bearer <API_TOKEN>` de compatibilité reste accepté). Toutes les routes le
 demandent et rendent du JSON, sauf indication.
