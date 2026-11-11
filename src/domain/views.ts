@@ -184,10 +184,13 @@ export interface LensDrawingEntry {
 }
 
 /** The shape drawn for one node: the winning entry and the types it
- * matched on the node's chain. */
+ * matched on the node's chain. `guarded` tells whether the winner
+ * came from a guarded entry (a data condition) or the unguarded
+ * fallback. */
 export interface DrawnShape {
   spec: Glyph[];
   hit: Address[];
+  guarded: boolean;
 }
 
 // Addresses candidates for a display entry: first level + specification.
@@ -426,7 +429,7 @@ export function drawnShape({
   const matches = dressingEntries({ space, lens, layer, path });
   for (const match of matches) {
     if (match.guard !== null && guardHolds({ space, layer, path, guard: match.guard })) {
-      return { spec: match.spec, hit: match.hit };
+      return { spec: match.spec, hit: match.hit, guarded: true };
     }
   }
   let best: { path: LayerPath; spec: Glyph[]; hit: Address[] } | null = null;
@@ -445,7 +448,7 @@ export function drawnShape({
       best = match;
     }
   }
-  return best;
+  return best === null ? null : { spec: best.spec, hit: best.hit, guarded: false };
 }
 
 // Drawn read through a viewpoint — the (model, viewpoint) pair:
@@ -467,7 +470,8 @@ export function viewShape({
 }
 
 // Mirror of the domain check check_view_lens: how many vertices of
-// the model does the lens dress?
+// the model does the lens dress, and how many of those are dressed by
+// a guarded entry (a data condition) rather than the default.
 export function dressingApplicability({
   space,
   lens,
@@ -476,24 +480,25 @@ export function dressingApplicability({
   space: Space;
   lens: LayerName;
   model: LayerName;
-}): { dressed: number; total: number } {
+}): { dressed: number; total: number; guarded: number } {
   const vertices = space.read({ layer: model, path: [], key: "vertices" });
-  if (!(vertices instanceof AddressView)) return { dressed: -1, total: -1 };
+  if (!(vertices instanceof AddressView)) return { dressed: -1, total: -1, guarded: -1 };
   const vertexKeys = space.keys({ layer: model, path: vertices.path });
   let dressed = 0;
+  let guarded = 0;
   for (const vertexKey of vertexKeys) {
-    if (
-      drawnShape({
-        space,
-        lens,
-        layer: model,
-        path: [...vertices.path, asPathSegment(vertexKey)],
-      }) !== null
-    ) {
+    const shape = drawnShape({
+      space,
+      lens,
+      layer: model,
+      path: [...vertices.path, asPathSegment(vertexKey)],
+    });
+    if (shape !== null) {
       dressed++;
+      if (shape.guarded) guarded++;
     }
   }
-  return { dressed, total: vertexKeys.length };
+  return { dressed, total: vertexKeys.length, guarded };
 }
 
 // ---- serialization helpers -------------------------------------------

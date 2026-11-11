@@ -43,7 +43,7 @@ export interface WorkshopLook {
   frame: string | null;
   vertices: LookVertex[];
   edges: LookEdge[];
-  applicability: { dressed: number; total: number };
+  applicability: { dressed: number; total: number; guarded: number };
 }
 
 /** Read one look of the workshop: a lens over the current model,
@@ -170,7 +170,7 @@ export function buildWorkshopLook({
   const applicability =
     lens !== null
       ? dressingApplicability({ space, lens: asLayerName(lens), model: asLayerName(model) })
-      : { dressed: -1, total: -1 };
+      : { dressed: -1, total: -1, guarded: -1 };
   return {
     isLens,
     model,
