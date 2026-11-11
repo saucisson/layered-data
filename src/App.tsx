@@ -100,6 +100,8 @@ export function App() {
       >
         Aller au contenu principal / Skip to main content
       </a>
+      {/* Live region for screen reader announcements (WCAG 4.1.3) */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only" id="sr-announcer" />
       <AppContent />
     </RouterProvider>
   );
