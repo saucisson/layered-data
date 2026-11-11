@@ -53,6 +53,12 @@ export const DATABASE_URL = process.env.DATABASE_URL ?? "";
 export const RATE_LIMIT_WINDOW_SECONDS = Math.max(1, Number(process.env.RATE_LIMIT_WINDOW_SECONDS ?? 60));
 export const GENERATE_MAX_REQUESTS = Math.max(1, Number(process.env.GENERATE_MAX_REQUESTS ?? 10));
 export const POST_MAX_REQUESTS = Math.max(1, Number(process.env.POST_MAX_REQUESTS ?? 30));
+// The editor session journal (ADR-0111) keeps the last N accepted
+// versions in PostgreSQL — undo/redo survives a reload.
+export const EDITOR_SESSION_HISTORY_DEPTH = Math.max(
+  1,
+  Number(process.env.EDITOR_SESSION_HISTORY_DEPTH ?? 200),
+);
 
 // ------------------------------------------------------------
 // The quarry on disk

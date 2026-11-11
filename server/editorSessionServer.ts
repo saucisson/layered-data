@@ -4,41 +4,92 @@
 // The graphical editor's living additions, kept as ONE versioned
 // state: every gesture is a layer source judged by the same staging
 // as the browser (the pure store lives in the application layer),
-// accepted under optimistic locking (baseVersion), persisted as JSON
-// and broadcast to every connected editor over SSE. Presence is
-// transport-level: the connected editors, each with the model it is
-// editing (its focus).
+// accepted under optimistic locking (baseVersion), persisted through
+// the EditorSessionStore (disk in dev, PostgreSQL in production —
+// ADR-0111) and broadcast to every connected editor over SSE.
+// Presence is transport-level: the connected editors, each with the
+// model it is editing (its focus).
 // ============================================================
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import type { ServerResponse } from "node:http";
 
 import {
   createEditorSession,
-  parseEditorSession,
-  serializeEditorSession,
+  type EditorSession,
   type EditorSessionState,
 } from "../src/application/editorSession.ts";
 import { KERNEL_LAYER_NAMES as CANONICAL_LAYER_NAMES } from "../src/application/corpus.ts";
-import { EDITOR_SESSION_FILE } from "./config.ts";
 import { KERNEL_LAYER_SOURCES } from "./layerStore.ts";
+import {
+  createEditorSessionStore,
+  type EditorSessionHistoryEntry,
+  type EditorSessionStore,
+} from "./editorSessionStore.ts";
+import {
+  DATABASE_URL,
+  EDITOR_SESSION_FILE,
+  EDITOR_SESSION_HISTORY_DEPTH,
+} from "./config.ts";
 
-/** The persisted state, reloaded at boot — a missing or malformed
- * file is an empty session, never a crash. */
-function loadEditorSessionState(): EditorSessionState | undefined {
-  if (!existsSync(EDITOR_SESSION_FILE)) return undefined;
-  return parseEditorSession({ text: readFileSync(EDITOR_SESSION_FILE, "utf8") }) ?? undefined;
-}
+// ---- the store and the session it backs -------------------------
 
-export const editorSession = createEditorSession({
+let store: EditorSessionStore = createEditorSessionStore({
+  databaseUrl: DATABASE_URL,
+  editorSessionFile: EDITOR_SESSION_FILE,
+  historyDepth: EDITOR_SESSION_HISTORY_DEPTH,
+});
+let session: EditorSession = createEditorSession({
   kernelLayerSources: KERNEL_LAYER_SOURCES,
   kernelLayerNames: [...CANONICAL_LAYER_NAMES],
-  initial: loadEditorSessionState(),
 });
+let loaded = false;
+
+/** Swap the store (composition root) — the session reloads lazily. */
+export function setEditorSessionStore({
+  editorSessionStore,
+}: {
+  editorSessionStore: EditorSessionStore;
+}): void {
+  store = editorSessionStore;
+  loaded = false;
+}
+
+/** Init the store and load the persisted state into a fresh session.
+ * Throws StoreUnavailableError when the store cannot serve. */
+export async function initializeEditorSession(): Promise<void> {
+  await store.init();
+  const initial = await store.load();
+  session = createEditorSession({
+    kernelLayerSources: KERNEL_LAYER_SOURCES,
+    kernelLayerNames: [...CANONICAL_LAYER_NAMES],
+    initial,
+  });
+  loaded = true;
+}
+
+/** Load on first use when the composition root did not (tests). */
+export async function ensureEditorSessionLoaded(): Promise<void> {
+  if (!loaded) await initializeEditorSession();
+}
+
+export function editorSession(): EditorSession {
+  return session;
+}
 
 /** Persist the accepted state — the durable path of the session. */
-export function persistEditorSession(): void {
-  writeFileSync(EDITOR_SESSION_FILE, serializeEditorSession({ state: editorSession.readState() }));
+export async function persistEditorSession(): Promise<void> {
+  await store.save({ state: session.readState() });
 }
+
+/** The journal, newest first — the base of undo/redo after a reload. */
+export async function editorSessionHistory({
+  limit,
+}: {
+  limit: number;
+}): Promise<EditorSessionHistoryEntry[]> {
+  return store.history({ limit });
+}
+
+// ---- the connected editors (transport-level presence) -----------
 
 /** One connected editor: its SSE stream and the model it edits. */
 export interface EditorClient {
@@ -70,7 +121,7 @@ export function sendEvent({
 export function sessionSnapshot(): EditorSessionState & {
   presence: { id: string; focus: string | null }[];
 } {
-  return { ...editorSession.readState(), presence: presenceList() };
+  return { ...session.readState(), presence: presenceList() };
 }
 
 /** Broadcast the state to every connected editor. */
