@@ -51,7 +51,7 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["src/**/*.{ts,tsx}", "server/**/*.ts", "tests/**/*.mts"],
+    files: ["src/**/*.{ts,tsx}", "server/**/*.ts", "tests/**/*.mts", "e2e/**/*.ts"],
     plugins: { "react-hooks": reactHooks },
     languageOptions: {
       globals: { ...globals.browser, ...globals.node },
