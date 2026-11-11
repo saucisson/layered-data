@@ -14,7 +14,8 @@ type Page =
   | "hierarchy"
   | "creation"
   | "formalism"
-  | "editor";
+  | "editor"
+  | "notfound";
 
 /** The pages the router serves — the landing page is the home. */
 const PAGES: readonly Page[] = [
@@ -52,8 +53,8 @@ export function RouterProvider({ children }: RouterProviderProps) {
         setPage(hashPage as Page);
         setParameter(hashSegments.join("/"));
       } else {
-        setPage("landing");
-        setParameter("");
+        setPage("notfound");
+        setParameter(hash);
       }
     };
 
