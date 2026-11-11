@@ -116,7 +116,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
             })}
           </h1>
           <span className="flex shrink-0 items-center gap-1 text-xs">
-            <span className="mr-1 text-slate-400">
+            <span className="mr-1 text-slate-600">
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
@@ -190,7 +190,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
               {say({ language, en: "reset", fr: "réinitialiser" })}
             </button>
           </span>
-          <span className="text-[11px] text-slate-400">
+          <span className="text-[11px] text-slate-600">
             {layerNames.length + " "}
             {say({
               language,
@@ -313,7 +313,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
           <h2 className="mb-1 text-sm font-bold text-slate-800">
             {say({ language, en: "The viewpoints", fr: "Les points de vue" })}
           </h2>
-          <p className="mb-2 text-[10px] leading-4 text-slate-400">
+          <p className="mb-2 text-[10px] leading-4 text-slate-600">
             {say({
               language,
               en: "A viewpoint is a layer that chooses a model and a lens: the data does not move, the reading changes. Click one: the formalism page opens on it.",
@@ -347,7 +347,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                     </button>
                     {modelLayer !== null && (
                       <>
-                        <span className="text-slate-400">
+                        <span className="text-slate-600">
                           {say({ language, en: "model: ", fr: "modèle : " })}
                         </span>
                         <button type="button"
@@ -360,7 +360,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                     )}
                     {displayLayer !== null && (
                       <>
-                        <span className="text-slate-400">
+                        <span className="text-slate-600">
                           {say({ language, en: "lens: ", fr: "lentille : " })}
                         </span>
                         <button type="button"

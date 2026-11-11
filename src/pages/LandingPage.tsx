@@ -24,7 +24,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             })}
           </h1>
           <span className="flex shrink-0 items-center gap-1 text-xs">
-            <span className="mr-1 text-slate-400">
+            <span className="mr-1 text-slate-600">
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
@@ -194,7 +194,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
           </button>
         </section>
 
-        <footer className="mt-16 pt-6 border-t border-slate-200 text-center text-xs text-slate-400">
+        <footer className="mt-16 pt-6 border-t border-slate-200 text-center text-xs text-slate-600">
           {say({
             language,
             en: "Layered Data — A formalism design workshop where definitions are data",
