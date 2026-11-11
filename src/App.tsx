@@ -51,6 +51,9 @@ const FormalismPage = lazy(() =>
 const WorkshopHomePage = lazy(() =>
   import("./pages/WorkshopHomePage").then((module) => ({ default: module.WorkshopHomePage })),
 );
+const NotFoundPage = lazy(() =>
+  import("./pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })),
+);
 
 // No text on purpose: the fallback must not depend on the i18n catalog
 // being loaded yet.
@@ -116,6 +119,9 @@ function AppContent() {
               />
             );
           case "landing":
+            return <LandingPage language={language} onChooseLanguage={handleChooseLanguage} />;
+          case "notfound":
+            return <NotFoundPage language={language} />;
           default:
             return <LandingPage language={language} onChooseLanguage={handleChooseLanguage} />;
         }
