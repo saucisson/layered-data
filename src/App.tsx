@@ -55,8 +55,12 @@ const WorkshopHomePage = lazy(() =>
 // being loaded yet.
 function PageFallback() {
   return (
-    <div className="flex min-h-screen items-center justify-center" aria-busy="true">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-700" />
+    <div className="flex min-h-screen flex-col items-center justify-center gap-4 p-8" aria-busy="true" aria-label="Loading">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-gray-300 border-t-gray-700 dark:border-slate-600 dark:border-t-slate-300" />
+      <div className="w-64 space-y-2" aria-hidden="true">
+        <div className="h-3 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+        <div className="h-3 w-2/3 animate-pulse rounded bg-slate-200 dark:bg-slate-700" />
+      </div>
     </div>
   );
 }

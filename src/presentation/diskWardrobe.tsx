@@ -233,9 +233,11 @@ export function DiskWardrobe({
         </span>
       </div>
       {entries === null && (
-        <p className="text-[11px] text-slate-500">
-          {say({ language, en: "quarry opening…", fr: "carrière en cours d'ouverture…" })}
-        </p>
+        <div className="space-y-1.5" aria-busy="true" aria-label="Loading layers">
+          {Array.from({ length: 5 }, (_, index) => (
+            <div key={index} className="h-5 animate-pulse rounded bg-slate-200 dark:bg-slate-700" aria-hidden="true" />
+          ))}
+        </div>
       )}
       {entries !== null && entries.length === 0 && (
         <p className="text-[11px] text-slate-500">
