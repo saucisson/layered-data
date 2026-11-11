@@ -1,0 +1,12 @@
+node_modules/
+dist/
+coverage/
+.git/
+.env
+.stryker-tmp/
+reports/
+playwright-report/
+test-results/
+data/
+*.vsix
+.review/
