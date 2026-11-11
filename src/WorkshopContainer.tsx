@@ -53,6 +53,7 @@ import {
   shapeLabel,
 } from "./presentation/viewTree.ts";
 import { buildWorkshopLook } from "./presentation/lensDrawing.ts";
+import { useToast } from "./components/Toast.tsx";
 
 // ---- the kernel, the graph, the line-target table -------------
 // Assembled once from the corpus files — the single source, never
@@ -98,6 +99,7 @@ export function WorkshopPage({
   // no active scenario at rest; the guided tour S1–S14 stays one
   // click away, folded in the header.
   const [scenarioIndex, setScenarioIndex] = useState(-1);
+  const { notify } = useToast();
   const [layer, setLayer] = useState(WORKSHOP_SCENARIOS[0]?.layer ?? "");
   const [path, setPath] = useState<string[]>(WORKSHOP_SCENARIOS[0]?.path ?? []);
   const [selectedKey, setSelectedKey] = useState<string | null>(WORKSHOP_SCENARIOS[0]?.key ?? null);
@@ -217,6 +219,7 @@ export function WorkshopPage({
       // clipboard unavailable: the copy is best-effort
     }
     setCopied(true);
+    notify(say({ language, fr: "Adresse copiée dans le presse-papiers", en: "Address copied to clipboard" }), "success");
   }
 
   // ---- additions --------------------------------------------------
