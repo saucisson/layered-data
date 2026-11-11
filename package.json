@@ -44,6 +44,7 @@
     "test:postgres": "node tests/postgres-store-checks.mts"
   },
   "dependencies": {
+    "@tanstack/react-virtual": "^3.14.26",
     "i18next": "^27.1.0",
     "pg": "^8.23.1",
     "react": "18.3.1",

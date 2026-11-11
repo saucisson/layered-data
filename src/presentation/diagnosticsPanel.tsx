@@ -14,6 +14,7 @@ import type { Diagnostic } from "../domain/space.ts";
 import { renderMessage, type Language } from "../domain/messages.ts";
 import { runAllLints } from "../application/linting.ts";
 import { ValidationPanel } from "./validationPanel.tsx";
+import { VirtualList } from "./virtualList.tsx";
 import { say, type BilingualText } from "./i18n.ts";
 
 /** One diagnostic kind as shown in the fold: label, tone, and the
@@ -212,24 +213,21 @@ export function DiagnosticsPanel({
                         {kindEvents.length}
                       </span>
                     </div>
-                    <div className="mt-1 max-h-40 space-y-0.5 overflow-y-auto">
-                      {kindEvents.slice(0, 40).map((event, index) => (
-                        <div key={index} className="font-mono text-[10px] leading-4 text-slate-600">
-                          <span className="text-slate-400">
-                            {event.address[0]}::{event.address[1].join("/") || "."}
-                          </span>{" "}
-                          {renderMessage({ message: event.fact, language })}
-                        </div>
-                      ))}
-                      {kindEvents.length > 40 && (
-                        <div className="text-[10px] text-slate-400">
-                          {say({
-                            language,
-                            en: "… and " + (kindEvents.length - 40) + " more",
-                            fr: "… et " + (kindEvents.length - 40) + " autres",
-                          })}
-                        </div>
-                      )}
+                    <div className="mt-1">
+                      <VirtualList
+                        items={kindEvents}
+                        estimateSize={16}
+                        maxHeightClass="max-h-40"
+                        keyOf={(_event, index) => index}
+                        renderItem={(event) => (
+                          <div className="font-mono text-[10px] leading-4 text-slate-600">
+                            <span className="text-slate-400">
+                              {event.address[0]}::{event.address[1].join("/") || "."}
+                            </span>{" "}
+                            {renderMessage({ message: event.fact, language })}
+                          </div>
+                        )}
+                      />
                     </div>
                   </div>
                 );
