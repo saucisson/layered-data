@@ -1,0 +1,7 @@
+# Gitleaks config — the reviewer harness (tests/reviewer-checks.mts)
+# carries a SYNTHETIC secret fixture on purpose, to pin the
+# possible-secret check. Allowlist that one file so the scan stays
+# green; everything else is scanned with the default rules.
+[allowlist]
+  description = "synthetic secret fixture of the reviewer harness"
+  paths = ['''tests/reviewer-checks\.mts''']
