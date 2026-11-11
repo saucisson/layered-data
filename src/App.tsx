@@ -94,6 +94,12 @@ function AppContent() {
 export function App() {
   return (
     <RouterProvider>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-slate-800 focus:px-3 focus:py-2 focus:text-sm focus:text-white"
+      >
+        Aller au contenu principal / Skip to main content
+      </a>
       <AppContent />
     </RouterProvider>
   );
