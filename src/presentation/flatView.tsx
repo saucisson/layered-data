@@ -179,7 +179,7 @@ export function FlatView({
                   ? say({ language, en: "collapse", fr: "replier" })
                   : say({ language, en: "expand", fr: "déplier" })
               }
-              className="w-4 shrink-0 rounded text-slate-600 hover:bg-slate-100 hover:text-slate-700"
+              className="w-4 shrink-0 rounded text-slate-600 hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-700 dark:text-slate-200"
             >
               {childOpen ? "▾" : "▸"}
             </button>
@@ -187,7 +187,7 @@ export function FlatView({
           <span
             className={
               "font-mono font-semibold " +
-              (isSpecialKey(entry.key) ? "text-amber-600" : "text-slate-800")
+              (isSpecialKey(entry.key) ? "text-amber-600" : "text-slate-800 dark:text-slate-100")
             }
           >
             {entry.key}
@@ -225,7 +225,7 @@ export function FlatView({
                 en: "open this address in panel ③ — the detailed read: chain, scan, winner",
                 fr: "ouvrir cette adresse dans le panneau ③ — la lecture détaillée : chaîne, scan, gagnant",
               })}
-              className="shrink-0 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800"
+              className="shrink-0 rounded border border-slate-300 dark:border-slate-600 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800 dark:text-slate-100"
             >
               {say({ language, en: "→ go there", fr: "→ y aller" })}
             </button>
@@ -315,7 +315,7 @@ export function FlatView({
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
           placeholder={say({ language, en: "filter keys…", fr: "filtrer les clés…" })}
-          className="min-w-32 flex-1 rounded border border-slate-200 px-1.5 py-0.5 text-xs"
+          className="min-w-32 flex-1 rounded border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 text-xs"
         />
         <span className="text-slate-600">
           {say({ language, en: "root chain: ", fr: "chaîne de racine : " })}
@@ -333,7 +333,7 @@ export function FlatView({
             en: "copy the complete flattened dump — every key, its resolved value, its winning layer",
             fr: "copier le dump complet de l'aplatissement — chaque clé, sa valeur résolue, sa couche gagnante",
           })}
-          className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-800"
+          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-800 dark:text-slate-100"
         >
           {copied
             ? say({ language, en: "✓ dump copied", fr: "✓ dump copié" })
@@ -341,7 +341,7 @@ export function FlatView({
         </button>
       </div>
       {needle && rows.length === 0 ? (
-        <div className="rounded-md border border-slate-100 bg-slate-50/50 p-2">
+        <div className="rounded-md border border-slate-100 bg-slate-50 dark:bg-slate-900/50 p-2">
           <div className="py-1 text-xs text-slate-600">
             {say({
               language,
@@ -354,7 +354,7 @@ export function FlatView({
         <VirtualList
           items={rows}
           estimateSize={24}
-          maxHeightClass="max-h-72 rounded-md border border-slate-100 bg-slate-50/50 p-2"
+          maxHeightClass="max-h-72 rounded-md border border-slate-100 bg-slate-50 dark:bg-slate-900/50 p-2"
           keyOf={(row, index) =>
             row.kind === "entry"
               ? folderKey(row.node.addr) + "/" + row.entry.key

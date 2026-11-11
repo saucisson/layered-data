@@ -47,9 +47,9 @@ export function FormalismPanel({
     [kernel, layer],
   );
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3">
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-bold text-slate-800">
+        <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "② The formalism", fr: "② Le formalisme" })}
           <span className="ml-1 font-mono text-xs font-normal text-slate-600">{layer}</span>
         </h2>
@@ -62,7 +62,7 @@ export function FormalismPanel({
                 "rounded-md px-2.5 py-1 text-[11px] font-semibold " +
                 (tab === activeTab
                   ? "bg-slate-800 text-white"
-                  : "border border-slate-300 bg-white text-slate-600 hover:border-slate-600")
+                  : "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 hover:border-slate-600")
               }
             >
               {say({ language, en: label.en, fr: label.fr })}

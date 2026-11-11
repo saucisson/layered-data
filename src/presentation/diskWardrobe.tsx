@@ -213,14 +213,14 @@ export function DiskWardrobe({
         <span className="rounded bg-sky-700 px-1.5 py-0.5 text-[11px] font-bold text-white">
           {say({ language, en: "disk", fr: "disque" })}
         </span>
-        <span className="text-xs font-semibold text-slate-700">
+        <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
           {say({ language, en: "the quarry of formalisms", fr: "la carrière des formalismes" })}
         </span>
         <button type="button"
           onClick={() => {
             void refresh();
           }}
-          className="rounded border border-slate-300 bg-white px-1.5 text-[10px] text-slate-600 hover:border-sky-500 hover:text-sky-700"
+          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 text-[10px] text-slate-600 hover:border-sky-500 hover:text-sky-700"
         >
           {say({ language, en: "refresh", fr: "rafraîchir" })}
         </button>
@@ -273,8 +273,8 @@ export function DiskWardrobe({
                   (selectedName === entry.name
                     ? "bg-sky-700 text-white"
                     : entry.builtIn
-                      ? "border border-slate-300 bg-white text-slate-600 hover:border-sky-500"
-                      : "border border-emerald-300 bg-white text-emerald-700 hover:border-emerald-500")
+                      ? "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 hover:border-sky-500"
+                      : "border border-emerald-300 bg-white dark:bg-slate-800 text-emerald-700 hover:border-emerald-500")
                 }
                 title={
                   entry.builtIn
@@ -304,7 +304,7 @@ export function DiskWardrobe({
             spellCheck={false}
             rows={8}
             placeholder={"layer …"}
-            className="mb-2 w-full rounded border border-slate-200 bg-white p-2 font-mono text-[11px] leading-4"
+            className="mb-2 w-full rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 font-mono text-[11px] leading-4"
           />
           <div className="flex flex-wrap items-center gap-2">
             <button type="button"
@@ -346,7 +346,7 @@ export function DiskWardrobe({
                   onClick={() => {
                     void putOnDisk(name, localLayerSources[name] ?? "");
                   }}
-                  className="rounded border border-emerald-300 bg-white px-1.5 py-0.5 text-[10px] font-mono leading-4 text-emerald-700 hover:border-emerald-500"
+                  className="rounded border border-emerald-300 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono leading-4 text-emerald-700 hover:border-emerald-500"
                   title={say({
                     language,
                     en: "lay this formalism on the disk — visible to the other visitors",
@@ -419,7 +419,7 @@ export function DiskWardrobe({
             </div>
           )}
           {loadResult.ok && (loadResult.newLayerNames ?? []).length === 0 && (
-            <div className="rounded-md border border-slate-200 bg-white px-2 py-1.5 text-[11px] leading-4 text-slate-600">
+            <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 text-[11px] leading-4 text-slate-600">
               {say({
                 language,
                 en: "staging: 0 verdict — but these layers are already in the space: nothing to add.",

@@ -117,7 +117,7 @@ export function TutorialListing({
               });
             }}
             aria-label={say({ language, en: "fold / unfold", fr: "replier / déplier" })}
-            className="w-4 shrink-0 text-left font-bold text-slate-600 hover:text-slate-700"
+            className="w-4 shrink-0 text-left font-bold text-slate-600 hover:text-slate-700 dark:text-slate-200"
           >
             {isFolded ? "▸" : "▾"}
           </button>
@@ -162,15 +162,15 @@ export function TutorialListing({
   };
 
   return (
-    <div className="overflow-hidden rounded-md border border-slate-200 bg-white">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-1.5">
-        <span className="font-mono text-xs font-semibold text-slate-700">
+    <div className="overflow-hidden rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-3 py-1.5">
+        <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-200">
           {"layer " + layer + "-flat"}
         </span>
         <span className="flex items-center gap-2">
           <button type="button"
             onClick={() => setFolded(new Set())}
-            className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
+            className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
           >
             {say({ language, en: "unfold all", fr: "tout déplier" })}
           </button>
@@ -178,7 +178,7 @@ export function TutorialListing({
             onClick={() =>
               setFolded(new Set(collectFoldKeys({ sections: text.sections, prefix: "" })))
             }
-            className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
+            className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
           >
             {say({ language, en: "fold all", fr: "tout replier" })}
           </button>
@@ -191,7 +191,7 @@ export function TutorialListing({
         )}
       </div>
       {cascade.length > 0 && (
-        <div className="border-t border-slate-200 bg-slate-50 p-2">
+        <div className="border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-2">
           <div className="mb-1 flex items-center justify-between gap-2">
             <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-600">
               {say({
@@ -202,7 +202,7 @@ export function TutorialListing({
             </p>
             <button type="button"
               onClick={() => setCascade([])}
-              className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
+              className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
             >
               {say({ language, en: "close", fr: "fermer" })}
             </button>
