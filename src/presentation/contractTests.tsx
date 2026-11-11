@@ -76,7 +76,7 @@ export function LayerContractTests({
       >
         <span>
           {say({ language, en: "Tests", fr: "Tests" })}
-          <span className="ml-1 font-normal text-slate-400">
+          <span className="ml-1 font-normal text-slate-600">
             {expectations.length}{" "}
             {say({
               language,
@@ -95,7 +95,7 @@ export function LayerContractTests({
                 })}
           </span>
         </span>
-        <span className="shrink-0 text-slate-400">{open ? "▾" : "▸"}</span>
+        <span className="shrink-0 text-slate-600">{open ? "▾" : "▸"}</span>
       </button>
       {open && (
         <div className="mt-2 space-y-1">
@@ -105,7 +105,7 @@ export function LayerContractTests({
                 {row.matching ? "✓" : "✗"}
               </span>{" "}
               <span className="text-slate-700">{row.expectation.address}</span>
-              <span className="text-slate-400">
+              <span className="text-slate-600">
                 {" " +
                   say({ language, en: "— expected ", fr: "— attendu " }) +
                   formatExpectation(row.expectation.expectation)}
@@ -116,13 +116,13 @@ export function LayerContractTests({
                 </span>
               )}
               {row.provenance !== null && (
-                <span className="text-slate-400">
+                <span className="text-slate-600">
                   {" (" + say({ language, en: "by ", fr: "par " }) + row.provenance + ")"}
                 </span>
               )}
             </div>
           ))}
-          <p className="pt-1 text-[10px] leading-4 text-slate-400">
+          <p className="pt-1 text-[10px] leading-4 text-slate-600">
             {say({
               language,
               en: "the contract lives in the layer (special key « tests ») — it travels with it, file, disk, staging; the validation replays it at every assembly, a betrayed read is a verdict",

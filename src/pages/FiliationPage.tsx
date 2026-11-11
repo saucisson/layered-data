@@ -410,7 +410,7 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
             </h1>
           </div>
           <span className="flex shrink-0 items-center gap-1 text-xs">
-            <span className="mr-1 text-slate-400">
+            <span className="mr-1 text-slate-600">
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
@@ -701,7 +701,7 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
           </button>
         </div>
 
-        <footer className="border-t border-slate-200 pt-6 text-center text-xs text-slate-400">
+        <footer className="border-t border-slate-200 pt-6 text-center text-xs text-slate-600">
           {say({
             language,
             en: "Layered Data — the filiation is part of the rigor: the story names its ancestors, the comparison measures its differences",

@@ -142,14 +142,14 @@ export function CascadeCard({
               <LayerBadge layer={provenance.winner} small />
             )
           ) : (
-            <span className="text-slate-400">
+            <span className="text-slate-600">
               {provenance && provenance.status
                 ? labelOf({ code: provenance.status, language })
                 : say({ language, en: "not provided", fr: "non fournie" })}
             </span>
           )}
           {provenance && (
-            <span className="ml-1 text-slate-400">
+            <span className="ml-1 text-slate-600">
               ({provenance.readCount}{" "}
               {say({
                 language,
@@ -167,10 +167,10 @@ export function CascadeCard({
       )}
       {chain.length > 0 && (
         <div className="mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[11px] leading-4">
-          <span className="text-slate-400">{say({ language, en: "refines", fr: "raffine" })}</span>
+          <span className="text-slate-600">{say({ language, en: "refines", fr: "raffine" })}</span>
           {chain.map((step, index) => (
             <span key={index} className="flex flex-wrap items-center gap-1">
-              {index > 0 && <span className="text-slate-300">→</span>}
+              {index > 0 && <span className="text-slate-500">→</span>}
               {isLast ? (
                 <button type="button"
                   onClick={() => onOpen(step.layer, step.path)}
@@ -194,7 +194,7 @@ export function CascadeCard({
         </div>
       )}
       {target.key === null && chain.length === 0 && (
-        <div className="mt-1 text-[11px] text-slate-400">
+        <div className="mt-1 text-[11px] text-slate-600">
           {say({ language, en: "closure: ", fr: "fermeture : " })}
           {
             space.closure({ layer: asLayerName(target.layer), path: asLayerPath(target.path) })

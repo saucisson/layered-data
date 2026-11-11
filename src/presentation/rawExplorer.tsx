@@ -32,7 +32,7 @@ function RawBranch({
     return (
       <div style={{ marginLeft: depth === 0 ? 0 : 12 }}>
         <span className={keyClassName}>{keyName}</span>
-        <span className="text-slate-400"> : {"{"}</span>
+        <span className="text-slate-600"> : {"{"}</span>
         {Object.keys(value).map((childKey) => (
           <RawBranch
             key={childKey}
@@ -42,7 +42,7 @@ function RawBranch({
             language={language}
           />
         ))}
-        <span className="text-slate-400">{"}"}</span>
+        <span className="text-slate-600">{"}"}</span>
       </div>
     );
   }
@@ -50,14 +50,14 @@ function RawBranch({
     return (
       <div style={{ marginLeft: depth === 0 ? 0 : 12 }}>
         <span className={keyClassName}>{keyName}</span>
-        <span className="text-slate-400"> : [</span>
+        <span className="text-slate-600"> : [</span>
         {value.map((element, index) => (
           <div key={index} style={{ marginLeft: 12 }}>
             <KernelValue value={element} language={language} />
-            {index < value.length - 1 ? <span className="text-slate-400">,</span> : null}
+            {index < value.length - 1 ? <span className="text-slate-600">,</span> : null}
           </div>
         ))}
-        <span className="text-slate-400">]</span>
+        <span className="text-slate-600">]</span>
       </div>
     );
   }
@@ -72,7 +72,7 @@ function RawBranch({
     rendered = <span className="text-sky-700">→ {value.layer}</span>;
   } else if (value === null) {
     rendered = (
-      <span className="text-slate-400">
+      <span className="text-slate-600">
         {say({ language, en: "∅ abstract slot", fr: "∅ slot abstrait" })}
       </span>
     );
@@ -82,7 +82,7 @@ function RawBranch({
   return (
     <div style={{ marginLeft: depth === 0 ? 0 : 12 }}>
       <span className={keyClassName}>{keyName}</span>
-      <span className="text-slate-400"> : </span>
+      <span className="text-slate-600"> : </span>
       {rendered}
     </div>
   );
