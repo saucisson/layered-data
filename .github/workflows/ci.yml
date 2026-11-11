@@ -53,8 +53,15 @@ jobs:
       - name: "Lint (ESLint: boundaries, no-console, named exports)"
         run: npm run lint
 
-      - name: The harnesses (audit, specification, staging, i18n)
-        run: npm test
+      - name: The harnesses under coverage (audit, specification, staging, i18n)
+        run: npm run test:coverage
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 7
 
       - name: Build
         run: npm run build
