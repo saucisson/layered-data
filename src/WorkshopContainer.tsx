@@ -639,7 +639,17 @@ export function WorkshopPage({
                 onPick={(layerName) => goto(layerName, [])}
               />
             ) : (
-              <div className="space-y-1">
+              <div className="space-y-1" onKeyDown={(event) => {
+                if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+                const buttons = Array.from(event.currentTarget.querySelectorAll("button"));
+                const currentIndex = buttons.findIndex((button) => button === document.activeElement);
+                if (currentIndex === -1) return;
+                event.preventDefault();
+                const nextIndex = event.key === "ArrowDown"
+                  ? Math.min(currentIndex + 1, buttons.length - 1)
+                  : Math.max(currentIndex - 1, 0);
+                buttons[nextIndex]?.focus();
+              }}>
                 {livingLayerNames.filter(layerMatches).length === 0 && (
                   <div className="py-2 text-xs text-slate-400">
                     {say({
