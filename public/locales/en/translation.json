@@ -21,6 +21,8 @@
   "pick a member on the canvas — its declared keys open here, every edition goes through the staging": "pick a member on the canvas — its declared keys open here, every edition goes through the staging",
   "pointer": "pointer",
   "redo (Ctrl+Shift+Z)": "redo (Ctrl+Shift+Z)",
+  "reload": "reload",
+  "something went wrong — the atelier hit an unexpected error": "something went wrong — the atelier hit an unexpected error",
   "shared — {{editors}} other editor(s) online": "shared — {{editors}} other editor(s) online",
   "show the model's source block": "show the model's source block",
   "simple: loop ({e} : {e/source*})": "simple: loop ({e} : {e/source*})",
