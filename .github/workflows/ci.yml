@@ -94,3 +94,25 @@ jobs:
       # needs-human, see issue #27.
       - name: npm audit (critical gate)
         run: npm audit --audit-level=critical
+
+  e2e:
+    name: browser E2E (Playwright)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Install the chromium browser
+        run: npx playwright install --with-deps chromium
+
+      - name: The browser harnesses (smoke + canvas gesture)
+        run: npm run test:e2e

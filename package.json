@@ -32,10 +32,11 @@
     "test:validation-session": "node tests/validation-session-checks.mts",
     "test:vscode": "node tests/vscode-checks.mts",
     "test:server": "node tests/server-http-checks.mts",
-    "lint": "eslint src server tests --no-warn-ignored",
-    "lint:fix": "eslint src server tests --no-warn-ignored --fix",
-    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"server/**/*.ts\" \"tests/**/*.mts\" \"*.{js,json,md}\" \".github/**/*.yml\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"server/**/*.ts\" \"tests/**/*.mts\" \"*.{js,json,md}\" \".github/**/*.yml\""
+    "test:e2e": "playwright test",
+    "lint": "eslint src server tests e2e --no-warn-ignored",
+    "lint:fix": "eslint src server tests e2e --no-warn-ignored --fix",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"server/**/*.ts\" \"tests/**/*.mts\" \"e2e/**/*.ts\" \"playwright.config.ts\" \"*.{js,json,md}\" \".github/**/*.yml\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"server/**/*.ts\" \"tests/**/*.mts\" \"e2e/**/*.ts\" \"playwright.config.ts\" \"*.{js,json,md}\" \".github/**/*.yml\""
   },
   "dependencies": {
     "i18next": "^27.1.0",
@@ -44,6 +45,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "^1.65.0",
     "@stryker-mutator/core": "^10.1.1",
     "@tailwindcss/vite": "4.1.11",
     "@types/node": "^22.10.0",
