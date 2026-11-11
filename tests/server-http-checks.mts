@@ -52,6 +52,14 @@ try {
   response = await fetch(base + "/api/layers");
   check("layers without token is 401", response.status === 401);
 
+  // ---- the security header baseline (issue #84) ----
+  response = await fetch(base + "/api/whoami", { headers: auth });
+  check("X-Content-Type-Options is nosniff", response.headers.get("x-content-type-options") === "nosniff");
+  check("X-Frame-Options is DENY", response.headers.get("x-frame-options") === "DENY");
+  check("Referrer-Policy is no-referrer", response.headers.get("referrer-policy") === "no-referrer");
+  response = await fetch(base + "/api/whoami");
+  check("the baseline is present even on a 401", response.headers.get("x-frame-options") === "DENY");
+
   // ---- the layers API ----
   response = await fetch(base + "/api/layers", { headers: auth });
   const layersBody = (await response.json()) as {
