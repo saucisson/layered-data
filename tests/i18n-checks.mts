@@ -36,6 +36,7 @@ import {
   VIEWPOINT_LAYERS,
   VIEW_NOTES,
 } from "../src/presentation/viewTree.ts";
+import { asGlyph } from "../src/domain/views.ts";
 import {
   LAYER_ROLE,
   layerRoleNames,
@@ -335,8 +336,12 @@ check(
       "2-port arc" &&
     shapeLabel({ shape: { shape: "line", ports: 2 }, language: "fr" }) ===
       "arc à 2 ports" &&
-    shapeLabel({ shape: { shape: "unknown-kind" }, language: "fr" }) ===
-      "unknown-kind",
+    // the glyph vocabulary is closed: an unknown shape narrows to
+    // null at the boundary, never a runtime surprise
+    asGlyph({ shape: "unknown-kind" }) === null &&
+    asGlyph({ shape: "circle", fill: "#fff" })?.shape === "circle" &&
+    shapeLabel({ shape: asGlyph({ shape: "unknown-kind" }), language: "fr" }) ===
+      "sans forme",
 );
 
 check(
