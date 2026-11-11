@@ -16,7 +16,6 @@ import { composeVerifiedLayerDraft } from "../src/application/penLoop.ts";
 import {
   VERSION,
   DIST_DIRECTORY,
-  USERS_DIRECTORY,
   MAX_PEN_ATTEMPTS,
   STRICT_CONFLICTS,
   STRICT_CHECKS,
@@ -29,13 +28,10 @@ import {
   KERNEL_LAYER_NAMES,
   KERNEL_LANGUAGE_SOURCE,
   asLayerName,
-  listLayerNames,
-  lookupLayer,
-  writeUserLayer,
-  deleteUserLayer,
-  userLayerPath,
   type LayerName,
 } from "./layerStore.ts";
+import { lookupLayer } from "./userLayerStore.ts";
+import { createQuarryStoresFromEnv, type QuarryStores } from "./stores.ts";
 import { PenInfraFailure, generateLayer } from "./mistralClient.ts";
 import {
   editorSession,
@@ -89,7 +85,11 @@ function createApiRateLimiters(): {
   };
 }
 
-export function createQuarryServer() {
+export function createQuarryServer({
+  stores = createQuarryStoresFromEnv(),
+}: {
+  stores?: QuarryStores;
+} = {}) {
   const rateLimiters = createApiRateLimiters();
   return createServer(async (request, response) => {
     applySecurityHeaders({ response });
@@ -135,9 +135,10 @@ export function createQuarryServer() {
 
         // ---- the workshop protocol: api/layers ----
         if (request.method === "GET" && url.pathname === "/api/layers") {
+          const userNames = await stores.userLayers.listNames();
           const layers = [
             ...KERNEL_LAYER_NAMES.map((name) => ({ name, builtIn: true })),
-            ...listLayerNames({ directory: USERS_DIRECTORY }).map((name) => ({
+            ...userNames.map((name) => ({
               name,
               builtIn: false,
             })),
@@ -152,7 +153,7 @@ export function createQuarryServer() {
           const name = nameCheck.name;
 
           if (request.method === "GET") {
-            const lookup = lookupLayer({ name });
+            const lookup = await lookupLayer({ name, userLayerStore: stores.userLayers });
             if (!lookup.found)
               return sendJson({
                 response,
@@ -177,7 +178,7 @@ export function createQuarryServer() {
             const bodyCheck = sourceOfRequestBody({ rawBody: await readRequestBody({ request }) });
             if ("reason" in bodyCheck)
               return sendJson({ response, statusCode: 400, body: { erreur: bodyCheck.reason } });
-            const { created } = writeUserLayer({ name, source: bodyCheck.source });
+            const { created } = await stores.userLayers.write({ name, source: bodyCheck.source });
             return sendJson({
               response,
               statusCode: created ? 201 : 200,
@@ -188,7 +189,7 @@ export function createQuarryServer() {
 
         // ---- the compatibility API: api/formalismes ----
         if (request.method === "GET" && url.pathname === "/api/formalismes") {
-          const userNames = listLayerNames({ directory: USERS_DIRECTORY });
+          const userNames = await stores.userLayers.listNames();
           return sendJson({
             response,
             statusCode: 200,
@@ -208,7 +209,7 @@ export function createQuarryServer() {
           const name = nameCheck.name;
 
           if (request.method === "GET") {
-            const lookup = lookupLayer({ name });
+            const lookup = await lookupLayer({ name, userLayerStore: stores.userLayers });
             if (!lookup.found)
               return sendJson({
                 response,
@@ -233,7 +234,7 @@ export function createQuarryServer() {
             const bodyCheck = sourceOfRequestBody({ rawBody: await readRequestBody({ request }) });
             if ("reason" in bodyCheck)
               return sendJson({ response, statusCode: 400, body: { erreur: bodyCheck.reason } });
-            const { created } = writeUserLayer({ name, source: bodyCheck.source });
+            const { created } = await stores.userLayers.write({ name, source: bodyCheck.source });
             return sendJson({
               response,
               statusCode: created ? 201 : 200,
@@ -249,14 +250,14 @@ export function createQuarryServer() {
                 body: { erreur: "le socle est en lecture seule : " + name },
               });
             }
-            if (!existsSync(userLayerPath({ name }))) {
+            const { existed } = await stores.userLayers.delete({ name });
+            if (!existed) {
               return sendJson({
                 response,
                 statusCode: 404,
                 body: { erreur: "couche inconnue : " + name },
               });
             }
-            deleteUserLayer({ name });
             return sendJson({ response, statusCode: 200, body: { nom: name, effacé: true } });
           }
         }
@@ -280,12 +281,16 @@ export function createQuarryServer() {
             });
           }
           // The living context of the loop: the kernel once, the
-          // visitors' layers read at the call — a layer written
-          // seconds ago stays refinable for the geologist.
-          const userNames = listLayerNames({ directory: USERS_DIRECTORY });
-          const previousAdditionSources = userNames.map((name) =>
-            readFileSync(userLayerPath({ name: name as LayerName }), "utf8"),
-          );
+          // visitors' layers read at the call through the store —
+          // a layer written seconds ago stays refinable for the
+          // geologist.
+          const userNames = await stores.userLayers.listNames();
+          const visitorLayers: { name: string; source: string }[] = [];
+          for (const name of userNames) {
+            const read = await stores.userLayers.read({ name: name as LayerName });
+            if (read.found) visitorLayers.push({ name, source: read.source });
+          }
+          const previousAdditionSources = visitorLayers.map((visitorLayer) => visitorLayer.source);
           try {
             const loopOutcome = await composeVerifiedLayerDraft({
               instruction,
@@ -297,7 +302,7 @@ export function createQuarryServer() {
               strictConflicts: STRICT_CONFLICTS,
               strictChecks: STRICT_CHECKS,
               propose: async ({ instruction, feedback }) => {
-                const generated = await generateLayer({ instruction, feedback });
+                const generated = await generateLayer({ instruction, feedback, visitorLayers });
                 if (generated.statusCode !== 200) {
                   throw new PenInfraFailure({
                     statusCode: generated.statusCode,

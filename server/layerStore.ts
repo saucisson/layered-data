@@ -1,11 +1,16 @@
 // ============================================================
-// Layered Data — the quarry on disk: layer names, lookup, writes
+// Layered Data — the bedrock on disk: layer names, kernel lookup
+//
+// The kernel (formalisms/kernel/) is read-only ground, shipped in
+// the image. The visitors' writable quarry lives behind the
+// UserLayerStore interface (server/userLayerStore.ts) — disk in
+// dev/tests, PostgreSQL in production (ADR-0111).
 // ============================================================
-import { readFileSync, writeFileSync, unlinkSync, existsSync, readdirSync } from "node:fs";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 
 import { KERNEL_LAYER_NAMES as CANONICAL_LAYER_NAMES } from "../src/application/corpus.ts";
-import { KERNEL_DIRECTORY, USERS_DIRECTORY } from "./config.ts";
+import { KERNEL_DIRECTORY } from "./config.ts";
 
 /** A layer name as it appears in a URL: lowercase letters,
  * digits and dashes. The brand keeps names from being confused
@@ -60,49 +65,4 @@ export const KERNEL_LANGUAGE_SOURCE = CANONICAL_LAYER_NAMES.map((name) => {
 /** The path of a kernel layer — read-only ground. */
 export function kernelLayerPath({ name }: { name: LayerName }): string {
   return join(KERNEL_DIRECTORY, name + ".ld");
-}
-
-/** The path of a user layer — the writable quarry. */
-export function userLayerPath({ name }: { name: LayerName }): string {
-  return join(USERS_DIRECTORY, name + ".ld");
-}
-
-/** What a lookup found: a layer's source and where it lives.
- * The user quarry wins over the kernel — a visitor may shadow
- * a read-only name with their own writing. */
-export type LayerLookup =
-  { found: false } | { found: true; location: "kernel" | "users"; source: string };
-
-export function lookupLayer({ name }: { name: LayerName }): LayerLookup {
-  if (existsSync(userLayerPath({ name }))) {
-    return {
-      found: true,
-      location: "users",
-      source: readFileSync(userLayerPath({ name }), "utf8"),
-    };
-  }
-  if (KERNEL_LAYER_NAMES.includes(name)) {
-    return {
-      found: true,
-      location: "kernel",
-      source: readFileSync(kernelLayerPath({ name }), "utf8"),
-    };
-  }
-  return { found: false };
-}
-
-/** Write a user layer (the kernel refuses). A trailing newline is
- * added: every layer file ends with one. */
-export function writeUserLayer({ name, source }: { name: LayerName; source: string }): {
-  created: boolean;
-} {
-  const created = !existsSync(userLayerPath({ name }));
-  const normalized = source.endsWith("\n") ? source : source + "\n";
-  writeFileSync(userLayerPath({ name }), normalized);
-  return { created };
-}
-
-/** Delete a user layer (the kernel refuses). */
-export function deleteUserLayer({ name }: { name: LayerName }): void {
-  unlinkSync(userLayerPath({ name }));
 }

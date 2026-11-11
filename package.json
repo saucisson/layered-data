@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "bench": "node --expose-gc benchmarks/kernel.mts",
-    "test": "npm run test:audit && npm run test:specification && npm run test:staging && npm run test:pen-loop && npm run test:editor && npm run test:pages && npm run test:model-editor && npm run test:editor-session && npm run test:i18n && npm run i18n:check && npm run test:terminology && npm run test:stream && npm run test:perf && npm run test:validation-session && npm run test:vscode && npm run test:server && npm run test:reviewer && npm run test:error-boundary && npm run test:access-code-consent && npm run test:rate-limit",
+    "test": "npm run test:audit && npm run test:specification && npm run test:staging && npm run test:pen-loop && npm run test:editor && npm run test:pages && npm run test:model-editor && npm run test:editor-session && npm run test:i18n && npm run i18n:check && npm run test:terminology && npm run test:stream && npm run test:perf && npm run test:validation-session && npm run test:vscode && npm run test:server && npm run test:reviewer && npm run test:error-boundary && npm run test:access-code-consent && npm run test:rate-limit && npm run test:postgres",
     "test:reviewer": "node tests/reviewer-checks.mts",
     "test:error-boundary": "node tests/error-boundary-checks.mts",
     "test:access-code-consent": "node tests/access-code-consent-checks.mts",
@@ -40,7 +40,8 @@
     "lint": "eslint src server tests e2e --no-warn-ignored",
     "lint:fix": "eslint src server tests e2e --no-warn-ignored --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" \"server/**/*.ts\" \"tests/**/*.mts\" \"e2e/**/*.ts\" \"playwright.config.ts\" \"*.{js,json,md}\" \".github/**/*.yml\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"server/**/*.ts\" \"tests/**/*.mts\" \"e2e/**/*.ts\" \"playwright.config.ts\" \"*.{js,json,md}\" \".github/**/*.yml\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"server/**/*.ts\" \"tests/**/*.mts\" \"e2e/**/*.ts\" \"playwright.config.ts\" \"*.{js,json,md}\" \".github/**/*.yml\"",
+    "test:postgres": "node tests/postgres-store-checks.mts"
   },
   "dependencies": {
     "i18next": "^27.1.0",

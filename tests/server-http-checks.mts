@@ -31,6 +31,8 @@ process.env.LD_DATA_DIRECTORY = join(sandbox, "data");
 process.env.API_TOKEN = "test-token";
 // an empty string counts as set: .env must not reintroduce a real key
 process.env.MISTRAL_API_KEY = "";
+// same isolation for the stores: this harness runs on the disk stores
+process.env.DATABASE_URL = "";
 
 const { createQuarryServer } = await import("../server/routes.ts");
 const server: Server = createQuarryServer();
