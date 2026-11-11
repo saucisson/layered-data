@@ -8,7 +8,7 @@ import { useRouter } from "../components/Router";
 export function NotFoundPage({ language }: { language: Language }) {
   const { navigate } = useRouter();
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-8 text-center">
+    <main className="flex min-h-screen flex-col items-center justify-center gap-4 p-4 sm:p-8 text-center">
       <p className="text-6xl font-bold text-slate-300 dark:text-slate-600">404</p>
       <h1 className="text-xl font-bold text-slate-800 dark:text-slate-100">
         {say({ language, fr: "Page introuvable", en: "Page not found" })}
