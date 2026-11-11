@@ -20,6 +20,10 @@ import {
   MAX_PEN_ATTEMPTS,
   STRICT_CONFLICTS,
   STRICT_CHECKS,
+  DATABASE_URL,
+  RATE_LIMIT_WINDOW_SECONDS,
+  GENERATE_MAX_REQUESTS,
+  POST_MAX_REQUESTS,
 } from "./config.ts";
 import {
   KERNEL_LAYER_NAMES,
@@ -50,8 +54,43 @@ import {
   readRequestBody,
   sourceOfRequestBody,
 } from "./httpUtils.ts";
+import {
+  clientKeyOf,
+  createPostgresRateLimitStore,
+  createRateLimiter,
+  type RateLimitDecision,
+  type RateLimitStore,
+} from "./rateLimit.ts";
+
+/** The API rate limiters (issue #85): PostgreSQL-backed fixed windows
+ * per client key, shared by every server instance. Without
+ * DATABASE_URL (local dev, tests) they are null and POSTs pass
+ * through — a startup warning says so. */
+function createApiRateLimiters(): {
+  generate: ((key: string) => Promise<RateLimitDecision>) | null;
+  post: ((key: string) => Promise<RateLimitDecision>) | null;
+} {
+  if (!DATABASE_URL) return { generate: null, post: null };
+  let storePromise: Promise<RateLimitStore> | null = null;
+  const lazyStore: RateLimitStore = {
+    increment: (args) => (storePromise ??= createPostgresRateLimitStore({ databaseUrl: DATABASE_URL })).then((store) => store.increment(args)),
+  };
+  return {
+    generate: createRateLimiter({
+      store: lazyStore,
+      maxRequests: GENERATE_MAX_REQUESTS,
+      windowSeconds: RATE_LIMIT_WINDOW_SECONDS,
+    }),
+    post: createRateLimiter({
+      store: lazyStore,
+      maxRequests: POST_MAX_REQUESTS,
+      windowSeconds: RATE_LIMIT_WINDOW_SECONDS,
+    }),
+  };
+}
 
 export function createQuarryServer() {
+  const rateLimiters = createApiRateLimiters();
   return createServer(async (request, response) => {
     applySecurityHeaders({ response });
     const url = new URL(request.url ?? "/", "http://" + (request.headers.host ?? "localhost"));
@@ -60,6 +99,27 @@ export function createQuarryServer() {
     try {
       // ---- the quarry and geologist API ----
       if (segments[0] === "api") {
+        // Rate limit before the auth check: the counters also blunt
+        // brute force on the access code. /api/generate (the Mistral
+        // call) gets the strict window, the other POSTs a wider one.
+        if (request.method === "POST") {
+          const limiter = url.pathname === "/api/generate" ? rateLimiters.generate : rateLimiters.post;
+          if (limiter !== null) {
+            const decision = await limiter(clientKeyOf({ request }));
+            if (!decision.allowed) {
+              response.setHeader("Retry-After", String(decision.retryAfterSeconds));
+              return sendJson({
+                response,
+                statusCode: 429,
+                body: {
+                  erreur: `trop de requêtes — réessayez dans ${decision.retryAfterSeconds}s`,
+                  remaining: 0,
+                },
+              });
+            }
+          }
+        }
+
         if (url.pathname === "/api/whoami") {
           if (!isAccessGranted({ request }))
             return sendJson({ response, statusCode: 401, body: { erreur: "code d'accès requis" } });

@@ -40,6 +40,21 @@ export const STRICT_CONFLICTS = process.env.PEN_STRICT_CONFLICTS === "1";
 export const STRICT_CHECKS = process.env.PEN_STRICT_CHECKS === "1";
 
 // ------------------------------------------------------------
+// PostgreSQL and the rate limiter (issue #85)
+//
+// The server is meant to be instantiated several times behind a
+// proxy, so the rate-limit counters live in PostgreSQL, not in
+// process memory. Without DATABASE_URL (local dev, tests) the
+// limiter is disabled and a warning is logged at startup.
+// ------------------------------------------------------------
+export const DATABASE_URL = process.env.DATABASE_URL ?? "";
+// Fixed window per client key: /api/generate is the expensive route
+// (it calls the Mistral API), the other POSTs get a wider window.
+export const RATE_LIMIT_WINDOW_SECONDS = Math.max(1, Number(process.env.RATE_LIMIT_WINDOW_SECONDS ?? 60));
+export const GENERATE_MAX_REQUESTS = Math.max(1, Number(process.env.GENERATE_MAX_REQUESTS ?? 10));
+export const POST_MAX_REQUESTS = Math.max(1, Number(process.env.POST_MAX_REQUESTS ?? 30));
+
+// ------------------------------------------------------------
 // The quarry on disk
 //
 // The corpus lives in two folders: the kernel (read-only, the
