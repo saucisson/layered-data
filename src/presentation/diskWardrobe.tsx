@@ -247,7 +247,17 @@ export function DiskWardrobe({
         </p>
       )}
       {entries !== null && entries.length > 0 && (
-        <div className="mb-2">
+        <div className="mb-2" onKeyDown={(event) => {
+          if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
+          const buttons = Array.from(event.currentTarget.querySelectorAll("button"));
+          const currentIndex = buttons.findIndex((button) => button === document.activeElement);
+          if (currentIndex === -1) return;
+          event.preventDefault();
+          const nextIndex = event.key === "ArrowDown"
+            ? Math.min(currentIndex + 1, buttons.length - 1)
+            : Math.max(currentIndex - 1, 0);
+          buttons[nextIndex]?.focus();
+        }}>
           <VirtualList
             items={entries}
             estimateSize={20}
