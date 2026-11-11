@@ -2,10 +2,18 @@
    par @tailwindcss/vite — l'atelier local est identique au rendu */
 @import "tailwindcss";
 
+/* dark mode piloté par la classe .dark sur <html> (préférence système
+   ou choix manuel) — Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* avant le montage de React : déjà le fond de l'atelier (slate-100) */
 body {
   margin: 0;
   background-color: #f1f5f9;
+}
+
+.dark body {
+  background-color: #0f172a;
 }
 
 /* le curseur dit ce qui se clique : Tailwind v4 laisse le bouton

@@ -110,21 +110,21 @@ export function CascadeCard({
       className={
         "w-64 shrink-0 rounded-lg border p-2 " +
         (isLast
-          ? "border-slate-500 bg-slate-50 ring-2 ring-slate-400"
+          ? "border-slate-500 bg-slate-50 dark:bg-slate-900 ring-2 ring-slate-400"
           : isSecondToLast
-            ? "border-slate-300 bg-white ring-1 ring-slate-300"
-            : "border-slate-200 bg-white opacity-50")
+            ? "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 ring-1 ring-slate-300"
+            : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 opacity-50")
       }
     >
       <div className="flex flex-wrap items-center gap-1 text-[11px]">
         <LayerBadge layer={target.layer} small />
-        <span className="min-w-0 break-all font-mono text-slate-700">
+        <span className="min-w-0 break-all font-mono text-slate-700 dark:text-slate-200">
           {target.path.length ? target.path.join("/") : "()"}
         </span>
       </div>
       {target.key !== null && (
         <div className="mt-1 text-[11px] leading-4">
-          <span className="font-mono font-semibold text-slate-800">{target.key}</span> ←{" "}
+          <span className="font-mono font-semibold text-slate-800 dark:text-slate-100">{target.key}</span> ←{" "}
           {provenance && provenance.winner !== null ? (
             isLast ? (
               <button type="button"

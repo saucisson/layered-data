@@ -27,7 +27,7 @@ function RawBranch({
   language: Language;
 }) {
   const special = (SPECIAL_KEYS as readonly string[]).includes(keyName);
-  const keyClassName = special ? "font-semibold text-amber-600" : "font-semibold text-slate-800";
+  const keyClassName = special ? "font-semibold text-amber-600" : "font-semibold text-slate-800 dark:text-slate-100";
   if (isDictionary(value)) {
     return (
       <div style={{ marginLeft: depth === 0 ? 0 : 12 }}>
@@ -77,7 +77,7 @@ function RawBranch({
       </span>
     );
   } else {
-    rendered = <span className="text-slate-800">{String(value)}</span>;
+    rendered = <span className="text-slate-800 dark:text-slate-100">{String(value)}</span>;
   }
   return (
     <div style={{ marginLeft: depth === 0 ? 0 : 12 }}>
@@ -100,7 +100,7 @@ export function RawLayerExplorer({
 }) {
   const node = space.layers[layer] ?? {};
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3 font-mono text-[11px] leading-5">
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 font-mono text-[11px] leading-5">
       {Object.keys(node).map((key) => (
         <RawBranch key={key} keyName={key} value={node[key]} depth={0} language={language} />
       ))}

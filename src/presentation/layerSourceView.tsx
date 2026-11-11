@@ -153,7 +153,7 @@ export const SPAN_CLASSES: Record<string, string> = {
   st: "text-amber-700",
   nu: "text-sky-700",
   cm: "italic text-slate-600",
-  id: "text-slate-800",
+  id: "text-slate-800 dark:text-slate-100",
   pu: "text-slate-500",
 };
 
@@ -192,7 +192,7 @@ export function LayerSourceView({
           fr: "La grammaire telle qu'elle s'écrit. « refines @a then @b » : les parents dans leur ordre de consultation — le premier gagne, la fermeture suit la liste ; « abstract clé » déclare un slot non tranché ; « bind slot -&gt; nom » lie un slot de check au nom de clé concret — à gauche l'API stable des checks, à droite le vocabulaire de la couche. Ce qui brille en violet est un acte, en vert un @chemin, en ambre une chaîne.",
         })}
       </p>
-      <div className="max-h-80 overflow-auto rounded-md border border-slate-100 bg-slate-50/50 p-2 font-mono text-[11px] leading-4">
+      <div className="max-h-80 overflow-auto rounded-md border border-slate-100 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4">
         {block === null ? (
           <div className="py-1 text-xs text-slate-600">
             {say({
@@ -213,7 +213,7 @@ export function LayerSourceView({
                 key={index}
                 className={
                   "flex " +
-                  (lineTarget !== undefined ? "cursor-pointer hover:bg-slate-100 rounded" : "")
+                  (lineTarget !== undefined ? "cursor-pointer hover:bg-slate-100 dark:bg-slate-800 rounded" : "")
                 }
                 onClick={lineTarget !== undefined ? () => onLine(lineTarget) : undefined}
                 title={

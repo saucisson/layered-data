@@ -311,7 +311,7 @@ export function NotionTip({
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
     >
-      <span className="cursor-help font-semibold text-slate-800 underline decoration-dotted decoration-sky-500 underline-offset-2">
+      <span className="cursor-help font-semibold text-slate-800 dark:text-slate-100 underline decoration-dotted decoration-sky-500 underline-offset-2">
         {children ?? termText}
       </span>
       {open && (

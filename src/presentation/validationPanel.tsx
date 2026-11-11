@@ -24,7 +24,7 @@ export function ValidationPanel({
   const verdicts = validation.verdicts;
   return (
     <div aria-live="polite" aria-atomic="false" role="status">
-      <h3 className="mt-2 text-xs font-bold text-slate-800">
+      <h3 className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-100">
         {say({ language, en: "Assembly validation", fr: "Validation d'assemblage" })}
         <span className="ml-1 font-normal text-slate-600">
           {say({
@@ -101,11 +101,11 @@ export function ValidationPanel({
       )}
       <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[11px] text-slate-500">
         <span>
-          <span className="font-semibold text-slate-700">{stats.nouveau}</span>{" "}
+          <span className="font-semibold text-slate-700 dark:text-slate-200">{stats.nouveau}</span>{" "}
           {say({ language, en: "new", fr: "nouveaux" })}
         </span>
         <span>
-          <span className="font-semibold text-slate-700">{stats.extension}</span>{" "}
+          <span className="font-semibold text-slate-700 dark:text-slate-200">{stats.extension}</span>{" "}
           {say({
             language,
             en: "extensions (declared transparency)",
@@ -113,7 +113,7 @@ export function ValidationPanel({
           })}
         </span>
         <span>
-          <span className="font-semibold text-slate-700">{stats.surcharge}</span>{" "}
+          <span className="font-semibold text-slate-700 dark:text-slate-200">{stats.surcharge}</span>{" "}
           {say({
             language,
             en: "overrides (declared shadows)",
@@ -121,7 +121,7 @@ export function ValidationPanel({
           })}
         </span>
         <span>
-          <span className="font-semibold text-slate-700">{stats.ombresDeclarées}</span>{" "}
+          <span className="font-semibold text-slate-700 dark:text-slate-200">{stats.ombresDeclarées}</span>{" "}
           {say({
             language,
             en: "first-wins overwrites — all declared",
@@ -129,7 +129,7 @@ export function ValidationPanel({
           })}
         </span>
         <span>
-          <span className="font-semibold text-slate-700">{stats.ombresÉmergentes}</span>{" "}
+          <span className="font-semibold text-slate-700 dark:text-slate-200">{stats.ombresÉmergentes}</span>{" "}
           {say({
             language,
             en: "emerging from the diamond (to inspect)",

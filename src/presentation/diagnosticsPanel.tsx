@@ -66,7 +66,7 @@ const DIAGNOSTIC_LABELS: Record<
   },
   "ombre-émergente": {
     label: { en: "emerging shadow", fr: "ombre émergente" },
-    tone: "border-slate-200 bg-slate-50 text-slate-600",
+    tone: "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600",
     note: {
       en: "language — the diamond decides: nobody declared the shadow, the closure order decides — to inspect",
       fr: "langage — le diamant tranche : personne n'a déclaré l'ombre, l'ordre de fermeture décide — à inspecter",
@@ -74,7 +74,7 @@ const DIAGNOSTIC_LABELS: Record<
   },
   ombre: {
     label: { en: "shadow", fr: "ombre" },
-    tone: "border-slate-200 bg-slate-50 text-slate-600",
+    tone: "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600",
     note: {
       en: "inventory: first-wins decided; to inspect, not a fault",
       fr: "inventaire : le premier-gagné a tranché ; à inspecter, pas une faute",
@@ -137,9 +137,9 @@ export function DiagnosticsPanel({
   ];
   const verdicts = validation.verdicts;
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-3" aria-live="polite" aria-atomic="false">
+    <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3" aria-live="polite" aria-atomic="false">
       <button type="button"
-        className="flex w-full items-center justify-between gap-2 text-left text-sm font-bold text-slate-800"
+        className="flex w-full items-center justify-between gap-2 text-left text-sm font-bold text-slate-800 dark:text-slate-100"
         onClick={() => setOpen(!open)}
       >
         <span>
@@ -197,7 +197,7 @@ export function DiagnosticsPanel({
                 const meta = DIAGNOSTIC_LABELS[kind];
                 if (meta === undefined) return null;
                 return (
-                  <div key={kind} className="rounded-md border border-slate-200 p-2">
+                  <div key={kind} className="rounded-md border border-slate-200 dark:border-slate-700 p-2">
                     <div className="flex flex-wrap items-baseline gap-2">
                       <span
                         className={
