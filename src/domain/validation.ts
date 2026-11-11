@@ -150,10 +150,12 @@ export interface ExpectedRead {
   expectation: RawValue;
 }
 
-export function expectationsOf(layerNode: any): ExpectedRead[] {
-  if (!isDictionary(layerNode) || !isDictionary(layerNode["tests"])) return [];
+export function expectationsOf(layerNode: unknown): ExpectedRead[] {
+  if (!isDictionary(layerNode)) return [];
+  const tests = layerNode["tests"];
+  if (!isDictionary(tests)) return [];
   const expectations: ExpectedRead[] = [];
-  for (const [address, expectation] of Object.entries(layerNode["tests"])) {
+  for (const [address, expectation] of Object.entries(tests)) {
     if (address.startsWith("__note:")) continue;
     const segments = address.split("/");
     expectations.push({
@@ -166,7 +168,7 @@ export function expectationsOf(layerNode: any): ExpectedRead[] {
   return expectations;
 }
 
-export function readMatchesExpectation(read: any, expectation: any): boolean {
+export function readMatchesExpectation(read: unknown, expectation: RawValue): boolean {
   if (expectation === null) return read === null;
   if (expectation instanceof LayerReference) {
     return read instanceof AddressView && read.layer === expectation.layer;
@@ -189,7 +191,7 @@ export function readMatchesExpectation(read: any, expectation: any): boolean {
   return read === expectation;
 }
 
-export function formatExpectation(value: any): string {
+export function formatExpectation(value: unknown): string {
   if (value === null) return "null";
   if (value instanceof AddressView) {
     return "@" + value.layer + (value.path.length ? "/" + value.path.join("/") : "");
@@ -480,7 +482,7 @@ export function* streamValidation({
   for (const [layerIndex, layer] of layerNames.entries()) {
     for (const expectation of expectationsOf(compilation.layers[layer])) {
       stats.tests++;
-      let read: any;
+      let read: unknown;
       try {
         read = space.read({ layer, path: expectation.path as LayerPath, key: expectation.key });
       } catch {
