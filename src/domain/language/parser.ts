@@ -19,6 +19,15 @@ export type LanguageValue =
 // ADR-0106 — the ones the ontology measured, nothing else.
 export type DeclarationMode = "new" | "extend" | "override";
 
+/** A display guard (strate 1 — presence / closed set, no
+ * comparisons): `when mark` tests the presence of the key path on
+ * the dressed node; `when mark in [1, 2]` its membership in a closed
+ * set. The strate-2 comparison form (`when (mark > 0)`) is a
+ * declared next strate, not parsed here. */
+export type DisplayGuard =
+  | { kind: "presence"; path: string[] }
+  | { kind: "member"; path: string[]; values: LanguageValue[] };
+
 export type LanguageAct =
   | { kind: "bind"; slot: string; value: LanguageValue; line: number; notes?: string[] }
   | { kind: "check"; labels: string[]; line: number; notes?: string[] }
@@ -53,6 +62,7 @@ export type LanguageAct =
       refines: LanguageValue[] | null;
       value: LanguageValue | null;
       block: LanguageAct[] | null;
+      guard: DisplayGuard | null;
       line: number;
       notes?: string[];
     };
@@ -223,6 +233,34 @@ export function parseLanguage(
     );
   };
 
+  // A display guard: `when mark` (presence) or `when mark in [1, 2]`
+  // (closed set) — strate 1, no comparisons.
+  const parseGuard = (): DisplayGuard => {
+    const segments = [eat("id").text];
+    while (peek()?.kind === "/") {
+      position++;
+      segments.push(eat("id").text);
+    }
+    if (peek()?.kind === "id" && peek()?.text === "in") {
+      position++;
+      eat("[");
+      const values: LanguageValue[] = [];
+      if (peek()?.kind !== "]") {
+        while (true) {
+          values.push(parseValue());
+          if (peek()?.kind === ",") {
+            position++;
+            continue;
+          }
+          break;
+        }
+      }
+      eat("]");
+      return { kind: "member", path: segments, values };
+    }
+    return { kind: "presence", path: segments };
+  };
+
   // ---- acts
   const parseActs = (): LanguageAct[] => {
     const acts: LanguageAct[] = [];
@@ -292,6 +330,7 @@ export function parseLanguage(
           refines: null,
           value: null,
           block: null,
+          guard: null,
           line: token.line,
         });
         const lastAct = acts[acts.length - 1];
@@ -422,6 +461,12 @@ export function parseLanguage(
         position++;
         refines = parseReferences();
       }
+      // The optional guard: `key when mark { … }` / `key when mark in [1, 2] { … }`
+      let guard: DisplayGuard | null = null;
+      if (peek()?.kind === "id" && peek()?.text === "when") {
+        position++;
+        guard = parseGuard();
+      }
       if (peek()?.kind === "{") {
         position++;
         acts.push({
@@ -431,6 +476,7 @@ export function parseLanguage(
           refines,
           value: null,
           block: parseActs(),
+          guard,
           line: token.line,
         });
         const lastAct = acts[acts.length - 1];
@@ -445,6 +491,7 @@ export function parseLanguage(
           refines,
           value: parseValue(),
           block: null,
+          guard,
           line: token.line,
         });
         const lastAct = acts[acts.length - 1];
@@ -460,6 +507,7 @@ export function parseLanguage(
           refines,
           value: null,
           block: [],
+          guard,
           line: token.line,
         });
         const lastAct = acts[acts.length - 1];
