@@ -46,13 +46,34 @@ Each finding: `file:line`, the rule violated, and the counterexample or
 evidence. The report ends with the counts per severity and a one-line
 recommendation.
 
+## Mechanical checks (`scripts/commands/review.mjs`)
+
+The CI reviewer job runs the review script, which enforces — on the PR
+diff itself, not only on meta-rules:
+
+- **new-dependency** (BLOCKING, waivable by `human-approved`): any
+  dependency added to `package.json` / `package-lock.json` in the diff.
+  New dependencies are on the escalation list (ADR-0011).
+- **removed-dependency** (SUGGESTION): a dependency removed.
+- **console-in-src** (BLOCKING): `console.*` added in `src/` or `server/`.
+- **default-export** (BLOCKING): `export default` added in `src/` or `server/`.
+- **explicit-any** (TO-FIX): `any` added in `src/`.
+- **layer-boundary-violation** (BLOCKING): an added import crossing a
+  layer boundary (the same zones as `eslint.config.js`).
+- **possible-secret** (BLOCKING): an added line shaped like a hardcoded
+  secret.
+
+These checks are pinned by `tests/reviewer-checks.mts` (run in
+`npm test`): a synthetic diff adding a dependency or a violation must
+produce the corresponding finding.
+
 ## Verdicts and their consequences
 
-| Report content          | Effect on auto-merge                       |
-| ----------------------- | ----------------------------------------- |
-| Zero BLOCKING findings  | Merge criterion satisfied (CI permitting) |
-| Any BLOCKING finding    | Report on the PR; developer iterates      |
-| Checklist item unclear  | Ask via `needs-human`, do not guess        |
+| Report content         | Effect on auto-merge                      |
+| ---------------------- | ----------------------------------------- |
+| Zero BLOCKING findings | Merge criterion satisfied (CI permitting) |
+| Any BLOCKING finding   | Report on the PR; developer iterates      |
+| Checklist item unclear | Ask via `needs-human`, do not guess       |
 
 You re-review after fixes on the same budget terms: the issue's 3-attempt
 budget applies across the whole cycle, not per review round.
