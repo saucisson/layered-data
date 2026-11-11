@@ -69,7 +69,7 @@ index 1111111..2222222 100644
 +import { assembleLayeredDataKernel } from "../application/corpus.ts";
 +export default function debugSpace(): any {
 +  console.log("space", arguments);
-+  const apiKey = "sk-live-abcdef0123456789";
++  const apiKey = "xxxxxxxx";
 +  return null as any;
  }
 `;
