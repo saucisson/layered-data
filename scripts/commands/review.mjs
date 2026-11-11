@@ -244,12 +244,176 @@ function checkPRDescription(description) {
 }
 
 /**
- * Check for new dependencies in package.json
+ * Parse the diff into added lines, each with its file and line number
+ * (new-file side of the hunks).
  */
-function checkNewDependencies() {
-  // This would need to compare with the base branch
-  // For now, we'll skip this as it requires git operations
-  return [];
+export function parseAddedLines(diff) {
+  const added = [];
+  let currentFile = null;
+  let newLine = 0;
+  for (const line of diff.split('\n')) {
+    if (line.startsWith('diff --git')) {
+      const match = line.match(/diff --git a\/(.+) b\/(.+)/);
+      currentFile = match ? match[1] : null;
+      newLine = 0;
+    } else if (line.startsWith('@@')) {
+      const match = line.match(/@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/);
+      newLine = match ? Number(match[1]) : 0;
+    } else if (line.startsWith('+') && !line.startsWith('+++')) {
+      added.push({ file: currentFile, line: newLine, text: line.slice(1) });
+      newLine++;
+    } else if (!line.startsWith('-')) {
+      newLine++;
+    }
+  }
+  return added;
+}
+
+/**
+ * Check for added/removed dependencies: parse the PR diff for
+ * package.json (dependency entries) and package-lock.json
+ * (node_modules entries). A NEW dependency is a major escalation
+ * criterion (ADR-0011) — BLOCKING unless waived by the human-approved
+ * label.
+ */
+export function checkNewDependencies(diff) {
+  const findings = [];
+  const addedDeps = new Set();
+  const removedDeps = new Set();
+
+  for (const { file, line, text } of parseAddedLines(diff)) {
+    if (file === 'package.json') {
+      // dependency entries are indented exactly 4 spaces inside
+      // "dependencies" / "devDependencies" blocks
+      const entry = text.match(/^ {4}"([^"]+)":\s*"[^"]+"/);
+      if (entry) addedDeps.add(entry[1]);
+    } else if (file === 'package-lock.json') {
+      const entry = text.match(/^ {4}"node_modules\/([^"]+)":\s*\{/);
+      if (entry) addedDeps.add(entry[1]);
+    }
+  }
+
+  // Removed lines: same shapes, on the '-' side
+  let currentFile = null;
+  for (const line of diff.split('\n')) {
+    if (line.startsWith('diff --git')) {
+      const match = line.match(/diff --git a\/(.+) b\/(.+)/);
+      currentFile = match ? match[1] : null;
+    } else if (line.startsWith('-') && !line.startsWith('---')) {
+      const text = line.slice(1);
+      if (currentFile === 'package.json') {
+        const removed = text.match(/^ {4}"([^"]+)":\s*"[^"]+"/);
+        if (removed) removedDeps.add(removed[1]);
+      } else if (currentFile === 'package-lock.json') {
+        const entry = text.match(/^ {4}"node_modules\/([^"]+)":\s*\{/);
+        if (entry) removedDeps.add(entry[1]);
+      }
+    }
+  }
+
+  for (const dep of [...addedDeps].sort()) {
+    findings.push({
+      severity: 'BLOCKING',
+      file: 'package.json',
+      line: '1',
+      rule: 'new-dependency',
+      evidence: `Dependency "${dep}" added — new dependencies are on the escalation list (ADR-0011): label needs-human and get human approval before merge`
+    });
+  }
+  for (const dep of [...removedDeps].sort()) {
+    if (addedDeps.has(dep)) continue;
+    findings.push({
+      severity: 'SUGGESTION',
+      file: 'package.json',
+      line: '1',
+      rule: 'removed-dependency',
+      evidence: `Dependency "${dep}" removed — confirm nothing still imports it`
+    });
+  }
+  return findings;
+}
+
+// The onion, mirrored from eslint.config.js: each zone may import the
+// zones to its LEFT, never the ones listed here.
+const ZONE_FORBIDDEN_IMPORTS = {
+  'src/domain': ['application', 'presentation', 'pages', 'components', 'infrastructure', 'App.tsx', 'WorkshopContainer.tsx'],
+  'src/application': ['presentation', 'pages', 'components', 'App.tsx', 'WorkshopContainer.tsx'],
+  'src/presentation': ['App.tsx', 'WorkshopContainer.tsx'],
+  'src/pages': ['App.tsx', 'WorkshopContainer.tsx'],
+  'src/components': ['App.tsx', 'WorkshopContainer.tsx']
+};
+
+const SECRET_PATTERN = /(api[_-]?key|secret|passwd|password|private[_-]?key|access[_-]?token)\s*[:=]\s*["'][A-Za-z0-9_\-./+]{8,}["']/i;
+
+/**
+ * Content-level checks on the added lines of the diff — the rules the
+ * reviewer promises but never enforced: no console in src//server/,
+ * no default exports, no explicit any in src/, no import crossing a
+ * layer boundary, no possible secret.
+ */
+export function checkDiffContent(diff) {
+  const findings = [];
+  for (const { file, line, text } of parseAddedLines(diff)) {
+    if (file === null) continue;
+
+    if (SECRET_PATTERN.test(text)) {
+      findings.push({
+        severity: 'BLOCKING',
+        file,
+        line: String(line),
+        rule: 'possible-secret',
+        evidence: `Added line looks like a hardcoded secret — secrets are on the escalation list (ADR-0011), never commit them`
+      });
+    }
+
+    if (file.startsWith('src/') || file.startsWith('server/')) {
+      if (/\bconsole\.(log|warn|error|info|debug)\s*\(/.test(text)) {
+        findings.push({
+          severity: 'BLOCKING',
+          file,
+          line: String(line),
+          rule: 'console-in-src',
+          evidence: 'console.* is banned in src/ and server/ — logging replaces comments, DEBUG events narrate sections'
+        });
+      }
+      if (/\bexport\s+default\b/.test(text)) {
+        findings.push({
+          severity: 'BLOCKING',
+          file,
+          line: String(line),
+          rule: 'default-export',
+          evidence: 'Named exports only — no default exports'
+        });
+      }
+    }
+
+    if (file.startsWith('src/')) {
+      if (/:\s*any\b|\bas\s+any\b|<any>/.test(text)) {
+        findings.push({
+          severity: 'TO-FIX',
+          file,
+          line: String(line),
+          rule: 'explicit-any',
+          evidence: 'Explicit any in src/ — use unknown + narrowing (tracked as debt, do not add more)'
+        });
+      }
+      for (const [zone, forbidden] of Object.entries(ZONE_FORBIDDEN_IMPORTS)) {
+        if (!file.startsWith(zone + '/')) continue;
+        for (const target of forbidden) {
+          if (text.includes(`../${target}`) || text.includes(`../../${target}`)) {
+            findings.push({
+              severity: 'BLOCKING',
+              file,
+              line: String(line),
+              rule: 'layer-boundary-violation',
+              evidence: `${zone} must not import ${target} — the onion points inward (domain <- application <- presentation <- App)`
+            });
+          }
+        }
+      }
+    }
+  }
+  return findings;
 }
 
 /**
@@ -423,8 +587,19 @@ function runReview() {
   // 5. Check commit messages
   allFindings.push(...checkCommitMessage(commits));
   
-  // 6. Check for new dependencies (placeholder)
-  allFindings.push(...checkNewDependencies());
+  // 6. Check for new/removed dependencies in the diff (escalation
+  //    list, ADR-0011) — waivable by the human-approved label, like
+  //    the constitutional-file gate
+  let dependencyFindings = checkNewDependencies(diff);
+  if (humanApproved) {
+    dependencyFindings = dependencyFindings.map((finding) =>
+      finding.severity === 'BLOCKING' ? waive(finding) : finding
+    );
+  }
+  allFindings.push(...dependencyFindings);
+
+  // 7. Content-level checks on the added lines of the diff
+  allFindings.push(...checkDiffContent(diff));
   
   // Count by severity
   const counts = {
