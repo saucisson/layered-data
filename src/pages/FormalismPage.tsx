@@ -387,7 +387,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl p-6">
+      <main className="mx-auto max-w-6xl p-4 sm:p-6">
         {/* The choice of the layer: the search fades, the click
             navigates — the hash carries the address. */}
         <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">

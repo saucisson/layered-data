@@ -115,7 +115,7 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl p-6">
+      <main className="mx-auto max-w-4xl p-4 sm:p-6">
         <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-sm leading-6 text-slate-600">
           <h2 className="mb-2 text-base font-bold text-slate-800 dark:text-slate-100">
             {say({ language, en: "The protocol", fr: "Le protocole" })}

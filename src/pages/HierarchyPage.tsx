@@ -157,7 +157,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
         </div>
       </header>
 
-      <main className="mx-auto max-w-[95rem] p-6">
+      <main className="mx-auto max-w-[95rem] p-4 sm:p-6">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <input
             value={search}
