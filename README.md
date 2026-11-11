@@ -68,6 +68,16 @@ npm test                       # non-régression du noyau (voir plus bas)
 npm run check:structure        # équilibre JSX/tsx (filet, sans compilateur)
 ```
 
+### Avec Docker
+
+```bash
+docker compose up --build      # build l'image et sert l'atelier sur 0.0.0.0:8791
+```
+
+`API_TOKEN` doit être défini dans l'environnement ou `.env` (compose refuse
+de démarrer sinon). Voir [docs/deployment.md](docs/deployment.md) pour le
+déploiement derrière un reverse proxy.
+
 ## Coloration syntaxique dans VS Code
 
 L'extension déclarative vit dans `vscode/` : grammaire TextMate
