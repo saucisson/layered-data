@@ -431,7 +431,7 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl space-y-12 p-8">
+      <main className="mx-auto max-w-4xl space-y-12 p-4 sm:p-8">
         <section>
           <p className="text-sm leading-6 text-slate-700 dark:text-slate-200">
             <NotionText
@@ -622,7 +622,7 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
               fr: "4 · Ce que l'atelier ajoute — et ce qu'il ne fait pas",
             })}
           </h2>
-          <div className="mt-4 grid gap-6 md:grid-cols-2">
+          <div className="mt-4 grid gap-4 sm:p-6 md:grid-cols-2">
             <div className="rounded-lg border border-sky-200 bg-sky-50 p-4">
               <h3 className="mb-2 text-sm font-bold text-sky-800">
                 {say({ language, en: "What it adds, measured", fr: "Ce qu'il ajoute, mesuré" })}

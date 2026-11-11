@@ -464,7 +464,7 @@ export function WorkshopPage({
                 "Entrée : y aller · Ctrl+K",
               en: "Search — layer, or key of the current address; " + "Enter: go there · Ctrl+K",
             })}
-            className="min-w-[240px] flex-1 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none"
+            className="min-w-0 flex-1 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none sm:min-w-[240px]"
           />
           <button type="button"
             onClick={() => setGuidedTourOpen(!guidedTourOpen)}
@@ -512,7 +512,7 @@ export function WorkshopPage({
               the artifact) */}
 
       {activeScenario && (
-        <div className="mx-4 mt-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm leading-6 text-slate-700 dark:text-slate-200 shadow-sm">
+        <div className="mx-2 mt-3 sm:mx-4 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm leading-6 text-slate-700 dark:text-slate-200 shadow-sm">
           <div className="mb-1 flex items-center gap-2">
             <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
               {activeScenario.id}
@@ -536,8 +536,8 @@ export function WorkshopPage({
         id="main-content"
         className={
           graphView
-            ? "grid grid-cols-1 gap-3 p-4"
-            : "grid grid-cols-1 gap-3 p-4 lg:grid-cols-[240px_minmax(0,1fr)_430px]"
+            ? "grid grid-cols-1 gap-3 p-2 sm:p-4"
+            : "grid grid-cols-1 gap-3 p-2 sm:p-4 lg:grid-cols-[240px_minmax(0,1fr)_430px]"
         }
       >
         {/* ① the layers */}
@@ -1111,7 +1111,7 @@ export function WorkshopPage({
         </section>
       </main>
 
-      <section className="mx-4 mt-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
+      <section className="mx-2 mt-3 sm:mx-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
         <h2 id="panel-viewpoint-heading" className="text-sm font-bold text-slate-800 dark:text-slate-100">
           {say({ language, fr: "④ Le point de vue", en: "④ The point of view" })}
           <span className="ml-1 font-normal text-slate-600">

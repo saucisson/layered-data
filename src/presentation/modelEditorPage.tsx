@@ -1217,9 +1217,9 @@ export function ModelEditorPage({
         </div>
       )}
 
-      <div className="grid grid-cols-12 gap-4">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* the palette: read from the formalism, never hardcoded */}
-        <div className="col-span-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 lg:col-span-2">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
             {t("palette")}
           </div>
@@ -1275,7 +1275,8 @@ export function ModelEditorPage({
         </div>
 
         {/* the canvas: a reading of the model's truth */}
-        <div className={showSource ? "col-span-5" : "col-span-7"}>
+        <div className={showSource ? "lg:col-span-5" : "lg:col-span-7"}>
+          <div className="overflow-x-auto">
           <svg
             ref={svgRef}
             viewBox={"0 0 " + CANVAS_WIDTH + " " + CANVAS_HEIGHT}
@@ -1362,6 +1363,7 @@ export function ModelEditorPage({
               })}
             </g>
           </svg>
+          </div>
           {banner !== null && (
             <div
               role="status"
@@ -1382,7 +1384,7 @@ export function ModelEditorPage({
         {/* the source panel: the block the canvas reads — shown beside
             the canvas on demand, the only truth made visible */}
         {showSource && model !== null && (
-          <div className="col-span-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
+          <div className="lg:col-span-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
               {t("source — the only truth")}
             </div>
@@ -1393,7 +1395,7 @@ export function ModelEditorPage({
         )}
 
         {/* the inspector: the selected member and its declared keys */}
-        <div className="col-span-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
+        <div className="lg:col-span-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
             {t("inspector")}
           </div>
