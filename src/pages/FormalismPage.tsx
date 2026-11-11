@@ -146,7 +146,7 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
           {lineNumbers.get(key)}
         </span>
         {hasSections ? (
-          <button
+          <button type="button"
             onClick={() => {
               setFolded((previous) => {
                 const next = new Set(previous);
@@ -188,13 +188,13 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
   return (
     <div className="overflow-auto rounded-md border border-slate-100 bg-slate-50/50 p-2 font-mono text-[11px] leading-4 max-h-[32rem]">
       <div className="mb-1 flex flex-wrap gap-2">
-        <button
+        <button type="button"
           onClick={() => setFolded(new Set())}
           className="rounded border border-slate-200 bg-white px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
         >
           {say({ language, en: "unfold all", fr: "tout déplier" })}
         </button>
-        <button
+        <button type="button"
           onClick={() =>
             setFolded(new Set(collectSectionKeys({ sections: text.sections, prefix: "" })))
           }
@@ -344,7 +344,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
-              <button
+              <button type="button"
                 key={choice}
                 onClick={() => onChooseLanguage(choice)}
                 className={
@@ -360,25 +360,25 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
           </span>
         </div>
         <div className="mt-2 flex flex-wrap gap-2 text-xs">
-          <button
+          <button type="button"
             onClick={() => navigate("landing")}
             className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
           >
             {say({ language, en: "← home", fr: "← accueil" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("hierarchy")}
             className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
           >
             {say({ language, en: "the hierarchy →", fr: "la hiérarchie →" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("creation")}
             className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
           >
             {say({ language, en: "create a formalism →", fr: "créer un formalisme →" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("workshop")}
             className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
           >
@@ -412,7 +412,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
           </div>
           <div className="flex max-h-24 flex-wrap gap-1.5 overflow-y-auto">
             {matchedLayerNames.map((layerName) => (
-              <button
+              <button type="button"
                 key={layerName}
                 onClick={() => navigate("formalism", layerName)}
                 className={
@@ -455,7 +455,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                 <span className="font-mono text-slate-400">∅</span>
               ) : (
                 parentNames.map((parentName) => (
-                  <button
+                  <button type="button"
                     key={parentName}
                     onClick={() => navigate("formalism", parentName)}
                     className="underline decoration-slate-300 hover:text-slate-900"
@@ -480,7 +480,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                 })}
               </span>
               {closureNames.map((closureName) => (
-                <button
+                <button type="button"
                   key={closureName}
                   onClick={() => navigate("formalism", closureName)}
                   className="underline decoration-slate-300 hover:text-slate-900"
@@ -561,7 +561,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
           </p>
           <div className="mb-2 flex flex-wrap gap-1.5">
             {looks.map(({ lens, look }) => (
-              <button
+              <button type="button"
                 key={lens}
                 onClick={() => setLensChoice(lens)}
                 className={

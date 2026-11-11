@@ -28,7 +28,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
-              <button
+              <button type="button"
                 key={choice}
                 onClick={() => onChooseLanguage(choice)}
                 className={
@@ -120,7 +120,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
                 fr: "Le graphe de raffinement complet du corpus. Cliquez sur une couche pour la comprendre.",
               })}
             </p>
-            <button
+            <button type="button"
               onClick={() => navigate("hierarchy")}
               className="mt-4 rounded-lg border-2 border-slate-400 px-4 py-2 text-sm text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
             >
@@ -139,7 +139,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
                 fr: "Dites l'intention ; le géologue IA de l'atelier propose un brouillon en langage ; le staging le juge ; la couche acceptée entre dans la session vivante.",
               })}
             </p>
-            <button
+            <button type="button"
               onClick={() => navigate("creation")}
               className="mt-4 rounded-lg border-2 border-emerald-500 px-4 py-2 text-sm text-emerald-600 font-semibold hover:bg-emerald-50 transition-colors"
             >
@@ -158,7 +158,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
                 fr: "Une couche à la fois : sa source telle qu'écrite, sa fermeture complète aplatie et résolue en place, et les lentilles qui la dessinent.",
               })}
             </p>
-            <button
+            <button type="button"
               onClick={() => navigate("formalism")}
               className="mt-4 rounded-lg border-2 border-sky-600 px-4 py-2 text-sm text-sky-600 font-semibold hover:bg-sky-50 transition-colors"
             >
@@ -168,25 +168,25 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
         </section>
 
         <section className="mt-12 flex flex-wrap justify-center gap-4">
-          <button
+          <button type="button"
             onClick={() => navigate("tutorial")}
             className="rounded-lg bg-sky-600 px-6 py-3 text-white font-semibold hover:bg-sky-500 transition-colors"
           >
             {say({ language, en: "Tutorial →", fr: "Tutoriel →" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("filiation")}
             className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
           >
             {say({ language, en: "Filiation & comparison →", fr: "Filiation & comparaison →" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("workshop")}
             className="rounded-lg border-2 border-sky-600 px-6 py-3 text-sky-600 font-semibold hover:bg-sky-50 transition-colors"
           >
             {say({ language, en: "Workshop →", fr: "Atelier →" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("editor")}
             className="rounded-lg border-2 border-emerald-600 px-6 py-3 text-emerald-600 font-semibold hover:bg-emerald-50 transition-colors"
           >

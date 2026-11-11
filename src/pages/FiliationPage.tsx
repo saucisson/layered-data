@@ -395,7 +395,7 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
       <header className="border-b border-slate-200 bg-white px-5 py-4">
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <div className="flex items-center gap-4">
-            <button
+            <button type="button"
               onClick={() => navigate("landing")}
               className="rounded-lg border border-slate-300 px-3 py-1 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
@@ -414,7 +414,7 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
-              <button
+              <button type="button"
                 key={choice}
                 onClick={() => onChooseLanguage(choice)}
                 className={
@@ -681,19 +681,19 @@ export function FiliationPage({ language, onChooseLanguage }: FiliationPageProps
         </section>
 
         <div className="flex justify-center gap-4 pt-4">
-          <button
+          <button type="button"
             onClick={() => navigate("landing")}
             className="rounded-lg border-2 border-slate-300 px-6 py-3 text-slate-700 font-semibold hover:bg-slate-50 transition-colors"
           >
             {say({ language, en: "← Landing", fr: "← Accueil" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("tutorial")}
             className="rounded-lg border-2 border-sky-600 px-6 py-3 text-sky-600 font-semibold hover:bg-sky-50 transition-colors"
           >
             {say({ language, en: "Tutorial →", fr: "Tutoriel →" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("workshop")}
             className="rounded-lg bg-sky-600 px-6 py-3 text-white font-semibold hover:bg-sky-500 transition-colors"
           >

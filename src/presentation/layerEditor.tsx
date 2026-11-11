@@ -102,7 +102,7 @@ export function LayerEditor({
             fr: "éditer la couche vivante « " + layerName + " »",
           })}
         </span>
-        <button
+        <button type="button"
           onClick={onClose}
           title={say({
             language,
@@ -129,7 +129,7 @@ export function LayerEditor({
         className="mb-2 w-full rounded border border-slate-200 bg-white p-2 font-mono text-[11px] leading-4"
       />
       <div className="flex flex-wrap items-center gap-2">
-        <button
+        <button type="button"
           onClick={() => {
             void judgeAndApply();
           }}
