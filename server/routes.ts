@@ -43,6 +43,7 @@ import {
   broadcastEditorPresence,
 } from "./editorSessionServer.ts";
 import {
+  applySecurityHeaders,
   sendJson,
   sendText,
   isAccessGranted,
@@ -52,6 +53,7 @@ import {
 
 export function createQuarryServer() {
   return createServer(async (request, response) => {
+    applySecurityHeaders({ response });
     const url = new URL(request.url ?? "/", "http://" + (request.headers.host ?? "localhost"));
     const segments = url.pathname.split("/").filter(Boolean);
 

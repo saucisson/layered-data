@@ -6,6 +6,23 @@ import type { IncomingMessage, ServerResponse } from "node:http";
 
 import { API_TOKEN } from "./config.ts";
 
+/** The conservative security header baseline (approved on issue #84):
+ * every response carries it — API, SSE and static files alike. A full
+ * CSP with nonces is a later chantier, delicate with the editor's SSE. */
+export const SECURITY_HEADERS: Readonly<Record<string, string>> = {
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "no-referrer",
+};
+
+/** Set the security baseline on a response — call once per request,
+ * before any writeHead; setHeader survives writeHead. */
+export function applySecurityHeaders({ response }: { response: ServerResponse }): void {
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    response.setHeader(name, value);
+  }
+}
+
 export function sendJson({
   response,
   statusCode,
