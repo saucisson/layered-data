@@ -23,7 +23,7 @@ export function ValidationPanel({
   const stats = validation.stats;
   const verdicts = validation.verdicts;
   return (
-    <>
+    <div aria-live="polite" aria-atomic="false" role="status">
       <h3 className="mt-2 text-xs font-bold text-slate-800">
         {say({ language, en: "Assembly validation", fr: "Validation d'assemblage" })}
         <span className="ml-1 font-normal text-slate-600">
@@ -137,6 +137,6 @@ export function ValidationPanel({
           })}
         </span>
       </div>
-    </>
+    </div>
   );
 }
