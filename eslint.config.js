@@ -5,6 +5,7 @@
 import js from "@eslint/js";
 import globals from "globals";
 import tseslint from "typescript-eslint";
+import react from "eslint-plugin-react";
 import reactHooks from "eslint-plugin-react-hooks";
 
 // The onion: src/domain <- src/application <- src/presentation <- src/App.tsx.
@@ -52,7 +53,8 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     files: ["src/**/*.{ts,tsx}", "server/**/*.ts", "tests/**/*.mts", "e2e/**/*.ts"],
-    plugins: { "react-hooks": reactHooks },
+    plugins: { react, "react-hooks": reactHooks },
+    settings: { react: { version: "detect" } },
     languageOptions: {
       globals: { ...globals.browser, ...globals.node },
       parserOptions: {
@@ -71,6 +73,7 @@ export default tseslint.config(
       ],
       "@typescript-eslint/no-explicit-any": "warn",
       "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
+      "react/button-has-type": "error",
       ...reactHooks.configs.recommended.rules,
     },
   },
