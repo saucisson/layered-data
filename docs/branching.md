@@ -4,11 +4,11 @@ Constitutional document (ADR-0010). Changing it requires a human decision.
 
 ## Branches
 
-| Branch             | Purpose                             | Who merges                                    |
-| ------------------ | ----------------------------------- | --------------------------------------------- |
-| `main`             | The tested, releasable product      | **Human only**, after human tests             |
-| `daily`            | One working day of agent work       | Platform auto-merge, on the criteria below    |
-| `feat/...`, `fix/...` | One issue each, short-lived      | Platform auto-merge into `daily`, same criteria |
+| Branch                | Purpose                        | Who merges                                      |
+| --------------------- | ------------------------------ | ----------------------------------------------- |
+| `main`                | The tested, releasable product | **Human only**, after human tests               |
+| `daily`               | One working day of agent work  | Platform auto-merge, on the criteria below      |
+| `feat/...`, `fix/...` | One issue each, short-lived    | Platform auto-merge into `daily`, same criteria |
 
 `main` and `daily` are both protected branches.
 
@@ -33,8 +33,11 @@ Constitutional document (ADR-0010). Changing it requires a human decision.
    - the change is not on the escalation list (`docs/agents/escalation.md`).
 5. **End of day** - freeze merges, run `npm run verify`, `make smoke-test`,
    then the human tests and merges `daily` into `main`.
-6. **Mutation testing** - the `mutation.yml` workflow runs Stryker on a daily
-   cron and fails on a low mutation score (owner decision 2026-11-10, #24).
+6. **Mutation testing** - the `mutation.yml` workflow runs Stryker (command
+   runner over the specification, audit and staging harnesses) on a daily
+   cron, mutating `src/domain/language`, and fails on a low mutation score
+   (break threshold 50%, see `stryker.config.json`; owner decision
+   2026-11-10, #24). Reports are uploaded as workflow artifacts.
 
 ## Integrating main into daily (ADR-0024)
 

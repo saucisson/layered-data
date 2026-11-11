@@ -1,7 +1,14 @@
 name: mutation-testing
 
-# ADR-0013: mutation testing runs on `daily` at end of day to ensure
-# test quality. Surviving mutants become issues.
+# Mutation testing on the kernel language pipeline (src/domain/language),
+# per the owner decision recorded in docs/branching.md §6 (issue #24):
+# Stryker runs on a daily cron and FAILS on a low mutation score
+# (thresholds in stryker.config.json, break = 50%).
+#
+# The command runner executes the specification, audit and staging
+# harnesses per mutant (~32s, 1379 mutants, ~3h at concurrency 4).
+# Reports are uploaded as artifacts; surviving mutants are listed in
+# the job summary.
 
 on:
   workflow_dispatch:
@@ -11,13 +18,21 @@ on:
         required: true
         default: "daily"
   schedule:
-    # Run at end of business day (adjust as needed)
+    # End of business day, weekdays
     - cron: "0 18 * * 1-5"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mutation-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   mutate:
     name: mutation testing
     runs-on: ubuntu-latest
+    timeout-minutes: 360
     steps:
       - uses: actions/checkout@v4
         with:
@@ -28,72 +43,39 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
+          cache: npm
 
-      - name: Install dependencies
+      - name: Install locked dependencies
         run: npm ci
 
-      - name: Run mutation testing with Stryker
+      # No `|| true`: a mutation score below the break threshold (or any
+      # Stryker error) exits non-zero and fails the workflow.
+      - name: Run Stryker (command runner)
+        run: npx stryker run
+
+      - name: Mutation score summary
+        if: always()
         run: |
-          # Install Stryker if not already in dependencies
-          npm install --save-dev @stryker-mutator/core @stryker-mutator/typescript-checker @stryker-mutator/jest-runner 2>&1 | grep -v "audited" || true
-
-          # Configure Stryker (minimal config)
-          cat > stryker.conf.js << 'EOF'
-          module.exports = {
-            _comment: "Configuration for mutation testing",
-            mutate: [
-              "src/**/*.ts",
-              "src/**/*.tsx",
-              "!src/**/*.test.ts",
-              "!src/**/*.test.tsx",
-              "!src/**/*.spec.ts",
-              "!src/**/*.d.ts"
-            ],
-            mutator: "typescript",
-            parsers: { tsconfig: {} },
-            transpilers: [],
-            testRunner: "command",
-            testFramework: "npm",
-            testCommand: "npm test",
-            reporters: ["clear-text", "progress"],
-            coverageAnalysis: "perTest"
-          };
-          EOF
-
-          # Run Stryker (this may take a while)
-          npx stryker run --fileLogLevel trace || true
-
-      - name: Parse mutation results
-        id: results
-        run: |
-          # Check if mutation report exists
-          if [ -f reports/mutation/mutants.html ]; then
-            echo "Mutation report generated"
-            # Count surviving mutants
-            SURVIVED=$(grep -o '"survived": *[0-9]*' reports/mutation/json-report.json | grep -o '[0-9]*' || echo "0")
-            echo "Survived mutants: $SURVIVED"
-            
-            if [ "$SURVIVED" -gt 0 ]; then
-              echo "SURVIVED=$SURVIVED" >> $GITHUB_OUTPUT
-              echo "Has surviving mutants" >> $GITHUB_STEP_SUMMARY
-            else
-              echo "All mutants killed!" >> $GITHUB_STEP_SUMMARY
-            fi
+          REPORT=reports/mutation/mutation-report.json
+          if [ -f "$REPORT" ]; then
+            node -e '
+              const report = require("./reports/mutation/mutation-report.json");
+              const m = report.metrics;
+              const summary = [
+                `Mutation score: ${m.mutationScore}%`,
+                `Killed: ${m.killed}, survived: ${m.survived}, no coverage: ${m.noCoverage}, timeout: ${m.timeout}, runtime errors: ${m.runtimeErrors}, total: ${m.totalMutants}`
+              ].join("\n");
+              console.log(summary);
+              require("fs").appendFileSync(process.env.GITHUB_STEP_SUMMARY, "## Mutation testing\n" + summary + "\n");
+            '
           else
-            echo "No mutation report found, skipping" >> $GITHUB_STEP_SUMMARY
+            echo "No mutation report found" >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Create issues for surviving mutants
-        if: steps.results.outputs.SURVIVED > 0
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Would create issues for ${{ steps.results.outputs.SURVIVED }} surviving mutants"
-          echo "This is a placeholder - implement based on your mutation report format"
-          # In a real implementation, you would:
-          # 1. Parse the mutation report
-          # 2. For each surviving mutant, create an issue with:
-          #    - The file and line number
-          #    - The type of mutation
-          #    - The test that didn't catch it
-          # 3. Label as "mutation-escape" and "needs-human"
+      - name: Upload mutation report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: mutation-report
+          path: reports/mutation/
+          retention-days: 14
