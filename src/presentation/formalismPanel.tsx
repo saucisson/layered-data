@@ -51,7 +51,7 @@ export function FormalismPanel({
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-bold text-slate-800">
           {say({ language, en: "② The formalism", fr: "② Le formalisme" })}
-          <span className="ml-1 font-mono text-xs font-normal text-slate-400">{layer}</span>
+          <span className="ml-1 font-mono text-xs font-normal text-slate-600">{layer}</span>
         </h2>
         <div className="flex gap-1">
           {tabs.map(([tab, label]) => (
@@ -83,7 +83,7 @@ export function FormalismPanel({
       )}
       {activeTab === "raw" && (
         <>
-          <p className="mb-2 text-[10px] leading-4 text-slate-400">
+          <p className="mb-2 text-[10px] leading-4 text-slate-600">
             {say({
               language,
               en: "What the layer actually stores — no more, no less. The amber keys (refines, specification) are structural.",

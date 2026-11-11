@@ -1198,7 +1198,7 @@ export function ModelEditorPage({
               placeholder={t("model name")}
               className="rounded border border-slate-300 px-2 py-1 text-xs"
             />
-            <span className="text-xs text-slate-400">refines</span>
+            <span className="text-xs text-slate-600">refines</span>
             <input
               value={creationRefines}
               onChange={(event) => setCreationRefines(event.target.value)}
@@ -1219,11 +1219,11 @@ export function ModelEditorPage({
       <div className="grid grid-cols-12 gap-4">
         {/* the palette: read from the formalism, never hardcoded */}
         <div className="col-span-2 rounded-lg border border-slate-200 bg-white p-2">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
             {t("palette")}
           </div>
           {model === null && (
-            <p className="text-[11px] leading-4 text-slate-400">
+            <p className="text-[11px] leading-4 text-slate-600">
               {t("no model — create or pick one, the palette follows its formalism")}
             </p>
           )}
@@ -1379,7 +1379,7 @@ export function ModelEditorPage({
             the canvas on demand, the only truth made visible */}
         {showSource && model !== null && (
           <div className="col-span-2 rounded-lg border border-slate-200 bg-white p-2">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
               {t("source — the only truth")}
             </div>
             <pre className="max-h-[540px] overflow-auto whitespace-pre-wrap font-mono text-[10px] leading-4 text-slate-600">
@@ -1390,11 +1390,11 @@ export function ModelEditorPage({
 
         {/* the inspector: the selected member and its declared keys */}
         <div className="col-span-3 rounded-lg border border-slate-200 bg-white p-2">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
             {t("inspector")}
           </div>
           {selected === null || selectedDeclaration === null || model === null ? (
-            <p className="text-[11px] leading-4 text-slate-400">
+            <p className="text-[11px] leading-4 text-slate-600">
               {t(
                 "pick a member on the canvas — its declared keys open here, every edition goes through the staging",
               )}
@@ -1423,7 +1423,7 @@ export function ModelEditorPage({
                       key={key}
                       className="mb-1 flex items-center gap-1 text-[11px] text-slate-600"
                     >
-                      <span className="w-20 shrink-0 font-mono text-slate-400">{key}</span>
+                      <span className="w-20 shrink-0 font-mono text-slate-600">{key}</span>
                       <input
                         value={shown}
                         spellCheck={false}
@@ -1455,7 +1455,7 @@ export function ModelEditorPage({
                     key={key}
                     className="mb-1 flex items-center gap-1 text-[11px] text-slate-600"
                   >
-                    <span className="w-20 shrink-0 font-mono text-slate-400">{key}</span>
+                    <span className="w-20 shrink-0 font-mono text-slate-600">{key}</span>
                     <input
                       value={shown}
                       onChange={(event) =>
@@ -1481,7 +1481,7 @@ export function ModelEditorPage({
           )}
           {model !== null && expectations.length > 0 && (
             <div className="mt-2 border-t border-slate-100 pt-2">
-              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
                 {t("declared expectations")}
               </div>
               {expectations.map((expectation) => (

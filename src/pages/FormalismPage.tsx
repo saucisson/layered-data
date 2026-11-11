@@ -54,7 +54,7 @@ function SourceText({ source, maxHeightClass }: { source: string; maxHeightClass
     >
       {source.split("\n").map((line, index) => (
         <div key={index} className="flex">
-          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-300">
+          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500">
             {index + 1}
           </span>
           <span className="whitespace-pre">
@@ -142,7 +142,7 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
     const isFolded = folded.has(key);
     const nodes: React.ReactNode[] = [
       <div key={key} className="flex">
-        <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-300">
+        <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500">
           {lineNumbers.get(key)}
         </span>
         {hasSections ? (
@@ -156,7 +156,7 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
               });
             }}
             aria-label={say({ language, en: "fold / unfold", fr: "replier / déplier" })}
-            className="mr-1 w-4 shrink-0 text-left font-bold text-slate-400 hover:text-slate-700"
+            className="mr-1 w-4 shrink-0 text-left font-bold text-slate-600 hover:text-slate-700"
           >
             {isFolded ? "▸" : "▾"}
           </button>
@@ -168,7 +168,7 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
             {lineOf({ line: section.line })}
           </span>
           {isFolded && (
-            <span className="ml-2 font-sans text-[10px] text-slate-400">
+            <span className="ml-2 font-sans text-[10px] text-slate-600">
               {"+ " +
                 (countFlattenedSectionLines({ section }) - section.line.split("\n").length) +
                 " " +
@@ -205,10 +205,10 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
       </div>
       {text.headerLines.map((line, index) => (
         <div key={"head" + index} className="flex">
-          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-300">
+          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500">
             {index + 1}
           </span>
-          <span className="whitespace-pre text-slate-400">{line}</span>
+          <span className="whitespace-pre text-slate-600">{line}</span>
         </div>
       ))}
       {text.sections.map((section, index) =>
@@ -340,7 +340,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
             })}
           </h1>
           <span className="flex shrink-0 items-center gap-1 text-xs">
-            <span className="mr-1 text-slate-400">
+            <span className="mr-1 text-slate-600">
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
@@ -401,7 +401,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
               placeholder={say({ language, en: "search a layer…", fr: "rechercher une couche…" })}
               className="min-w-40 flex-1 rounded border border-slate-200 px-2 py-1 text-xs"
             />
-            <span className="text-[10px] text-slate-400">
+            <span className="text-[10px] text-slate-600">
               {livingLayerNames.length + " "}
               {say({
                 language,
@@ -452,7 +452,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                 {say({ language, en: "refines:", fr: "rafine :" })}
               </span>
               {parentNames.length === 0 ? (
-                <span className="font-mono text-slate-400">∅</span>
+                <span className="font-mono text-slate-600">∅</span>
               ) : (
                 parentNames.map((parentName) => (
                   <button type="button"
@@ -508,7 +508,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                 fr: "① Le DSL du formalisme — tel qu'écrit",
               })}
             </h2>
-            <p className="mb-2 text-[10px] leading-4 text-slate-400">
+            <p className="mb-2 text-[10px] leading-4 text-slate-600">
               {say({
                 language,
                 en: "The .ld source of the layer: the acts that write it, its declared refinements, its blocks. What shines in violet is an act, in green an @path, in amber a string.",
@@ -516,7 +516,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
               })}
             </p>
             {sourceBlock === null ? (
-              <p className="text-xs text-slate-400">
+              <p className="text-xs text-slate-600">
                 {say({
                   language,
                   en: "layer unknown to the geologist",
@@ -535,7 +535,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                 fr: "② Le DSL du formalisme complet aplati",
               })}
             </h2>
-            <p className="mb-2 text-[10px] leading-4 text-slate-400">
+            <p className="mb-2 text-[10px] leading-4 text-slate-600">
               {say({
                 language,
                 en: "The whole closure, resolved in place — first-wins decides: every key carries its effective value and, as a comment, the layer that provides it (or declares the slot nobody provides — abstract). refines is absent: the hierarchy is what the flattening removes. Each indented part folds: one click hides it, one click opens it.",
@@ -552,7 +552,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
           <h2 className="mb-1 text-sm font-bold text-slate-800">
             {say({ language, en: "③ The lenses", fr: "③ Les lentilles" })}
           </h2>
-          <p className="mb-2 text-[10px] leading-4 text-slate-400">
+          <p className="mb-2 text-[10px] leading-4 text-slate-600">
             {say({
               language,
               en: "A lens is a display layer that refines the formalism and draws everything descending from it — it displays only what it knows, the unknown types fall back to the generic circle, without an error. Choose a lens: the drawing shows the formalism seen through it.",

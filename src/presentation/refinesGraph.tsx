@@ -155,7 +155,7 @@ export function RefinesGraph({
           })}
         </div>
       </div>
-      <p className="mt-1 text-[10px] leading-4 text-slate-400">
+      <p className="mt-1 text-[10px] leading-4 text-slate-600">
         {localized({ language, text: LAYER_ROLE[focus] ?? { en: focus, fr: focus } })}{" "}
         {say({
           language,

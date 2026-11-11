@@ -152,7 +152,7 @@ export const SPAN_CLASSES: Record<string, string> = {
   rf: "text-emerald-700",
   st: "text-amber-700",
   nu: "text-sky-700",
-  cm: "italic text-slate-400",
+  cm: "italic text-slate-600",
   id: "text-slate-800",
   pu: "text-slate-500",
 };
@@ -194,7 +194,7 @@ export function LayerSourceView({
       </p>
       <div className="max-h-80 overflow-auto rounded-md border border-slate-100 bg-slate-50/50 p-2 font-mono text-[11px] leading-4">
         {block === null ? (
-          <div className="py-1 text-xs text-slate-400">
+          <div className="py-1 text-xs text-slate-600">
             {say({
               language,
               en: "layer unknown to the geologist",
@@ -238,7 +238,7 @@ export function LayerSourceView({
                     : undefined
                 }
               >
-                <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-300">
+                <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500">
                   {index + 1}
                 </span>
                 <span className="whitespace-pre">

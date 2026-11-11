@@ -26,7 +26,7 @@ export function ValidationPanel({
     <>
       <h3 className="mt-2 text-xs font-bold text-slate-800">
         {say({ language, en: "Assembly validation", fr: "Validation d'assemblage" })}
-        <span className="ml-1 font-normal text-slate-400">
+        <span className="ml-1 font-normal text-slate-600">
           {say({
             language,
             en:

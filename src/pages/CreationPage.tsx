@@ -74,7 +74,7 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
             })}
           </h1>
           <span className="flex shrink-0 items-center gap-1 text-xs">
-            <span className="mr-1 text-slate-400">
+            <span className="mr-1 text-slate-600">
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
@@ -127,7 +127,7 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
               fr: "Vous dites l'intention ; le géologue (l'IA de l'atelier, ancrée dans l'état réel du corpus et vérifiée par la boucle de staging) propose un brouillon en langage ; vous le corrigez librement ; le staging juge corpus + supplément et exige 0 verdict ; la couche acceptée entre dans la session vivante. Sans serveur ni clé, l'IA simulée déterministe du canvas répond à sa place — dégradée, honnêtement étiquetée, jamais une panne silencieuse.",
             })}
           </p>
-          <p className="mt-2 text-[11px] text-slate-400">
+          <p className="mt-2 text-[11px] text-slate-600">
             {say({
               language,
               en: "Examples of intentions — copy one, or write your own: ",
@@ -170,7 +170,7 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
             })}
           </h2>
           {createdLayerNames.length === 0 ? (
-            <p className="text-[11px] text-slate-400">
+            <p className="text-[11px] text-slate-600">
               {say({
                 language,
                 en: "Nothing yet — an accepted draft appears here, and stays visible from the hierarchy and formalism pages for as long as the tab lives (the disk quarry, through the workshop, remains the durable path).",
