@@ -10,3 +10,5 @@ data/
 public/locales/**/*_old.json
 .stryker-tmp/
 reports/
+playwright-report/
+test-results/
