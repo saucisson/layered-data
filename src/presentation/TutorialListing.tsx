@@ -117,7 +117,7 @@ export function TutorialListing({
               });
             }}
             aria-label={say({ language, en: "fold / unfold", fr: "replier / déplier" })}
-            className="w-4 shrink-0 text-left font-bold text-slate-400 hover:text-slate-700"
+            className="w-4 shrink-0 text-left font-bold text-slate-600 hover:text-slate-700"
           >
             {isFolded ? "▸" : "▾"}
           </button>
@@ -147,7 +147,7 @@ export function TutorialListing({
           {section.winner !== null && <LayerBadge layer={section.winner} small />}
         </button>
         {hidden > 0 && (
-          <span className="font-sans text-[10px] text-slate-400">
+          <span className="font-sans text-[10px] text-slate-600">
             {"+ " + hidden + " " + say({ language, en: "lines", fr: "lignes" })}
           </span>
         )}
@@ -185,7 +185,7 @@ export function TutorialListing({
         </span>
       </div>
       <div className="max-h-[32rem] overflow-auto px-3 py-2 font-mono text-[11px] leading-5">
-        <p className="mb-1 text-slate-400">{text.headerLines[1]}</p>
+        <p className="mb-1 text-slate-600">{text.headerLines[1]}</p>
         {text.sections.map((section, index) =>
           renderSection({ section, key: String(index), depth: 0 }),
         )}
@@ -193,7 +193,7 @@ export function TutorialListing({
       {cascade.length > 0 && (
         <div className="border-t border-slate-200 bg-slate-50 p-2">
           <div className="mb-1 flex items-center justify-between gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+            <p className="text-[10px] font-semibold uppercase tracking-wide text-slate-600">
               {say({
                 language,
                 en: "the line's parentage — click again to walk further",

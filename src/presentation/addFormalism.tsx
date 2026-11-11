@@ -223,7 +223,7 @@ export function AddFormalismComposer({
               })
             : say({ language, en: "staging — validate & add", fr: "staging — valider & ajouter" })}
         </button>
-        <span className="text-[10px] leading-4 text-slate-400">
+        <span className="text-[10px] leading-4 text-slate-600">
           {say({
             language,
             en: "the least assembly verdict, anywhere, refuses the entry — the supplement never circumvents the contract",

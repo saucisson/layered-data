@@ -19,7 +19,7 @@ export function addressText(address: [string, string[]]): string {
 export function KernelValue({ value, language }: { value: any; language: Language }) {
   if (value === null || value === undefined) {
     return (
-      <span className="text-slate-400">
+      <span className="text-slate-600">
         {say({ language, en: "∅ undefined", fr: "∅ non défini" })}
       </span>
     );
@@ -170,7 +170,7 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
                   </span>
                 ))
               ) : (
-                <span className="text-slate-400">
+                <span className="text-slate-600">
                   {say({
                     language,
                     en: "— computing, conservative jump kept",
@@ -201,7 +201,7 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
       <div className="text-slate-700">
         <span className="font-semibold">③ + source</span>{" "}
         <span className="font-medium">{addressText(event.addr)}</span>{" "}
-        <span className="text-slate-400">({labelOf({ code: event.via, language })})</span>
+        <span className="text-slate-600">({labelOf({ code: event.via, language })})</span>
       </div>
     );
   }
@@ -215,7 +215,15 @@ const STATUS_STYLE: Record<string, string> = {
   fournit: "bg-emerald-50 text-emerald-700 border-emerald-200",
   transparent: "bg-amber-50 text-amber-700 border-amber-200",
   absent: "bg-slate-50 text-slate-500 border-slate-200",
-  "non atteint": "bg-slate-50 text-slate-300 border-slate-100",
+  "non atteint": "bg-slate-50 text-slate-500 border-slate-100",
+};
+
+/** A shape prefix so the status is not conveyed by color alone (WCAG 1.4.1). */
+const STATUS_ICON: Record<string, string> = {
+  fournit: "● ",
+  transparent: "◐ ",
+  absent: "○ ",
+  "non atteint": "○ ",
 };
 
 /** One read status as a pill. */
@@ -226,6 +234,7 @@ export function StatusPill({ status, language }: { status: string; language: Lan
         "rounded border px-1.5 py-0.5 text-[10px] " + (STATUS_STYLE[status] || STATUS_STYLE.absent)
       }
     >
+      <span aria-hidden="true">{STATUS_ICON[status] ?? ""}</span>
       {labelOf({ code: status, language })}
     </span>
   );

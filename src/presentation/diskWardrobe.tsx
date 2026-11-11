@@ -318,7 +318,7 @@ export function DiskWardrobe({
                 fr: "staging — charger dans l'atelier",
               })}
             </button>
-            <span className="text-[10px] leading-4 text-slate-400">
+            <span className="text-[10px] leading-4 text-slate-600">
               {say({
                 language,
                 en: "the layer is corrected here like any other — the staging revalidates corpus + supplements + candidate, 0 verdict demanded",

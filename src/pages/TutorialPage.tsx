@@ -157,7 +157,7 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
             </h1>
           </div>
           <span className="flex shrink-0 items-center gap-1 text-xs">
-            <span className="mr-1 text-slate-400">
+            <span className="mr-1 text-slate-600">
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (

@@ -144,7 +144,7 @@ export function DiagnosticsPanel({
       >
         <span>
           {say({ language, en: "Diagnostics & validation", fr: "Diagnostics & validation" })}
-          <span className="ml-1 font-normal text-slate-400">
+          <span className="ml-1 font-normal text-slate-600">
             {verdicts.length}{" "}
             {say({
               language,
@@ -168,7 +168,7 @@ export function DiagnosticsPanel({
             })}
           </span>
         </span>
-        <span className="shrink-0 text-slate-400">{open ? "▾" : "▸"}</span>
+        <span className="shrink-0 text-slate-600">{open ? "▾" : "▸"}</span>
       </button>
       {open && (
         <>
@@ -206,10 +206,10 @@ export function DiagnosticsPanel({
                       >
                         {say({ language, en: meta.label.en, fr: meta.label.fr })}
                       </span>
-                      <span className="text-[11px] text-slate-400">
+                      <span className="text-[11px] text-slate-600">
                         {say({ language, en: meta.note.en, fr: meta.note.fr })}
                       </span>
-                      <span className="ml-auto font-mono text-[11px] text-slate-400">
+                      <span className="ml-auto font-mono text-[11px] text-slate-600">
                         {kindEvents.length}
                       </span>
                     </div>
@@ -221,7 +221,7 @@ export function DiagnosticsPanel({
                         keyOf={(_event, index) => index}
                         renderItem={(event) => (
                           <div className="font-mono text-[10px] leading-4 text-slate-600">
-                            <span className="text-slate-400">
+                            <span className="text-slate-600">
                               {event.address[0]}::{event.address[1].join("/") || "."}
                             </span>{" "}
                             {renderMessage({ message: event.fact, language })}
@@ -235,7 +235,7 @@ export function DiagnosticsPanel({
             {[...byKind.keys()]
               .filter((kind) => !kindOrder.includes(kind))
               .map((kind) => (
-                <div key={kind} className="font-mono text-[10px] text-slate-400">
+                <div key={kind} className="font-mono text-[10px] text-slate-600">
                   {kind} × {byKind.get(kind)!.length}
                 </div>
               ))}

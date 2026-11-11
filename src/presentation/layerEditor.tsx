@@ -109,7 +109,7 @@ export function LayerEditor({
             en: "close the editor — nothing is written into the space",
             fr: "fermer l'éditeur — rien n'est écrit dans l'espace",
           })}
-          className="ml-auto rounded px-1.5 py-0.5 text-[11px] text-slate-400 hover:text-slate-700"
+          className="ml-auto rounded px-1.5 py-0.5 text-[11px] text-slate-600 hover:text-slate-700"
         >
           ✕
         </button>
@@ -148,7 +148,7 @@ export function LayerEditor({
                 fr: "staging — rejuger & réécrire la couche",
               })}
         </button>
-        <span className="text-[10px] leading-4 text-slate-400">
+        <span className="text-[10px] leading-4 text-slate-600">
           {say({
             language,
             en: "the accepted tree replaces the old one in place, the invalidation protocol re-reads the workshop — the corpus ranks stay frozen",

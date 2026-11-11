@@ -154,7 +154,7 @@ export function FlatView({
   const renderRow = (row: FlatRow): ReactNode => {
     if (row.kind === "declaration") {
       return (
-        <div className="py-0.5 text-[10px] text-slate-400" style={{ paddingLeft: row.depth * 12 }}>
+        <div className="py-0.5 text-[10px] text-slate-600" style={{ paddingLeft: row.depth * 12 }}>
           {say({
             language,
             en: "declaration node (no visible key)",
@@ -179,7 +179,7 @@ export function FlatView({
                   ? say({ language, en: "collapse", fr: "replier" })
                   : say({ language, en: "expand", fr: "déplier" })
               }
-              className="w-4 shrink-0 rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              className="w-4 shrink-0 rounded text-slate-600 hover:bg-slate-100 hover:text-slate-700"
             >
               {childOpen ? "▾" : "▸"}
             </button>
@@ -204,13 +204,13 @@ export function FlatView({
                 fr: "slot abstrait : la clé est déclarée, aucune couche n'en fournit la valeur",
               })}
             >
-              <span className="text-[10px] text-slate-400">∅</span>
+              <span className="text-[10px] text-slate-600">∅</span>
               <LayerBadge layer={entry.winner} small />
             </span>
           )}
           <span className="min-w-0">
             {entry.status === "transparent" ? (
-              <span className="text-slate-400">
+              <span className="text-slate-600">
                 {say({ language, en: "abstract slot", fr: "slot abstrait" })}
               </span>
             ) : (
@@ -232,7 +232,7 @@ export function FlatView({
           )}
         </div>
         {child !== null && !childOpen && !needle && (
-          <div className="ml-4 text-[10px] text-slate-400">
+          <div className="ml-4 text-[10px] text-slate-600">
             {"+ "}
             {child.nAddrs}{" "}
             {say({
@@ -277,7 +277,7 @@ export function FlatView({
         })}
       </p>
       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-slate-400">
+        <span className="text-slate-600">
           {layer} — {flattened.addrs}{" "}
           {say({
             language,
@@ -317,7 +317,7 @@ export function FlatView({
           placeholder={say({ language, en: "filter keys…", fr: "filtrer les clés…" })}
           className="min-w-32 flex-1 rounded border border-slate-200 px-1.5 py-0.5 text-xs"
         />
-        <span className="text-slate-400">
+        <span className="text-slate-600">
           {say({ language, en: "root chain: ", fr: "chaîne de racine : " })}
           {flattened.chaîne}{" "}
           {say({
@@ -342,7 +342,7 @@ export function FlatView({
       </div>
       {needle && rows.length === 0 ? (
         <div className="rounded-md border border-slate-100 bg-slate-50/50 p-2">
-          <div className="py-1 text-xs text-slate-400">
+          <div className="py-1 text-xs text-slate-600">
             {say({
               language,
               en: "No key of " + layer + " matches the filter.",
