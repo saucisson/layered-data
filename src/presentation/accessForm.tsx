@@ -2,15 +2,21 @@
 // speaks — never a silent failure, even without a proxy.
 
 import { useState } from "react";
-import { apiFetch, readAccessCode, writeAccessCode } from "../infrastructure/wardrobeClient.ts";
+import {
+  apiFetch,
+  hasValidAccessCodeConsent,
+  readAccessCode,
+  writeAccessCode,
+} from "../infrastructure/wardrobeClient.ts";
 import { say } from "./i18n.ts";
 import type { Language } from "../domain/messages.ts";
 
 export function AccessCodeForm({ language }: { language: Language }) {
   const [accessCode, setAccessCode] = useState(readAccessCode());
+  const [remember, setRemember] = useState(hasValidAccessCodeConsent());
   const [stateMessage, setStateMessage] = useState<string | null>(null);
   async function verify() {
-    writeAccessCode({ accessCode });
+    writeAccessCode({ accessCode, remember });
     try {
       const response = await apiFetch({ endpoint: "api/whoami" });
       if (response.ok) {
@@ -82,6 +88,18 @@ export function AccessCodeForm({ language }: { language: Language }) {
           {say({ language, en: "verify", fr: "vérifier" })}
         </button>
       </div>
+      <label className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-500">
+        <input
+          type="checkbox"
+          checked={remember}
+          onChange={(event) => setRemember(event.target.checked)}
+        />
+        {say({
+          language,
+          en: "remember this code on this browser for 30 days (stored locally, expires automatically) — otherwise it is kept for this tab only",
+          fr: "retenir ce code sur ce navigateur pendant 30 jours (stocké localement, expire automatiquement) — sinon il n'est gardé que pour cet onglet",
+        })}
+      </label>
       {stateMessage !== null && <p className="mt-1.5 text-[10px] text-slate-500">{stateMessage}</p>}
     </div>
   );
