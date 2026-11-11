@@ -1073,7 +1073,8 @@ export function ModelEditorPage({
     selected !== null ? containerNamed({ name: selected.container }) : null;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6">
+    <div className="mx-auto max-w-6xl px-4 py-6" aria-live="off">
+      {/* Editor state changes are announced via the banner below */}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
           ✎
@@ -1363,6 +1364,9 @@ export function ModelEditorPage({
           </svg>
           {banner !== null && (
             <div
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
               className={
                 "mt-2 rounded-md border px-2 py-1.5 text-[11px] leading-4 " +
                 (banner.tone === "refused"
