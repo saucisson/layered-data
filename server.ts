@@ -36,6 +36,7 @@ import {
   API_TOKEN,
   MISTRAL_API_KEY,
   MAX_PEN_ATTEMPTS,
+  DATABASE_URL,
   environmentFilePath,
 } from "./server/config.ts";
 import { KERNEL_LAYER_NAMES } from "./server/layerStore.ts";
@@ -56,6 +57,11 @@ server.listen(PORT, HOST, () => {
   if (API_TOKEN === "changez-moi") {
     console.log(
       "ATTENTION : code d'accès par défaut « changez-moi » encore en place — posez API_TOKEN dans .env",
+    );
+  }
+  if (!DATABASE_URL) {
+    console.log(
+      "ATTENTION : DATABASE_URL absent — rate limiting désactivé (compteurs PostgreSQL requis en production)",
     );
   }
   if (existsSync(environmentFilePath)) {
