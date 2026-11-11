@@ -54,3 +54,57 @@ button:not(:disabled),
   clip: auto;
   white-space: normal;
 }
+
+/* ---- print stylesheet (documentation pages) ---- */
+@media print {
+  body {
+    background-color: #ffffff;
+  }
+
+  /* hide interactive-only elements */
+  button,
+  .fixed,
+  [role="status"],
+  nav,
+  .no-print {
+    display: none !important;
+  }
+
+  /* force light colors for print */
+  .dark body,
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  * {
+    color: #000000 !important;
+    background: transparent !important;
+    border-color: #cccccc !important;
+    box-shadow: none !important;
+  }
+
+  /* avoid breaking inside blocks */
+  section,
+  article,
+  pre,
+  table,
+  figure {
+    break-inside: avoid;
+  }
+
+  /* show link URLs after the text */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.85em;
+    color: #555555 !important;
+  }
+
+  /* full width for print */
+  main,
+  .mx-auto {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+}
