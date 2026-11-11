@@ -32,7 +32,7 @@ import {
   type EditionOutcome,
   type LivingAddition,
 } from "../application/edition.ts";
-import { drawnShape, type DrawnShape } from "../domain/views.ts";
+import { drawnShape, type Glyph } from "../domain/views.ts";
 import { expectationsOf, formatExpectation, readMatchesExpectation } from "../domain/validation.ts";
 import { circlePosition, LENS_LAYERS } from "./viewTree.ts";
 import { EdgeGlyph } from "./glyphs.tsx";
@@ -68,8 +68,9 @@ const DRAG_THRESHOLD = 4;
 const MAXIMUM_SCALE = 3;
 const MINIMUM_SCALE = 0.3;
 
-/** The shape template of a lens entry, as the glyphs read it. */
-type ShapeSpec = DrawnShape["spec"];
+/** The shape template of a lens entry, as the glyphs read it (null:
+ * the lens knows nothing of the type, the dashed fallback). */
+type ShapeSpec = Glyph | null;
 
 /** The tool in the hand: the plain pointer, one vertex container, or
  * the SINGLE arc tool — pre or post is never the user's question,
@@ -1521,7 +1522,7 @@ function EditorVertexGlyph({
   const { x, y } = position;
   const shapeKind = shape ? shape.shape : null;
   const stroke = shape ? shape.stroke : "#94a3b8";
-  const fill = shape && shape.fill ? shape.fill : "none";
+  const fill = shape && shape.shape !== "line" && shape.fill ? shape.fill : "none";
   const strokeWidth = selected ? 2.5 : 1.5;
   return (
     <g onPointerDown={onPointerDown} style={{ cursor: "grab" }}>

@@ -7,6 +7,7 @@
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { LayerReference, PathReference } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
+import type { Glyph } from "../domain/views.ts";
 import type { Language } from "../domain/messages.ts";
 import { resolvePositionAt } from "../application/positions.ts";
 import { say } from "./i18n.ts";
@@ -188,7 +189,7 @@ export function bindingOf({ space, view, key }: { space: Space; view: string; ke
 
 /** One drawing shape as text (for the "shapes" readouts), in the
  * workshop language. */
-export function shapeLabel({ shape, language }: { shape: any; language: Language }): string {
+export function shapeLabel({ shape, language }: { shape: Glyph | null; language: Language }): string {
   if (!shape) return say({ language, en: "no shape", fr: "sans forme" });
   if (shape.shape === "circle") return say({ language, en: "circle", fr: "cercle" });
   if (shape.shape === "ellipse") return say({ language, en: "ellipse", fr: "ellipse" });
@@ -201,5 +202,5 @@ export function shapeLabel({ shape, language }: { shape: any; language: Language
       ? say({ language, en: "2-port arc", fr: "arc à 2 ports" })
       : say({ language, en: "line", fr: "trait" });
   }
-  return shape.shape;
+  return say({ language, en: "unknown shape", fr: "forme inconnue" });
 }
