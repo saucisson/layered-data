@@ -36,7 +36,7 @@ import {
   VIEWPOINT_LAYERS,
   VIEW_NOTES,
 } from "../src/presentation/viewTree.ts";
-import { asGlyph } from "../src/domain/views.ts";
+import { asGlyph, asGlyphList } from "../src/domain/views.ts";
 import {
   LAYER_ROLE,
   layerRoleNames,
@@ -330,17 +330,22 @@ check(
   "shapeLabel names the glyphs in both tongues — the shared names stay shared",
   shapeLabel({ shape: null, language: "en" }) === "no shape" &&
     shapeLabel({ shape: null, language: "fr" }) === "sans forme" &&
-    shapeLabel({ shape: { shape: "circle" }, language: "en" }) === "circle" &&
-    shapeLabel({ shape: { shape: "circle" }, language: "fr" }) === "cercle" &&
-    shapeLabel({ shape: { shape: "line", ports: 2 }, language: "en" }) ===
+    shapeLabel({ shape: [{ shape: "circle" }], language: "en" }) === "circle" &&
+    shapeLabel({ shape: [{ shape: "circle" }], language: "fr" }) === "cercle" &&
+    shapeLabel({ shape: [{ shape: "line", ports: 2 }], language: "en" }) ===
       "2-port arc" &&
-    shapeLabel({ shape: { shape: "line", ports: 2 }, language: "fr" }) ===
+    shapeLabel({ shape: [{ shape: "line", ports: 2 }], language: "fr" }) ===
       "arc à 2 ports" &&
+    // a multi-glyph template reads as its overlaid glyphs joined by "+"
+    shapeLabel({
+      shape: [{ shape: "circle" }, { shape: "circle" }],
+      language: "en",
+    }) === "circle + circle" &&
     // the glyph vocabulary is closed: an unknown shape narrows to
     // null at the boundary, never a runtime surprise
     asGlyph({ shape: "unknown-kind" }) === null &&
     asGlyph({ shape: "circle", fill: "#fff" })?.shape === "circle" &&
-    shapeLabel({ shape: asGlyph({ shape: "unknown-kind" }), language: "fr" }) ===
+    shapeLabel({ shape: asGlyphList({ shape: "unknown-kind" }), language: "fr" }) ===
       "sans forme",
 );
 

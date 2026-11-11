@@ -88,6 +88,21 @@ Le même `graph`, relu comme un automate : les sommets deviennent des états, le
 ```ldflat:automaton
 ```
 
+## habillage multi-glyphes — un gabarit, plusieurs glyphes superposés
+
+Un gabarit `display` de lentille est d'ordinaire un seul glyphe (`shape`, `fill`, `stroke`…). Quand une forme ne suffit pas — un jeton dessiné en double cercle — le gabarit pose un sous-bloc `glyphs` : chaque membre est un glyphe, superposé dans l'ordre écrit. Une règle de grammaire plutôt qu'un nouveau glyphe nommé par forme composée.
+
+```ld
+extend display
+  glyphs
+    ring
+      shape = "circle"
+      fill = "none"
+      stroke = "#455555"
+    dot
+      shape = "circle"
+```
+
 ## state-space — l'espace d'états paramétré
 
 Raffine l'automate, **paramétré par le réseau** : le slot `net` raffine la couche `petrinet` entière — personne ne le pose ici. Le type d'un état raffine le slot : chaque marquage du réseau se lira dans l'état. Et la liaison (`binding_type`) pointe les transitions **à travers** le slot : ⟪liaison tardive⟫, résolue par la couche qui lit, jamais par celle qui écrit. Le ⟪paramètre⟫ est une adresse comme les autres.

@@ -6,8 +6,66 @@
 
 import type { Glyph } from "../domain/views.ts";
 
-/** One drawn vertex: the shape decided by the lens for its type,
- * the name inside, dashed when the lens knows nothing of it. */
+/** One vertex glyph of the closed vocabulary, at a position. */
+function vertexGlyphElement({
+  glyph,
+  x,
+  y,
+  strokeWidth,
+}: {
+  glyph: Glyph;
+  x: number;
+  y: number;
+  strokeWidth: number;
+}): React.ReactNode {
+  const stroke = glyph.stroke ?? "#94a3b8";
+  const fill = glyph.shape !== "line" && glyph.fill ? glyph.fill : "none";
+  if (glyph.shape === "circle")
+    return <circle cx={x} cy={y} r={16} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />;
+  if (glyph.shape === "ellipse")
+    return (
+      <ellipse
+        cx={x}
+        cy={y}
+        rx={24}
+        ry={14}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+      />
+    );
+  if (glyph.shape === "rectangle")
+    return (
+      <rect
+        x={x - 22}
+        y={y - 12}
+        width={44}
+        height={24}
+        rx={2}
+        fill={fill}
+        stroke={stroke}
+        strokeWidth={strokeWidth}
+      />
+    );
+  if (glyph.shape === "box")
+    return (
+      <rect
+        x={x - 26}
+        y={y - 12}
+        width={52}
+        height={24}
+        rx={3}
+        fill="#ffffff"
+        stroke="#455555"
+        strokeWidth={strokeWidth}
+      />
+    );
+  return null;
+}
+
+/** One drawn vertex: the glyphs decided by the lens for its type,
+ * overlaid in the order posed, the name inside, dashed when the lens
+ * knows nothing of it. */
 export function NodeGlyph({
   name,
   shape,
@@ -16,57 +74,24 @@ export function NodeGlyph({
   onPick,
 }: {
   name: string;
-  shape: Glyph | null;
+  shape: Glyph[] | null;
   position: { x: number; y: number };
   selected: boolean;
   onPick: () => void;
 }) {
   const { x, y } = position;
-  const shapeKind = shape ? shape.shape : null;
-  const stroke = shape ? shape.stroke : "#94a3b8";
-  const fill = shape && shape.shape !== "line" && shape.fill ? shape.fill : "none";
+  const glyphs = shape ?? [];
+  const shapeKind = glyphs.length > 0 ? (glyphs[0]?.shape ?? null) : null;
+  const stroke = "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
   return (
     <g onClick={onPick} style={{ cursor: "pointer" }}>
-      {shapeKind === "circle" && (
-        <circle cx={x} cy={y} r={16} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />
+      {glyphs.map((glyph, index) => (
+        <g key={index}>{vertexGlyphElement({ glyph, x, y, strokeWidth })}</g>
+      ))}
+      {glyphs.length === 0 && (
+        <circle cx={x} cy={y} r={16} fill="none" stroke={stroke} strokeDasharray="3 3" />
       )}
-      {shapeKind === "ellipse" && (
-        <ellipse
-          cx={x}
-          cy={y}
-          rx={24}
-          ry={14}
-          fill={fill}
-          stroke={stroke}
-          strokeWidth={strokeWidth}
-        />
-      )}
-      {shapeKind === "rectangle" && (
-        <rect
-          x={x - 22}
-          y={y - 12}
-          width={44}
-          height={24}
-          rx={2}
-          fill={fill}
-          stroke={stroke}
-          strokeWidth={strokeWidth}
-        />
-      )}
-      {shapeKind === "box" && (
-        <rect
-          x={x - 26}
-          y={y - 12}
-          width={52}
-          height={24}
-          rx={3}
-          fill="#ffffff"
-          stroke="#455555"
-          strokeWidth={strokeWidth}
-        />
-      )}
-      {!shape && <circle cx={x} cy={y} r={16} fill="none" stroke={stroke} strokeDasharray="3 3" />}
       <text
         x={x}
         y={y + 3}
@@ -94,16 +119,17 @@ export function EdgeGlyph({
   onPick,
 }: {
   name: string;
-  shape: Glyph | null;
+  shape: Glyph[] | null;
   weight?: number | null;
   from: { x: number; y: number };
   to: { x: number; y: number };
   selected: boolean;
   onPick: () => void;
 }) {
-  const hasPorts = shape !== null && shape.shape === "line" && shape.ports === 2;
-  const hasArrow = shape !== null && shape.shape === "line" && shape.arrow === "plain";
-  const stroke = shape ? shape.stroke : "#94a3b8";
+  const glyphs = (shape ?? []).filter((glyph) => glyph.shape === "line");
+  const hasPorts = glyphs.some((glyph) => glyph.shape === "line" && glyph.ports === 2);
+  const hasArrow = glyphs.some((glyph) => glyph.shape === "line" && glyph.arrow === "plain");
+  const stroke = glyphs.length > 0 ? (glyphs[0]?.stroke ?? "#94a3b8") : "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
 
   // trim the line ends so it does not run under the vertex glyphs
@@ -128,7 +154,7 @@ export function EdgeGlyph({
         y2={y2}
         stroke={stroke}
         strokeWidth={strokeWidth}
-        strokeDasharray={shape ? undefined : "3 3"}
+        strokeDasharray={glyphs.length > 0 ? undefined : "3 3"}
       />
       {hasPorts && (
         <>
