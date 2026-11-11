@@ -14,6 +14,7 @@ import {
   type StagingOutcome,
 } from "../application/staging.ts";
 import { apiFetch } from "../infrastructure/wardrobeClient.ts";
+import { VirtualList } from "./virtualList.tsx";
 import { labelOf, say } from "./i18n.ts";
 
 /** One quarry entry as the proxy reports it: a name and whether
@@ -246,38 +247,43 @@ export function DiskWardrobe({
         </p>
       )}
       {entries !== null && entries.length > 0 && (
-        <div className="mb-2 flex max-h-32 flex-wrap gap-1 overflow-y-auto">
-          {entries.map((entry) => (
-            <button type="button"
-              key={entry.name}
-              onClick={() => {
-                void openLayer(entry.name);
-              }}
-              className={
-                "rounded px-1.5 py-0.5 text-[10px] font-mono leading-4 " +
-                (selectedName === entry.name
-                  ? "bg-sky-700 text-white"
-                  : entry.builtIn
-                    ? "border border-slate-300 bg-white text-slate-600 hover:border-sky-500"
-                    : "border border-emerald-300 bg-white text-emerald-700 hover:border-emerald-500")
-              }
-              title={
-                entry.builtIn
-                  ? say({
-                      language,
-                      en: "bedrock — read-only on the disk",
-                      fr: "socle — en lecture seule sur le disque",
-                    })
-                  : say({
-                      language,
-                      en: "a visitor's layer — on the disk",
-                      fr: "couche d'un visiteur — sur le disque",
-                    })
-              }
-            >
-              {entry.name}
-            </button>
-          ))}
+        <div className="mb-2">
+          <VirtualList
+            items={entries}
+            estimateSize={20}
+            maxHeightClass="max-h-32"
+            keyOf={(entry) => entry.name}
+            renderItem={(entry) => (
+              <button type="button"
+                onClick={() => {
+                  void openLayer(entry.name);
+                }}
+                className={
+                  "block w-full truncate rounded px-1.5 py-0.5 text-left text-[10px] font-mono leading-4 " +
+                  (selectedName === entry.name
+                    ? "bg-sky-700 text-white"
+                    : entry.builtIn
+                      ? "border border-slate-300 bg-white text-slate-600 hover:border-sky-500"
+                      : "border border-emerald-300 bg-white text-emerald-700 hover:border-emerald-500")
+                }
+                title={
+                  entry.builtIn
+                    ? say({
+                        language,
+                        en: "bedrock — read-only on the disk",
+                        fr: "socle — en lecture seule sur le disque",
+                      })
+                    : say({
+                        language,
+                        en: "a visitor's layer — on the disk",
+                        fr: "couche d'un visiteur — sur le disque",
+                      })
+                }
+              >
+                {entry.name}
+              </button>
+            )}
+          />
         </div>
       )}
       {selectedName !== null && (
