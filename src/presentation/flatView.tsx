@@ -5,16 +5,17 @@
 // key, the providing layer (badge), the resolved value. Pure
 // observer: nothing is ever written back.
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { AddressView, isDictionary } from "../domain/addresses.ts";
 import { isSpecialKey } from "../domain/specialKeys.ts";
 import type { Address } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
 import { asLayerName } from "../domain/identifiers.ts";
 import { DEFAULT_LANGUAGE, type Language } from "../domain/messages.ts";
-import { flattenLayer, type FlatNode } from "../application/flatten.ts";
+import { flattenLayer, type FlatEntry, type FlatNode } from "../application/flatten.ts";
 import { FlatValue } from "./valueRendering.tsx";
 import { LayerBadge } from "./layerBadge.tsx";
+import { VirtualList } from "./virtualList.tsx";
 import { say } from "./i18n.ts";
 
 /** The full flattened dump as plain text — the interactive tree and
@@ -118,22 +119,17 @@ export function FlatView({
   const isOpenAt = (node: FlatNode, depth: number) =>
     needle ? true : (expanded[folderKey(node.addr)] ?? depth < 2);
 
-  // The recursive tree renderer: one call per node. Depth drives the
-  // indentation; the filter either prunes a whole branch (nothing
+  // The visible tree, flattened to rows: one row per shown entry, in
+  // walk order. The filter either prunes a whole branch (nothing
   // matches inside) or keeps the entries that match, directly or
-  // through a child.
-  const RenderedNode = ({ node, depth }: { node: FlatNode; depth: number }) => {
-    if (needle && !nodeMatches(node)) {
-      return depth === 0 ? (
-        <div className="py-1 text-xs text-slate-400">
-          {say({
-            language,
-            en: "No key of " + layer + " matches the filter.",
-            fr: "Aucune clé de " + layer + " ne correspond au filtre.",
-          })}
-        </div>
-      ) : null;
-    }
+  // through a child. The rows are virtualized — only the rows inside
+  // the scroll window are mounted, whatever the key count.
+  type FlatRow =
+    | { kind: "entry"; entry: FlatEntry; node: FlatNode; depth: number }
+    | { kind: "declaration"; depth: number };
+  const rows: FlatRow[] = [];
+  const walk = (node: FlatNode, depth: number): void => {
+    if (needle && !nodeMatches(node)) return;
     const baseEntries = showSpecialKeys
       ? node.entries
       : node.entries.filter((entry) => !isSpecialKey(entry.key));
@@ -144,111 +140,115 @@ export function FlatView({
             (node.children[entry.key] !== undefined && nodeMatches(node.children[entry.key]!)),
         )
       : baseEntries;
+    if (shownEntries.length === 0 && !needle && node.entries.length === 0) {
+      rows.push({ kind: "declaration", depth });
+    }
+    for (const entry of shownEntries) {
+      rows.push({ kind: "entry", entry, node, depth });
+      const child = (entry.target !== null && node.children[entry.key]) || null;
+      if (child !== null && isOpenAt(child, depth + 1)) walk(child, depth + 1);
+    }
+  };
+  walk(flattened.root, 0);
+
+  const renderRow = (row: FlatRow): ReactNode => {
+    if (row.kind === "declaration") {
+      return (
+        <div className="py-0.5 text-[10px] text-slate-400" style={{ paddingLeft: row.depth * 12 }}>
+          {say({
+            language,
+            en: "declaration node (no visible key)",
+            fr: "nœud de déclaration (aucune clé visible)",
+          })}
+        </div>
+      );
+    }
+    const { entry, node, depth } = row;
+    const child = (entry.target !== null && node.children[entry.key]) || null;
+    const childOpen = child !== null && isOpenAt(child, depth + 1);
     return (
-      <div className={depth > 0 ? "ml-3 border-l border-slate-100 pl-2" : ""}>
-        {shownEntries.length === 0 && !needle && node.entries.length === 0 && (
-          <div className="py-0.5 text-[10px] text-slate-400">
+      <div className="py-0.5" style={{ paddingLeft: depth * 12 }}>
+        <div className="flex flex-wrap items-center gap-1.5 text-xs">
+          {child !== null && !needle && (
+            <button type="button"
+              onClick={() =>
+                setExpanded({ ...expanded, [folderKey(child.addr)]: !childOpen })
+              }
+              aria-label={
+                childOpen
+                  ? say({ language, en: "collapse", fr: "replier" })
+                  : say({ language, en: "expand", fr: "déplier" })
+              }
+              className="w-4 shrink-0 rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+            >
+              {childOpen ? "▾" : "▸"}
+            </button>
+          )}
+          <span
+            className={
+              "font-mono font-semibold " +
+              (isSpecialKey(entry.key) ? "text-amber-600" : "text-slate-800")
+            }
+          >
+            {entry.key}
+          </span>
+          {showProvenance && entry.status === "fournit" && entry.winner !== null && (
+            <LayerBadge layer={entry.winner} small />
+          )}
+          {showProvenance && entry.status === "transparent" && entry.winner !== null && (
+            <span
+              className="flex items-center gap-0.5"
+              title={say({
+                language,
+                en: "abstract slot: the key is declared, no layer provides its value",
+                fr: "slot abstrait : la clé est déclarée, aucune couche n'en fournit la valeur",
+              })}
+            >
+              <span className="text-[10px] text-slate-400">∅</span>
+              <LayerBadge layer={entry.winner} small />
+            </span>
+          )}
+          <span className="min-w-0">
+            {entry.status === "transparent" ? (
+              <span className="text-slate-400">
+                {say({ language, en: "abstract slot", fr: "slot abstrait" })}
+              </span>
+            ) : (
+              <FlatValue value={entry.value} language={language} />
+            )}
+          </span>
+          {entry.target !== null && (
+            <button type="button"
+              onClick={() => onPick(entry.target![0], entry.target![1])}
+              title={say({
+                language,
+                en: "open this address in panel ③ — the detailed read: chain, scan, winner",
+                fr: "ouvrir cette adresse dans le panneau ③ — la lecture détaillée : chaîne, scan, gagnant",
+              })}
+              className="shrink-0 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800"
+            >
+              {say({ language, en: "→ go there", fr: "→ y aller" })}
+            </button>
+          )}
+        </div>
+        {child !== null && !childOpen && !needle && (
+          <div className="ml-4 text-[10px] text-slate-400">
+            {"+ "}
+            {child.nAddrs}{" "}
             {say({
               language,
-              en: "declaration node (no visible key)",
-              fr: "nœud de déclaration (aucune clé visible)",
+              en: child.nAddrs > 1 ? "nodes" : "node",
+              fr: "nœud" + (child.nAddrs > 1 ? "s" : ""),
+            })}
+            {" · "}
+            {child.nKeys}{" "}
+            {say({
+              language,
+              en: child.nKeys > 1 ? "keys" : "key",
+              fr: "clé" + (child.nKeys > 1 ? "s" : ""),
             })}
           </div>
         )}
-        {shownEntries.map((entry) => {
-          const child = (entry.target !== null && node.children[entry.key]) || null;
-          const childOpen = child !== null && isOpenAt(child, depth + 1);
-          return (
-            <div key={entry.key} className="py-0.5">
-              <div className="flex flex-wrap items-center gap-1.5 text-xs">
-                {child !== null && !needle && (
-                  <button type="button"
-                    onClick={() =>
-                      setExpanded({ ...expanded, [folderKey(child.addr)]: !childOpen })
-                    }
-                    aria-label={
-                      childOpen
-                        ? say({ language, en: "collapse", fr: "replier" })
-                        : say({ language, en: "expand", fr: "déplier" })
-                    }
-                    className="w-4 shrink-0 rounded text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                  >
-                    {childOpen ? "▾" : "▸"}
-                  </button>
-                )}
-                <span
-                  className={
-                    "font-mono font-semibold " +
-                    (isSpecialKey(entry.key) ? "text-amber-600" : "text-slate-800")
-                  }
-                >
-                  {entry.key}
-                </span>
-                {showProvenance && entry.status === "fournit" && entry.winner !== null && (
-                  <LayerBadge layer={entry.winner} small />
-                )}
-                {showProvenance && entry.status === "transparent" && entry.winner !== null && (
-                  <span
-                    className="flex items-center gap-0.5"
-                    title={say({
-                      language,
-                      en: "abstract slot: the key is declared, no layer provides its value",
-                      fr: "slot abstrait : la clé est déclarée, aucune couche n'en fournit la valeur",
-                    })}
-                  >
-                    <span className="text-[10px] text-slate-400">∅</span>
-                    <LayerBadge layer={entry.winner} small />
-                  </span>
-                )}
-                <span className="min-w-0">
-                  {entry.status === "transparent" ? (
-                    <span className="text-slate-400">
-                      {say({ language, en: "abstract slot", fr: "slot abstrait" })}
-                    </span>
-                  ) : (
-                    <FlatValue value={entry.value} language={language} />
-                  )}
-                </span>
-                {entry.target !== null && (
-                  <button type="button"
-                    onClick={() => onPick(entry.target![0], entry.target![1])}
-                    title={say({
-                      language,
-                      en: "open this address in panel ③ — the detailed read: chain, scan, winner",
-                      fr: "ouvrir cette adresse dans le panneau ③ — la lecture détaillée : chaîne, scan, gagnant",
-                    })}
-                    className="shrink-0 rounded border border-slate-300 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800"
-                  >
-                    {say({ language, en: "→ go there", fr: "→ y aller" })}
-                  </button>
-                )}
-              </div>
-              {child !== null && childOpen && (
-                <div className="mt-0.5">
-                  <RenderedNode node={child} depth={depth + 1} />
-                </div>
-              )}
-              {child !== null && !childOpen && !needle && (
-                <div className="ml-4 text-[10px] text-slate-400">
-                  {"+ "}
-                  {child.nAddrs}{" "}
-                  {say({
-                    language,
-                    en: child.nAddrs > 1 ? "nodes" : "node",
-                    fr: "nœud" + (child.nAddrs > 1 ? "s" : ""),
-                  })}
-                  {" · "}
-                  {child.nKeys}{" "}
-                  {say({
-                    language,
-                    en: child.nKeys > 1 ? "keys" : "key",
-                    fr: "clé" + (child.nKeys > 1 ? "s" : ""),
-                  })}
-                </div>
-              )}
-            </div>
-          );
-        })}
       </div>
     );
   };
@@ -340,9 +340,29 @@ export function FlatView({
             : say({ language, en: "⧉ copy the dump", fr: "⧉ copier le dump" })}
         </button>
       </div>
-      <div className="max-h-72 overflow-y-auto rounded-md border border-slate-100 bg-slate-50/50 p-2">
-        <RenderedNode node={flattened.root} depth={0} />
-      </div>
+      {needle && rows.length === 0 ? (
+        <div className="rounded-md border border-slate-100 bg-slate-50/50 p-2">
+          <div className="py-1 text-xs text-slate-400">
+            {say({
+              language,
+              en: "No key of " + layer + " matches the filter.",
+              fr: "Aucune clé de " + layer + " ne correspond au filtre.",
+            })}
+          </div>
+        </div>
+      ) : (
+        <VirtualList
+          items={rows}
+          estimateSize={24}
+          maxHeightClass="max-h-72 rounded-md border border-slate-100 bg-slate-50/50 p-2"
+          keyOf={(row, index) =>
+            row.kind === "entry"
+              ? folderKey(row.node.addr) + "/" + row.entry.key
+              : "declaration-" + index
+          }
+          renderItem={renderRow}
+        />
+      )}
     </div>
   );
 }
