@@ -19,6 +19,34 @@ npm run build
 npm run serve:prod    # sert dist/ + l'API sur $HOST:$PORT (127.0.0.1:8791 par défaut)
 ```
 
+## Déploiement conteneurisé (docker compose)
+
+Un seul `docker compose up --build` déploie **l'atelier + PostgreSQL** :
+
+```bash
+cp .env.example .env    # puis éditez API_TOKEN, POSTGRES_USER, POSTGRES_PASSWORD
+docker compose up --build
+```
+
+- Le service `postgres` (`postgres:17-alpine`) garde ses données dans le
+  volume nommé `postgres-data` et initialise le schéma au premier
+  démarrage via `docker-entrypoint-initdb.d/` (table `rate_limit`,
+  issue #85).
+- Le service `atelier` attend que la base soit saine
+  (`depends_on: condition: service_healthy`) et reçoit
+  `DATABASE_URL=postgres://…@postgres:5432/…` : **le rate limiting est
+  actif**, partagé entre instances (compteurs en base).
+- Vérification : `curl -H "Authorization: Bearer $API_TOKEN" http://127.0.0.1:8791/api/whoami`
+  répond 200, et `POST /api/generate` répond **429** après la limite
+  (`GENERATE_MAX_REQUESTS` par fenêtre, 10/min par défaut).
+
+Déploiement **sans base** (dev local) : le rate limiting est alors
+désactivé, comme sans `DATABASE_URL` :
+
+```bash
+DATABASE_URL= docker compose up --no-deps --build atelier
+```
+
 ## Exemple nginx (reverse proxy + HTTPS)
 
 ```nginx
