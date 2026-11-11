@@ -78,7 +78,7 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
-              <button
+              <button type="button"
                 key={choice}
                 onClick={() => onChooseLanguage(choice)}
                 className={
@@ -94,19 +94,19 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
           </span>
         </div>
         <div className="mt-2 flex flex-wrap gap-2 text-xs">
-          <button
+          <button type="button"
             onClick={() => navigate("landing")}
             className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
           >
             {say({ language, en: "← home", fr: "← accueil" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("hierarchy")}
             className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
           >
             {say({ language, en: "the hierarchy →", fr: "la hiérarchie →" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("workshop")}
             className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
           >
@@ -187,13 +187,13 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
                     }
                   />
                   <span className="font-mono font-semibold">{layerName}</span>
-                  <button
+                  <button type="button"
                     onClick={() => navigate("formalism", layerName)}
                     className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
                   >
                     {say({ language, en: "understand it →", fr: "le comprendre →" })}
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => navigate("hierarchy")}
                     className="rounded border border-slate-300 bg-white px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
                   >
@@ -220,7 +220,7 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
               fr: "« layer <nom> » ouvre une couche ; « refines @<couche> » déclare un parent, « then @<autre> » les enchaîne ; les blocs s'ouvrent par indentation (specification, les collections, tests) ; un membre s'écrit « <clé> refines @<chemin-absolu> » ; les actes sont extend, override, abstract, bind, check, et une valeur « slot = <valeur> ». Le tutoriel de l'atelier explique les sept gestes, pas à pas.",
             })}
           </p>
-          <button
+          <button type="button"
             onClick={() => navigate("tutorial")}
             className="mt-2 rounded border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
           >

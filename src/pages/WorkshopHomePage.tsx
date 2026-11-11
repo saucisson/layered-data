@@ -30,7 +30,7 @@ export function WorkshopHomePage({
       <nav className="border-b border-slate-200 bg-white">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-1 px-4 pt-3">
           {TABS.map((candidate) => (
-            <button
+            <button type="button"
               key={candidate}
               onClick={() => navigate(candidate)}
               aria-current={candidate === tab ? "page" : undefined}

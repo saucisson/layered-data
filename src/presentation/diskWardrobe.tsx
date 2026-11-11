@@ -215,7 +215,7 @@ export function DiskWardrobe({
         <span className="text-xs font-semibold text-slate-700">
           {say({ language, en: "the quarry of formalisms", fr: "la carrière des formalismes" })}
         </span>
-        <button
+        <button type="button"
           onClick={() => {
             void refresh();
           }}
@@ -248,7 +248,7 @@ export function DiskWardrobe({
       {entries !== null && entries.length > 0 && (
         <div className="mb-2 flex max-h-32 flex-wrap gap-1 overflow-y-auto">
           {entries.map((entry) => (
-            <button
+            <button type="button"
               key={entry.name}
               onClick={() => {
                 void openLayer(entry.name);
@@ -291,7 +291,7 @@ export function DiskWardrobe({
             className="mb-2 w-full rounded border border-slate-200 bg-white p-2 font-mono text-[11px] leading-4"
           />
           <div className="flex flex-wrap items-center gap-2">
-            <button
+            <button type="button"
               onClick={loadIntoWorkshop}
               disabled={!source.trim()}
               className="rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
@@ -325,7 +325,7 @@ export function DiskWardrobe({
             {Object.keys(localLayerSources)
               .filter((name) => !onDiskNames.has(name))
               .map((name) => (
-                <button
+                <button type="button"
                   key={name}
                   onClick={() => {
                     void putOnDisk(name, localLayerSources[name] ?? "");

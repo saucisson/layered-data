@@ -162,7 +162,7 @@ export function FlatView({
             <div key={entry.key} className="py-0.5">
               <div className="flex flex-wrap items-center gap-1.5 text-xs">
                 {child !== null && !needle && (
-                  <button
+                  <button type="button"
                     onClick={() =>
                       setExpanded({ ...expanded, [folderKey(child.addr)]: !childOpen })
                     }
@@ -210,7 +210,7 @@ export function FlatView({
                   )}
                 </span>
                 {entry.target !== null && (
-                  <button
+                  <button type="button"
                     onClick={() => onPick(entry.target![0], entry.target![1])}
                     title={say({
                       language,
@@ -326,7 +326,7 @@ export function FlatView({
             fr: "couche" + (flattened.chaîne > 1 ? "s" : ""),
           })}
         </span>
-        <button
+        <button type="button"
           onClick={copyDump}
           title={say({
             language,

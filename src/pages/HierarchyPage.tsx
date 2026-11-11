@@ -120,7 +120,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
               {say({ language, en: "language: ", fr: "langue : " })}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
-              <button
+              <button type="button"
                 key={choice}
                 onClick={() => onChooseLanguage(choice)}
                 className={
@@ -136,19 +136,19 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
           </span>
         </div>
         <div className="mt-2 flex flex-wrap gap-2 text-xs">
-          <button
+          <button type="button"
             onClick={() => navigate("landing")}
             className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
           >
             {say({ language, en: "← home", fr: "← accueil" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("creation")}
             className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
           >
             {say({ language, en: "create a formalism →", fr: "créer un formalisme →" })}
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("workshop")}
             className="rounded border border-slate-300 bg-white px-2 py-1 text-slate-600 hover:border-slate-600"
           >
@@ -166,7 +166,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
             className="min-w-52 flex-1 rounded border border-slate-300 bg-white px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none"
           />
           <span className="flex items-center gap-1 text-xs">
-            <button
+            <button type="button"
               onClick={() => setScale(Math.max(MINIMUM_SCALE, scale - SCALE_STEP))}
               disabled={scale <= MINIMUM_SCALE}
               className="rounded border border-slate-300 bg-white px-2 py-1 font-semibold text-slate-600 hover:border-slate-600 disabled:opacity-40"
@@ -175,7 +175,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
               −
             </button>
             <span className="w-12 text-center font-mono text-[11px] text-slate-500">×{scale}</span>
-            <button
+            <button type="button"
               onClick={() => setScale(Math.min(MAXIMUM_SCALE, scale + SCALE_STEP))}
               disabled={scale >= MAXIMUM_SCALE}
               className="rounded border border-slate-300 bg-white px-2 py-1 font-semibold text-slate-600 hover:border-slate-600 disabled:opacity-40"
@@ -183,7 +183,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
             >
               ＋
             </button>
-            <button
+            <button type="button"
               onClick={() => setScale(1)}
               className="rounded border border-slate-300 bg-white px-2 py-1 text-[11px] text-slate-600 hover:border-slate-600"
             >
@@ -259,7 +259,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                 const inDescendants = descendants.has(layerName);
                 const matches = !needle || layerName.toLowerCase().includes(needle);
                 return (
-                  <button
+                  <button type="button"
                     key={layerName}
                     onClick={() => navigate("formalism", layerName)}
                     onMouseEnter={() => setHovered(layerName)}
@@ -333,7 +333,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                   className="rounded-md border border-slate-100 bg-slate-50 p-2 text-[11px] leading-4"
                 >
                   <div className="flex flex-wrap items-center gap-1.5">
-                    <button
+                    <button type="button"
                       onClick={() => navigate("formalism", view)}
                       className="font-mono font-semibold underline decoration-slate-300 hover:text-slate-900"
                     >
@@ -350,7 +350,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                         <span className="text-slate-400">
                           {say({ language, en: "model: ", fr: "modèle : " })}
                         </span>
-                        <button
+                        <button type="button"
                           onClick={() => navigate("formalism", modelLayer)}
                           className="font-mono underline decoration-slate-300 hover:text-slate-900"
                         >
@@ -363,7 +363,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                         <span className="text-slate-400">
                           {say({ language, en: "lens: ", fr: "lentille : " })}
                         </span>
-                        <button
+                        <button type="button"
                           onClick={() => navigate("formalism", displayLayer)}
                           className="font-mono underline decoration-slate-300 hover:text-slate-900"
                         >

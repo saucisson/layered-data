@@ -1122,13 +1122,13 @@ export function ModelEditorPage({
             </option>
           ))}
         </select>
-        <button
+        <button type="button"
           onClick={() => setCreationOpen(!creationOpen)}
           className="rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500"
         >
           {t("+ new model")}
         </button>
-        <button
+        <button type="button"
           onClick={undo}
           disabled={history.length === 0}
           title={t("undo (Ctrl+Z)")}
@@ -1136,7 +1136,7 @@ export function ModelEditorPage({
         >
           ↶
         </button>
-        <button
+        <button type="button"
           onClick={redo}
           disabled={future.length === 0}
           title={t("redo (Ctrl+Shift+Z)")}
@@ -1144,7 +1144,7 @@ export function ModelEditorPage({
         >
           ↷
         </button>
-        <button
+        <button type="button"
           onClick={() => setShowSource((previous) => !previous)}
           disabled={model === null}
           title={t("show the model's source block")}
@@ -1152,7 +1152,7 @@ export function ModelEditorPage({
         >
           {t("source")}
         </button>
-        <button
+        <button type="button"
           onClick={exportModel}
           disabled={model === null}
           title={t("download the model as .ld")}
@@ -1160,7 +1160,7 @@ export function ModelEditorPage({
         >
           {t("export .ld")}
         </button>
-        <button
+        <button type="button"
           onClick={() => importInputRef.current?.click()}
           title={t("import a .ld draft — judged by the staging")}
           className="rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
@@ -1174,7 +1174,7 @@ export function ModelEditorPage({
           className="hidden"
           onChange={handleImportFile}
         />
-        <button
+        <button type="button"
           onClick={() => onChooseLanguage(language === "fr" ? "en" : "fr")}
           className="ml-auto rounded border border-slate-300 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50"
         >
@@ -1203,7 +1203,7 @@ export function ModelEditorPage({
               spellCheck={false}
               className="w-72 rounded border border-slate-300 px-2 py-1 font-mono text-xs"
             />
-            <button
+            <button type="button"
               onClick={handleCreateModel}
               disabled={creationName.trim().length === 0}
               className="rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
@@ -1226,7 +1226,7 @@ export function ModelEditorPage({
             </p>
           )}
           <div className="flex flex-col gap-1">
-            <button
+            <button type="button"
               onClick={() => setTool({ kind: "select" })}
               className={
                 "rounded px-2 py-1 text-left text-[11px] " +
@@ -1238,7 +1238,7 @@ export function ModelEditorPage({
               {t("pointer")}
             </button>
             {vertexContainers.map((container) => (
-              <button
+              <button type="button"
                 key={container.name}
                 onClick={() => setTool({ kind: "sommet", container: container.name })}
                 className={
@@ -1253,7 +1253,7 @@ export function ModelEditorPage({
               </button>
             ))}
             {arcContainers.length > 0 && (
-              <button
+              <button type="button"
                 onClick={() => setTool({ kind: "arc" })}
                 className={
                   "rounded px-2 py-1 text-left text-[11px] " +
@@ -1469,7 +1469,7 @@ export function ModelEditorPage({
                   </label>
                 );
               })}
-              <button
+              <button type="button"
                 onClick={deleteSelectedMember}
                 className="mt-1 rounded border border-red-200 px-2 py-1 text-[11px] text-red-600 hover:bg-red-50"
               >

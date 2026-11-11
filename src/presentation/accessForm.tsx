@@ -73,7 +73,7 @@ export function AccessCodeForm({ language }: { language: Language }) {
           placeholder={say({ language, en: "access code", fr: "code d'accès" })}
           className="min-w-40 flex-1 rounded border border-slate-200 px-2 py-1 text-xs"
         />
-        <button
+        <button type="button"
           onClick={() => {
             void verify();
           }}
