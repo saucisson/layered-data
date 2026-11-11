@@ -178,10 +178,10 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl space-y-4 p-8">
+      <main className="mx-auto max-w-4xl space-y-4 p-4 sm:p-8">
         {blocks.map(renderBlock)}
 
-        <section className="mt-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6">
+        <section className="mt-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6">
           <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
             {say({ language, en: "Glossary", fr: "Glossaire" })}
           </h2>

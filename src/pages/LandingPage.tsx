@@ -45,7 +45,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-4xl p-8">
+      <main className="mx-auto max-w-4xl p-4 sm:p-8">
         <section className="text-center">
           <h2 className="mb-4 text-3xl font-bold text-slate-800 dark:text-slate-100">
             {say({
@@ -63,8 +63,8 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
           </p>
         </section>
 
-        <section className="mt-12 grid gap-6 md:grid-cols-3">
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+        <section className="mt-12 grid gap-4 sm:p-6 md:grid-cols-3">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({ language, en: "Incremental Definitions", fr: "Définitions incrémentales" })}
             </h3>
@@ -77,7 +77,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({ language, en: "First-Wins Reading", fr: "La première définition l'emporte" })}
             </h3>
@@ -90,7 +90,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             </p>
           </div>
 
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({
                 language,
@@ -108,8 +108,8 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
           </div>
         </section>
 
-        <section className="mt-12 grid gap-6 md:grid-cols-3">
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+        <section className="mt-12 grid gap-4 sm:p-6 md:grid-cols-3">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({ language, en: "Visualize the Hierarchy", fr: "Visualisez la hiérarchie" })}
             </h3>
@@ -128,7 +128,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             </button>
           </div>
 
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({ language, en: "Create a Formalism", fr: "Créez un formalisme" })}
             </h3>
@@ -147,7 +147,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             </button>
           </div>
 
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-6 shadow-sm">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6 shadow-sm">
             <h3 className="mb-3 text-lg font-semibold text-slate-800 dark:text-slate-100">
               {say({ language, en: "Study and Understand", fr: "Étudiez et comprenez" })}
             </h3>
