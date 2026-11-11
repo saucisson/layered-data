@@ -39,7 +39,12 @@ import {
 } from "../src/domain/desugaring.ts";
 import { parseLanguage } from "../src/domain/language/parser.ts";
 import { compileLanguage } from "../src/domain/language/compiler.ts";
-import { walkAddresses } from "../src/domain/views.ts";
+import {
+  drawnShape,
+  dressingApplicability,
+  dressingEntries,
+  walkAddresses,
+} from "../src/domain/views.ts";
 import { orderConflictsOf } from "../src/domain/conflicts.ts";
 import { KERNEL_LAYER_NAMES } from "../src/application/corpus.ts";
 import {
@@ -1259,6 +1264,157 @@ check(
   divergentRePose.verdicts.filter(
     (verdict) => verdict.kind === "check-redéfini",
   ).length === 1,
+);
+
+// =====================================================================
+// guarded display — the five measured laws (issue #71)
+// =====================================================================
+
+// A dedicated mini corpus: a default lens, then three guarded
+// refinements (closed set, presence, comparison), and a model with
+// marked and unmarked vertices.
+const guardedDisplaySources = [
+  "layer gd-base",
+  "  specification",
+  "    vertex_type",
+  "  vertices",
+  "layer gd-default refines @gd-base",
+  "  extend specification",
+  "    extend vertex_type",
+  "      extend display",
+  '        shape = "circle"',
+  '        fill = "#ffffff"',
+  "layer gd-set refines @gd-default",
+  "  extend specification",
+  "    extend vertex_type",
+  "      extend display when mark in [1, 2]",
+  '        shape = "box"',
+  "layer gd-presence refines @gd-set",
+  "  extend specification",
+  "    extend vertex_type",
+  "      extend display when mark",
+  '        shape = "rectangle"',
+  "layer gd-compare refines @gd-presence",
+  "  extend specification",
+  "    extend vertex_type",
+  "      extend display when (mark > 2)",
+  '        shape = "ellipse"',
+  "layer gd-model refines @gd-base",
+  "  extend vertices",
+  "    v1 refines @gd-base/specification/vertex_type",
+  "      mark = 1",
+  "    v2 refines @gd-base/specification/vertex_type",
+  "      mark = 2",
+  "    v3 refines @gd-base/specification/vertex_type",
+  "      mark = 3",
+  "    v0 refines @gd-base/specification/vertex_type",
+  "      mark = 0",
+  "    vu refines @gd-base/specification/vertex_type",
+];
+const gdSpace = spaceFromWrittenSources(guardedDisplaySources);
+const gdShapeOf = (vertexName: string) =>
+  drawnShape({
+    space: gdSpace,
+    lens: asLayerName("gd-compare"),
+    layer: asLayerName("gd-model"),
+    path: asLayerPath(["vertices", vertexName]),
+  });
+const gdShapeKind = (vertexName: string) => {
+  const shape = gdShapeOf(vertexName);
+  return shape === null ? null : (shape.spec[0]?.shape ?? null);
+};
+
+// 1. first winning guard, deterministic: the entries are ordered
+//    child-first, and the first guard that holds takes the node.
+check(
+  "guarded display (1) first winning guard: v3 (mark=3) takes the comparison entry (ellipse), v1 (mark=1) the presence entry (rectangle)",
+  gdShapeKind("v3") === "ellipse" && gdShapeKind("v1") === "rectangle",
+);
+check(
+  "guarded display (1) the guard order is the closure order: compare, presence, member, default",
+  JSON.stringify(
+    dressingEntries({
+      space: gdSpace,
+      lens: asLayerName("gd-compare"),
+      layer: asLayerName("gd-model"),
+      path: asLayerPath(["vertices", "v1"]),
+    }).map((entry) => entry.guard?.kind ?? null),
+  ) === JSON.stringify(["compare", "presence", "member", null]),
+);
+
+// 2. fallback to the default: no guard holds -> the unguarded entry.
+check(
+  "guarded display (2) fallback to default: vu (no mark) takes the unguarded circle, and the winner is not guarded",
+  gdShapeKind("vu") === "circle" && gdShapeOf("vu")?.guarded === false,
+);
+check(
+  "guarded display (2) a winning guard marks the shape as guarded",
+  gdShapeOf("v3")?.guarded === true && gdShapeOf("v1")?.guarded === true,
+);
+
+// 3. invariance of the choice: permuting the model's vertex order
+//    does not change any vertex's retained template.
+const gdModelPermuted = spaceFromWrittenSources([
+  ...guardedDisplaySources.slice(0, -6),
+  "layer gd-model refines @gd-base",
+  "  extend vertices",
+  "    vu refines @gd-base/specification/vertex_type",
+  "    v0 refines @gd-base/specification/vertex_type",
+  "      mark = 0",
+  "    v3 refines @gd-base/specification/vertex_type",
+  "      mark = 3",
+  "    v2 refines @gd-base/specification/vertex_type",
+  "      mark = 2",
+  "    v1 refines @gd-base/specification/vertex_type",
+  "      mark = 1",
+]);
+const gdShapeKindPermuted = (vertexName: string) => {
+  const shape = drawnShape({
+    space: gdModelPermuted,
+    lens: asLayerName("gd-compare"),
+    layer: asLayerName("gd-model"),
+    path: asLayerPath(["vertices", vertexName]),
+  });
+  return shape === null ? null : (shape.spec[0]?.shape ?? null);
+};
+check(
+  "guarded display (3) invariance: the retained template does not depend on the model's declaration order",
+  ["v1", "v2", "v3", "v0", "vu"].every(
+    (name) => gdShapeKindPermuted(name) === gdShapeKind(name),
+  ),
+);
+
+// 4. inheritance: a child lens's entries precede the parent's — with
+//    only the default lens, every vertex takes the circle.
+check(
+  "guarded display (4) inheritance: the default lens alone dresses every vertex with the circle (no guard anywhere)",
+  ["v1", "v2", "v3", "v0", "vu"].every((name) => {
+    const shape = drawnShape({
+      space: gdSpace,
+      lens: asLayerName("gd-default"),
+      layer: asLayerName("gd-model"),
+      path: asLayerPath(["vertices", name]),
+    });
+    return shape !== null && shape.spec[0]?.shape === "circle" && !shape.guarded;
+  }),
+);
+
+// 5. totality: a guard on an absent key retains nothing, no error —
+//    and the applicability column counts the guarded dresses.
+check(
+  "guarded display (5) totality: a guard on an absent key is not retained (vu falls back), the kernel never crashes",
+  gdShapeKind("vu") === "circle",
+);
+const gdApplicability = dressingApplicability({
+  space: gdSpace,
+  lens: asLayerName("gd-compare"),
+  model: asLayerName("gd-model"),
+});
+check(
+  "guarded display (5) the applicability column counts the guarded dresses: 5 dressed, 4 by a guard, 1 by the default",
+  gdApplicability.dressed === 5 &&
+    gdApplicability.total === 5 &&
+    gdApplicability.guarded === 4,
 );
 
 // =====================================================================
