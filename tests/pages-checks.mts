@@ -205,11 +205,11 @@ check(
   dinnerPetriLook.vertices.length === 25 &&
     dinnerPetriLook.vertices.filter(
       (vertex) =>
-        vertex.drawn !== null && vertex.drawn.spec.shape === "ellipse",
+        vertex.drawn !== null && vertex.drawn.spec.some((glyph) => glyph.shape === "ellipse"),
     ).length === 15 &&
     dinnerPetriLook.vertices.filter(
       (vertex) =>
-        vertex.drawn !== null && vertex.drawn.spec.shape === "rectangle",
+        vertex.drawn !== null && vertex.drawn.spec.some((glyph) => glyph.shape === "rectangle"),
     ).length === 10,
 );
 const dinnerKahnLook = buildWorkshopLook({
