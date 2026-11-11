@@ -9,7 +9,7 @@ import { asLayerName, asLayerPath } from "./domain/identifiers.ts";
 import { AddressView, PathReference, addressesEqual } from "./domain/addresses.ts";
 import { Tracer } from "./domain/space.ts";
 import { type Language } from "./domain/messages.ts";
-import { coversAddresses, dressingEntries } from "./domain/views.ts";
+import { coversAddresses, dressingEntries, type Glyph } from "./domain/views.ts";
 import { assembleLayeredDataKernel } from "./application/corpus.ts";
 import { loadKernelLayerSources } from "./infrastructure/corpusLoader.ts";
 
@@ -1411,7 +1411,7 @@ export function WorkshopPage({
             });
             let best: {
               path: string[];
-              spec: any;
+              spec: Glyph;
               hit: ReturnType<typeof dressingEntries>[number]["hit"];
             } | null = null;
             for (const match of matches) {
