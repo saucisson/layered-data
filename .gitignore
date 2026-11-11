@@ -8,3 +8,5 @@ formalisms/users/*
 !formalisms/users/.gitkeep
 data/
 public/locales/**/*_old.json
+.stryker-tmp/
+reports/
