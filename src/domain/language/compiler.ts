@@ -9,7 +9,12 @@
 import { type LayerName, asLayerName, asLayerPath, asPathSegment } from "../identifiers.ts";
 import { LayerReference, PathReference, type RawTree, isDictionary } from "../addresses.ts";
 import { SPECIAL_KEYS } from "../specialKeys.ts";
-import { type LanguageAct, type LanguageLayer, type LanguageValue } from "./parser.ts";
+import {
+  type DisplayGuard,
+  type LanguageAct,
+  type LanguageLayer,
+  type LanguageValue,
+} from "./parser.ts";
 
 /** One declared act of the language, indexed for the shadow
  * confrontation: (layer, path, key) → declared mode. */
@@ -38,6 +43,18 @@ const makeValue = (value: LanguageValue): any => {
   if (value.kind === "literal") return value.value;
   if (value.kind === "reference") return makeReference(value);
   return value.items.map(makeValue);
+};
+
+// The guard compiles to DATA beside the member it qualifies — the
+// `__when:key` sibling (same convention as `__note:key`): the display
+// template itself stays a clean glyph dict.
+const guardToRaw = (guard: DisplayGuard): RawTree => {
+  if (guard.kind === "presence") return { kind: "presence", path: guard.path };
+  return {
+    kind: "member",
+    path: guard.path,
+    values: guard.values.map(makeValue),
+  };
 };
 
 // The comment becomes DATA — each written line arrives with its raw
@@ -115,6 +132,7 @@ const emit = (
       continue;
     }
     declarations.push({ layer, path, key: act.key, mode: act.mode });
+    if (act.guard !== null) output["__when:" + act.key] = guardToRaw(act.guard);
     if (act.block !== null) {
       const childNode: RawTree = {};
       if (act.refines)

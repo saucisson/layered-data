@@ -133,13 +133,40 @@ export function asGlyphList(value: unknown): Glyph[] {
   return [];
 }
 
-/** One lens drawing entry: where the template lives, and which types
- * it dresses (concrete closure sources — never the layer roots,
- * never a node carrying a display of its own). */
+/** A display guard, narrowed from its raw form — strate 1: presence
+ * of a key path on the dressed node, or membership in a closed set.
+ * No comparisons (strate 2 is a declared next strate). */
+export type DisplayGuard =
+  | { kind: "presence"; path: string[] }
+  | { kind: "member"; path: string[]; values: unknown[] };
+
+/** Narrow a raw `__when:display` value to a guard — anything else is
+ * no guard (the entry is then the unguarded default). */
+export function asDisplayGuard(value: unknown): DisplayGuard | null {
+  if (!isDictionary(value)) return null;
+  const kind = value["kind"];
+  const path = value["path"];
+  if (!Array.isArray(path) || !path.every((segment) => typeof segment === "string")) {
+    return null;
+  }
+  const guardPath = path as string[];
+  if (kind === "presence") return { kind: "presence", path: guardPath };
+  if (kind === "member") {
+    const values = value["values"];
+    if (!Array.isArray(values)) return null;
+    return { kind: "member", path: guardPath, values };
+  }
+  return null;
+}
+
+/** One lens drawing entry: where the template lives, which types it
+ * dresses (concrete closure sources — never the layer roots, never a
+ * node carrying a display of its own), and its optional guard. */
 export interface LensDrawingEntry {
   path: LayerPath;
   spec: Glyph[];
   types: Address[];
+  guard: DisplayGuard | null;
 }
 
 /** The shape drawn for one node: the winning entry and the types it
@@ -187,9 +214,32 @@ export function readDisplayTemplate({
   return null;
 }
 
-// Drawing entries: (path, template, dressed types) — the dressed
-// types are the closure sources with the same final segment, never
-// the layer roots, never a node carrying a display of its own.
+// Raw display guard at the first defining source (the `__when:display`
+// sibling of the display template).
+export function readDisplayGuard({
+  space,
+  lens,
+  path,
+}: {
+  space: Space;
+  lens: LayerName;
+  path: LayerPath;
+}): DisplayGuard | null {
+  for (const [sourceLayer, sourcePath] of space.closure({ layer: lens, path })) {
+    const node = space.raw({ layer: sourceLayer, path: sourcePath });
+    if (isDictionary(node) && "__when:display" in node) {
+      const guard = asDisplayGuard(node["__when:display"]);
+      if (guard !== null) return guard;
+    }
+  }
+  return null;
+}
+
+// Drawing entries: one per (candidate path, closure source carrying a
+// display) — the closure order is child-first, so a lens child's
+// entries precede its parent's (ADR-0100). The dressed types are the
+// closure sources with the same final segment, never the layer roots,
+// never a node carrying a display of its own.
 export function lensDrawingEntries({
   space,
   lens,
@@ -199,10 +249,9 @@ export function lensDrawingEntries({
 }): LensDrawingEntry[] {
   const entries: LensDrawingEntry[] = [];
   for (const path of displayCandidatePaths({ space, lens })) {
-    const spec = readDisplayTemplate({ space, lens, path });
-    if (spec === null || spec.length === 0) continue;
+    const closure = space.closure({ layer: lens, path });
     const types: Address[] = [];
-    for (const source of space.closure({ layer: lens, path })) {
+    for (const source of closure) {
       const [sourceLayer, sourcePath] = source;
       if (
         (sourceLayer === lens && sourcePath.join("/") === path.join("/")) ||
@@ -215,7 +264,16 @@ export function lensDrawingEntries({
       if (isDictionary(node) && "display" in node) continue;
       if (!types.some((existing) => addressesEqual(existing, source))) types.push(source);
     }
-    entries.push({ path, spec, types });
+    for (const [sourceLayer, sourcePath] of closure) {
+      const node = space.raw({ layer: sourceLayer, path: sourcePath });
+      if (!isDictionary(node) || !("display" in node)) continue;
+      const display = node["display"];
+      if (display === null) continue;
+      const spec = asGlyphList(display);
+      if (spec.length === 0) continue;
+      const guard = asDisplayGuard(node["__when:display"] ?? null);
+      entries.push({ path, spec, types, guard });
+    }
   }
   return entries;
 }
@@ -240,6 +298,53 @@ export function coversAddresses({
   return false;
 }
 
+// Read one key path on a node: the last segment reads at the node,
+// the earlier ones descend through address views. A missing segment
+// or a non-address intermediate = the path is absent (found: false).
+function readGuardPath({
+  space,
+  layer,
+  path,
+  segments,
+}: {
+  space: Space;
+  layer: LayerName;
+  path: LayerPath;
+  segments: string[];
+}): { found: boolean; value: unknown } {
+  let currentLayer = layer;
+  let currentPath = path;
+  for (const [index, segment] of segments.entries()) {
+    const value = space.read({ layer: currentLayer, path: currentPath, key: segment });
+    if (index === segments.length - 1) return { found: value !== null, value };
+    if (!(value instanceof AddressView)) return { found: false, value: null };
+    currentLayer = value.layer;
+    currentPath = value.path;
+  }
+  return { found: false, value: null };
+}
+
+/** Does the guard hold on the dressed node? Strate 1: presence of
+ * the key path, or membership in the closed set. A guard citing an
+ * absent key does not hold — the entry is not retained, never a
+ * crash (the kernel stays total). */
+export function guardHolds({
+  space,
+  layer,
+  path,
+  guard,
+}: {
+  space: Space;
+  layer: LayerName;
+  path: LayerPath;
+  guard: DisplayGuard;
+}): boolean {
+  const read = readGuardPath({ space, layer, path, segments: guard.path });
+  if (!read.found) return false;
+  if (guard.kind === "presence") return true;
+  return guard.values.some((expected) => expected === read.value);
+}
+
 // The entries dressing one node (in the harness order).
 export function dressingEntries({
   space,
@@ -251,20 +356,28 @@ export function dressingEntries({
   lens: LayerName;
   layer: LayerName;
   path: LayerPath;
-}): { path: LayerPath; spec: Glyph[]; hit: Address[] }[] {
+}): { path: LayerPath; spec: Glyph[]; hit: Address[]; guard: DisplayGuard | null }[] {
   const chain = space.closure({ layer, path });
-  const matches: { path: LayerPath; spec: Glyph[]; hit: Address[] }[] = [];
+  const matches: {
+    path: LayerPath;
+    spec: Glyph[];
+    hit: Address[];
+    guard: DisplayGuard | null;
+  }[] = [];
   for (const entry of lensDrawingEntries({ space, lens })) {
     const hit = entry.types.filter((type) => chain.some((member) => addressesEqual(member, type)));
-    if (hit.length) matches.push({ path: entry.path, spec: entry.spec, hit });
+    if (hit.length) matches.push({ path: entry.path, spec: entry.spec, hit, guard: entry.guard });
   }
   return matches;
 }
 
-// Drawn read: the most specific of the dressing entries wins —
-// measured by closure, independently of the chain order (think1
-// carries its most specific type at the end of the chain, producer
-// at the beginning).
+// Drawn read: the FIRST WINNING GUARD takes the node (the entries are
+// in the harness order — a lens child's entries before its parent's,
+// ADR-0100); a guard that does not hold retains nothing. When no
+// guard holds, the fallback is the most specific of the unguarded
+// entries — measured by closure, independently of the chain order
+// (think1 carries its most specific type at the end of the chain,
+// producer at the beginning).
 export function drawnShape({
   space,
   lens,
@@ -276,9 +389,25 @@ export function drawnShape({
   layer: LayerName;
   path: LayerPath;
 }): DrawnShape | null {
+  const matches = dressingEntries({ space, lens, layer, path });
+  for (const match of matches) {
+    if (match.guard !== null && guardHolds({ space, layer, path, guard: match.guard })) {
+      return { spec: match.spec, hit: match.hit };
+    }
+  }
   let best: { path: LayerPath; spec: Glyph[]; hit: Address[] } | null = null;
-  for (const match of dressingEntries({ space, lens, layer, path })) {
-    if (best === null || coversAddresses({ space, covering: match.hit, covered: best.hit })) {
+  for (const match of matches) {
+    if (match.guard !== null) continue;
+    if (best === null) {
+      best = match;
+      continue;
+    }
+    // Strictly more specific wins; on a tie the first (the child's)
+    // stays — the order is the semantics (ADR-0100).
+    if (
+      coversAddresses({ space, covering: match.hit, covered: best.hit }) &&
+      !coversAddresses({ space, covering: best.hit, covered: match.hit })
+    ) {
       best = match;
     }
   }
