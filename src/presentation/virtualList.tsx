@@ -27,7 +27,7 @@ export function VirtualList<T>({
     overscan: 8,
   });
   return (
-    <div ref={parentRef} className={maxHeightClass + " overflow-y-auto"}>
+    <div ref={parentRef} className={maxHeightClass + " overflow-y-auto"} role="list">
       <div style={{ height: virtualizer.getTotalSize(), position: "relative" }}>
         {virtualizer.getVirtualItems().map((virtualItem) => {
           const item = items[virtualItem.index];
@@ -37,6 +37,7 @@ export function VirtualList<T>({
               key={keyOf !== undefined ? keyOf(item, virtualItem.index) : virtualItem.key}
               data-index={virtualItem.index}
               ref={virtualizer.measureElement}
+              role="listitem"
               style={{
                 position: "absolute",
                 top: 0,
