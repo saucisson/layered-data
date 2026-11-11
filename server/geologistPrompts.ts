@@ -4,19 +4,20 @@
 // The geologist writes layers; to be pertinent it must not guess
 // what already exists. The system prompt embeds, rebuilt at each
 // call: the manifesto of the model, the stratigraphic column (one
-// line per layer, read from the disk so layers written seconds ago
-// are known), and one complete example of the corpus.
+// line per layer — the visitors' layers are read through the
+// UserLayerStore at the call, so layers written seconds ago are
+// known), and one complete example of the corpus.
 // ============================================================
 import { readFileSync } from "node:fs";
 
-import { VERSION, USERS_DIRECTORY } from "./config.ts";
-import {
-  KERNEL_LAYER_NAMES,
-  kernelLayerPath,
-  userLayerPath,
-  listLayerNames,
-  type LayerName,
-} from "./layerStore.ts";
+import { VERSION } from "./config.ts";
+import { KERNEL_LAYER_NAMES, kernelLayerPath, type LayerName } from "./layerStore.ts";
+
+/** One visitor layer as the prompt sees it: its name and source. */
+export interface VisitorLayer {
+  name: string;
+  source: string;
+}
 
 // ------------------------------------------------------------
 export const MANIFESTO = `CE QU'EST LAYERED DATA — les définitions elles-mêmes sont des données.
@@ -29,38 +30,36 @@ Tout est couche : les formalismes (les schémas) et les modèles (les données) 
 LA COLONNE STRATIGRAPHIQUE CI-DESSOUS EST L'ÉTAT RÉEL DE L'ATELIER — un nouveau formalisme s'y raccroche : raffiner une couche existante (chemins absolus vers ses membres), jamais redéfinir ce qui existe.`;
 
 /** One line per existing layer: the `layer …` header as written.
- * Reading the files at each call keeps the column true — the
- * kernel and the visitors' layers alike. */
-export function corpusBackbone(): string {
+ * The visitors' layers arrive as data, read through the store at
+ * each call — the column stays true. */
+export function corpusBackbone({ visitorLayers }: { visitorLayers: VisitorLayer[] }): string {
   const lines: string[] = [];
   for (const name of KERNEL_LAYER_NAMES) {
     const source = readFileSync(kernelLayerPath({ name: name as LayerName }), "utf8");
     const header = source.split("\n").find((line) => line.startsWith("layer "));
     lines.push(header ?? "layer " + name);
   }
-  for (const name of listLayerNames({ directory: USERS_DIRECTORY })) {
-    const source = readFileSync(userLayerPath({ name: name as LayerName }), "utf8");
-    const header = source.split("\n").find((line) => line.startsWith("layer "));
-    lines.push(header ?? "layer " + name + "  // couche d'un visiteur");
+  for (const visitorLayer of visitorLayers) {
+    const header = visitorLayer.source.split("\n").find((line) => line.startsWith("layer "));
+    lines.push(header ?? "layer " + visitorLayer.name + "  // couche d'un visiteur");
   }
   return lines.join("\n");
 }
 
 /** The complete system prompt sent to the model. */
-export function buildSystemPrompt(): string {
+export function buildSystemPrompt({ visitorLayers }: { visitorLayers: VisitorLayer[] }): string {
   let example = "";
   if (KERNEL_LAYER_NAMES.includes("pn-philosophers-1")) {
     example =
       "UN EXEMPLE COMPLET DU CORPUS — pn-philosophers-1, le modèle d'un philosophe seul (il remplit les collections du schéma pn-philosophers, ses membres raffinent les types par chemin absolu, les arcs désignent leurs extrémités par @) :\n" +
       readFileSync(kernelLayerPath({ name: "pn-philosophers-1" as LayerName }), "utf8").trim();
   }
-  const visitorLayerNames = listLayerNames({ directory: USERS_DIRECTORY });
-  const visitorLayers =
-    visitorLayerNames.length > 0
+  const visitorLayersText =
+    visitorLayers.length > 0
       ? "\n\nLES COUCHES DES VISITEURS (sources complètes — un nouveau formalisme peut les raffiner ou les citer) :\n" +
-        visitorLayerNames
-          .sort()
-          .map((name) => readFileSync(userLayerPath({ name: name as LayerName }), "utf8").trim())
+        [...visitorLayers]
+          .sort((a, b) => a.name.localeCompare(b.name))
+          .map((visitorLayer) => visitorLayer.source.trim())
           .join("\n\n")
       : "";
   return (
@@ -70,10 +69,10 @@ export function buildSystemPrompt(): string {
     "\n\nLA COLONNE STRATIGRAPHIQUE (une ligne par couche — " +
     KERNEL_LAYER_NAMES.length +
     " du socle en lecture seule, plus les couches des visiteurs) :\n" +
-    corpusBackbone() +
+    corpusBackbone({ visitorLayers }) +
     "\n\n" +
     example +
-    visitorLayers
+    visitorLayersText
   );
 }
 
