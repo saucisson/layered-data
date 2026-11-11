@@ -7,6 +7,7 @@
 
 import type { ValidationOutcome } from "../domain/validation.ts";
 import { renderMessage } from "../domain/messages.ts";
+import { VirtualList } from "./virtualList.tsx";
 import { labelOf, say } from "./i18n.ts";
 import type { Language } from "../domain/messages.ts";
 
@@ -85,14 +86,18 @@ export function ValidationPanel({
           })}
         </p>
       ) : (
-        <div className="max-h-40 space-y-0.5 overflow-y-auto">
-          {verdicts.slice(0, 40).map((verdict, index) => (
-            <div key={index} className="font-mono text-[10px] text-red-700">
+        <VirtualList
+          items={verdicts}
+          estimateSize={16}
+          maxHeightClass="max-h-40"
+          keyOf={(_verdict, index) => index}
+          renderItem={(verdict) => (
+            <div className="font-mono text-[10px] text-red-700">
               {labelOf({ code: verdict.kind, language })} —{" "}
               {renderMessage({ message: verdict.fact, language })}
             </div>
-          ))}
-        </div>
+          )}
+        />
       )}
       <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[11px] text-slate-500">
         <span>
