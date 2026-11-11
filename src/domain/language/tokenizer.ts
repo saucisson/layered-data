@@ -11,7 +11,26 @@
 import { DEFAULT_LANGUAGE, parseText, type Language } from "../messages.ts";
 
 export type LanguageTokenKind =
-  "str" | "id" | "num" | "@" | "/" | "[" | "]" | "," | "=" | "->" | "{" | "}" | "note";
+  | "str"
+  | "id"
+  | "num"
+  | "@"
+  | "/"
+  | "["
+  | "]"
+  | ","
+  | "="
+  | "->"
+  | "("
+  | ")"
+  | ">"
+  | "<"
+  | ">="
+  | "<="
+  | "!="
+  | "{"
+  | "}"
+  | "note";
 
 export interface LanguageToken {
   kind: LanguageTokenKind;
@@ -158,13 +177,32 @@ export function tokenizeLanguage(
         cursor += 2;
         continue;
       }
+      // The comparison operators of the strate-2 guards: >=, <=, !=
+      // read as one token, then the single-char ( ) > <.
+      if (
+        (character === ">" || character === "<") &&
+        body[cursor + 1] === "="
+      ) {
+        tokens.push({ kind: (character + "=") as ">=" | "<=", text: character + "=", line: lineNumber });
+        cursor += 2;
+        continue;
+      }
+      if (character === "!" && body[cursor + 1] === "=") {
+        tokens.push({ kind: "!=", text: "!=", line: lineNumber });
+        cursor += 2;
+        continue;
+      }
       if (
         character === "@" ||
         character === "=" ||
         character === "," ||
         character === "/" ||
         character === "[" ||
-        character === "]"
+        character === "]" ||
+        character === "(" ||
+        character === ")" ||
+        character === ">" ||
+        character === "<"
       ) {
         tokens.push({ kind: character, text: character, line: lineNumber });
         cursor++;
