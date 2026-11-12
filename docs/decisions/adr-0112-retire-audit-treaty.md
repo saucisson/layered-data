@@ -1,6 +1,6 @@
 # ADR-0112: Retiring the audit treaty
 
-- Status: proposed (awaiting the human owner's acceptance)
+- Status: accepted (human owner, 2026-11-12 — slimming series, PR #131)
 - Date: 2026-11-12
 
 ## Context
