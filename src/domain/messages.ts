@@ -1,9 +1,9 @@
-// Bilingual kernel messages: the domain speaks facts, the boundary
-// renders them. A MessageFact is a stable code plus named params —
-// never a pre-rendered string — and renderMessage() turns it into
-// English (the workshop default) or French, the two languages the
-// workshop chrome speaks. Codes are never translated: they travel
-// through tests, verdicts and diagnostics as anchors of meaning.
+// Kernel messages: the domain speaks facts, the boundary renders them.
+// A MessageFact is a stable code plus named params — never a
+// pre-rendered string — and renderMessage() turns it into English (the
+// workshop default) or, when a template carries one, French. Codes are
+// never translated: they travel through tests, verdicts and
+// diagnostics as anchors of meaning.
 
 /** The languages the workshop speaks. */
 export type Language = "en" | "fr";
@@ -11,10 +11,6 @@ export type Language = "en" | "fr";
 /** English is the default: the workshop opens in English unless the
  * browser or the visitor says otherwise. */
 export const DEFAULT_LANGUAGE: Language = "en";
-
-/** The languages messages render in — used by the audit to dump the
- * kernel twice, once per language. */
-export const MESSAGE_LANGUAGES: readonly Language[] = ["en", "fr"];
 
 /** Named parameters of a message — strings and numbers only, so a
  * fact stays JSON-serializable and diffable. */
@@ -32,10 +28,12 @@ export function fact(code: string, params?: MessageParams): MessageFact {
   return { code, params };
 }
 
-/** A template renders the parameters into one language. */
+/** A template renders the parameters into one language. English is
+ * required; French is optional content — when absent, renderers fall
+ * back to English (ADR-0113). */
 export type MessageTemplate = {
   en: (params: MessageParams) => string;
-  fr: (params: MessageParams) => string;
+  fr?: ((params: MessageParams) => string) | undefined;
 };
 
 /** Parameter access — p.layer reads a string, p.count reads a
@@ -46,17 +44,14 @@ function text(params: MessageParams, key: string): string {
   return value === undefined ? "" : String(value);
 }
 
-/** All kernel message templates, indexed by stable code. The French
- * templates reproduce the historic kernel wording exactly — the
- * French audit half must stay byte-identical from one version to
- * the next; the English templates are the workshop's new tongue. */
+/** All kernel message templates, indexed by stable code. English is
+ * the workshop's tongue; a French template, when present, is pure
+ * content that may return without any code change (ADR-0113). */
 export const TEMPLATES: Record<string, MessageTemplate> = {
   // ---- validation verdicts (checks.ts) ----
   "implicit-overload": {
     en: (p) =>
       text(p, "where") + ' : "' + text(p, "key") + '" exists upstream — declare extend/override',
-    fr: (p) =>
-      text(p, "where") + " : « " + text(p, "key") + " » existe en amont — déclarez extend/override",
   },
   "ghost-declaration": {
     en: (p) =>
@@ -66,17 +61,9 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       '" (' +
       text(p, "mode") +
       ") does not exist upstream",
-    fr: (p) =>
-      text(p, "where") +
-      " : « " +
-      text(p, "key") +
-      " » (" +
-      text(p, "mode") +
-      ") n'existe pas en amont",
   },
   "unknown-label": {
     en: (p) => text(p, "layer") + ' : "' + text(p, "tag") + '"',
-    fr: (p) => text(p, "layer") + " : « " + text(p, "tag") + " »",
   },
   "dead-binding": {
     en: (p) =>
@@ -88,15 +75,6 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " (" +
       text(p, "readingLayer") +
       ") reads it at the instance level — lay it on the type",
-    fr: (p) =>
-      text(p, "layer") +
-      " : bind " +
-      text(p, "slot") +
-      " à la racine, mais " +
-      text(p, "tag") +
-      " (" +
-      text(p, "readingLayer") +
-      ") le lit au niveau instance — posez-le sur le type",
   },
   "undeclared-shadow": {
     en: (p) =>
@@ -106,13 +84,6 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       ' : "' +
       text(p, "key") +
       '" overwrites the upstream outside the language',
-    fr: (p) =>
-      text(p, "layer") +
-      "::" +
-      text(p, "path") +
-      " : « " +
-      text(p, "key") +
-      " » écrase l'amont hors langage",
   },
   "expectation-betrayed": {
     en: (p) =>
@@ -122,14 +93,6 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " : expected " +
       text(p, "expected") +
       ", read " +
-      text(p, "read"),
-    fr: (p) =>
-      text(p, "layer") +
-      " :: " +
-      text(p, "address") +
-      " : attendu " +
-      text(p, "expected") +
-      ", lu " +
       text(p, "read"),
   },
   "order-conflict": {
@@ -146,60 +109,36 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " lays " +
       text(p, "loserValue") +
       " — first-wins walked the branches as written",
-    fr: (p) =>
-      text(p, "where") +
-      " : « " +
-      text(p, "key") +
-      " » tranché par l'ordre — " +
-      text(p, "winner") +
-      " pose " +
-      text(p, "winnerValue") +
-      ", " +
-      text(p, "loser") +
-      " pose " +
-      text(p, "loserValue") +
-      " — le premier-gagné a traversé les branches telles qu'elles sont écrites",
   },
 
   // ---- staging verdicts (staging.ts) ----
   "unknown-target": {
     en: (p) =>
       text(p, "layer") + ' : refines "' + text(p, "target") + '", layer unknown to the assembly',
-    fr: (p) =>
-      text(p, "layer") +
-      " : raffine « " +
-      text(p, "target") +
-      " », couche inconnue de l'assemblage",
   },
 
   // ---- space diagnostics (space.ts) ----
   "no-concrete-target": {
     en: () => "target without a concrete node",
-    fr: () => "cible sans nœud concret",
   },
   "ref-not-found": {
     en: (p) => "ref " + text(p, "ref") + " — anchor not found or path interrupted",
-    fr: (p) => "ref " + text(p, "ref") + " — ancre introuvable ou chemin interrompu",
   },
   "ref-scalar": {
     en: (p) => "ref " + text(p, "ref") + " — resolves to a scalar, not an address",
-    fr: (p) => "ref " + text(p, "ref") + " — résout en scalaire, pas une adresse",
   },
   "entry-not-designating": {
     en: (p) => "non-designating entry: " + text(p, "entry"),
-    fr: (p) => "entrée non désignante : " + text(p, "entry"),
   },
   // the cycle guard stays a silence in both languages — an
   // interrupted walk says it by where it stopped, not by a detail
   "cycle-guard": {
     en: () => "",
-    fr: () => "",
   },
 
   // ---- lint events (linting.ts) ----
   "refines-inverted": {
     en: (p) => text(p, "specific") + " (specific) follows " + text(p, "generic") + " (generic)",
-    fr: (p) => text(p, "specific") + " (spécifique) suit " + text(p, "generic") + " (générique)",
   },
   shadow: {
     en: (p) =>
@@ -211,33 +150,20 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " ; " +
       text(p, "sources") +
       " sources",
-    fr: (p) =>
-      text(p, "key") +
-      " — gagnant " +
-      text(p, "winner") +
-      "::" +
-      text(p, "path") +
-      " ; " +
-      text(p, "sources") +
-      " sources",
   },
   "label-unknown": {
     en: (p) => "unknown label: " + text(p, "tag"),
-    fr: (p) => text(p, "tag"),
   },
   "vacuous-bounds": {
     en: () => "cardinality bounds read, collection root never reached",
-    fr: () => "bornes de cardinalité lues, racine collection jamais atteinte",
   },
 
   // ---- language checks (checks.ts) ----
   "edges-slot-unbound": {
     en: () => "edges slot unbound",
-    fr: () => "slot edges non lié",
   },
   "slots-unbound": {
     en: (p) => "unbound slots (" + text(p, "slots") + ")",
-    fr: (p) => "slots non liés (" + text(p, "slots") + ")",
   },
   "vacant-slot": {
     en: (p) =>
@@ -247,27 +173,15 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " » cannot judge — the slot « " +
       text(p, "slot") +
       " » is unbound (ADR-0101)",
-    fr: (p) =>
-      text(p, "where") +
-      " : le check « " +
-      text(p, "tag") +
-      " » ne peut pas juger — le slot « " +
-      text(p, "slot") +
-      " » n'est pas lié (ADR-0101)",
   },
   "check-betrayed": {
     en: (p) => text(p, "where") + " : the carried check refuses — " + text(p, "error"),
-    fr: (p) => text(p, "where") + " : le check porté refuse — " + text(p, "error"),
   },
   "algorithm-missing": {
     en: (p) =>
       "the check « " +
       text(p, "tag") +
       " » is declared in the registry but no algorithm executes it (ADR-0102)",
-    fr: (p) =>
-      "le check « " +
-      text(p, "tag") +
-      " » est déclaré dans le registre mais aucun algorithme ne l'exécute (ADR-0102)",
   },
   // ---- the declarative strate's facts (ADR-0105) ----
   "redefined-check": {
@@ -280,15 +194,6 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " then " +
       text(p, "second") +
       ") — a couple is never replaced (ADR-0105)",
-    fr: (p) =>
-      text(p, "where") +
-      " : le check « " +
-      text(p, "name") +
-      " » est re-possé divergent (" +
-      text(p, "first") +
-      " puis " +
-      text(p, "second") +
-      ") — un couple n'est jamais remplacé (ADR-0105)",
   },
   "unsupported-level": {
     en: (p) =>
@@ -298,13 +203,6 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " » judges at the level « " +
       text(p, "level") +
       " » — the reading strate judges at layer roots only",
-    fr: (p) =>
-      text(p, "where") +
-      " : le check « " +
-      text(p, "name") +
-      " » juge au niveau « " +
-      text(p, "level") +
-      " » — la strate de lecture ne juge qu'aux racines des couches",
   },
   "missing-condition": {
     en: (p) =>
@@ -312,23 +210,12 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " : the judgment of « " +
       text(p, "name") +
       " » carries a « when » but the couple declares no condition",
-    fr: (p) =>
-      text(p, "where") +
-      " : le jugement de « " +
-      text(p, "name") +
-      " » porte un « when » mais le couple ne déclare pas de condition",
   },
   "unreadable-formula": {
     en: (p) =>
       "the check « " +
       text(p, "tag") +
       " » carries an unreadable formula: " +
-      text(p, "detail") +
-      " (ADR-0105)",
-    fr: (p) =>
-      "le check « " +
-      text(p, "tag") +
-      " » porte une formule illisible : " +
       text(p, "detail") +
       " (ADR-0105)",
   },
@@ -340,13 +227,6 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " » names « " +
       text(p, "term") +
       " », outside the judgment's quantified scope",
-    fr: (p) =>
-      text(p, "where") +
-      " : le message de « " +
-      text(p, "name") +
-      " » nomme « " +
-      text(p, "term") +
-      " », hors de la portée quantifiée du jugement",
   },
   "exhausted-formula": {
     en: (p) =>
@@ -355,32 +235,18 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " » exhausted its budget (" +
       text(p, "steps") +
       " steps) — it never judges silently",
-    fr: (p) =>
-      "le check « " +
-      text(p, "tag") +
-      " » a épuisé son budget (" +
-      text(p, "steps") +
-      " pas) — il ne juge jamais en silence",
   },
   "contract-without-algorithm": {
     en: (p) =>
       "the registry declares « " +
       text(p, "tag") +
       " » but the kernel binds no algorithm to it (ADR-0102)",
-    fr: (p) =>
-      "le registre déclare « " +
-      text(p, "tag") +
-      " » mais le noyau ne lui lie aucun algorithme (ADR-0102)",
   },
   "algorithm-without-contract": {
     en: (p) =>
       "the kernel binds an algorithm for « " +
       text(p, "tag") +
       " » that the registry never declares (ADR-0102)",
-    fr: (p) =>
-      "le noyau lie un algorithme pour « " +
-      text(p, "tag") +
-      " » que le registre ne déclare pas (ADR-0102)",
   },
   "contract-unreadable": {
     en: (p) =>
@@ -388,21 +254,12 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       " : the contract of « " +
       text(p, "tag") +
       " » is unreadable — a clause the kernel cannot parse (ADR-0102)",
-    fr: (p) =>
-      text(p, "where") +
-      " : le contrat de « " +
-      text(p, "tag") +
-      " » est illisible — une clause que le noyau ne sait pas lire (ADR-0102)",
   },
   "bedrock-occupied": {
     en: (p) =>
       "the name « " +
       text(p, "layer") +
       " » belongs to the bedrock — the read-only corpus: its layers are never rewritten, a draft may refine them, never replace them (ADR-0103)",
-    fr: (p) =>
-      "le nom « " +
-      text(p, "layer") +
-      " » appartient au socle — le corpus en lecture seule : ses couches ne se réécrivent jamais, un brouillon peut les raffiner, jamais les remplacer (ADR-0103)",
   },
 };
 
@@ -426,14 +283,15 @@ export function renderMessage({
     const params = message.params === undefined ? "" : " " + JSON.stringify(message.params);
     return message.code + params;
   }
-  const rendered =
-    language === "fr" ? template.fr(message.params ?? {}) : template.en(message.params ?? {});
-  return rendered;
+  const params = message.params ?? {};
+  if (language === "fr" && template.fr !== undefined) return template.fr(params);
+  return template.en(params);
 }
 
-/** Pick one of two ephemeral texts — English by default. Used for
- * compositions that never enter the kernel (syntax errors, geologist
- * feedback), where the pair is written at the call site. */
+/** Pick one of two ephemeral texts — English by default, and the
+ * fallback when no French text is present. Used for compositions that
+ * never enter the kernel (syntax errors, geologist feedback), where
+ * the pair is written at the call site. */
 export function parseText({
   language = DEFAULT_LANGUAGE,
   en,
@@ -441,58 +299,59 @@ export function parseText({
 }: {
   language?: Language;
   en: string;
-  fr: string;
+  fr?: string | undefined;
 }): string {
-  return language === "fr" ? fr : en;
+  return language === "fr" && fr !== undefined ? fr : en;
 }
 
 /** Stable kernel vocabulary — statuses, kinds, steps: the codes the
- * UI displays next to values. French keeps the historic code as its
- * label; English translates it. */
-export const VOCABULARY: Record<string, { en: string; fr: string }> = {
+ * UI displays next to values. The keys are the kernel's stable French
+ * codes, not translations; English translates them, French is
+ * optional content that falls back to English (ADR-0113). */
+export const VOCABULARY: Record<string, { en: string; fr?: string | undefined }> = {
   // ---- statuses ----
-  fournit: { en: "provides", fr: "fournit" },
-  transparent: { en: "transparent", fr: "transparent" },
-  absent: { en: "absent", fr: "absent" },
-  "non atteint": { en: "not reached", fr: "non atteint" },
+  fournit: { en: "provides"},
+  transparent: { en: "transparent"},
+  absent: { en: "absent"},
+  "non atteint": { en: "not reached"},
 
   // ---- verdict and diagnostic kinds ----
-  syntaxe: { en: "syntax", fr: "syntaxe" },
-  validation: { en: "validation", fr: "validation" },
-  "attendu-trahi": { en: "expectation-betrayed", fr: "attendu-trahi" },
-  "cible-inconnue": { en: "unknown-target", fr: "cible-inconnue" },
-  "surcharge-implicite": { en: "implicit-overload", fr: "surcharge-implicite" },
-  "déclaration-fantôme": { en: "ghost-declaration", fr: "déclaration-fantôme" },
-  "liaison-morte": { en: "dead-binding", fr: "liaison-morte" },
-  "ombre-non-déclarée": { en: "undeclared-shadow", fr: "ombre-non-déclarée" },
-  "conflit-d'ordre": { en: "order-conflict", fr: "conflit-d'ordre" },
-  "étiquette-inconnue": { en: "unknown-label", fr: "étiquette-inconnue" },
-  "entrée-ignorée": { en: "entry-ignored", fr: "entrée-ignorée" },
-  "garde-de-cycle": { en: "cycle-guard", fr: "garde-de-cycle" },
-  "check-vacant": { en: "check-vacant", fr: "check-vacant" },
-  "check-trahi": { en: "check-betrayed", fr: "check-trahi" },
-  "algorithme-absent": { en: "algorithm-missing", fr: "algorithme-absent" },
-  "contrat-sans-algorithme": { en: "contract-without-algorithm", fr: "contrat-sans-algorithme" },
-  "algorithme-sans-contrat": { en: "algorithm-without-contract", fr: "algorithme-sans-contrat" },
-  "contrat-illisible": { en: "contract-unreadable", fr: "contrat-illisible" },
-  "check-redéfini": { en: "redefined-check", fr: "check-redéfini" },
-  "niveau-non-soutenu": { en: "unsupported-level", fr: "niveau-non-soutenu" },
-  "condition-manquante": { en: "missing-condition", fr: "condition-manquante" },
-  "formule-illisible": { en: "unreadable-formula", fr: "formule-illisible" },
-  "gabarit-hors-de-portée": { en: "template-out-of-scope", fr: "gabarit-hors-de-portée" },
-  "formule-épuisée": { en: "exhausted-formula", fr: "formule-épuisée" },
-  "socle-occupé": { en: "bedrock-occupied", fr: "socle-occupé" },
-  "refines-inversés": { en: "refines-inverted", fr: "refines-inversés" },
-  "ombre-émergente": { en: "emerging-shadow", fr: "ombre-émergente" },
-  ombre: { en: "shadow", fr: "ombre" },
-  cible: { en: "target", fr: "cible" },
-  propre: { en: "own", fr: "propre" },
-  "membre-du-père": { en: "member-of-parent", fr: "membre-du-père" },
-  union: { en: "union", fr: "union" },
-  "vue-courante": { en: "current-view", fr: "vue-courante" },
-  "couche-étrangère": { en: "foreign-layer", fr: "couche-étrangère" },
-  introuvable: { en: "not found", fr: "introuvable" },
-  "chemin interrompu": { en: "path interrupted", fr: "chemin interrompu" },
+  syntaxe: { en: "syntax"},
+  validation: { en: "validation"},
+  "attendu-trahi": { en: "expectation-betrayed"},
+  "cible-inconnue": { en: "unknown-target"},
+  "surcharge-implicite": { en: "implicit-overload"},
+  "déclaration-fantôme": { en: "ghost-declaration"},
+  "liaison-morte": { en: "dead-binding"},
+  "ombre-non-déclarée": { en: "undeclared-shadow"},
+  "conflit-d'ordre": { en: "order-conflict"},
+  "étiquette-inconnue": { en: "unknown-label"},
+  "entrée-ignorée": { en: "entry-ignored"},
+  "garde-de-cycle": { en: "cycle-guard"},
+  "check-vacant": { en: "check-vacant"},
+  "check-trahi": { en: "check-betrayed"},
+  "algorithme-absent": { en: "algorithm-missing"},
+  "contrat-sans-algorithme": { en: "contract-without-algorithm"},
+  "algorithme-sans-contrat": { en: "algorithm-without-contract"},
+  "contrat-illisible": { en: "contract-unreadable"},
+  "check-redéfini": { en: "redefined-check"},
+  "niveau-non-soutenu": { en: "unsupported-level"},
+  "condition-manquante": { en: "missing-condition"},
+  "formule-illisible": { en: "unreadable-formula"},
+  "gabarit-hors-de-portée": { en: "template-out-of-scope"},
+  "formule-épuisée": { en: "exhausted-formula"},
+  "socle-occupé": { en: "bedrock-occupied"},
+  "refines-inversés": { en: "refines-inverted"},
+  "ombre-émergente": { en: "emerging-shadow"},
+  ombre: { en: "shadow"},
+  cible: { en: "target"},
+  propre: { en: "own"},
+  "membre-du-père": { en: "member-of-parent"},
+  union: { en: "union"},
+  "vue-courante": { en: "current-view"},
+  "couche-étrangère": { en: "foreign-layer"},
+  introuvable: { en: "not found"},
+  "chemin interrompu": { en: "path interrupted"},
 };
 
 /** Label of a kernel code in a language — statuses, kinds, steps.
@@ -506,5 +365,5 @@ export function kernelLabel({
 }): string {
   const entry = VOCABULARY[code];
   if (entry === undefined) return code;
-  return language === "fr" ? entry.fr : entry.en;
+  return language === "fr" && entry.fr !== undefined ? entry.fr : entry.en;
 }

@@ -73,7 +73,7 @@ function RawBranch({
   } else if (value === null) {
     rendered = (
       <span className="text-slate-600">
-        {say({ language, en: "∅ abstract slot", fr: "∅ slot abstrait" })}
+        {say({ language, en: "∅ abstract slot"})}
       </span>
     );
   } else {

@@ -172,7 +172,7 @@ function prepareStaging({
       early: {
         ok: false,
         step: "syntaxe",
-        errors: [parseText({ language, en: "syntax: " + message, fr: "syntaxe : " + message })],
+        errors: [parseText({ language, en: "syntax: " + message})],
         verdicts: [],
         layerNames: [],
         compiledLanguage: null,
@@ -494,12 +494,10 @@ export function simulatedAssistantProposal({
     parseText({
       language,
       en: "// deterministic proposal — correct the draft freely,",
-      fr: "// proposition déterministe — corrigez le brouillon librement,",
     }),
     parseText({
       language,
       en: "// the staging will judge corpus + supplement, 0 verdict demanded",
-      fr: "// le staging jugera corpus + supplément, 0 verdict exigé",
     }),
     "layer " + name + " refines @weighted-hypergraph then @graph",
     "  extend edge_type",

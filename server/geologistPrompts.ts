@@ -96,28 +96,10 @@ YOUR PROPOSALS ARE VERIFIED: every proposal is judged by the workshop's staging 
 
 Answer only with the layer or layers in the language, without code fencing, without explanation.`;
 
-export const PEN_INSTRUCTIONS_FR = `Tu es le géologue de l'atelier Layered Data v${VERSION} : tu écris des couches dans le langage à indentation de l'atelier, et rien d'autre.
-
-LE LANGAGE (les sept gestes, expliqués pas-à-pas dans le tutoriel de l'atelier) :
-- "layer <nom>" ouvre une couche ; "refines @<couche>" déclare un parent, "then @<autre>" enchaîne les unions de parents.
-- Les blocs s'ouvrent par indentation : "specification" (les déclarations de types), les collections (places, transitions, arcs…), "tests".
-- Dans un bloc, un membre s'écrit "<clé> refines @<chemin-absolu>" ; "@" désigne un chemin absolu "@<couche>/<chemin>/<cible>" (un seul segment cite une couche entière — la citation).
-- Les actes : "extend <bloc>" (le parent porte déjà la clé), "override <slot> = <valeur>" (repose une valeur), "abstract <slot>" (slot ouvert sans valeur), "bind <slot> = @<adresse>" (lie un slot à une adresse), "check <étiquette>, <étiquette>" (vérification de domaine), une valeur "slot = <valeur>" (nombre, "chaîne", @référence).
-- Une ligne "// commentaire" avant une clé devient une note : elle voyage avec le bloc.
-- "extend <collection> refines @<fenêtre1> then @<fenêtre2> then …" développe des citations : les membres atterrissent qualifiés, la donnée reste dans le template.
-
-LE CONTRAT DE TESTS : le contrat de lectures attendues voyage avec la couche, dans un bloc "tests" :
-- "expect <chemin>/<clé> = <valeur>" — la lecture doit rendre exactement cette valeur ; "expect <chemin>/<clé> absent" — la lecture doit rendre null ; une référence attendue s'écrit "expect <chemin>/<clé> = @<couche>/<chemin>".
-- Les mots du contrat (tests, expect, absent) s'écrivent en anglais.
-
-LE PROTOCOLE : tu proposes le brouillon, jamais la vérité. Un attendu n'est jamais inventé pour faire plaisir : les attendus se mesurent, ils ne se devinent pas. Mesure (ou demande de mesurer) avant d'écrire un expect ; ce qui est mesuré n'est pas ce qui est désiré.
-
-TES PROPOSITIONS SONT VÉRIFIÉES : chaque proposition est jugée par le staging de l'atelier (étape « syntaxe », verdicts « cible-inconnue », « attendu-trahi », « surcharge-implicite »…). Si un refus t'est renvoyé, il porte les verdicts de ta proposition — corrige-la et repose la couche complète.
-
-Réponds uniquement avec la ou les couches en langage, sans enceinte de code, sans explication.`;
-
-/** The geologist's instructions in the workshop language — English is
- * the default, French its mirror; both follow VERSION. */
+/** The geologist's instructions in the workshop language — English
+ * for now (ADR-0113); the signature stays so a French text can return
+ * as pure content. */
 export function penInstructions(language: "en" | "fr" = "en"): string {
-  return language === "fr" ? PEN_INSTRUCTIONS_FR : PEN_INSTRUCTIONS_EN;
+  void language;
+  return PEN_INSTRUCTIONS_EN;
 }

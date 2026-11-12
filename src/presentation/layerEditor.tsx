@@ -99,7 +99,6 @@ export function LayerEditor({
           {say({
             language,
             en: "edit the living layer « " + layerName + " »",
-            fr: "éditer la couche vivante « " + layerName + " »",
           })}
         </span>
         <button type="button"
@@ -107,7 +106,6 @@ export function LayerEditor({
           title={say({
             language,
             en: "close the editor — nothing is written into the space",
-            fr: "fermer l'éditeur — rien n'est écrit dans l'espace",
           })}
           className="ml-auto rounded px-1.5 py-0.5 text-[11px] text-slate-600 hover:text-slate-700 dark:text-slate-200"
         >
@@ -118,7 +116,6 @@ export function LayerEditor({
         {say({
           language,
           en: "the layer leaves the living context for the time of the judgement: the staging revalidates the whole corpus + supplements, replays the expectations of the other living layers and demands 0 verdict; renaming the layer or sliding another one in is not editing; and the bedrock is read-only by protocol — an edition never aims at it (ADR-0103)",
-          fr: "la couche quitte le contexte vivant le temps du jugement : le staging revalide corpus + suppléments entiers, rejoue les attendus des autres couches vivantes et exige 0 verdict ; renommer la couche ou en glisser une autre n'est pas l'éditer ; et le socle est immuable par protocole — une édition ne vise jamais le socle (ADR-0103)",
         })}
       </p>
       <textarea
@@ -140,19 +137,16 @@ export function LayerEditor({
             ? say({
                 language,
                 en: "staging — " + stagingProgress.done + "/" + stagingProgress.total + " judged…",
-                fr: "staging — " + stagingProgress.done + "/" + stagingProgress.total + " jugées…",
               })
             : say({
                 language,
                 en: "staging — re-judge & rewrite the layer",
-                fr: "staging — rejuger & réécrire la couche",
               })}
         </button>
         <span className="text-[10px] leading-4 text-slate-600">
           {say({
             language,
             en: "the accepted tree replaces the old one in place, the invalidation protocol re-reads the workshop — the corpus ranks stay frozen",
-            fr: "l'arbre accepté remplace l'ancien en place, le protocole d'invalidation relit l'atelier — les rangs du corpus restent gelés",
           })}
         </span>
       </div>
@@ -162,7 +156,6 @@ export function LayerEditor({
             {say({
               language,
               en: "staging — the syntax refuses the edition:",
-              fr: "staging — la syntaxe refuse l'édition :",
             })}
           </div>
           {staging.errors.map((error, index) => (
@@ -185,10 +178,6 @@ export function LayerEditor({
                   "staging — " +
                   staging.verdicts.length +
                   " assembly verdict(s), the edition is refused:",
-                fr:
-                  "staging — " +
-                  staging.verdicts.length +
-                  " verdict(s) d'assemblage, l'édition est refusée :",
               })}
             </div>
             {staging.verdicts.map((verdict, index) => (
@@ -202,7 +191,7 @@ export function LayerEditor({
       {result !== null && result.outcome.refusals.length > 0 && !result.applied && (
         <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] leading-4 text-amber-800">
           <div className="font-semibold">
-            {say({ language, en: "the edition is refused:", fr: "l'édition est refusée :" })}
+            {say({ language, en: "the edition is refused:"})}
           </div>
           {result.outcome.refusals.map((refusal, index) => (
             <div key={index}>{editionRefusalLabel({ code: refusal, language })}</div>
@@ -217,10 +206,6 @@ export function LayerEditor({
               "staging: 0 verdict — the layer « " +
               layerName +
               " » is rewritten, the write is declared, the workshop re-reads the space",
-            fr:
-              "staging : 0 verdict — la couche « " +
-              layerName +
-              " » est réécrite, l'écriture est déclarée, l'atelier relit l'espace",
           })}
         </div>
       )}

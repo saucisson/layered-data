@@ -116,7 +116,7 @@ export function TutorialListing({
                 return next;
               });
             }}
-            aria-label={say({ language, en: "fold / unfold", fr: "replier / déplier" })}
+            aria-label={say({ language, en: "fold / unfold"})}
             className="w-4 shrink-0 text-left font-bold text-slate-600 hover:text-slate-700 dark:text-slate-200"
           >
             {isFolded ? "▸" : "▾"}
@@ -129,7 +129,6 @@ export function TutorialListing({
           title={say({
             language,
             en: "read this line's parentage — the cascade opens below",
-            fr: "lire la parenté de cette ligne — la cascade s'ouvre en dessous",
           })}
           className="shrink-0 rounded text-left hover:ring-1 hover:ring-slate-500"
         >
@@ -140,7 +139,6 @@ export function TutorialListing({
           title={say({
             language,
             en: "the layer that provides this value (or declares the slot)",
-            fr: "la couche qui fournit cette valeur (ou déclare le slot)",
           })}
           className="shrink-0"
         >
@@ -148,7 +146,7 @@ export function TutorialListing({
         </button>
         {hidden > 0 && (
           <span className="font-sans text-[10px] text-slate-600">
-            {"+ " + hidden + " " + say({ language, en: "lines", fr: "lignes" })}
+            {"+ " + hidden + " " + say({ language, en: "lines"})}
           </span>
         )}
       </div>,
@@ -172,7 +170,7 @@ export function TutorialListing({
             onClick={() => setFolded(new Set())}
             className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
           >
-            {say({ language, en: "unfold all", fr: "tout déplier" })}
+            {say({ language, en: "unfold all"})}
           </button>
           <button type="button"
             onClick={() =>
@@ -180,7 +178,7 @@ export function TutorialListing({
             }
             className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
           >
-            {say({ language, en: "fold all", fr: "tout replier" })}
+            {say({ language, en: "fold all"})}
           </button>
         </span>
       </div>
@@ -197,14 +195,13 @@ export function TutorialListing({
               {say({
                 language,
                 en: "the line's parentage — click again to walk further",
-                fr: "la parenté de la ligne — cliquez encore pour marcher plus loin",
               })}
             </p>
             <button type="button"
               onClick={() => setCascade([])}
               className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
             >
-              {say({ language, en: "close", fr: "fermer" })}
+              {say({ language, en: "close"})}
             </button>
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">

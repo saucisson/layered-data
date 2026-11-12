@@ -132,7 +132,6 @@ export function CascadeCard({
                 title={say({
                   language,
                   en: "the winning address — the value is provided there; this crank moves left, it opens on the right",
-                  fr: "l'adresse gagnante — la valeur y est fournie ; ce cran passe à gauche, elle s'ouvre à droite",
                 })}
                 className="rounded hover:ring-1 hover:ring-slate-500"
               >
@@ -145,7 +144,7 @@ export function CascadeCard({
             <span className="text-slate-600">
               {provenance && provenance.status
                 ? labelOf({ code: provenance.status, language })
-                : say({ language, en: "not provided", fr: "non fournie" })}
+                : say({ language, en: "not provided"})}
             </span>
           )}
           {provenance && (
@@ -154,11 +153,6 @@ export function CascadeCard({
               {say({
                 language,
                 en: provenance.readCount > 1 ? "sources consulted" : "source consulted",
-                fr:
-                  "source" +
-                  (provenance.readCount > 1 ? "s" : "") +
-                  " consultée" +
-                  (provenance.readCount > 1 ? "s" : ""),
               })}
               )
             </span>
@@ -167,7 +161,7 @@ export function CascadeCard({
       )}
       {chain.length > 0 && (
         <div className="mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[11px] leading-4">
-          <span className="text-slate-600">{say({ language, en: "refines", fr: "raffine" })}</span>
+          <span className="text-slate-600">{say({ language, en: "refines"})}</span>
           {chain.map((step, index) => (
             <span key={index} className="flex flex-wrap items-center gap-1">
               {index > 0 && <span className="text-slate-500">→</span>}
@@ -177,7 +171,6 @@ export function CascadeCard({
                   title={say({
                     language,
                     en: "the next crank of the chain — it opens on the right",
-                    fr: "le cran suivant de la chaîne — il s'ouvre à droite",
                   })}
                   className="rounded hover:ring-1 hover:ring-slate-500"
                 >
@@ -195,7 +188,7 @@ export function CascadeCard({
       )}
       {target.key === null && chain.length === 0 && (
         <div className="mt-1 text-[11px] text-slate-600">
-          {say({ language, en: "closure: ", fr: "fermeture : " })}
+          {say({ language, en: "closure: "})}
           {
             space.closure({ layer: asLayerName(target.layer), path: asLayerPath(target.path) })
               .length
@@ -207,12 +200,6 @@ export function CascadeCard({
                 .length > 1
                 ? "sources"
                 : "source",
-            fr:
-              "source" +
-              (space.closure({ layer: asLayerName(target.layer), path: asLayerPath(target.path) })
-                .length > 1
-                ? "s"
-                : ""),
           })}
         </div>
       )}

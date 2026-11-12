@@ -6,17 +6,28 @@
 
 import { kernelLabel, parseText, type Language } from "../domain/messages.ts";
 
-/** A text written in both workshop languages. */
-export type BilingualText = { en: string; fr: string };
+/** A text in the workshop's tongue: English always, French as
+ * optional content (ADR-0113). */
+export type BilingualText = { en: string; fr?: string | undefined };
 
-/** Pick one of two inline texts. */
-export function say({ language, en, fr }: { language: Language; en: string; fr: string }): string {
+/** Pick one of two inline texts — English falls back when no French
+ * text is present. */
+export function say({
+  language,
+  en,
+  fr,
+}: {
+  language: Language;
+  en: string;
+  fr?: string | undefined;
+}): string {
   return parseText({ language, en, fr });
 }
 
-/** Render a bilingual entry. */
+/** Render a bilingual entry — English falls back when no French text
+ * is present. */
 export function localized({ language, text }: { language: Language; text: BilingualText }): string {
-  return language === "fr" ? text.fr : text.en;
+  return language === "fr" && text.fr !== undefined ? text.fr : text.en;
 }
 
 /** Render a kernel code — a status, a kind, a step. */
@@ -29,15 +40,12 @@ export function labelOf({ code, language }: { code: string; language: Language }
 export const EDITION_REFUSAL_LABEL: Record<string, BilingualText> = {
   "couche-renomme": {
     en: "the edition renames the layer — an edition edits, it never renames",
-    fr: "l'édition renomme la couche — une édition édite, elle ne renomme jamais",
   },
   "couche-glissée": {
     en: "the edition carries a layer besides — an edition is not an addition",
-    fr: "l'édition glisse une couche en plus — une édition n'est pas un ajout",
   },
   "socle-édité": {
     en: "the edition aims at the bedrock — the bedrock is read-only, its layers never re-enter the staging (ADR-0103)",
-    fr: "l'édition vise le socle — le socle est en lecture seule, ses couches ne repassent jamais au staging (ADR-0103)",
   },
 };
 
@@ -55,15 +63,12 @@ export function editionRefusalLabel({
   return localized({ language, text: entry });
 }
 
-/** Parity check for the harnesses: a bilingual entry carries two
- * non-empty texts, and they differ — a translation nobody wrote is
- * a missing translation. */
+/** Parity check for the harnesses: a bilingual entry carries a
+ * non-empty English text, and — when a French text is present — a
+ * non-empty one that differs. English-only entries are accepted
+ * (ADR-0113); an empty English text is not. */
 export function bilingualParityOf(entry: BilingualText): boolean {
-  return (
-    typeof entry.en === "string" &&
-    typeof entry.fr === "string" &&
-    entry.en.length > 0 &&
-    entry.fr.length > 0 &&
-    entry.en !== entry.fr
-  );
+  if (typeof entry.en !== "string" || entry.en.length === 0) return false;
+  if (entry.fr === undefined) return true;
+  return typeof entry.fr === "string" && entry.fr.length > 0 && entry.en !== entry.fr;
 }

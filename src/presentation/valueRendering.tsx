@@ -20,14 +20,14 @@ export function KernelValue({ value, language }: { value: any; language: Languag
   if (value === null || value === undefined) {
     return (
       <span className="text-slate-600">
-        {say({ language, en: "∅ undefined", fr: "∅ non défini" })}
+        {say({ language, en: "∅ undefined"})}
       </span>
     );
   }
   if (value instanceof AddressView) {
     return (
       <span className="font-medium text-emerald-700">
-        {say({ language, en: "node → ", fr: "nœud → " })}
+        {say({ language, en: "node → "})}
         {value.layer} :: {value.path.length ? value.path.join("/") : "()"}
       </span>
     );
@@ -79,7 +79,7 @@ export function FlatValue({ value, language }: { value: any; language: Language 
 
 /** One path prefix as text. */
 function prefixText(prefix: string[], language: Language): string {
-  return prefix.length ? prefix.join("/") : say({ language, en: "root ( )", fr: "racine ( )" });
+  return prefix.length ? prefix.join("/") : say({ language, en: "root ( )"});
 }
 
 /** Render one trace event of a closure walk: the base (own node +
@@ -90,17 +90,17 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
     return (
       <div className="text-slate-700 dark:text-slate-200">
         <span className="font-semibold">① base</span>{" "}
-        {say({ language, en: "— own node: ", fr: "— nœud propre : " })}
+        {say({ language, en: "— own node: "})}
         {event.own ? (
           <span className="font-medium text-emerald-700">
-            {say({ language, en: "present", fr: "présent" })}
+            {say({ language, en: "present"})}
           </span>
         ) : (
-          <span className="text-slate-500">{say({ language, en: "absent", fr: "absent" })}</span>
+          <span className="text-slate-500">{say({ language, en: "absent"})}</span>
         )}
         {event.fatherMembers.length > 0 && (
           <>
-            {say({ language, en: " ; father's members: ", fr: " ; membres du père : " })}
+            {say({ language, en: " ; father's members: "})}
             <span className="text-slate-500">
               {event.fatherMembers.map((member: any) => addressText(member)).join(" · ")}
             </span>
@@ -117,7 +117,6 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
           {say({
             language,
             en: "— none declared in the base: the chain stops at the own node and the father's members.",
-            fr: "— aucun défini dans la base : la chaîne s'arrête au nœud propre et aux membres du père.",
           })}
         </div>
       );
@@ -125,9 +124,9 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
     return (
       <div className="text-slate-700 dark:text-slate-200">
         <span className="font-semibold">② refines</span>{" "}
-        {say({ language, en: "— defined by ", fr: "— définis par " })}
+        {say({ language, en: "— defined by "})}
         {event.from ? addressText(event.from) : "—"}
-        {say({ language, en: ", resolved from the holder ", fr: ", résolus depuis le porteur " })}
+        {say({ language, en: ", resolved from the holder "})}
         <span className="text-slate-500">{addressText(event.holder)}</span> :
         <span className="ml-1 text-sky-700">
           {event.entries
@@ -144,21 +143,21 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
     return (
       <div className="text-slate-700 dark:text-slate-200">
         <span className="font-semibold text-sky-700">
-          {say({ language, en: "⟦resolution⟧", fr: "⟦résolution⟧" })}
+          {say({ language, en: "⟦resolution⟧"})}
         </span>{" "}
         <span className="text-sky-700">
           → ({event.ref[0]}) {event.ref[1].join("/")}
         </span>{" "}
-        {say({ language, en: "from ", fr: "depuis " })}
+        {say({ language, en: "from "})}
         {addressText(event.holder)} :
         <div className="ml-3 mt-0.5 space-y-0.5 text-[11px] text-slate-500">
           {event.search.map((searchStep: any, index: number) => (
             <div key={index}>
-              {say({ language, en: "prefix ", fr: "préfixe " })}
+              {say({ language, en: "prefix "})}
               <span className="font-medium text-slate-700 dark:text-slate-200">
                 {prefixText(searchStep.prefix, language)}
               </span>{" "}
-              {say({ language, en: "→ anchors ", fr: "→ ancres " })}
+              {say({ language, en: "→ anchors "})}
               {"{ "}
               {searchStep.anchors.length ? (
                 searchStep.anchors.map((anchor: string, anchorIndex: number) => (
@@ -174,7 +173,6 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
                   {say({
                     language,
                     en: "— computing, conservative jump kept",
-                    fr: "— calcul en cours, saut conservateur",
                   })}
                 </span>
               )}
@@ -183,14 +181,13 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
                 ? say({
                     language,
                     en: " — root anchor: rerooting « " + searchStep.reroot + " »",
-                    fr: " — ancre racine : re-racination « " + searchStep.reroot + " »",
                   })
                 : ""}
             </div>
           ))}
         </div>
         <div className="ml-3 text-[11px]">
-          {say({ language, en: "result: ", fr: "résultat : " })}
+          {say({ language, en: "result: "})}
           <span className="font-medium text-slate-800 dark:text-slate-100">{result}</span>
         </div>
       </div>
