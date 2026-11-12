@@ -76,16 +76,10 @@ export function formatPenFeedback(
         ' was refused by the verification, at the step "' +
         kernelLabel({ code: step, language }) +
         '".',
-      fr:
-        "Ta proposition n°" +
-        attempt +
-        " a été refusée par la vérification, à l'étape « " +
-        kernelLabel({ code: step, language }) +
-        " ».",
     }),
   ];
   for (const error of errors) {
-    lines.push(parseText({ language, en: "Error: " + error, fr: "Erreur : " + error }));
+    lines.push(parseText({ language, en: "Error: " + error}));
   }
   for (const verdict of verdicts) {
     lines.push(
@@ -96,11 +90,6 @@ export function formatPenFeedback(
           kernelLabel({ code: verdict.kind, language }) +
           '": ' +
           renderMessage({ message: verdict.fact, language }),
-        fr:
-          "Verdict « " +
-          kernelLabel({ code: verdict.kind, language }) +
-          " » : " +
-          renderMessage({ message: verdict.fact, language }),
       }),
     );
   }
@@ -108,7 +97,6 @@ export function formatPenFeedback(
     parseText({
       language,
       en: "Fix it and propose the complete, corrected layer, in the workshop language, with no explanation.",
-      fr: "Corrige et repose la couche complète, corrigée, en langage de l'atelier, sans explication.",
     }),
   );
   return lines.join("\n");
@@ -171,7 +159,7 @@ export async function composeVerifiedLayerDraft({
         attempt,
         step: "syntaxe",
         errors: [
-          parseText({ language, en: "the proposal is empty", fr: "la proposition est vide" }),
+          parseText({ language, en: "the proposal is empty"}),
         ],
         verdicts: [],
         proposal,

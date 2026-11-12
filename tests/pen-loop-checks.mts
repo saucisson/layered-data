@@ -353,11 +353,8 @@ check(
 );
 const formattedFrench = formatPenFeedback(formatterRefusal, "fr");
 check(
-  "the formatter mirrors itself in French — the same refusal, the other tongue",
-  formattedFrench.includes("n°2") &&
-    formattedFrench.includes("« liaison-morte »") &&
-    formattedFrench.includes("sans explication") &&
-    formattedFrench !== formatted,
+  "the formatter falls back to English when asked for French — French content is absent (ADR-0113)",
+  formattedFrench === formatted,
 );
 
 // =====================================================================

@@ -71,7 +71,6 @@ export function tokenizeLanguage(
         parseText({
           language,
           en: "l." + lineNumber + " : tab — indentation counts in spaces",
-          fr: "l." + lineNumber + " : tabulation — l'indentation se compte en espaces",
         }),
       );
     }
@@ -126,12 +125,6 @@ export function tokenizeLanguage(
               " : inconsistent indentation — no block opens at " +
               margin +
               " space(s)",
-            fr:
-              "l." +
-              lineNumber +
-              " : indentation incohérente — aucun bloc ne s'ouvre à " +
-              margin +
-              " espace(s)",
           }),
         );
       }
@@ -150,7 +143,6 @@ export function tokenizeLanguage(
           parseText({
             language,
             en: "l." + lineNumber + " : brace — the language lives on indentation",
-            fr: "l." + lineNumber + " : accolade — le langage vit de l'indentation",
           }),
         );
       }
@@ -162,7 +154,6 @@ export function tokenizeLanguage(
               parseText({
                 language,
                 en: "unterminated string l." + lineNumber,
-                fr: "chaîne non fermée l." + lineNumber,
               }),
             );
           }
@@ -231,7 +222,6 @@ export function tokenizeLanguage(
         parseText({
           language,
           en: "unexpected character '" + character + "' l." + lineNumber,
-          fr: "caractère inattendu '" + character + "' l." + lineNumber,
         }),
       );
     }

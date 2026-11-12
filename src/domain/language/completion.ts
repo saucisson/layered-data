@@ -49,7 +49,6 @@ const detailOf = ({ kind, language }: { kind: CompletionKind; language: Language
   parseText({
     language,
     en: kind === "act" ? "act" : kind === "layer" ? "layer" : "key",
-    fr: kind === "act" ? "acte" : kind === "layer" ? "couche" : "clé",
   });
 
 const suggestion = ({

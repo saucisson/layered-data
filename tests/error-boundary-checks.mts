@@ -27,7 +27,6 @@ const boundarySource = readFileSync(join(rootDirectory, "src/components/ErrorBou
 const mainSource = readFileSync(join(rootDirectory, "src/main.tsx"), "utf8");
 const packageSource = readFileSync(join(rootDirectory, "package.json"), "utf8");
 const enCatalog = JSON.parse(readFileSync(join(rootDirectory, "public/locales/en/translation.json"), "utf8"));
-const frCatalog = JSON.parse(readFileSync(join(rootDirectory, "public/locales/fr/translation.json"), "utf8"));
 
 // ---- the boundary component -----------------------------------------
 
@@ -48,9 +47,7 @@ check("main.tsx wraps <App /> in <ErrorBoundary>", /<ErrorBoundary>\s*<App \/>\s
 
 const ERROR_KEY = "something went wrong — the atelier hit an unexpected error";
 check("the error message key exists in the English catalog", typeof enCatalog[ERROR_KEY] === "string" && enCatalog[ERROR_KEY].length > 0);
-check("the error message key exists in the French catalog", typeof frCatalog[ERROR_KEY] === "string" && frCatalog[ERROR_KEY].length > 0);
-check("the French error message is a real translation", frCatalog[ERROR_KEY] !== enCatalog[ERROR_KEY]);
-check("the reload key exists in both catalogs", typeof enCatalog["reload"] === "string" && typeof frCatalog["reload"] === "string");
+check("the reload key exists in the English catalog", typeof enCatalog["reload"] === "string");
 
 // ---- the harness is registered --------------------------------------
 
