@@ -68,7 +68,7 @@ What this decision implies - good and bad.
 | [ADR-0108](adr-0108-streamed-validation.md) | Streamed validation - chunked generator + event-loop pacing, synchronous drain kept as the API | accepted | 2026-11-09 |
 | [ADR-0109](adr-0109-inline-checks-english-formalisms.md) | Inline checks, English-first formalisms, i18next for translations | proposed | 2026-11-09 |
 | [ADR-0110](adr-0110-shared-editor-session.md) | A shared editor session - SSE state, judged gestures, optimistic locking | proposed | 2026-11-09 |
-| [ADR-0112](adr-0112-retire-audit-treaty.md) | Retiring the audit treaty - the executable specification is the contract | proposed | 2026-11-12 |
+| [ADR-0112](adr-0112-retire-audit-treaty.md) | Retiring the audit treaty - the executable specification is the contract | accepted | 2026-11-12 |
 
 Numbers ADR-0000 to ADR-0099 are reserved for the project template (agent
 protocol, branching, CI mechanics). ADRs specific to layered-data start at
