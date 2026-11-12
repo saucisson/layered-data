@@ -2,7 +2,7 @@
 //
 // The mechanism lives OUTSIDE the Space class on purpose: the kernel
 // stays a reading machine, and rewriting the copied implicits is a
-// pass driven from the outside (the audit harness calls it; the
+// pass driven from the outside (the callers drive it; the
 // workbench reads the space immutably).
 
 import { type LayerName, type LayerPath, asPathSegment } from "./identifiers.ts";

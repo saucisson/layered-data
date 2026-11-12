@@ -5,7 +5,6 @@
 //
 // Three consumers read through this module:
 //   - the drawing panels (the lens shapes of the glyphs);
-//   - the audit harness (the walk of the observable reads);
 //   - the validator and the checks (walkAddresses).
 
 import { type LayerName, type LayerPath, asPathSegment } from "./identifiers.ts";
@@ -575,27 +574,4 @@ export function walkAddresses({ space, layer }: { space: Space; layer: LayerName
   return output;
 }
 
-// One golden entry: closure, keys, reads — the unit of measurement. The
-// audit harness consumes it; the workbench itself reads the space
-// through the panels.
-export interface FullObservation {
-  closure: Address[];
-  keys: string[];
-  reads: Record<string, SerializableValue>;
-}
 
-export function fullObservation({
-  space,
-  address,
-}: {
-  space: Space;
-  address: Address;
-}): FullObservation {
-  const closure = space.closure({ layer: address[0], path: address[1] });
-  const keys = space.keys({ layer: address[0], path: address[1] });
-  const reads: Record<string, SerializableValue> = {};
-  for (const key of keys) {
-    reads[key] = normalizedValue(space.read({ layer: address[0], path: address[1], key }));
-  }
-  return { closure, keys, reads };
-}

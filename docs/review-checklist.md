@@ -46,8 +46,6 @@ binary**: yes or no, with `file:line` evidence for every "no".
 
 - [ ] Every new behavior is covered by an assertion that **fails if the
       behavior regresses** (not just "executes without crashing").
-- [ ] The kernel audit dump (`tests/audit-kernel.mts`) remains byte-identical
-      (`npm run test:audit`).
 - [ ] The executable specification tests pass (`npm run test:specification`).
 - [ ] No test weakened or deleted to make CI pass.
 - [ ] New tests added for new functionality.

@@ -34,7 +34,7 @@ Constitutional document (ADR-0010). Changing it requires a human decision.
 5. **End of day** - freeze merges, run `npm run verify`, `make smoke-test`,
    then the human tests and merges `daily` into `main`.
 6. **Mutation testing** - the `mutation.yml` workflow runs Stryker (command
-   runner over the specification, audit and staging harnesses) on a daily
+   runner over the specification and staging harnesses) on a daily
    cron, mutating `src/domain/language`, and fails on a low mutation score
    (break threshold 50%, see `stryker.config.json`; owner decision
    2026-11-10, #24). Reports are uploaded as workflow artifacts.

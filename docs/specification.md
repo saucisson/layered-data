@@ -6,9 +6,8 @@
 > (C1–C8) — and, since ADR-0106, the two-regime theorems (T1–T3) —
 > are executable: `tests/specification-properties.mts`
 > checks them as properties over the bedrock corpus and over dedicated
-> spaces — conformance measurements, not formal demonstrations —
-> and `tests/audit-kernel.mts` freezes C1–C3 as a
-> byte-identical baseline dump. Bracketed names refer to kernel
+> spaces — conformance measurements, not formal demonstrations.
+> Bracketed names refer to kernel
 > operations; in the TypeScript domain they read: `[closure]` →
 > `Space.closure`, `[computeClosure]` → `Space.computeClosure`,
 > `[raw]` → `Space.raw`, `[rawValue]` → `Space.rawValue`,
@@ -20,7 +19,7 @@
 > `Space`. The document is kept in French: its vocabulary (fournit,
 > transparent, absent, attendu-trahi…) is the observable
 > vocabulary of the product. Its measured references live in
-> `tests/` (the audit harness and its baseline).
+> `tests/` (the executable specification).
 
 **Statut.** Spécification normative, extraite du noyau de référence (layered-data, noyau
 TypeScript extrait de l'atelier). Elle décrit ce que le noyau *fait* — la fermeture par

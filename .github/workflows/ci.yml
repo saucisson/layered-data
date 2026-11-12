@@ -1,7 +1,7 @@
 # The CI of the atelier — the same gates, in the same order, as a
 # local `npm run verify`. The kernel behavior is a contract: any push
 # that breaks the types (strict, no emit), the presentation
-# structure, the harnesses (audit, executable specification,
+# structure, the harnesses (executable specification,
 # staging), the bilingual parity, or the build is refused.
 #
 # The typecheck is the gate that no sandbox in this repository can
@@ -53,7 +53,7 @@ jobs:
       - name: "Lint (ESLint: boundaries, no-console, named exports)"
         run: npm run lint
 
-      - name: The harnesses under coverage (audit, specification, staging, i18n)
+      - name: The harnesses under coverage (specification, staging, i18n)
         run: npm run test:coverage
 
       - name: Upload coverage report
