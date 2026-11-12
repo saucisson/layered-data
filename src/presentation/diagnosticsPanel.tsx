@@ -25,67 +25,59 @@ const DIAGNOSTIC_LABELS: Record<
   { label: BilingualText; tone: string; note: BilingualText }
 > = {
   "refines-inversés": {
-    label: { en: "inverted refines", fr: "refines inversés" },
+    label: { en: "inverted refines"},
     tone: "border-red-200 bg-red-50 text-red-700",
     note: {
       en: "the generic precedes the specific: structural error, before any behavior",
-      fr: "le générique précède le spécifique : erreur structurelle, avant tout comportement",
     },
   },
   "garde-de-cycle": {
-    label: { en: "cycle guard", fr: "garde de cycle" },
+    label: { en: "cycle guard"},
     tone: "border-red-200 bg-red-50 text-red-700",
     note: {
       en: "truncated closure: order-dependent read",
-      fr: "fermeture tronquée : lecture dépendante de l'ordre",
     },
   },
   "check-vacant": {
-    label: { en: "vacant check", fr: "check vacant" },
+    label: { en: "vacant check"},
     tone: "border-red-200 bg-red-50 text-red-700",
     note: {
       en: "bounds read, never verified (or unbound check slots)",
-      fr: "bornes lues, jamais vérifiées (ou slots de check non liés)",
     },
   },
   "étiquette-inconnue": {
-    label: { en: "unknown tag", fr: "étiquette inconnue" },
+    label: { en: "unknown tag"},
     tone: "border-amber-200 bg-amber-50 text-amber-700",
     note: {
       en: "a wanted check that does not exist is a vacant check",
-      fr: "un check voulu qui n'existe pas est un check vacant",
     },
   },
   "entrée-ignorée": {
-    label: { en: "ignored entry", fr: "entrée ignorée" },
+    label: { en: "ignored entry"},
     tone: "border-amber-200 bg-amber-50 text-amber-700",
     note: {
       en: "a wanted refinement can disappear without a trace: every silence is listed",
-      fr: "un raffinement voulu peut disparaître sans trace : chaque silence est listé",
     },
   },
   "ombre-émergente": {
-    label: { en: "emerging shadow", fr: "ombre émergente" },
+    label: { en: "emerging shadow"},
     tone: "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600",
     note: {
       en: "language — the diamond decides: nobody declared the shadow, the closure order decides — to inspect",
-      fr: "langage — le diamant tranche : personne n'a déclaré l'ombre, l'ordre de fermeture décide — à inspecter",
     },
   },
   ombre: {
-    label: { en: "shadow", fr: "ombre" },
+    label: { en: "shadow"},
     tone: "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600",
     note: {
       en: "inventory: first-wins decided; to inspect, not a fault",
-      fr: "inventaire : le premier-gagné a tranché ; à inspecter, pas une faute",
     },
   },
   "conflit-d'ordre": {
-    label: { en: "order conflict", fr: "conflit d'ordre" },
+    label: { en: "order conflict"},
     tone: "border-amber-200 bg-amber-50 text-amber-700",
     note: {
       en: "first-wins decided between incomparable sources: the refines order, a convention — to inspect, or to restructure (ADR-0106)",
-      fr: "le premier-gagné a tranché entre sources incomparables : l'ordre des refines, une convention — à inspecter, ou à restructurer (ADR-0106)",
     },
   },
 };
@@ -143,28 +135,18 @@ export function DiagnosticsPanel({
         onClick={() => setOpen(!open)}
       >
         <span>
-          {say({ language, en: "Diagnostics & validation", fr: "Diagnostics & validation" })}
+          {say({ language, en: "Diagnostics & validation"})}
           <span className="ml-1 font-normal text-slate-600">
             {verdicts.length}{" "}
             {say({
               language,
               en: verdicts.length > 1 ? "blocking verdicts" : "blocking verdict",
-              fr:
-                "verdict" +
-                (verdicts.length > 1 ? "s" : "") +
-                " bloquant" +
-                (verdicts.length > 1 ? "s" : ""),
             })}{" "}
             {"· "}
             {events.length}{" "}
             {say({
               language,
               en: events.length > 1 ? "logged silences" : "logged silence",
-              fr:
-                "silence" +
-                (events.length > 1 ? "s" : "") +
-                " consigné" +
-                (events.length > 1 ? "s" : ""),
             })}
           </span>
         </span>
@@ -177,7 +159,6 @@ export function DiagnosticsPanel({
             {say({
               language,
               en: "The kernel stays total — never an exception — but everything it ignores is logged: ignored entries, cycle guards, unknown tags, vacant checks, first-wins shadows, specificity inversions detected by the closure. The generic checks read no hard-coded name: their slots are bound by the layers (bindings). The kernel logs, it does not judge — the severity is yours.",
-              fr: "Le noyau reste total — jamais d'exception — mais tout ce qu'il ignore est consigné : entrées ignorées, gardes de cycle, étiquettes inconnues, checks vacants, ombres du premier-gagné, inversions de spécificité détectées par la fermeture. Les checks génériques ne lisent aucun nom en dur : leurs slots sont liés par les couches (bindings). Le noyau consigne, il ne juge pas — la sévérité est à vous.",
             })}
           </p>
           {events.length === 0 && (
@@ -185,7 +166,6 @@ export function DiagnosticsPanel({
               {say({
                 language,
                 en: "Space sweep: 0 logged silence — verified, nothing to list.",
-                fr: "Balayage de l'espace : 0 silence consigné — vérifié, rien à lister.",
               })}
             </p>
           )}
@@ -204,10 +184,10 @@ export function DiagnosticsPanel({
                           "rounded border px-1.5 py-0.5 text-[11px] font-semibold " + meta.tone
                         }
                       >
-                        {say({ language, en: meta.label.en, fr: meta.label.fr })}
+                        {say({ language, en: meta.label.en})}
                       </span>
                       <span className="text-[11px] text-slate-600">
-                        {say({ language, en: meta.note.en, fr: meta.note.fr })}
+                        {say({ language, en: meta.note.en})}
                       </span>
                       <span className="ml-auto font-mono text-[11px] text-slate-600">
                         {kindEvents.length}

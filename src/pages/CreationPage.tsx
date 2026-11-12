@@ -34,18 +34,15 @@ const KERNEL = assembleLayeredDataKernel({ layerSources: loadKernelLayerSources(
 
 /** Three example intentions — said, not executed: the visitor
  * copies one, or writes their own. */
-const EXAMPLE_INTENTIONS: { en: string; fr: string }[] = [
+const EXAMPLE_INTENTIONS: { en: string; fr?: string | undefined }[] = [
   {
     en: "a net whose arcs carry a charge",
-    fr: "un réseau dont les arcs portent une charge",
   },
   {
     en: "a graph whose vertices carry a color",
-    fr: "un graphe dont les sommets portent une couleur",
   },
   {
     en: "a directed graph without parallel arcs, bound to a check",
-    fr: "un graphe orienté sans arcs parallèles, lié à un check",
   },
 ];
 
@@ -70,12 +67,11 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
             {say({
               language,
               en: "Create a formalism — with the assistance of the geologist",
-              fr: "Créez un formalisme — avec l'assistance du géologue",
             })}
           </h1>
           <span className="flex shrink-0 items-center gap-1 text-xs">
             <span className="mr-1 text-slate-600">
-              {say({ language, en: "language: ", fr: "langue : " })}
+              {say({ language, en: "language: "})}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
               <button type="button"
@@ -98,19 +94,19 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
             onClick={() => navigate("landing")}
             className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
-            {say({ language, en: "← home", fr: "← accueil" })}
+            {say({ language, en: "← home"})}
           </button>
           <button type="button"
             onClick={() => navigate("hierarchy")}
             className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
-            {say({ language, en: "the hierarchy →", fr: "la hiérarchie →" })}
+            {say({ language, en: "the hierarchy →"})}
           </button>
           <button type="button"
             onClick={() => navigate("workshop")}
             className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
-            {say({ language, en: "the workshop →", fr: "l'atelier →" })}
+            {say({ language, en: "the workshop →"})}
           </button>
         </div>
       </header>
@@ -118,24 +114,22 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
       <main className="mx-auto max-w-4xl p-4 sm:p-6">
         <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-sm leading-6 text-slate-600">
           <h2 className="mb-2 text-base font-bold text-slate-800 dark:text-slate-100">
-            {say({ language, en: "The protocol", fr: "Le protocole" })}
+            {say({ language, en: "The protocol"})}
           </h2>
           <p>
             {say({
               language,
               en: "You say the intention; the geologist (the workshop's AI, grounded in the real state of the corpus and verified by the staging loop) proposes a draft in the language; you correct it freely; the staging judges corpus + supplement and demands 0 verdict; the accepted layer enters the living session. Without a server or a key, the deterministic simulated AI of the canvas answers instead — degraded, honestly labeled, never a silent failure.",
-              fr: "Vous dites l'intention ; le géologue (l'IA de l'atelier, ancrée dans l'état réel du corpus et vérifiée par la boucle de staging) propose un brouillon en langage ; vous le corrigez librement ; le staging juge corpus + supplément et exige 0 verdict ; la couche acceptée entre dans la session vivante. Sans serveur ni clé, l'IA simulée déterministe du canvas répond à sa place — dégradée, honnêtement étiquetée, jamais une panne silencieuse.",
             })}
           </p>
           <p className="mt-2 text-[11px] text-slate-600">
             {say({
               language,
               en: "Examples of intentions — copy one, or write your own: ",
-              fr: "Exemples d'intentions — copiez-en une, ou écrivez la vôtre : ",
             })}
             {EXAMPLE_INTENTIONS.map((example, index) => (
               <span key={index} className="font-mono text-slate-500">
-                {"« " + say({ language, en: example.en, fr: example.fr }) + " »"}
+                {"« " + say({ language, en: example.en}) + " »"}
                 {index < EXAMPLE_INTENTIONS.length - 1 ? " · " : ""}
               </span>
             ))}
@@ -166,7 +160,6 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
             {say({
               language,
               en: "The formalisms of this session",
-              fr: "Les formalismes de cette session",
             })}
           </h2>
           {createdLayerNames.length === 0 ? (
@@ -174,7 +167,6 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
               {say({
                 language,
                 en: "Nothing yet — an accepted draft appears here, and stays visible from the hierarchy and formalism pages for as long as the tab lives (the disk quarry, through the workshop, remains the durable path).",
-                fr: "Rien encore — un brouillon accepté apparaît ici, et reste visible depuis les pages hiérarchie et formalisme tant que l'onglet vit (la carrière disque, par l'atelier, reste le chemin durable).",
               })}
             </p>
           ) : (
@@ -191,7 +183,7 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
                     onClick={() => navigate("formalism", layerName)}
                     className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
                   >
-                    {say({ language, en: "understand it →", fr: "le comprendre →" })}
+                    {say({ language, en: "understand it →"})}
                   </button>
                   <button type="button"
                     onClick={() => navigate("hierarchy")}
@@ -200,7 +192,6 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
                     {say({
                       language,
                       en: "see it in the hierarchy →",
-                      fr: "le voir dans la hiérarchie →",
                     })}
                   </button>
                 </div>
@@ -211,20 +202,19 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
 
         <section className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-[11px] leading-5 text-slate-500">
           <h2 className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
-            {say({ language, en: "The gestures of the language", fr: "Les gestes du langage" })}
+            {say({ language, en: "The gestures of the language"})}
           </h2>
           <p>
             {say({
               language,
               en: '"layer <name>" opens a layer; "refines @<layer>" declares a parent, "then @<other>" chains them; blocks open by indentation (specification, the collections, tests); a member is written "<key> refines @<absolute-path>"; the acts are extend, override, abstract, bind, check, and a value "slot = <value>". The tutorial of the workshop explains the seven gestures, step by step.',
-              fr: "« layer <nom> » ouvre une couche ; « refines @<couche> » déclare un parent, « then @<autre> » les enchaîne ; les blocs s'ouvrent par indentation (specification, les collections, tests) ; un membre s'écrit « <clé> refines @<chemin-absolu> » ; les actes sont extend, override, abstract, bind, check, et une valeur « slot = <valeur> ». Le tutoriel de l'atelier explique les sept gestes, pas à pas.",
             })}
           </p>
           <button type="button"
             onClick={() => navigate("tutorial")}
             className="mt-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-[11px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
           >
-            {say({ language, en: "the tutorial →", fr: "le tutoriel →" })}
+            {say({ language, en: "the tutorial →"})}
           </button>
         </section>
       </main>

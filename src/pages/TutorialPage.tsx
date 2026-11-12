@@ -1,5 +1,5 @@
 // Tutorial page — the markdown-driven walkthrough. The prose lives
-// in two hand-editable files (tutorial.en.md, tutorial.fr.md), read
+// in a hand-editable file (tutorial.en.md), read
 // at build time and parsed by the measured dialect: headings,
 // paragraphs, lists, code fences — and the `ldflat:<layer>` fence,
 // which this page resolves at run time against the tutorial corpus
@@ -22,7 +22,6 @@ import { loadTutorialLayerSources } from "../infrastructure/corpusLoader.ts";
 import { asLayerName } from "../domain/identifiers.ts";
 import type { Language } from "../domain/messages.ts";
 import RAW_TUTORIAL_EN from "../presentation/tutorial.en.md?raw";
-import RAW_TUTORIAL_FR from "../presentation/tutorial.fr.md?raw";
 
 const TUTORIAL_KERNEL = assembleTutorialKernel({ layerSources: loadTutorialLayerSources() });
 
@@ -83,7 +82,7 @@ interface TutorialPageProps {
 
 export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) {
   const { navigate } = useRouter();
-  const source = language === "fr" ? RAW_TUTORIAL_FR : RAW_TUTORIAL_EN;
+  const source = RAW_TUTORIAL_EN;
   const blocks = useMemo(() => parseTutorialMarkdown({ source }), [source]);
 
   const renderBlock = (block: TutorialBlock, index: number): React.ReactNode => {
@@ -150,15 +149,15 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
               onClick={() => navigate("landing")}
               className="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-1 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-900"
             >
-              {say({ language, en: "← Back", fr: "← Retour" })}
+              {say({ language, en: "← Back"})}
             </button>
             <h1 className="text-lg font-bold">
-              {say({ language, en: "Tutorial", fr: "Tutoriel" })}
+              {say({ language, en: "Tutorial"})}
             </h1>
           </div>
           <span className="flex shrink-0 items-center gap-1 text-xs">
             <span className="mr-1 text-slate-600">
-              {say({ language, en: "language: ", fr: "langue : " })}
+              {say({ language, en: "language: "})}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
               <button type="button"
@@ -183,13 +182,12 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
 
         <section className="mt-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6">
           <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-            {say({ language, en: "Glossary", fr: "Glossaire" })}
+            {say({ language, en: "Glossary"})}
           </h2>
           <p className="mt-1 text-xs leading-5 text-slate-500">
             {say({
               language,
               en: "every notion this page cites — hover a term for its one-line definition.",
-              fr: "chaque notion citée dans cette page — survolez un terme pour sa définition en une ligne.",
             })}
           </p>
           <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
@@ -204,19 +202,19 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
             onClick={() => navigate("landing")}
             className="rounded-lg border-2 border-slate-300 dark:border-slate-600 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:bg-slate-900 transition-colors"
           >
-            {say({ language, en: "← Landing", fr: "← Accueil" })}
+            {say({ language, en: "← Landing"})}
           </button>
           <button type="button"
             onClick={() => navigate("filiation")}
             className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:bg-slate-900 transition-colors"
           >
-            {say({ language, en: "Filiation & comparison →", fr: "Filiation & comparaison →" })}
+            {say({ language, en: "Filiation & comparison →"})}
           </button>
           <button type="button"
             onClick={() => navigate("workshop")}
             className="rounded-lg bg-sky-600 px-6 py-3 text-white font-semibold hover:bg-sky-500 transition-colors"
           >
-            {say({ language, en: "Workshop →", fr: "Atelier →" })}
+            {say({ language, en: "Workshop →"})}
           </button>
         </div>
       </main>

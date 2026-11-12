@@ -75,23 +75,21 @@ export function LayerContractTests({
         onClick={() => setOpen(!open)}
       >
         <span>
-          {say({ language, en: "Tests", fr: "Tests" })}
+          {say({ language, en: "Tests"})}
           <span className="ml-1 font-normal text-slate-600">
             {expectations.length}{" "}
             {say({
               language,
               en: expectations.length > 1 ? "expectations" : "expectation",
-              fr: "attendu" + (expectations.length > 1 ? "s" : ""),
             })}
             {" · "}
             {betrayed === 0
-              ? say({ language, en: "all met", fr: "tous conformes" })
+              ? say({ language, en: "all met"})
               : String(betrayed) +
                 " " +
                 say({
                   language,
                   en: "betrayed",
-                  fr: "trahi" + (betrayed > 1 ? "s" : ""),
                 })}
           </span>
         </span>
@@ -107,17 +105,17 @@ export function LayerContractTests({
               <span className="text-slate-700 dark:text-slate-200">{row.expectation.address}</span>
               <span className="text-slate-600">
                 {" " +
-                  say({ language, en: "— expected ", fr: "— attendu " }) +
+                  say({ language, en: "— expected "}) +
                   formatExpectation(row.expectation.expectation)}
               </span>
               {!row.matching && (
                 <span className="text-red-600">
-                  {", " + say({ language, en: "read ", fr: "lu " }) + formatExpectation(row.read)}
+                  {", " + say({ language, en: "read "}) + formatExpectation(row.read)}
                 </span>
               )}
               {row.provenance !== null && (
                 <span className="text-slate-600">
-                  {" (" + say({ language, en: "by ", fr: "par " }) + row.provenance + ")"}
+                  {" (" + say({ language, en: "by "}) + row.provenance + ")"}
                 </span>
               )}
             </div>
@@ -126,7 +124,6 @@ export function LayerContractTests({
             {say({
               language,
               en: "the contract lives in the layer (special key « tests ») — it travels with it, file, disk, staging; the validation replays it at every assembly, a betrayed read is a verdict",
-              fr: "le contrat vit dans la couche (clé spéciale « tests ») — il voyage avec elle, fichier, disque, staging ; la validation le rejoue à chaque assemblage, une lecture trahie est un verdict",
             })}
           </p>
         </div>

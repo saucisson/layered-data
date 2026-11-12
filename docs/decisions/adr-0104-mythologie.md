@@ -1,6 +1,6 @@
 # ADR-0104: The vocabulary's treaty — three strata, one story
 
-- Status: accepted
+- Status: superseded (by ADR-0113, 2026-11-12 — the treaty-vocabulary part: bilingual content becomes English-first with optional French; the body below is history, untouched)
 - Date: 2026-11-05
 
 ## Context

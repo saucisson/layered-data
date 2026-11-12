@@ -155,7 +155,7 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
                 return next;
               });
             }}
-            aria-label={say({ language, en: "fold / unfold", fr: "replier / déplier" })}
+            aria-label={say({ language, en: "fold / unfold"})}
             className="mr-1 w-4 shrink-0 text-left font-bold text-slate-600 hover:text-slate-700 dark:text-slate-200"
           >
             {isFolded ? "▸" : "▾"}
@@ -172,7 +172,7 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
               {"+ " +
                 (countFlattenedSectionLines({ section }) - section.line.split("\n").length) +
                 " " +
-                say({ language, en: "lines", fr: "lignes" })}
+                say({ language, en: "lines"})}
             </span>
           )}
         </span>
@@ -192,7 +192,7 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
           onClick={() => setFolded(new Set())}
           className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
         >
-          {say({ language, en: "unfold all", fr: "tout déplier" })}
+          {say({ language, en: "unfold all"})}
         </button>
         <button type="button"
           onClick={() =>
@@ -200,7 +200,7 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
           }
           className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
         >
-          {say({ language, en: "fold all", fr: "tout replier" })}
+          {say({ language, en: "fold all"})}
         </button>
       </div>
       {text.headerLines.map((line, index) => (
@@ -263,7 +263,7 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
       })}
       {selectedGlyph === null && look.vertices.length === 0 && (
         <text x={135} y={110} textAnchor="middle" fontSize={9} fill="#94a3b8">
-          {say({ language, en: "nothing to draw", fr: "rien à dessiner" })}
+          {say({ language, en: "nothing to draw"})}
         </text>
       )}
     </svg>
@@ -301,7 +301,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
 
   // The identity of the layer: its role sentence, its parents, its
   // closure towards the bases.
-  const role = LAYER_ROLE[selectedLayer] ?? { en: selectedLayer, fr: selectedLayer };
+  const role = LAYER_ROLE[selectedLayer] ?? { en: selectedLayer};
   const parentNames = dag.targetsOf(selectedLayer);
   const closureNames = [...dag.ancestorsOf(selectedLayer)].filter(
     (layerName) => layerName !== selectedLayer,
@@ -336,12 +336,11 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
             {say({
               language,
               en: "The formalism — understand one layer",
-              fr: "Le formalisme — comprendre une couche",
             })}
           </h1>
           <span className="flex shrink-0 items-center gap-1 text-xs">
             <span className="mr-1 text-slate-600">
-              {say({ language, en: "language: ", fr: "langue : " })}
+              {say({ language, en: "language: "})}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
               <button type="button"
@@ -364,25 +363,25 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
             onClick={() => navigate("landing")}
             className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
-            {say({ language, en: "← home", fr: "← accueil" })}
+            {say({ language, en: "← home"})}
           </button>
           <button type="button"
             onClick={() => navigate("hierarchy")}
             className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
-            {say({ language, en: "the hierarchy →", fr: "la hiérarchie →" })}
+            {say({ language, en: "the hierarchy →"})}
           </button>
           <button type="button"
             onClick={() => navigate("creation")}
             className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
-            {say({ language, en: "create a formalism →", fr: "créer un formalisme →" })}
+            {say({ language, en: "create a formalism →"})}
           </button>
           <button type="button"
             onClick={() => navigate("workshop")}
             className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
-            {say({ language, en: "the workshop →", fr: "l'atelier →" })}
+            {say({ language, en: "the workshop →"})}
           </button>
         </div>
       </header>
@@ -393,12 +392,12 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
         <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-              {say({ language, en: "One layer", fr: "Une couche" })}
+              {say({ language, en: "One layer"})}
             </h2>
             <input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder={say({ language, en: "search a layer…", fr: "rechercher une couche…" })}
+              placeholder={say({ language, en: "search a layer…"})}
               className="min-w-40 flex-1 rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
             />
             <span className="text-[10px] text-slate-600">
@@ -406,7 +405,6 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
               {say({
                 language,
                 en: livingLayerNames.length > 1 ? "living layers" : "living layer",
-                fr: livingLayerNames.length > 1 ? "couches vivantes" : "couche vivante",
               })}
             </span>
           </div>
@@ -439,7 +437,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
             <span className="text-lg font-bold font-mono">{selectedLayer}</span>
             {!inCorpus && (
               <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
-                {say({ language, en: "created in this session", fr: "créée dans cette session" })}
+                {say({ language, en: "created in this session"})}
               </span>
             )}
           </div>
@@ -449,7 +447,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
           <div className="mt-2 space-y-1 text-[11px]">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="font-semibold text-slate-500">
-                {say({ language, en: "refines:", fr: "rafine :" })}
+                {say({ language, en: "refines:"})}
               </span>
               {parentNames.length === 0 ? (
                 <span className="font-mono text-slate-600">∅</span>
@@ -476,7 +474,6 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                 {say({
                   language,
                   en: "closure (" + closureNames.length + "):",
-                  fr: "fermeture (" + closureNames.length + ") :",
                 })}
               </span>
               {closureNames.map((closureName) => (
@@ -505,14 +502,12 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
               {say({
                 language,
                 en: "① The DSL of the formalism — as written",
-                fr: "① Le DSL du formalisme — tel qu'écrit",
               })}
             </h2>
             <p className="mb-2 text-[10px] leading-4 text-slate-600">
               {say({
                 language,
                 en: "The .ld source of the layer: the acts that write it, its declared refinements, its blocks. What shines in violet is an act, in green an @path, in amber a string.",
-                fr: "La source .ld de la couche : les actes qui l'écrivent, ses raffinements déclarés, ses blocs. Ce qui brille en violet est un acte, en vert un @chemin, en ambre une chaîne.",
               })}
             </p>
             {sourceBlock === null ? (
@@ -520,7 +515,6 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                 {say({
                   language,
                   en: "layer unknown to the geologist",
-                  fr: "couche inconnue du géologue",
                 })}
               </p>
             ) : (
@@ -532,14 +526,12 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
               {say({
                 language,
                 en: "② The DSL of the complete flattened formalism",
-                fr: "② Le DSL du formalisme complet aplati",
               })}
             </h2>
             <p className="mb-2 text-[10px] leading-4 text-slate-600">
               {say({
                 language,
                 en: "The whole closure, resolved in place — first-wins decides: every key carries its effective value and, as a comment, the layer that provides it (or declares the slot nobody provides — abstract). refines is absent: the hierarchy is what the flattening removes. Each indented part folds: one click hides it, one click opens it.",
-                fr: "Toute la fermeture, résolue en place — la première définition l'emporte : chaque clé porte sa valeur effective et, en commentaire, la couche qui la fournit (ou déclare le slot que personne ne fournit — abstract). refines est absent : la hiérarchie est ce que l'aplatissement retire. Chaque partie indentée se replie : un clic la cache, un clic l'ouvre.",
               })}
             </p>
             <FlattenedText text={flattenedText} language={language} />
@@ -550,13 +542,12 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
             what it draws, what it degrades honestly. */}
         <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
           <h2 className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
-            {say({ language, en: "③ The lenses", fr: "③ Les lentilles" })}
+            {say({ language, en: "③ The lenses"})}
           </h2>
           <p className="mb-2 text-[10px] leading-4 text-slate-600">
             {say({
               language,
               en: "A lens is a display layer that refines the formalism and draws everything descending from it — it displays only what it knows, the unknown types fall back to the generic circle, without an error. Choose a lens: the drawing shows the formalism seen through it.",
-              fr: "Une lentille est une couche d'affichage qui raffine le formalisme et dessine tout ce qui en descend — elle n'affiche que ce qu'elle sait, les types inconnus retombent au cercle générique, sans erreur. Choisissez une lentille : le dessin montre le formalisme vu par elle.",
             })}
           </p>
           <div className="mb-2 flex flex-wrap gap-1.5">
@@ -580,7 +571,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                 {lens}
                 {" — "}
                 {look.applicability.total === -1
-                  ? say({ language, en: "no vertices", fr: "sans sommets" })
+                  ? say({ language, en: "no vertices"})
                   : look.applicability.dressed + "/" + look.applicability.total}
               </button>
             ))}
@@ -596,7 +587,7 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                     language,
                     text:
                       VIEW_NOTES[selectedLookEntry.lens] ??
-                      ({ en: selectedLookEntry.lens, fr: selectedLookEntry.lens } as BilingualText),
+                      ({ en: selectedLookEntry.lens} as BilingualText),
                   })}
                 </p>
                 <p className="text-slate-500">
@@ -604,13 +595,11 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                     ? say({
                         language,
                         en: "This layer carries no vertices collection — the lens has nothing to dress here, the reading stays honest.",
-                        fr: "Cette couche ne porte pas de collection vertices — la lentille n'a rien à habiller ici, la lecture reste honnête.",
                       })
                     : selectedLookEntry.look.applicability.dressed === 0
                       ? say({
                           language,
                           en: "The lens knows none of the types of this layer: everything falls back to the dashed generic circle — a legal degradation, not an error.",
-                          fr: "La lentille ne connaît aucun des types de cette couche : tout retombe au cercle générique en pointillés — dégradation légale, pas une erreur.",
                         })
                       : say({
                           language,
@@ -620,12 +609,6 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
                             " of the " +
                             selectedLookEntry.look.applicability.total +
                             " vertices; the undressed ones fall back to the generic circle.",
-                          fr:
-                            "La lentille habille " +
-                            selectedLookEntry.look.applicability.dressed +
-                            " sommets sur " +
-                            selectedLookEntry.look.applicability.total +
-                            " ; les non habillés retombent au cercle générique.",
                         })}
                 </p>
               </div>

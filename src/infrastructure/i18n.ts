@@ -1,14 +1,14 @@
 // i18next initialization: loads the translation catalogs extracted by
 // i18next-parser (public/locales/<locale>/translation.json). English is
-// the default; the browser language or the stored workshop language
-// picks French when available.
+// the only catalog for now (ADR-0113); i18next falls back to English
+// for any other language, so a French catalog can return as pure
+// content without any code change.
 import i18next from "i18next";
 
-import enTranslation from "../../public/locales/en/translation.json";
-import frTranslation from "../../public/locales/fr/translation.json";
+import enTranslation from "../../public/locales/en/translation.json" with { type: "json" };
 import { DEFAULT_LANGUAGE, type Language } from "../domain/messages.ts";
 
-export const SUPPORTED_LANGUAGES: readonly Language[] = ["en", "fr"];
+export const SUPPORTED_LANGUAGES: readonly Language[] = ["en"];
 
 let initialized = false;
 
@@ -23,7 +23,6 @@ export function initI18n({ language = DEFAULT_LANGUAGE }: { language?: Language 
     fallbackLng: DEFAULT_LANGUAGE,
     resources: {
       en: { translation: enTranslation },
-      fr: { translation: frTranslation },
     },
     interpolation: { escapeValue: false },
     returnEmptyString: false,

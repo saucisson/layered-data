@@ -189,7 +189,6 @@ export function LayerSourceView({
         {say({
           language,
           en: "The grammar as it writes itself. « refines @a then @b »: the parents in their consultation order — the first wins, the closure follows the list; « abstract key » declares an unbound slot; « bind slot -&gt; name » binds a check slot to the concrete key name — on the left the checks' stable API, on the right the layer's vocabulary. What shines in violet is an act, in green an @path, in amber a string.",
-          fr: "La grammaire telle qu'elle s'écrit. « refines @a then @b » : les parents dans leur ordre de consultation — le premier gagne, la fermeture suit la liste ; « abstract clé » déclare un slot non tranché ; « bind slot -&gt; nom » lie un slot de check au nom de clé concret — à gauche l'API stable des checks, à droite le vocabulaire de la couche. Ce qui brille en violet est un acte, en vert un @chemin, en ambre une chaîne.",
         })}
       </p>
       <div className="max-h-80 overflow-auto rounded-md border border-slate-100 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4">
@@ -198,7 +197,6 @@ export function LayerSourceView({
             {say({
               language,
               en: "layer unknown to the geologist",
-              fr: "couche inconnue du géologue",
             })}
           </div>
         ) : (
@@ -227,13 +225,6 @@ export function LayerSourceView({
                           (lineTarget.path.length ? lineTarget.path.join("/") : "()") +
                           (lineTarget.key !== null ? " :: " + lineTarget.key : "") +
                           " : the cascade opens there",
-                        fr:
-                          "ouvrir ce que cette ligne écrit — adresse " +
-                          lineTarget.layer +
-                          "/" +
-                          (lineTarget.path.length ? lineTarget.path.join("/") : "()") +
-                          (lineTarget.key !== null ? " :: " + lineTarget.key : "") +
-                          " : la cascade s'y ouvre",
                       })
                     : undefined
                 }

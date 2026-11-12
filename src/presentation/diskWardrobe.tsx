@@ -65,7 +65,6 @@ export function DiskWardrobe({
           say({
             language,
             en: "access code required — the quarry is closed",
-            fr: "code d'accès requis — la carrière est fermée",
           }),
         );
       } else {
@@ -74,7 +73,6 @@ export function DiskWardrobe({
           say({
             language,
             en: "response " + response.status + " from the proxy",
-            fr: "réponse " + response.status + " du proxy",
           }),
         );
       }
@@ -84,7 +82,6 @@ export function DiskWardrobe({
         say({
           language,
           en: "without proxy — the quarry is empty, the workshop lives alone",
-          fr: "sans proxy — la carrière est vide, l'atelier vit seul",
         }),
       );
     }
@@ -110,14 +107,13 @@ export function DiskWardrobe({
           say({
             language,
             en: "impossible to read — response " + response.status + " from the proxy",
-            fr: "lecture impossible — réponse " + response.status + " du proxy",
           }),
         );
       }
     } catch {
       setSource("");
       setMessage(
-        say({ language, en: "without proxy — nothing to read", fr: "sans proxy — rien à lire" }),
+        say({ language, en: "without proxy — nothing to read"}),
       );
     }
   }
@@ -166,7 +162,6 @@ export function DiskWardrobe({
           say({
             language,
             en: "« " + name + " » laid on the disk — visible to the other visitors",
-            fr: "« " + name + " » posé sur le disque — visible des autres visiteurs",
           }),
         );
         void refresh();
@@ -175,7 +170,6 @@ export function DiskWardrobe({
           say({
             language,
             en: "access code required — the disk is protected",
-            fr: "code d'accès requis — le disque est protégé",
           }),
         );
       } else if (response.status === 403) {
@@ -183,7 +177,6 @@ export function DiskWardrobe({
           say({
             language,
             en: "« " + name + " » belongs to the bedrock — read-only",
-            fr: "« " + name + " » appartient au socle — lecture seule",
           }),
         );
       } else {
@@ -191,7 +184,6 @@ export function DiskWardrobe({
           say({
             language,
             en: "response " + response.status + " from the proxy",
-            fr: "réponse " + response.status + " du proxy",
           }),
         );
       }
@@ -200,7 +192,6 @@ export function DiskWardrobe({
         say({
           language,
           en: "without proxy — nothing gets laid",
-          fr: "sans proxy — rien ne se pose",
         }),
       );
     }
@@ -211,10 +202,10 @@ export function DiskWardrobe({
     <div className="rounded-lg border border-sky-200 bg-sky-50/40 p-3">
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
         <span className="rounded bg-sky-700 px-1.5 py-0.5 text-[11px] font-bold text-white">
-          {say({ language, en: "disk", fr: "disque" })}
+          {say({ language, en: "disk"})}
         </span>
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-          {say({ language, en: "the quarry of formalisms", fr: "la carrière des formalismes" })}
+          {say({ language, en: "the quarry of formalisms"})}
         </span>
         <button type="button"
           onClick={() => {
@@ -222,13 +213,12 @@ export function DiskWardrobe({
           }}
           className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 text-[10px] text-slate-600 hover:border-sky-500 hover:text-sky-700"
         >
-          {say({ language, en: "refresh", fr: "rafraîchir" })}
+          {say({ language, en: "refresh"})}
         </button>
         <span className="text-[11px] leading-4 text-slate-500">
           {say({
             language,
             en: "one file per formalism, in the language format — the bedrock read-only, the visitors' layers visible to all; every entry passes through the staging, the disk never bypasses the contract",
-            fr: "un fichier par formalisme, au format langage — le socle en lecture seule, les couches des visiteurs visibles de tous ; toute entrée passe par le staging, le disque ne contourne jamais le contrat",
           })}
         </span>
       </div>
@@ -244,7 +234,6 @@ export function DiskWardrobe({
           {say({
             language,
             en: "the quarry is empty or closed — without proxy, the workshop lives alone",
-            fr: "la carrière est vide ou fermée — sans proxy, l'atelier vit seul",
           })}
         </p>
       )}
@@ -283,12 +272,10 @@ export function DiskWardrobe({
                     ? say({
                         language,
                         en: "bedrock — read-only on the disk",
-                        fr: "socle — en lecture seule sur le disque",
                       })
                     : say({
                         language,
                         en: "a visitor's layer — on the disk",
-                        fr: "couche d'un visiteur — sur le disque",
                       })
                 }
               >
@@ -317,14 +304,12 @@ export function DiskWardrobe({
               {say({
                 language,
                 en: "staging — load into the workshop",
-                fr: "staging — charger dans l'atelier",
               })}
             </button>
             <span className="text-[10px] leading-4 text-slate-600">
               {say({
                 language,
                 en: "the layer is corrected here like any other — the staging revalidates corpus + supplements + candidate, 0 verdict demanded",
-                fr: "la couche se corrige ici comme toute autre — le staging revalide corpus + suppléments + candidat, 0 verdict exigé",
               })}
             </span>
           </div>
@@ -336,7 +321,6 @@ export function DiskWardrobe({
             {say({
               language,
               en: "the local layers, not yet on the disk:",
-              fr: "les couches locales, pas encore sur le disque :",
             })}
           </p>
           <div className="flex flex-wrap gap-1">
@@ -352,7 +336,6 @@ export function DiskWardrobe({
                   title={say({
                     language,
                     en: "lay this formalism on the disk — visible to the other visitors",
-                    fr: "poser ce formalisme sur le disque — visible des autres visiteurs",
                   })}
                 >
                   {name} ⤓
@@ -370,7 +353,6 @@ export function DiskWardrobe({
                 {say({
                   language,
                   en: "staging — the syntax refuses the candidate:",
-                  fr: "staging — la syntaxe refuse le candidat :",
                 })}
               </div>
               {loadResult.errors.map((error, index) => (
@@ -389,10 +371,6 @@ export function DiskWardrobe({
                     "staging — " +
                     loadResult.verdicts.length +
                     " verdict(s), the entry is refused:",
-                  fr:
-                    "staging — " +
-                    loadResult.verdicts.length +
-                    " verdict(s), l'entrée est refusée :",
                 })}
               </div>
               {loadResult.verdicts.map((verdict, index) => (
@@ -412,11 +390,6 @@ export function DiskWardrobe({
                   loadResult.newLayerNames.length +
                   " layer(s) loaded from the disk: " +
                   loadResult.newLayerNames.join(", "),
-                fr:
-                  "staging : 0 verdict — " +
-                  loadResult.newLayerNames.length +
-                  " couche(s) chargée(s) du disque : " +
-                  loadResult.newLayerNames.join(", "),
               })}
             </div>
           )}
@@ -425,7 +398,6 @@ export function DiskWardrobe({
               {say({
                 language,
                 en: "staging: 0 verdict — but these layers are already in the space: nothing to add.",
-                fr: "staging : 0 verdict — mais ces couches sont déjà dans l'espace : rien à ajouter.",
               })}
             </div>
           )}

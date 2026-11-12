@@ -9,7 +9,7 @@
 import LdLexer from "./scripts/ld-lexer.mjs";
 
 export default {
-  locales: ["en", "fr"],
+  locales: ["en"],
   defaultNamespace: "translation",
   output: "public/locales/$LOCALE/$NAMESPACE.json",
   input: ["src/**/*.ts", "src/**/*.tsx", "formalisms/**/*.ld"],

@@ -112,12 +112,11 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
             {say({
               language,
               en: "The hierarchy — the complete refinement graph",
-              fr: "La hiérarchie — le graphe de raffinement complet",
             })}
           </h1>
           <span className="flex shrink-0 items-center gap-1 text-xs">
             <span className="mr-1 text-slate-600">
-              {say({ language, en: "language: ", fr: "langue : " })}
+              {say({ language, en: "language: "})}
             </span>
             {(["en", "fr"] as Language[]).map((choice) => (
               <button type="button"
@@ -140,19 +139,19 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
             onClick={() => navigate("landing")}
             className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
-            {say({ language, en: "← home", fr: "← accueil" })}
+            {say({ language, en: "← home"})}
           </button>
           <button type="button"
             onClick={() => navigate("creation")}
             className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
-            {say({ language, en: "create a formalism →", fr: "créer un formalisme →" })}
+            {say({ language, en: "create a formalism →"})}
           </button>
           <button type="button"
             onClick={() => navigate("workshop")}
             className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
           >
-            {say({ language, en: "the workshop →", fr: "l'atelier →" })}
+            {say({ language, en: "the workshop →"})}
           </button>
         </div>
       </header>
@@ -162,7 +161,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder={say({ language, en: "search a layer…", fr: "rechercher une couche…" })}
+            placeholder={say({ language, en: "search a layer…"})}
             className="min-w-52 flex-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none"
           />
           <span className="flex items-center gap-1 text-xs">
@@ -170,7 +169,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
               onClick={() => setScale(Math.max(MINIMUM_SCALE, scale - SCALE_STEP))}
               disabled={scale <= MINIMUM_SCALE}
               className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 font-semibold text-slate-600 hover:border-slate-600 disabled:opacity-40"
-              aria-label={say({ language, en: "zoom out", fr: "zoom arrière" })}
+              aria-label={say({ language, en: "zoom out"})}
             >
               −
             </button>
@@ -179,7 +178,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
               onClick={() => setScale(Math.min(MAXIMUM_SCALE, scale + SCALE_STEP))}
               disabled={scale >= MAXIMUM_SCALE}
               className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 font-semibold text-slate-600 hover:border-slate-600 disabled:opacity-40"
-              aria-label={say({ language, en: "zoom in", fr: "zoom avant" })}
+              aria-label={say({ language, en: "zoom in"})}
             >
               ＋
             </button>
@@ -187,7 +186,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
               onClick={() => setScale(1)}
               className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-[11px] text-slate-600 hover:border-slate-600"
             >
-              {say({ language, en: "reset", fr: "réinitialiser" })}
+              {say({ language, en: "reset"})}
             </button>
           </span>
           <span className="text-[11px] text-slate-600">
@@ -195,18 +194,16 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
             {say({
               language,
               en: layerNames.length > 1 ? "layers" : "layer",
-              fr: layerNames.length > 1 ? "couches" : "couche",
             })}
             {" · "}
             {refinementCount + " "}
             {say({
               language,
               en: refinementCount > 1 ? "refinements" : "refinement",
-              fr: refinementCount > 1 ? "raffinements" : "raffinement",
             })}
             {" · "}
             {layout.rows.length + " "}
-            {say({ language, en: "generations", fr: "générations" })}
+            {say({ language, en: "generations"})}
           </span>
         </div>
 
@@ -272,7 +269,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                     }}
                     title={localized({
                       language,
-                      text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName },
+                      text: LAYER_ROLE[layerName] ?? { en: layerName},
                     })}
                     className={
                       "flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[9px] leading-4 transition-opacity " +
@@ -311,13 +308,12 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
             corpus in one glance. */}
         <section className="mt-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
           <h2 className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
-            {say({ language, en: "The viewpoints", fr: "Les points de vue" })}
+            {say({ language, en: "The viewpoints"})}
           </h2>
           <p className="mb-2 text-[10px] leading-4 text-slate-600">
             {say({
               language,
               en: "A viewpoint is a layer that chooses a model and a lens: the data does not move, the reading changes. Click one: the formalism page opens on it.",
-              fr: "Un point de vue est une couche qui choisit un modèle et une lentille : la donnée ne bouge pas, la lecture change. Cliquez-le : la page du formalisme s'ouvre sur lui.",
             })}
           </p>
           <div className="grid gap-2 md:grid-cols-2">
@@ -348,7 +344,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                     {modelLayer !== null && (
                       <>
                         <span className="text-slate-600">
-                          {say({ language, en: "model: ", fr: "modèle : " })}
+                          {say({ language, en: "model: "})}
                         </span>
                         <button type="button"
                           onClick={() => navigate("formalism", modelLayer)}
@@ -361,7 +357,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                     {displayLayer !== null && (
                       <>
                         <span className="text-slate-600">
-                          {say({ language, en: "lens: ", fr: "lentille : " })}
+                          {say({ language, en: "lens: "})}
                         </span>
                         <button type="button"
                           onClick={() => navigate("formalism", displayLayer)}
@@ -375,7 +371,7 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
                   <p className="mt-1 text-slate-600">
                     {localized({
                       language,
-                      text: VIEW_NOTES[view] ?? ({ en: view, fr: view } as BilingualText),
+                      text: VIEW_NOTES[view] ?? ({ en: view} as BilingualText),
                     })}
                   </p>
                 </div>
@@ -388,18 +384,16 @@ export function HierarchyPage({ language, onChooseLanguage }: HierarchyPageProps
           {focus !== null
             ? localized({
                 language,
-                text: LAYER_ROLE[focus] ?? { en: focus, fr: focus },
+                text: LAYER_ROLE[focus] ?? { en: focus},
               })
             : say({
                 language,
                 en: "Hover a layer: its closure (upward) and its descendants (downward) come to the front; click it: the formalism page opens on it.",
-                fr: "Survolez une couche : sa fermeture (vers le haut) et ses descendants (vers le bas) passent au premier plan ; cliquez-la : la page du formalisme s'ouvre sur elle.",
               })}
           {" — "}
           {say({
             language,
             en: "the bands are the generations (the rank is the longest path towards a base); one curve is one refinement; the search fades the non-matching layers.",
-            fr: "les bandes sont les générations (le rang est le plus long chemin vers une base) ; une courbe est un raffinement ; la recherche efface les couches non correspondantes.",
           })}
         </p>
       </main>

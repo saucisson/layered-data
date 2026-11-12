@@ -64,7 +64,6 @@ export function AddFormalismComposer({
     let origin = say({
       language,
       en: "simulated AI — degraded stream of the canvas (no network, no key)",
-      fr: "IA simulée — flux dégradé du canvas (sans réseau ni clé)",
     });
     let text = simulatedAssistantProposal({ intention, language });
     try {
@@ -82,7 +81,6 @@ export function AddFormalismComposer({
           origin = say({
             language,
             en: "api.mistral.ai — via the local project's proxy",
-            fr: "api.mistral.ai — via le proxy du projet local",
           });
           text = proposedText;
         }
@@ -90,7 +88,6 @@ export function AddFormalismComposer({
         origin = say({
           language,
           en: "protected proxy — access code required; simulated AI of the canvas",
-          fr: "proxy protégé — code d'accès requis ; IA simulée du canvas",
         });
       } else {
         // An upstream refusal speaks — refused key, unknown model,
@@ -98,11 +95,11 @@ export function AddFormalismComposer({
         // surfaces in the origin line.
         const detail = (await response.text()).trim();
         origin =
-          say({ language, en: "the proxy answered ", fr: "proxy a répondu " }) +
+          say({ language, en: "the proxy answered "}) +
           response.status +
           " : " +
           detail.slice(0, 180) +
-          say({ language, en: " ; simulated AI of the canvas", fr: " ; IA simulée du canvas" });
+          say({ language, en: " ; simulated AI of the canvas"});
       }
     } catch {
       // simulated AI: the proposal is best-effort
@@ -162,13 +159,12 @@ export function AddFormalismComposer({
           ＋
         </span>
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-          {say({ language, en: "one more formalism", fr: "un formalisme de plus" })}
+          {say({ language, en: "one more formalism"})}
         </span>
         <span className="text-[11px] leading-4 text-slate-500">
           {say({
             language,
             en: "the intention is said, the layer is written by hand or generated, the staging revalidates corpus + supplements and demands 0 assembly verdict — then the space extends, the corpus ranks stay frozen",
-            fr: "l'intention se dit, la couche s'écrit à la main ou se génère, le staging revalide corpus + suppléments et exige 0 verdict d'assemblage — puis l'espace s'étend, les rangs du corpus restent gelés",
           })}
         </span>
       </div>
@@ -179,7 +175,6 @@ export function AddFormalismComposer({
           placeholder={say({
             language,
             en: "intention — « a net whose arcs carry a charge »",
-            fr: "intention — « un réseau dont les arcs portent une charge »",
           })}
           className="min-w-40 flex-1 rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
         />
@@ -190,12 +185,12 @@ export function AddFormalismComposer({
           disabled={busy}
           className="rounded bg-slate-800 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
         >
-          {busy ? "…" : say({ language, en: "ask the AI", fr: "demander à l'IA" })}
+          {busy ? "…" : say({ language, en: "ask the AI"})}
         </button>
       </div>
       {proposalOrigin !== null && (
         <p className="mb-1 text-[10px] text-slate-500">
-          {say({ language, en: "draft proposed by: ", fr: "brouillon proposé par : " })}
+          {say({ language, en: "draft proposed by: "})}
           {proposalOrigin}
         </p>
       )}
@@ -219,15 +214,13 @@ export function AddFormalismComposer({
             ? say({
                 language,
                 en: "staging — " + stagingProgress.done + "/" + stagingProgress.total + " judged…",
-                fr: "staging — " + stagingProgress.done + "/" + stagingProgress.total + " jugées…",
               })
-            : say({ language, en: "staging — validate & add", fr: "staging — valider & ajouter" })}
+            : say({ language, en: "staging — validate & add"})}
         </button>
         <span className="text-[10px] leading-4 text-slate-600">
           {say({
             language,
             en: "the least assembly verdict, anywhere, refuses the entry — the supplement never circumvents the contract",
-            fr: "le moindre verdict d'assemblage, où qu'il soit, refuse l'entrée — le supplément ne contourne jamais le contrat",
           })}
         </span>
       </div>
@@ -239,7 +232,6 @@ export function AddFormalismComposer({
                 {say({
                   language,
                   en: "staging — the syntax refuses the candidate:",
-                  fr: "staging — la syntaxe refuse le candidat :",
                 })}
               </div>
               {composerResult.errors.map((error, index) => (
@@ -258,10 +250,6 @@ export function AddFormalismComposer({
                     "staging — " +
                     composerResult.verdicts.length +
                     " assembly verdict(s), the entry is refused:",
-                  fr:
-                    "staging — " +
-                    composerResult.verdicts.length +
-                    " verdict(s) d'assemblage, l'entrée est refusée :",
                 })}
               </div>
               {composerResult.verdicts.map((verdict, index) => (
@@ -281,11 +269,6 @@ export function AddFormalismComposer({
                   composerResult.newLayerNames.length +
                   " layer(s) entered the space: " +
                   composerResult.newLayerNames.join(", "),
-                fr:
-                  "staging : 0 verdict — " +
-                  composerResult.newLayerNames.length +
-                  " couche(s) entrée(s) dans l'espace : " +
-                  composerResult.newLayerNames.join(", "),
               })}
             </div>
           )}
@@ -294,7 +277,6 @@ export function AddFormalismComposer({
               {say({
                 language,
                 en: "staging: 0 verdict — but these layers are already in the space: nothing to add.",
-                fr: "staging : 0 verdict — mais ces couches sont déjà dans l'espace : rien à ajouter.",
               })}
             </div>
           )}
