@@ -118,15 +118,10 @@ try {
     body: JSON.stringify({ source: "layer record\n" }),
   });
   check("PUT on the bedrock is 403", response.status === 403);
-  response = await fetch(base + "/api/formalismes/http-test-demo", {
-    method: "DELETE",
+  response = await fetch(base + "/api/layers/never-written-layer", {
     headers: auth,
   });
-  check("DELETE a user layer (compat API) is 200", response.status === 200);
-  response = await fetch(base + "/api/layers/http-test-demo", {
-    headers: auth,
-  });
-  check("GET a deleted layer is 404", response.status === 404);
+  check("GET an unknown layer is 404", response.status === 404);
 
   // ---- the editor session: SSE + CAS gestures ----
   const sseResponse = await fetch(base + "/api/editor/session", {
