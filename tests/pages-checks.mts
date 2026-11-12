@@ -88,13 +88,13 @@ check(
     at(flatWb1Lines, 0).startsWith("// wb1 — the complete flattened formalism"),
 );
 check(
-  "(a) the diamond reads flattened: e1 carries weight = 3 provided by wb1, e2 inherits weight = 1 provided by weighted-hypergraph",
+  "(a) the diamond reads flattened: e1 carries weight = 3 provided by wb1, e2 inherits weight = 1 provided by unit-weighted-hypergraph",
   flatWb1Lines.some(
     (line) => line.trim() === "weight = 3  // provided by wb1",
   ) &&
     flatWb1Lines.some(
       (line) =>
-        line.trim() === "weight = 1  // provided by weighted-hypergraph",
+        line.trim() === "weight = 1  // provided by unit-weighted-hypergraph",
     ),
 );
 check(
@@ -337,9 +337,9 @@ const corpusDag = new RefinementDag({
   layerNames: KERNEL_LAYER_NAMES,
 });
 check(
-  "(d) the corpus DAG knows the multiple inheritance: the diamond layer refines bipartite-digraph then weighted-hypergraph, and wb1 hangs from it",
+  "(d) the corpus DAG knows the multiple inheritance: the diamond layer refines bipartite-digraph then unit-weighted-hypergraph, and wb1 hangs from it",
   corpusDag.targetsOf("weighted-bipartite").join(",") ===
-    "bipartite-digraph,weighted-hypergraph" &&
+    "bipartite-digraph,unit-weighted-hypergraph" &&
     corpusDag.targetsOf("wb1").join(",") === "weighted-bipartite",
 );
 check(
