@@ -183,7 +183,7 @@ const editions: Edition[] = [
         "expect places/philo1.think1/marking = 7",
         "expect places/philo1.think1/marking = 1",
       ),
-    expectVerdicts: 3,
+    expectVerdicts: 5,
   },
   {
     label:
@@ -205,7 +205,7 @@ const editions: Edition[] = [
         "expect places/philo1.think1/marking = 1",
         "expect places/philo1.think1/marking = 7",
       ),
-    expectVerdicts: 5,
+    expectVerdicts: 7,
     maxRebuiltWalks: 1,
     expectCheap: true,
   },
