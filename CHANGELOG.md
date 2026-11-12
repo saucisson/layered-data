@@ -1,5 +1,26 @@
 # Changelog
 
+## Unreleased — slimming: treaty retired, one tongue, docs refreshed
+
+Four cleanup PRs, no behavior change for the kernel:
+
+- **The audit treaty is retired** (ADR-0112, proposed): the
+  byte-identical corpus-wide dump (`tests/audit-kernel.mts`,
+  `tests/baseline-kernel.txt.gz`) is gone; engine protection comes
+  from the executable specification (O/C/T), the staging gold reads
+  and the per-layer expectations.
+- **One tongue for now** (ADR-0113, proposed): user-facing content is
+  English-only; the i18n mechanism (i18next, optional `fr` fields,
+  English fallback everywhere) is kept so French returns as pure
+  content. ADR-0104's treaty-vocabulary part is superseded.
+- **Documentation regenerated** to match the tree: README rewritten
+  around the atelier product, `docs/filiation.md` archived, stale
+  counts (47 layers, seven harnesses, audit baseline) corrected — the
+  kernel corpus is 85 layers.
+- **Compatibility API removed**: the French `api/formalismes` alias
+  and the Bearer-token branch are gone; `api/layers` with
+  `x-access-code` is the protocol.
+
 ## 2.25.0 — le tutoriel, en strates
 
 Le tutoriel se réécrit, la prose cède la place au code : deux
