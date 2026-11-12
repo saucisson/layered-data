@@ -54,19 +54,14 @@ export function sendText({
 }
 
 /** The access code travels in the `x-access-code` header (the
- * workshop protocol) or as a Bearer token (compatibility) —
- * never in the URL, never in the page. */
+ * workshop protocol) — never in the URL, never in the page. */
 export function isAccessGranted({ request }: { request: IncomingMessage }): boolean {
   const workshopHeader = request.headers["x-access-code"];
-  if (
+  return (
     typeof workshopHeader === "string" &&
     workshopHeader.trim() !== "" &&
     workshopHeader.trim() === API_TOKEN
-  ) {
-    return true;
-  }
-  const authorizationHeader = request.headers["authorization"] ?? "";
-  return authorizationHeader.startsWith("Bearer ") && authorizationHeader.slice(7) === API_TOKEN;
+  );
 }
 
 /** Read a request body, refusing bodies over one megabyte — a
