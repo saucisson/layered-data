@@ -1,6 +1,6 @@
 # ADR-0113: One tongue for now — English-only content, translation system kept
 
-- Status: proposed (awaiting the human owner's acceptance)
+- Status: accepted (human owner, 2026-11-12 — slimming series, PR #132)
 - Date: 2026-11-12
 
 ## Context
