@@ -1,4 +1,6 @@
-# Filiation intellectuelle
+# Filiation intellectuelle (archive)
+
+> Intellectual history — demoted from required reading, kept as archive.
 
 Le mécanisme central de l'atelier — héritage par défaut, ordre de
 spécificité, lecture par chaînes de délégation — n'est pas né ici. Il

@@ -2,6 +2,8 @@
 
 import { useRouter } from "../components/Router";
 import { say } from "../presentation/i18n.ts";
+import { SUPPORTED_LANGUAGES } from "../infrastructure/i18n.ts";
+import { KERNEL_LAYER_NAMES } from "../application/corpus.ts";
 import type { Language } from "../domain/messages.ts";
 
 interface LandingPageProps {
@@ -26,7 +28,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             <span className="mr-1 text-slate-600">
               {say({ language, en: "language: "})}
             </span>
-            {(["en", "fr"] as Language[]).map((choice) => (
+            {SUPPORTED_LANGUAGES.map((choice) => (
               <button type="button"
                 key={choice}
                 onClick={() => onChooseLanguage(choice)}
@@ -68,7 +70,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
             <p className="text-sm text-slate-600">
               {say({
                 language,
-                en: "Definition is incremental: each notion is a small, finely composable layer that refines its parent — 47 layers, from basic records to the philosophers' dinner.",
+                en: "Definition is incremental: each notion is a small, finely composable layer that refines its parent — " + KERNEL_LAYER_NAMES.length + " layers, from basic records to the philosophers' dinner.",
               })}
             </p>
           </div>
