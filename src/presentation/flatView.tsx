@@ -54,7 +54,7 @@ export function dumpFlattenedLayer({
             ? entry.winner
             : entry.winner +
               " (" +
-              say({ language, en: "abstract slot ∅", fr: "slot abstrait ∅" }) +
+              say({ language, en: "abstract slot ∅"}) +
               ")"
           : "?";
       lines.push(
@@ -68,20 +68,19 @@ export function dumpFlattenedLayer({
   return (
     "# " +
     layer +
-    say({ language, en: " — flattened formalism\n", fr: " — formalisme aplati\n" }) +
+    say({ language, en: " — flattened formalism\n"}) +
     "# " +
     flattened.addrs +
-    say({ language, en: " nodes · ", fr: " nœuds · " }) +
+    say({ language, en: " nodes · "}) +
     flattened.keys +
-    say({ language, en: " keys · ", fr: " clés · " }) +
+    say({ language, en: " keys · "}) +
     flattened.winners.length +
     say({
       language,
       en: " contributing layers · root chain: ",
-      fr: " couches contributeurs · chaîne de racine : ",
     }) +
     flattened.chaîne +
-    say({ language, en: " layers\n", fr: " couches\n" }) +
+    say({ language, en: " layers\n"}) +
     lines.join("\n")
   );
 }
@@ -158,7 +157,6 @@ export function FlatView({
           {say({
             language,
             en: "declaration node (no visible key)",
-            fr: "nœud de déclaration (aucune clé visible)",
           })}
         </div>
       );
@@ -176,8 +174,8 @@ export function FlatView({
               }
               aria-label={
                 childOpen
-                  ? say({ language, en: "collapse", fr: "replier" })
-                  : say({ language, en: "expand", fr: "déplier" })
+                  ? say({ language, en: "collapse"})
+                  : say({ language, en: "expand"})
               }
               className="w-4 shrink-0 rounded text-slate-600 hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-700 dark:text-slate-200"
             >
@@ -201,7 +199,6 @@ export function FlatView({
               title={say({
                 language,
                 en: "abstract slot: the key is declared, no layer provides its value",
-                fr: "slot abstrait : la clé est déclarée, aucune couche n'en fournit la valeur",
               })}
             >
               <span className="text-[10px] text-slate-600">∅</span>
@@ -211,7 +208,7 @@ export function FlatView({
           <span className="min-w-0">
             {entry.status === "transparent" ? (
               <span className="text-slate-600">
-                {say({ language, en: "abstract slot", fr: "slot abstrait" })}
+                {say({ language, en: "abstract slot"})}
               </span>
             ) : (
               <FlatValue value={entry.value} language={language} />
@@ -223,11 +220,10 @@ export function FlatView({
               title={say({
                 language,
                 en: "open this address in panel ③ — the detailed read: chain, scan, winner",
-                fr: "ouvrir cette adresse dans le panneau ③ — la lecture détaillée : chaîne, scan, gagnant",
               })}
               className="shrink-0 rounded border border-slate-300 dark:border-slate-600 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800 dark:text-slate-100"
             >
-              {say({ language, en: "→ go there", fr: "→ y aller" })}
+              {say({ language, en: "→ go there"})}
             </button>
           )}
         </div>
@@ -238,14 +234,12 @@ export function FlatView({
             {say({
               language,
               en: child.nAddrs > 1 ? "nodes" : "node",
-              fr: "nœud" + (child.nAddrs > 1 ? "s" : ""),
             })}
             {" · "}
             {child.nKeys}{" "}
             {say({
               language,
               en: child.nKeys > 1 ? "keys" : "key",
-              fr: "clé" + (child.nKeys > 1 ? "s" : ""),
             })}
           </div>
         )}
@@ -273,7 +267,6 @@ export function FlatView({
         {say({
           language,
           en: "The whole formalism, without hierarchy: every node shows the effective state of its address after first-wins — the key, the layer providing the value (badge), the resolved value. The special keys appear there; only refines is absent: the hierarchy is precisely what the view removes. An abstract slot shows ∅ with its declarer; a resolved reference stays a leaf — its content opens by « go there ». Pure observer: nothing is written.",
-          fr: "Le formalisme entier, sans hiérarchie : chaque nœud montre l'état effectif de son adresse après premier-gagné — la clé, la couche qui fournit la valeur (badge), la valeur résolue. Les clés spéciales y figurent ; seul refines est absent : la hiérarchie est précisément ce que la vue retire. Un slot abstrait se montre ∅ avec son déclarant ; une référence résolue reste une feuille — son contenu s'ouvre par « y aller ». Observateur pur : rien n'est écrit.",
         })}
       </p>
       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
@@ -282,18 +275,16 @@ export function FlatView({
           {say({
             language,
             en: flattened.addrs > 1 ? "nodes" : "node",
-            fr: "nœud" + (flattened.addrs > 1 ? "s" : ""),
           })}
           {" · "}
           {flattened.keys}{" "}
           {say({
             language,
             en: flattened.keys > 1 ? "keys" : "key",
-            fr: "clé" + (flattened.keys > 1 ? "s" : ""),
           })}
           {" · "}
           {flattened.winners.length}{" "}
-          {say({ language, en: "contributing layers", fr: "couches contributeurs" })}
+          {say({ language, en: "contributing layers"})}
         </span>
         <label className="flex items-center gap-1 text-slate-500">
           <input
@@ -301,7 +292,7 @@ export function FlatView({
             checked={showProvenance}
             onChange={(event) => setShowProvenance(event.target.checked)}
           />
-          {say({ language, en: "provenance", fr: "provenance" })}
+          {say({ language, en: "provenance"})}
         </label>
         <label className="flex items-center gap-1 text-slate-500">
           <input
@@ -309,21 +300,20 @@ export function FlatView({
             checked={showSpecialKeys}
             onChange={(event) => setShowSpecialKeys(event.target.checked)}
           />
-          {say({ language, en: "special keys", fr: "clés spéciales" })}
+          {say({ language, en: "special keys"})}
         </label>
         <input
           value={filter}
           onChange={(event) => setFilter(event.target.value)}
-          placeholder={say({ language, en: "filter keys…", fr: "filtrer les clés…" })}
+          placeholder={say({ language, en: "filter keys…"})}
           className="min-w-32 flex-1 rounded border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 text-xs"
         />
         <span className="text-slate-600">
-          {say({ language, en: "root chain: ", fr: "chaîne de racine : " })}
+          {say({ language, en: "root chain: "})}
           {flattened.chaîne}{" "}
           {say({
             language,
             en: flattened.chaîne > 1 ? "layers" : "layer",
-            fr: "couche" + (flattened.chaîne > 1 ? "s" : ""),
           })}
         </span>
         <button type="button"
@@ -331,13 +321,12 @@ export function FlatView({
           title={say({
             language,
             en: "copy the complete flattened dump — every key, its resolved value, its winning layer",
-            fr: "copier le dump complet de l'aplatissement — chaque clé, sa valeur résolue, sa couche gagnante",
           })}
           className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-800 dark:text-slate-100"
         >
           {copied
-            ? say({ language, en: "✓ dump copied", fr: "✓ dump copié" })
-            : say({ language, en: "⧉ copy the dump", fr: "⧉ copier le dump" })}
+            ? say({ language, en: "✓ dump copied"})
+            : say({ language, en: "⧉ copy the dump"})}
         </button>
       </div>
       {needle && rows.length === 0 ? (
@@ -346,7 +335,6 @@ export function FlatView({
             {say({
               language,
               en: "No key of " + layer + " matches the filter.",
-              fr: "Aucune clé de " + layer + " ne correspond au filtre.",
             })}
           </div>
         </div>

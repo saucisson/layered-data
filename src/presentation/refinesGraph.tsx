@@ -118,7 +118,7 @@ export function RefinesGraph({
                 }}
                 title={localized({
                   language,
-                  text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName },
+                  text: LAYER_ROLE[layerName] ?? { en: layerName},
                 })}
                 className={
                   "flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[9px] leading-4 transition-opacity " +
@@ -145,7 +145,6 @@ export function RefinesGraph({
                     title={say({
                       language,
                       en: "in the closure of the current address (③)",
-                      fr: "dans la fermeture de l'adresse courante (③)",
                     })}
                     className="absolute -top-1 -right-1 h-2 w-2 rounded-full border border-amber-500 bg-amber-300"
                   />
@@ -156,11 +155,10 @@ export function RefinesGraph({
         </div>
       </div>
       <p className="mt-1 text-[10px] leading-4 text-slate-600">
-        {localized({ language, text: LAYER_ROLE[focus] ?? { en: focus, fr: focus } })}{" "}
+        {localized({ language, text: LAYER_ROLE[focus] ?? { en: focus} })}{" "}
         {say({
           language,
           en: "— click a layer: the closure of its refinements (upward) and its descendants (downward) come to the front; the amber ring = layers of the current address's closure (③); the search (header) fades the non-matching layers.",
-          fr: "— cliquez une couche : la fermeture de ses raffinements (vers le haut) et ses descendants (vers le bas) passent au premier plan ; l'anneau ambre = couches de la fermeture de l'adresse courante (③) ; la recherche (en-tête) efface les couches non correspondantes.",
         })}
       </p>
     </div>

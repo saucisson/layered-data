@@ -38,9 +38,9 @@ export function FormalismPanel({
 }) {
   const [activeTab, setActiveTab] = useState<FormalismTab>("language");
   const tabs: [FormalismTab, BilingualText][] = [
-    ["language", { en: "Language", fr: "Langage" }],
-    ["raw", { en: "Raw", fr: "Brut" }],
-    ["flattened", { en: "Flattened", fr: "Aplati" }],
+    ["language", { en: "Language"}],
+    ["raw", { en: "Raw"}],
+    ["flattened", { en: "Flattened"}],
   ];
   const parsedLayer = useMemo(
     () => kernel.parsedLanguage.layers.find((candidate) => candidate.name === layer) ?? null,
@@ -50,7 +50,7 @@ export function FormalismPanel({
     <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
-          {say({ language, en: "② The formalism", fr: "② Le formalisme" })}
+          {say({ language, en: "② The formalism"})}
           <span className="ml-1 font-mono text-xs font-normal text-slate-600">{layer}</span>
         </h2>
         <div className="flex gap-1">
@@ -65,7 +65,7 @@ export function FormalismPanel({
                   : "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 hover:border-slate-600")
               }
             >
-              {say({ language, en: label.en, fr: label.fr })}
+              {say({ language, en: label.en})}
             </button>
           ))}
         </div>
@@ -87,7 +87,6 @@ export function FormalismPanel({
             {say({
               language,
               en: "What the layer actually stores — no more, no less. The amber keys (refines, specification) are structural.",
-              fr: "Ce que la couche stocke réellement — ni plus, ni moins. Les clés ambrées (refines, specification) sont structurelles.",
             })}
           </p>
           <RawLayerExplorer space={kernel.space} layer={asLayerName(layer)} language={language} />
