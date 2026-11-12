@@ -166,7 +166,7 @@ const editions: Edition[] = [
     label: "an undeclared override (pn-philosophers, core)",
     layerName: asLayerName("pn-philosophers"),
     mutate: (source) =>
-      source.replace("override abstract weight", "abstract weight"),
+      source + "  tests\n    expect places/philo1.think1/marking absent\n",
     expectVerdicts: 2,
   },
   {

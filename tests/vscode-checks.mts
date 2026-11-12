@@ -527,10 +527,7 @@ const overloadRoot = brokenCorpus({
     const file = join(kernelDirectory, "pn-philosophers.ld");
     writeFileSync(
       file,
-      readFileSync(file, "utf8").replace(
-        "override abstract weight",
-        "abstract weight",
-      ),
+      readFileSync(file, "utf8") + "  places\n",
     );
   },
 });
@@ -549,10 +546,7 @@ const mixedRoot = brokenCorpus({
     const file = join(kernelDirectory, "pn-philosophers.ld");
     writeFileSync(
       file,
-      readFileSync(file, "utf8").replace(
-        "override abstract weight",
-        "abstract weight",
-      ),
+      readFileSync(file, "utf8") + "  places\n",
     );
     mkdirSync(join(kernelDirectory, "..", "users"), { recursive: true });
     writeFileSync(
