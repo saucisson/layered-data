@@ -1,15 +1,12 @@
 // ---- axe arcs de remise à zéro — reset-petrinet : l'arc de reset
 //      vide sa place source au tir, sans poids ni multiplicité.
-//      Le poids est re-coupé en abstrait dans le record, là où le
-//      tronc déclare le slot : le poids d'un arc de reset est
-//      illisible — override abstract arrête la lecture, là où une
-//      valeur laisserait passer un défaut.
+//      Le poids reste abstrait (hérité de petrinet-scheme) : aucun
+//      défaut ne transpire, la lecture s'arrête là.
 layer reset-petrinet refines @petrinet-scheme
   extend specification
     reset_arc_type refines @petrinet-scheme/specification/arc_type
       extend specification
         extend record
-          override abstract weight
           override abstract identifier
           extend source
             override container = @reset-petrinet/places
