@@ -100,7 +100,6 @@ export function parseLanguage(
       parseText({
         language,
         en: "syntax: " + (error as Error).message,
-        fr: "syntaxe : " + (error as Error).message,
       }),
     );
     return { layers, errors };
@@ -123,14 +122,6 @@ export function parseLanguage(
             "', got '" +
             (token?.text ?? "end") +
             "'",
-          fr:
-            "l." +
-            (token?.line ?? 0) +
-            " : attendu '" +
-            expectedKind +
-            "' obtenu '" +
-            (token?.text ?? "fin") +
-            "'",
         }),
       );
     }
@@ -144,7 +135,6 @@ export function parseLanguage(
         parseText({
           language,
           en: "l." + (token?.line ?? 0) + " : name expected, got '" + (token?.text ?? "end") + "'",
-          fr: "l." + (token?.line ?? 0) + " : nom attendu, obtenu '" + (token?.text ?? "fin") + "'",
         }),
       );
     }
@@ -186,7 +176,6 @@ export function parseLanguage(
         parseText({
           language,
           en: "value expected, end of text",
-          fr: "valeur attendue, fin du texte",
         }),
       );
     }
@@ -232,7 +221,6 @@ export function parseLanguage(
       parseText({
         language,
         en: "l." + token.line + " : unexpected value '" + token.text + "'",
-        fr: "l." + token.line + " : valeur inattendue '" + token.text + "'",
       }),
     );
   };
@@ -267,12 +255,6 @@ export function parseLanguage(
               (opToken?.line ?? 0) +
               " : comparison operator expected, got '" +
               (opToken?.text ?? "end") +
-              "'",
-            fr:
-              "l." +
-              (opToken?.line ?? 0) +
-              " : opérateur de comparaison attendu, obtenu '" +
-              (opToken?.text ?? "fin") +
               "'",
           }),
         );
@@ -411,7 +393,6 @@ export function parseLanguage(
               parseText({
                 language,
                 en: "l." + token.line + " : a check definition names ONE check",
-                fr: "l." + token.line + " : une définition de check nomme UN seul check",
               }),
             );
           }
@@ -424,7 +405,6 @@ export function parseLanguage(
                 parseText({
                   language,
                   en: "l." + token.line + " : '" + field + "' expects a string",
-                  fr: "l." + token.line + " : « " + field + " » attend une chaîne",
                 }),
               );
             }
@@ -454,7 +434,6 @@ export function parseLanguage(
                     parseText({
                       language,
                       en: "l." + token.line + " : unknown judgment field '" + inner.text + "'",
-                      fr: "l." + token.line + " : champ de jugement inconnu « " + inner.text + " »",
                     }),
                   );
                 }
@@ -466,7 +445,6 @@ export function parseLanguage(
                 parseText({
                   language,
                   en: "l." + token.line + " : unknown definition field '" + field.text + "'",
-                  fr: "l." + token.line + " : champ de définition inconnu « " + field.text + " »",
                 }),
               );
             }
@@ -497,7 +475,6 @@ export function parseLanguage(
           parseText({
             language,
             en: "l." + token.line + " : unexpected act '" + token.text + "'",
-            fr: "l." + token.line + " : acte inattendu '" + token.text + "'",
           }),
         );
       }
@@ -583,7 +560,6 @@ export function parseLanguage(
         parseText({
           language,
           en: "l." + token.line + " : expected 'layer', got '" + token.text + "'",
-          fr: "l." + token.line + " : attendu 'layer' obtenu '" + token.text + "'",
         }),
       );
     }

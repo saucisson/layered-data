@@ -1,6 +1,6 @@
 // The tutorial's markdown dialect — a small, hand-editable surface.
-// The tutorial prose lives in two files (tutorial.en.md,
-// tutorial.fr.md), edited by hand, read by the app at build time;
+// The tutorial prose lives in one file (tutorial.en.md), edited by
+// hand, read by the app at build time;
 // this module is the measured dialect they may use: headings,
 // paragraphs, bullet lists, code fences — and one directive fence,
 // `ldflat:<layer>`, which the page resolves at run time into the

@@ -30,31 +30,24 @@ export const VIEWPOINT_LAYERS = [
 export const VIEW_NOTES: Record<string, BilingualText> = {
   "graph-display": {
     en: "The generic lens: a circle per vertex, a line per arc — it dresses every graph descendant, no place/transition distinction.",
-    fr: "La lentille générique : un cercle par sommet, un trait par arc — elle habille tout descendant du graphe, aucune distinction place/transition.",
   },
   "petrinet-display": {
     en: "The Petri lens: ellipses for the places, rectangles for the transitions, 2-port arcs — the generic circle stays for the unknown types.",
-    fr: "La lentille Petri : ellipses pour les places, rectangles pour les transitions, arcs à 2 ports — le cercle générique reste pour les types inconnus.",
   },
   "kahn-display": {
     en: "The Kahn lens: boxes for processes and channels — on the dinner, it knows no Petri types: everything falls back to the generic circle, without an error (a lens displays only what it knows).",
-    fr: "La lentille Kahn : boîtes pour processus et canaux — sur le dîner, elle ne connaît pas les types Petri : tout retombe au cercle générique, sans erreur (la lentille n'affiche que ce qu'elle sait).",
   },
   "petrinet-view": {
     en: "The abstract Petri viewpoint: the lens is decided (petrinet-display), the model stays a slot — the current model of ① applies.",
-    fr: "Le point de vue Petri abstrait : la lentille est tranchée (petrinet-display), le modèle reste un slot — le modèle courant de ① s'applique.",
   },
   "pn-philosophers-5-course": {
     en: "The dinner through the Petri lens, course positions: 15 ellipses, 10 rectangles, 2-port arcs.",
-    fr: "Le dîner par la lentille Petri, positions du cours : 15 ellipses, 10 rectangles, arcs à 2 ports.",
   },
   "kahn-course": {
     en: "The same dinner through the Kahn lens — a legal degradation: everything falls back to the generic circle. No position decided: circle layout.",
-    fr: "Le même dîner par la lentille Kahn — dégradation légale : tout retombe au cercle générique. Aucune position décidée : disposition cercle.",
   },
   "wb-course": {
     en: "The weighted diamond — wb1 through the generic lens: 3 circles, 2 lines. The weights are data read through the diamond — e1 carries 3 (first-wins), e2 inherits 1 from the weighted-hypergraph default. Two axes, one model, no copy.",
-    fr: "Le diamant pondéré — wb1 par la lentille générique : 3 cercles, 2 traits. Les poids sont des données lues à travers le diamant — e1 porte 3 (premier-gagné), e2 hérite 1 du défaut de weighted-hypergraph. Deux axes, un modèle, aucune copie.",
   },
 };
 
@@ -189,22 +182,21 @@ export function bindingOf({ space, view, key }: { space: Space; view: string; ke
 
 /** One glyph as text, in the workshop language. */
 function glyphLabel({ glyph, language }: { glyph: Glyph; language: Language }): string {
-  if (glyph.shape === "circle") return say({ language, en: "circle", fr: "cercle" });
-  if (glyph.shape === "ellipse") return say({ language, en: "ellipse", fr: "ellipse" });
-  if (glyph.shape === "rectangle") return say({ language, en: "rectangle", fr: "rectangle" });
+  if (glyph.shape === "circle") return say({ language, en: "circle"});
+  if (glyph.shape === "ellipse") return say({ language, en: "ellipse"});
+  if (glyph.shape === "rectangle") return say({ language, en: "rectangle"});
   if (glyph.shape === "box") {
     return say({
       language,
       en: "box (" + (glyph.label ?? "") + ")",
-      fr: "boîte (" + (glyph.label ?? "") + ")",
     });
   }
   if (glyph.shape === "line") {
     return glyph.ports === 2
-      ? say({ language, en: "2-port arc", fr: "arc à 2 ports" })
-      : say({ language, en: "line", fr: "trait" });
+      ? say({ language, en: "2-port arc"})
+      : say({ language, en: "line"});
   }
-  return say({ language, en: "unknown shape", fr: "forme inconnue" });
+  return say({ language, en: "unknown shape"});
 }
 
 /** The drawing shape as text (for the "shapes" readouts), in the
@@ -217,6 +209,6 @@ export function shapeLabel({
   shape: Glyph[] | null;
   language: Language;
 }): string {
-  if (!shape || shape.length === 0) return say({ language, en: "no shape", fr: "sans forme" });
+  if (!shape || shape.length === 0) return say({ language, en: "no shape"});
   return shape.map((glyph) => glyphLabel({ glyph, language })).join(" + ");
 }

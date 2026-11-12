@@ -24,7 +24,6 @@ export function AccessCodeForm({ language }: { language: Language }) {
           say({
             language,
             en: "code verified — the quarry and the AI geologist are open",
-            fr: "code vérifié — la carrière et le géologue IA sont ouverts",
           }),
         );
       } else if (response.status === 401) {
@@ -32,7 +31,6 @@ export function AccessCodeForm({ language }: { language: Language }) {
           say({
             language,
             en: "code refused — the proxy is protected",
-            fr: "code refusé — le proxy est protégé",
           }),
         );
       } else {
@@ -40,7 +38,6 @@ export function AccessCodeForm({ language }: { language: Language }) {
           say({
             language,
             en: "response " + response.status + " from the proxy",
-            fr: "réponse " + response.status + " du proxy",
           }),
         );
       }
@@ -49,7 +46,6 @@ export function AccessCodeForm({ language }: { language: Language }) {
         say({
           language,
           en: "without proxy — the workshop lives alone, the quarry is empty",
-          fr: "sans proxy — l'atelier vit seul, la carrière est vide",
         }),
       );
     }
@@ -58,16 +54,15 @@ export function AccessCodeForm({ language }: { language: Language }) {
     <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
       <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
         <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
-          {say({ language, en: "key", fr: "clé" })}
+          {say({ language, en: "key"})}
         </span>
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
-          {say({ language, en: "site access code", fr: "code d'accès du site" })}
+          {say({ language, en: "site access code"})}
         </span>
         <span className="text-[11px] leading-4 text-slate-500">
           {say({
             language,
             en: "a shared key, laid in the proxy's .env — it protects the chatbot and the disk quarry; the workshop stays open to all",
-            fr: "une clé partagée, posée dans .env du proxy — elle protège le chatbot et la carrière du disque ; l'atelier reste ouvert à tous",
           })}
         </span>
       </div>
@@ -76,7 +71,7 @@ export function AccessCodeForm({ language }: { language: Language }) {
           type="password"
           value={accessCode}
           onChange={(event) => setAccessCode(event.target.value)}
-          placeholder={say({ language, en: "access code", fr: "code d'accès" })}
+          placeholder={say({ language, en: "access code"})}
           className="min-w-40 flex-1 rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
         />
         <button type="button"
@@ -85,7 +80,7 @@ export function AccessCodeForm({ language }: { language: Language }) {
           }}
           className="rounded bg-slate-800 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
         >
-          {say({ language, en: "verify", fr: "vérifier" })}
+          {say({ language, en: "verify"})}
         </button>
       </div>
       <label className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-500">
@@ -97,7 +92,6 @@ export function AccessCodeForm({ language }: { language: Language }) {
         {say({
           language,
           en: "remember this code on this browser for 30 days (stored locally, expires automatically) — otherwise it is kept for this tab only",
-          fr: "retenir ce code sur ce navigateur pendant 30 jours (stocké localement, expire automatiquement) — sinon il n'est gardé que pour cet onglet",
         })}
       </label>
       {stateMessage !== null && <p className="mt-1.5 text-[10px] text-slate-500">{stateMessage}</p>}

@@ -9,6 +9,7 @@ import { asLayerName, asLayerPath } from "./domain/identifiers.ts";
 import { AddressView, PathReference, addressesEqual } from "./domain/addresses.ts";
 import { Tracer } from "./domain/space.ts";
 import { type Language } from "./domain/messages.ts";
+import { SUPPORTED_LANGUAGES } from "./infrastructure/i18n.ts";
 import { coversAddresses, dressingEntries, type Glyph } from "./domain/views.ts";
 import { assembleLayeredDataKernel } from "./application/corpus.ts";
 import { loadKernelLayerSources } from "./infrastructure/corpusLoader.ts";
@@ -219,7 +220,7 @@ export function WorkshopPage({
       // clipboard unavailable: the copy is best-effort
     }
     setCopied(true);
-    notify(say({ language, fr: "Adresse copiée dans le presse-papiers", en: "Address copied to clipboard" }), "success");
+    notify(say({ language, en: "Address copied to clipboard" }), "success");
   }
 
   // ---- additions --------------------------------------------------
@@ -418,14 +419,13 @@ export function WorkshopPage({
             {say({
               language,
               en: "The formalism design workshop — data in strata",
-              fr: "L'atelier de conception des formalismes — les données en strates",
             })}
           </h1>
           <span className="flex shrink-0 items-center gap-1 text-xs">
             <span className="mr-1 text-slate-600">
-              {say({ language, en: "language: ", fr: "langue : " })}
+              {say({ language, en: "language: "})}
             </span>
-            {(["en", "fr"] as Language[]).map((choice) => (
+            {SUPPORTED_LANGUAGES.map((choice) => (
               <button type="button"
                 key={choice}
                 onClick={() => onChooseLanguage(choice)}
@@ -444,7 +444,6 @@ export function WorkshopPage({
         <p className="mt-2 text-xs text-slate-500">
           {say({
             language,
-            fr: "Atelier de conception des formalismes — données en strates, raffinement, lecture premier-gagné",
             en: "Formalism design workshop — data in strata, refinement, first-winner reading",
           })}
         </p>
@@ -459,9 +458,6 @@ export function WorkshopPage({
             }}
             placeholder={say({
               language,
-              fr:
-                "Rechercher — couche, ou clé de l'adresse courante ; " +
-                "Entrée : y aller · Ctrl+K",
               en: "Search — layer, or key of the current address; " + "Enter: go there · Ctrl+K",
             })}
             className="min-w-0 flex-1 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none sm:min-w-[240px]"
@@ -471,7 +467,6 @@ export function WorkshopPage({
             aria-expanded={guidedTourOpen}
             title={say({
               language,
-              fr: "les scénarios S1–S14 : le curriculum guidé de l'atelier",
               en: "the S1–S14 scenarios: the workshop's guided curriculum",
             })}
             className={
@@ -481,7 +476,7 @@ export function WorkshopPage({
                 : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 hover:border-slate-500")
             }
           >
-            {say({ language, fr: "Visite guidée S1–S14", en: "Guided tour S1–S14" })}{" "}
+            {say({ language, en: "Guided tour S1–S14" })}{" "}
             {guidedTourOpen ? "▾" : "▸"}
           </button>
         </div>
@@ -523,7 +518,7 @@ export function WorkshopPage({
             <button type="button"
               className="ml-auto rounded px-2 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-700 dark:text-slate-200"
               onClick={() => setScenarioIndex(-1)}
-              aria-label={say({ language, fr: "fermer le scénario", en: "close the scenario" })}
+              aria-label={say({ language, en: "close the scenario" })}
             >
               ×
             </button>
@@ -544,15 +539,14 @@ export function WorkshopPage({
         <section className="space-y-3" role="region" aria-labelledby="panel-layers-heading">
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
             <h2 id="panel-layers-heading" className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
-              {say({ language, fr: "① Les couches", en: "① The layers" })}
+              {say({ language, en: "① The layers" })}
               <span className="font-normal text-slate-600">
                 {graphView
                   ? say({
                       language,
-                      fr: "le graphe des raffinements",
                       en: "the graph of refinements",
                     })
-                  : say({ language, fr: "et leurs bruts", en: "and their raws" })}
+                  : say({ language, en: "and their raws" })}
               </span>
               <span className="ml-auto flex overflow-hidden rounded border border-slate-300 dark:border-slate-600 text-[10px] leading-4">
                 <button type="button"
@@ -564,7 +558,7 @@ export function WorkshopPage({
                       : "bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:bg-slate-900")
                   }
                 >
-                  {say({ language, fr: "liste", en: "list" })}
+                  {say({ language, en: "list" })}
                 </button>
                 <button type="button"
                   onClick={() => setGraphView(true)}
@@ -575,16 +569,13 @@ export function WorkshopPage({
                       : "bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:bg-slate-900")
                   }
                 >
-                  {say({ language, fr: "graphe", en: "graph" })}
+                  {say({ language, en: "graph" })}
                 </button>
               </span>
               <button type="button"
                 onClick={() => setComposerOpen(!composerOpen)}
                 title={say({
                   language,
-                  fr:
-                    "ajouter un formalisme — le candidat passe par le staging : " +
-                    "corpus + suppléments revalidés entiers, 0 verdict d'assemblage exigé",
                   en:
                     "add a formalism — the candidate goes through staging: " +
                     "whole corpus + supplements revalidated, 0 assembly verdict demanded",
@@ -657,7 +648,6 @@ export function WorkshopPage({
                   <div className="py-2 text-xs text-slate-600">
                     {say({
                       language,
-                      fr: "Aucune couche ne correspond à « " + search + " ».",
                       en: "No layer matches « " + search + " ».",
                     })}
                   </div>
@@ -683,7 +673,7 @@ export function WorkshopPage({
                           onClick={() => goto(layerName, [])}
                           title={localized({
                             language,
-                            text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName },
+                            text: LAYER_ROLE[layerName] ?? { en: layerName},
                           })}
                           className={
                             "flex flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-xs transition-colors " +
@@ -703,7 +693,6 @@ export function WorkshopPage({
                             <span
                               title={say({
                                 language,
-                                fr: "dans la fermeture de l'adresse courante (③)",
                                 en: "in the closure of the current address (③)",
                               })}
                               className="ml-1 text-[10px] text-slate-600"
@@ -719,17 +708,13 @@ export function WorkshopPage({
                             }
                             title={say({
                               language,
-                              fr:
-                                "éditer la couche vivante — le staging la rejuge " +
-                                "(0 verdict exigé), l'écriture est déclarée, " +
-                                "l'atelier relit l'espace",
                               en:
                                 "edit the living layer — staging rejudges it " +
                                 "(0 verdict demanded), the write is declared, " +
                                 "the workshop re-reads the space",
                             })}
                             aria-label={
-                              say({ language, fr: "éditer la couche ", en: "edit the layer " }) +
+                              say({ language, en: "edit the layer " }) +
                               layerName
                             }
                             className={
@@ -747,7 +732,7 @@ export function WorkshopPage({
                         <div className="ml-4 text-[10px] leading-4 text-slate-600">
                           {localized({
                             language,
-                            text: LAYER_ROLE[layerName] ?? { en: layerName, fr: layerName },
+                            text: LAYER_ROLE[layerName] ?? { en: layerName},
                           })}
                         </div>
                       )}
@@ -775,9 +760,9 @@ export function WorkshopPage({
         <section className="space-y-3" role="region" aria-labelledby="panel-flat-heading">
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
             <h2 id="panel-flat-heading" className="mb-2 text-sm font-bold text-slate-800 dark:text-slate-100">
-              {say({ language, fr: "③ Les données aplaties", en: "③ The flattened data" })}
+              {say({ language, en: "③ The flattened data" })}
               <span className="ml-1 font-normal text-slate-600">
-                {say({ language, fr: "lecture à une adresse", en: "reading at an address" })}
+                {say({ language, en: "reading at an address" })}
               </span>
             </h2>
             <div className="flex flex-wrap items-center gap-1 text-xs">
@@ -788,16 +773,14 @@ export function WorkshopPage({
                   history.length
                     ? say({
                         language,
-                        fr: "retour à l'adresse précédente (" + history.length + " dans la pile)",
                         en: "back to the previous address (" + history.length + " in the stack)",
                       })
                     : say({
                         language,
-                        fr: "rien à défaire — aucune adresse parcourue",
                         en: "nothing to undo — no address visited",
                       })
                 }
-                aria-label={say({ language, fr: "adresse précédente", en: "previous address" })}
+                aria-label={say({ language, en: "previous address" })}
                 className={
                   "rounded px-1.5 py-0.5 font-bold " +
                   (history.length
@@ -809,7 +792,7 @@ export function WorkshopPage({
               </button>
               <LayerBadge layer={layer} />
               <span className="text-slate-600">::</span>
-              <button type="button" className="text-slate-600 hover:text-slate-600" onClick={() => setPath([])} aria-label={say({ language, fr: "réinitialiser le chemin", en: "reset path" })}>
+              <button type="button" className="text-slate-600 hover:text-slate-600" onClick={() => setPath([])} aria-label={say({ language, en: "reset path" })}>
                 ()
               </button>
               {path.map((segment, index) => (
@@ -827,14 +810,11 @@ export function WorkshopPage({
                 onClick={copyAddress}
                 title={say({
                   language,
-                  fr:
-                    "copier l'adresse (couche :: chemin :: clé) — " +
-                    "l'artefact partageable de l'atelier",
                   en:
                     "copy the address (layer :: path :: key) — " +
                     "the workshop's shareable artifact",
                 })}
-                aria-label={say({ language, fr: "copier l'adresse", en: "copy the address" })}
+                aria-label={say({ language, en: "copy the address" })}
                 className={
                   "ml-auto rounded px-1.5 py-0.5 text-[10px] " +
                   (copied
@@ -843,8 +823,8 @@ export function WorkshopPage({
                 }
               >
                 {copied
-                  ? say({ language, fr: "adresse copiée ✓", en: "address copied ✓" })
-                  : say({ language, fr: "copier ⧉", en: "copy ⧉" })}
+                  ? say({ language, en: "address copied ✓" })
+                  : say({ language, en: "copy ⧉" })}
               </button>
             </div>
 
@@ -854,12 +834,10 @@ export function WorkshopPage({
                   {addressKeys.length === 0
                     ? say({
                         language,
-                        fr: "Aucune clé visible à cette adresse (nœud de déclaration).",
                         en: "No visible key at this address (declaration node).",
                       })
                     : say({
                         language,
-                        fr: "Aucune clé ne correspond à « " + search + " ».",
                         en: "No key matches « " + search + " ».",
                       })}
                 </div>
@@ -888,7 +866,7 @@ export function WorkshopPage({
                       <LayerBadge layer={info.winner[0]} small />
                     ) : (
                       <span className="text-[10px] text-slate-600">
-                        {say({ language, fr: "sans valeur", en: "no value" })}
+                        {say({ language, en: "no value" })}
                       </span>
                     )}
                     <span className="truncate">
@@ -901,7 +879,7 @@ export function WorkshopPage({
                           goto((info.value as AddressView).layer, (info.value as AddressView).path)
                         }
                       >
-                        {say({ language, fr: "→ y aller", en: "→ go there" })}
+                        {say({ language, en: "→ go there" })}
                       </button>
                     )}
                   </div>
@@ -911,10 +889,6 @@ export function WorkshopPage({
             <p className="mt-2 text-[10px] leading-4 text-slate-600">
               {say({
                 language,
-                fr:
-                  "Chaque ligne : la clé, la couche qui fournit la valeur " +
-                  "(premier-gagné), la valeur. Un nœud se traverse (« → y aller ») ; " +
-                  "une référence résolue se reconnaît à son adresse désignée.",
                 en:
                   "Each line: the key, the layer providing the value " +
                   "(first-wins), the value. A node is traversed (« → go there »); " +
@@ -929,32 +903,28 @@ export function WorkshopPage({
         <section className="space-y-3" role="region" aria-labelledby="panel-mechanism-heading">
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
             <h2 id="panel-mechanism-heading" className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
-              {say({ language, fr: "③ Le mécanisme", en: "③ The mechanism" })}
+              {say({ language, en: "③ The mechanism" })}
               <span className="ml-1 font-normal text-slate-600">
                 {say({
                   language,
-                  fr:
-                    "le dernier cran en détail — fermeture par adresse, sources dans " +
-                    "l'ordre de lecture",
                   en:
                     "the last crank in detail — closure by address, sources in " + "reading order",
                 })}
               </span>
             </h2>
             <p className="mb-2 text-[10px] leading-4 text-slate-600">
-              {say({ language, fr: "Adresse courante :", en: "Current address:" })}{" "}
+              {say({ language, en: "Current address:" })}{" "}
               <span className="font-mono font-semibold text-slate-600">
                 {addressText(currentAddress)}
               </span>
               {selectedKey ? (
                 <>
-                  {say({ language, fr: " — clé lue : ", en: " — key read: " })}
+                  {say({ language, en: " — key read: " })}
                   <span className="font-mono font-semibold text-slate-600">{selectedKey}</span>
                 </>
               ) : (
                 say({
                   language,
-                  fr: " — sélectionnez une clé à gauche pour voir le parcours de lecture",
                   en: " — select a key on the left to see the reading path",
                 })
               )}
@@ -1009,7 +979,6 @@ export function WorkshopPage({
                   >
                     {say({
                       language,
-                      fr: "→ aller à l'adresse désignée",
                       en: "→ go to the designated address",
                     })}
                   </button>
@@ -1021,7 +990,7 @@ export function WorkshopPage({
           {selectedKeyDetail && selectedKeyDetail.referenceEvents.length > 0 && (
             <div className="rounded-lg border border-sky-200 bg-sky-50/50 p-3">
               <h3 className="mb-1 text-xs font-bold text-sky-800">
-                {say({ language, fr: "Résolution de la référence", en: "Reference resolution" })}
+                {say({ language, en: "Reference resolution" })}
               </h3>
               <div className="space-y-2">
                 {selectedKeyDetail.referenceEvents.map((event, index) => (
@@ -1038,16 +1007,15 @@ export function WorkshopPage({
               highlighted, the story scrolls, older steps fading */}
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
             <h2 className="mb-2 text-sm font-bold text-slate-800 dark:text-slate-100">
-              {say({ language, fr: "③ La cascade de résolution", en: "③ The resolution cascade" })}
+              {say({ language, en: "③ The resolution cascade" })}
               <span className="ml-1 font-normal text-slate-600">
                 {cascade.length +
                   " " +
-                  say({ language, fr: "cran", en: "crank" }) +
+                  say({ language, en: "crank" }) +
                   (cascade.length > 1 ? "s" : "") +
                   " — " +
                   say({
                     language,
-                    fr: "l'histoire reste visible, le dernier parle",
                     en: "the story stays visible, the last one speaks",
                   })}
               </span>
@@ -1055,15 +1023,14 @@ export function WorkshopPage({
             {cascade.length > 10 && (
               <p className="mb-1 text-[10px] leading-4 text-slate-600">
                 {"… " +
-                  say({ language, fr: "et ", en: "and " }) +
+                  say({ language, en: "and " }) +
                   (cascade.length - 10) +
                   " " +
-                  say({ language, fr: "cran", en: "crank" }) +
+                  say({ language, en: "crank" }) +
                   (cascade.length - 10 > 1 ? "s" : "") +
                   " " +
                   say({
                     language,
-                    fr: "avant, dans la pile — le bouton retour de ③ les redéfait",
                     en: "before, in the stack — the ③ back button undoes them",
                   })}
               </p>
@@ -1094,7 +1061,6 @@ export function WorkshopPage({
               <span>
                 {say({
                   language,
-                  fr: "Comment cette fermeture est calculée",
                   en: "How this closure is calculated",
                 })}
               </span>
@@ -1113,11 +1079,10 @@ export function WorkshopPage({
 
       <section className="mx-2 mt-3 sm:mx-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
         <h2 id="panel-viewpoint-heading" className="text-sm font-bold text-slate-800 dark:text-slate-100">
-          {say({ language, fr: "④ Le point de vue", en: "④ The point of view" })}
+          {say({ language, en: "④ The point of view" })}
           <span className="ml-1 font-normal text-slate-600">
             {say({
               language,
-              fr: "l'arbre à gauche, le dessin à droite",
               en: "the tree on the left, the drawing on the right",
             })}
           </span>
@@ -1125,18 +1090,6 @@ export function WorkshopPage({
         <p className="mb-3 mt-1 text-[11px] leading-4 text-slate-500">
           {say({
             language,
-            fr:
-              "Le regard se choisit dans l'arbre : les lentilles habillent les " +
-              "types d'un schéma de gabarits display ; les points de vue " +
-              "désignent un modèle et une lentille par champs LRef. Un point " +
-              "de vue impose son modèle — une lentille seule s'applique au " +
-              "modèle courant de ①. Les positions sont celles du cours quand " +
-              "le point de vue les décide, sinon la disposition cercle ; et " +
-              "l'inapplicabilité s'affiche honnêtement (la lentille " +
-              "n'habille que ce qu'elle sait, le modèle reste entier). Parmi " +
-              "les entrées qui habillent un nœud, la plus spécifique gagne — " +
-              "mesuré par fermeture, pas par l'ordre de la chaîne. " +
-              "Cliquez une forme ou un arc pour voir l'habillage.",
             en:
               "The look is chosen in the tree: lenses dress the types with a " +
               "display templates scheme; viewpoints designate a model and " +
@@ -1158,7 +1111,7 @@ export function WorkshopPage({
           <div className="space-y-3">
             <div>
               <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                {say({ language, fr: "Lentilles", en: "Lenses" })}
+                {say({ language, en: "Lenses" })}
               </div>
               <div className="space-y-1">
                 {groupTree({ space: KERNEL.space, members: LENS_LAYERS }).map(
@@ -1180,7 +1133,6 @@ export function WorkshopPage({
                         <span className="truncate text-slate-600">
                           {say({
                             language,
-                            fr: "lentille — modèle : le courant de ①",
                             en: "lens — model: the current one of ①",
                           })}
                         </span>
@@ -1192,7 +1144,7 @@ export function WorkshopPage({
             </div>
             <div>
               <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                {say({ language, fr: "Points de vue", en: "Viewpoints" })}
+                {say({ language, en: "Viewpoints" })}
               </div>
               <div className="space-y-1">
                 {groupTree({ space: KERNEL.space, members: VIEWPOINT_LAYERS }).map(
@@ -1214,10 +1166,9 @@ export function WorkshopPage({
                         <span className="truncate text-slate-600">
                           {bindingOf({ space: KERNEL.space, view: viewLayer, key: "model" })
                             .value instanceof AddressView
-                            ? say({ language, fr: "→ modèle désigné", en: "→ designated model" })
+                            ? say({ language, en: "→ designated model" })
                             : say({
                                 language,
-                                fr: "→ modèle : le courant de ①",
                                 en: "→ model: the current one of ①",
                               })}
                         </span>
@@ -1234,13 +1185,13 @@ export function WorkshopPage({
             <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[11px]">
               <LayerBadge layer={look.model} small />
               <span className="text-slate-500">
-                {say({ language, fr: "vu par", en: "seen through" })}
+                {say({ language, en: "seen through" })}
               </span>
               {look.lens !== null ? (
                 <LayerBadge layer={look.lens} small />
               ) : (
                 <span className="font-mono text-slate-600">
-                  {say({ language, fr: "∅ sans lentille", en: "∅ without a lens" })}
+                  {say({ language, en: "∅ without a lens" })}
                 </span>
               )}
               <span className="text-slate-500">·</span>
@@ -1248,20 +1199,17 @@ export function WorkshopPage({
                 {look.isLens
                   ? say({
                       language,
-                      fr: "lentille seule — modèle courant de ①",
                       en: "lone lens — current model of ①",
                     })
                   : look.viewpointDecidesPositions
-                    ? say({ language, fr: "positions du cours", en: "course positions" })
+                    ? say({ language, en: "course positions" })
                     : look.modelCarriesPositions
                       ? say({
                           language,
-                          fr: "positions du modèle — résolues (grille ou pôle, relatives comprises)",
                           en: "model positions — resolved (grid or pole, relative included)",
                         })
                       : say({
                           language,
-                          fr: "positions : disposition cercle",
                           en: "positions: circle layout",
                         })}
               </span>
@@ -1354,7 +1302,7 @@ export function WorkshopPage({
                         {binding.value instanceof AddressView
                           ? "→ " + binding.value.layer
                           : binding.value === null
-                            ? say({ language, fr: "∅ non défini", en: "∅ undefined" })
+                            ? say({ language, en: "∅ undefined" })
                             : String(binding.value)}
                       </span>
                     </div>
@@ -1368,31 +1316,27 @@ export function WorkshopPage({
               {look.lens === null
                 ? say({
                     language,
-                    fr: "point de vue sans lentille — aucun dessin",
                     en: "viewpoint without a lens — no drawing",
                   })
                 : look.applicability.total === -1
                   ? say({
                       language,
-                      fr: "le modèle n'est pas un graphe — aucune entrée vertices",
                       en: "the model is not a graph — no vertices entry",
                     })
-                  : say({ language, fr: "applicabilité : ", en: "applicability: " }) +
+                  : say({ language, en: "applicability: " }) +
                     look.applicability.dressed +
                     "/" +
                     look.applicability.total +
                     say({
                       language,
-                      fr: " sommets habillés",
                       en: " vertices dressed",
                     }) +
                     (look.applicability.dressed === look.applicability.total
-                      ? say({ language, fr: " — lentille applicable", en: " — applicable lens" })
+                      ? say({ language, en: " — applicable lens" })
                       : "") +
                     (look.applicability.dressed === 0
                       ? say({
                           language,
-                          fr: " — lentille aveugle : erreur de domaine (check_view_lens)",
                           en: " — blind lens: domain error (check_view_lens)",
                         })
                       : "") +
@@ -1400,13 +1344,12 @@ export function WorkshopPage({
                     look.applicability.dressed < look.applicability.total
                       ? say({
                           language,
-                          fr: " — partiel : erreur de domaine",
                           en: " — partial: domain error",
                         })
                       : "")}
             </div>
             <p className="mt-1 text-[10px] leading-4 text-slate-600">
-              {localized({ language, text: VIEW_NOTES[selectedView] ?? { en: "", fr: "" } })}
+              {localized({ language, text: VIEW_NOTES[selectedView] ?? { en: ""} })}
             </p>
           </div>
         </div>
@@ -1444,7 +1387,7 @@ export function WorkshopPage({
                   </span>
                   <span className="text-xs text-slate-500">
                     {look.model} :: {glyphPath.join("/")} —{" "}
-                    {say({ language, fr: "habillage par", en: "dressing by" })}{" "}
+                    {say({ language, en: "dressing by" })}{" "}
                     <span className="font-medium">{look.lens}</span>
                   </span>
                   <button type="button"
@@ -1458,9 +1401,6 @@ export function WorkshopPage({
                   <p className="text-xs text-slate-500">
                     {say({
                       language,
-                      fr:
-                        "Aucune entrée de la lentille n'habille ce nœud — il se " +
-                        "dessinerait « nu » (pointillé).",
                       en:
                         "No entry of the lens dresses this node — it would be " +
                         "drawn « naked » (dotted).",
@@ -1482,11 +1422,11 @@ export function WorkshopPage({
                           {shapeLabel({ shape: match.spec, language })}
                         </span>
                         <span className="text-slate-600">
-                          {say({ language, fr: "← entrée", en: "← entry" })}
+                          {say({ language, en: "← entry" })}
                         </span>
                         <span className="font-mono text-slate-600">{match.path.join("/")}</span>
                         <span className="text-slate-600">
-                          {say({ language, fr: "habille", en: "dresses" })}
+                          {say({ language, en: "dresses" })}
                         </span>
                         {match.hit.map((hitAddress, hitIndex) => (
                           <span key={hitIndex} className="inline-flex items-center gap-0.5">
@@ -1501,7 +1441,6 @@ export function WorkshopPage({
                           <span className="ml-auto rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
                             {say({
                               language,
-                              fr: "gagnante — la plus spécifique",
                               en: "winner — the most specific",
                             })}
                           </span>
@@ -1535,7 +1474,6 @@ export function WorkshopPage({
                   <p className="mt-1.5 text-[11px] text-slate-500">
                     {say({
                       language,
-                      fr: "Une seule entrée habille ce nœud : aucun choix à faire.",
                       en: "A single entry dresses this node: no choice to make.",
                     })}
                   </p>
@@ -1558,13 +1496,6 @@ export function WorkshopPage({
       <footer className="px-5 pb-6 text-[10px] leading-4 text-slate-600">
         {say({
           language,
-          fr:
-            "Atelier mesuré : non-régression du noyau au bit près — " +
-            "chaque lecture observable comparée, octet par octet, à la " +
-            "ligne de base gelée — harnais autonome, aucun appel " +
-            "externe ; premier rendu une passe pure, sans effet de " +
-            "bord. Les chiffres cités dans l'atelier sont mesurés par " +
-            "ce même harnais.",
           en:
             "Measured workshop: bit-exact kernel non-regression — " +
             "every observable read compared, byte by byte, to the " +

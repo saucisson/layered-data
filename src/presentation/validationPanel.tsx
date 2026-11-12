@@ -25,18 +25,12 @@ export function ValidationPanel({
   return (
     <div aria-live="polite" aria-atomic="false" role="status">
       <h3 className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-100">
-        {say({ language, en: "Assembly validation", fr: "Validation d'assemblage" })}
+        {say({ language, en: "Assembly validation"})}
         <span className="ml-1 font-normal text-slate-600">
           {say({
             language,
             en:
               "the single source — " + stats.couches + " declared layers, " + stats.decl + " acts",
-            fr:
-              "la source unique — " +
-              stats.couches +
-              " couches déclarées, " +
-              stats.decl +
-              " actes",
           })}
         </span>
       </h3>
@@ -44,7 +38,6 @@ export function ValidationPanel({
         {say({
           language,
           en: "JSON is no longer the writing tool: the 47 layers are written in the design language, where inheritance (refines), transparency (extend), overloading (override), bindings (bind) and tags (check) are explicit acts. The assembly validation confronts every declared act with the reality of the closures BEFORE any execution: implicit overload, ghost declaration, unknown tag, binding laid at the wrong level. The first-wins shadows become declared acts; only an undeclared shadow is an error. The silences logged below remain the safety net.",
-          fr: "Le JSON n'est plus l'outil d'écriture : les 47 couches sont écrites dans le langage de conception, où héritage (refines), transparence (extend), surcharge (override), liaisons (bind) et étiquettes (check) sont des actes explicites. La validation d'assemblage confronte chaque acte déclaré à la réalité des fermetures AVANT toute exécution : surcharge implicite, déclaration de fantôme, étiquette inconnue, liaison posée au mauvais niveau. Les ombres du premier-gagné deviennent des actes déclarés ; seule une ombre non déclarée est une erreur. Les silences consignés ci-dessous restent le filet de sécurité.",
         })}
       </p>
       {stats.erreursSyntaxe > 0 && (
@@ -55,11 +48,6 @@ export function ValidationPanel({
               stats.erreursSyntaxe +
               (stats.erreursSyntaxe > 1 ? " syntax errors" : " syntax error") +
               " — the analysis stops at the first verdict, the partial space displays.",
-            fr:
-              stats.erreursSyntaxe +
-              " erreur" +
-              (stats.erreursSyntaxe > 1 ? "s" : "") +
-              " de syntaxe — l'analyse s'arrête au premier verdict, l'espace partiel s'affiche.",
           })}
         </p>
       )}
@@ -75,14 +63,6 @@ export function ValidationPanel({
               " consistent acts, " +
               stats.etiquettes +
               " tags at the registry, 0 implicit overload, 0 dead binding — the space passes.",
-            fr:
-              "Validation d'assemblage : " +
-              stats.declOK +
-              "/" +
-              stats.decl +
-              " actes cohérents, " +
-              stats.etiquettes +
-              " étiquettes au registre, 0 surcharge implicite, 0 liaison morte — l'espace passe.",
           })}
         </p>
       ) : (
@@ -102,14 +82,13 @@ export function ValidationPanel({
       <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[11px] text-slate-500">
         <span>
           <span className="font-semibold text-slate-700 dark:text-slate-200">{stats.nouveau}</span>{" "}
-          {say({ language, en: "new", fr: "nouveaux" })}
+          {say({ language, en: "new"})}
         </span>
         <span>
           <span className="font-semibold text-slate-700 dark:text-slate-200">{stats.extension}</span>{" "}
           {say({
             language,
             en: "extensions (declared transparency)",
-            fr: "extensions (transparence déclarée)",
           })}
         </span>
         <span>
@@ -117,7 +96,6 @@ export function ValidationPanel({
           {say({
             language,
             en: "overrides (declared shadows)",
-            fr: "surcharges (ombres déclarées)",
           })}
         </span>
         <span>
@@ -125,7 +103,6 @@ export function ValidationPanel({
           {say({
             language,
             en: "first-wins overwrites — all declared",
-            fr: "premier-gagné qui écrasent — tous déclarés",
           })}
         </span>
         <span>
@@ -133,7 +110,6 @@ export function ValidationPanel({
           {say({
             language,
             en: "emerging from the diamond (to inspect)",
-            fr: "émergentes du diamant (à inspecter)",
           })}
         </span>
       </div>
