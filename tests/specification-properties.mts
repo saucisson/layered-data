@@ -312,6 +312,7 @@ check(
       "multihypergraph/specification/edge_type " +
       "record " +
       "pair-graph/edge_type " +
+      "unit-weighted-hypergraph/edge_type " +
       "weighted-hypergraph/edge_type " +
       "edge-annotated-hypergraph/edge_type",
 );
@@ -326,8 +327,8 @@ check(
     ),
 );
 check(
-  "C1 (O4, measured diamond §12): the closure counts exactly the eight sources of the §12 walk",
-  diamondClosure.length === 8,
+  "C1 (O4, measured diamond §12): the closure counts exactly the nine sources of the §12 walk",
+  diamondClosure.length === 9,
 );
 
 // =====================================================================
