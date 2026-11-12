@@ -6,7 +6,7 @@
 // refuses — for the honesty of the story, not for the comfort of a
 // name. Two axes read the neighbors, a table measures them, and the
 // last section displays what the workshop adds and what it does not.
-// The companion document is docs/filiation.md, in the repository.
+// The companion document is docs/archive/filiation.md, in the repository.
 
 import { useRouter } from "../components/Router";
 import { say } from "../presentation/i18n.ts";
@@ -99,7 +99,7 @@ const FILIATION_ERAS: FiliationEra[] = [
     years: "2024–2026",
     title: { en: "This workshop"},
     text: {
-      en: "The idea made executable: 47 layers shipped as .ld files read by one kernel, a specification verified by property, contracts replayed at every assembly, a staged assisted-writing protocol — and every number cited on this site measured by a standalone harness.",
+      en: "The idea made executable: 85 layers shipped as .ld files read by one kernel, a specification verified by property, contracts replayed at every assembly, a staged assisted-writing protocol — and every number cited on this site measured by a standalone harness.",
     },
   },
 ];
@@ -231,7 +231,7 @@ const WORKSHOP_ADDS: BilingualText[] = [
     en: "An assisted-writing protocol. The geologist proposes, staging judges: the proposal is a staged layer, never a truth, and the refusal is spoken.",
   },
   {
-    en: "Everything is data. The 47 layers of the base are .ld files read by the same kernel as the visitors' layers — the metamodel does not write itself here: it loads.",
+    en: "Everything is data. The 85 layers of the base are .ld files read by the same kernel as the visitors' layers — the metamodel does not write itself here: it loads.",
   },
 ];
 
@@ -243,7 +243,7 @@ const WORKSHOP_LIMITS: BilingualText[] = [
     en: "It has no OCL. The constraints are generic checks carried by the data — measured, composed, less expressive than a full constraint logic.",
   },
   {
-    en: "It has no ecosystem. EMF has twenty years of tools and industry adoption; the workshop has seven harnesses and a tutorial.",
+    en: "It has no ecosystem. EMF has twenty years of tools and industry adoption; the workshop has a verification harness suite and a tutorial.",
   },
   {
     en: "It pays displayed prices. The alias multiplies the reports of one defect, the linter is blind to designations by keys.",
@@ -274,9 +274,9 @@ const LINKED_REFERENCES: LinkReference[] = [
   },
   {
     label: {
-      en: "The companion document — docs/filiation.md in the repository",
+      en: "The companion document — docs/archive/filiation.md in the repository",
     },
-    url: "https://github.com/saucisson/layered-data/blob/feat/tutorial-page-defilante/docs/filiation.md",
+    url: "https://github.com/saucisson/layered-data/blob/daily/docs/archive/filiation.md",
   },
   {
     label: { en: "CUE — the introduction"},
