@@ -5,6 +5,12 @@
 //      containers — names do not refine (places ≠ left), paths do.
 layer petrinet-scheme refines @bipartite-digraph then @vertex-annotated-hypergraph then @edge-annotated-hypergraph
   extend specification
+    // the abstract token type: each refinement fixes what a token is
+    // (pt-petrinet: an integer; colored-petrinet: a color tuple)
+    token_type refines @record
+      extend specification
+        extend record
+          abstract identifier
     place_type refines @petrinet-scheme/specification/vertex_type
       extend specification
         extend record
@@ -46,6 +52,12 @@ layer petrinet-scheme refines @bipartite-digraph then @vertex-annotated-hypergra
     extend specification
       extend collection
         override type = @petrinet-scheme/specification/place_type
+  // the marking of a place is a multiset of tokens — the abstract link;
+  // pt-petrinet binds it to pt-multiset (ℕ multiplicities)
+  place_marking refines @multiset
+    extend specification
+      extend multiset
+        override element_type = @petrinet-scheme/specification/token_type
   transitions refines @collection
     extend specification
       extend collection
