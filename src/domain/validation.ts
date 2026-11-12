@@ -311,7 +311,7 @@ export function* streamValidation({
   // The labels pass reads the root closures DIRECTLY (never through
   // the shared walk): the first closure computation of a layer is
   // observable — it records the resolution diagnostics — and the
-  // recorded order is part of the audit's byte-identical dump.
+  // recorded order is deterministic.
   for (const [layerIndex, layer] of layerNames.entries()) {
     for (const [sourceLayer, sourcePath] of space.closure({ layer, path: [] })) {
       if (sourcePath.length === 0) ancestorsOf.get(layer)!.add(sourceLayer);

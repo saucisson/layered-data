@@ -32,7 +32,7 @@ Read `docs/architecture.md` (layer boundaries: `src/domain` <- `src/application`
 
 ### Running tests individually
 
-Each front of `npm run verify` has its own script: `npm run typecheck`, `npm run check:structure`, `npm run lint`, `npm run test:audit`, `npm run test:specification`, `npm run test:editor`, `npm run test:pages`, `npm run test:server`, `npm run test:e2e` (Playwright), etc. — see the `scripts` section of `package.json`.
+Each front of `npm run verify` has its own script: `npm run typecheck`, `npm run check:structure`, `npm run lint`, `npm run test:specification`, `npm run test:editor`, `npm run test:pages`, `npm run test:server`, `npm run test:e2e` (Playwright), etc. — see the `scripts` section of `package.json`.
 
 ## For humans
 
