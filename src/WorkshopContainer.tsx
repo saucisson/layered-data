@@ -1497,12 +1497,11 @@ export function WorkshopPage({
         {say({
           language,
           en:
-            "Measured workshop: bit-exact kernel non-regression — " +
-            "every observable read compared, byte by byte, to the " +
-            "frozen baseline — self-contained harness, no external " +
-            "call; first render a pure pass, without side effect. " +
-            "The figures quoted in the workshop are measured by " +
-            "that same harness.",
+            "Measured workshop: the kernel's behavior is pinned by the " +
+            "executable specification — property checks over the whole " +
+            "corpus, self-contained harness, no external call; first " +
+            "render a pure pass, without side effect. The figures quoted " +
+            "in the workshop are measured by that same harness.",
         })}
       </footer>
     </div>

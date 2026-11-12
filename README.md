@@ -1,268 +1,204 @@
-# Layered Data — l'atelier de conception des formalismes
+# Layered Data — the formalism design workshop
 
-Un démonstrateur où **les définitions elles-mêmes sont des données** : formalismes
-et modèles sont des couches qui se sédimentent (raffinement, héritage,
-carottage premier-gagné). Le réseau de Petri s'y dérive du socle des
-hypergraphes jusqu'au dîner des cinq philosophes, et son espace d'états
-hérite du réseau par liaison tardive. Le modèle vient du papier
-_Layered Data: A Modular Formal Definition without Formalisms_
-(PNSE'16) ; sa filiation intellectuelle — les prédécesseurs
-nommés, des frames aux langages de configuration, et les
-métamodélisations comparées
-(EMF/Ecore, MOF, multi-niveaux, feature models…) — est établie dans
-`docs/filiation.md`.
+A standalone workshop where **the definitions themselves are data**: formalisms
+and models are layers that sediment on top of each other (refinement,
+inheritance, first-wins reading). The atelier lets you **define formalisms,
+validate them by linting, and display and graphically edit models**. A Petri
+net derives from the bedrock of hypergraphs up to the five philosophers'
+dinner, and its state space inherits from the net by late binding. The model
+comes from the paper _Layered Data: A Modular Formal Definition without
+Formalisms_ (PNSE'16).
 
-## Contenu
+## Contents
 
-Le code suit une architecture en oignon, documentée dans
-`docs/architecture.md` (les règles de codage, binding pour tout `src/` et
-`server.ts`, vivent dans `docs/coding-guidelines.md`) :
+The code follows an onion architecture, documented in
+`docs/architecture.md` (the coding rules, binding for all of `src/` and
+`server.ts`, live in `docs/coding-guidelines.md`):
 
-- `src/domain/` — le noyau layered-data, pur : l'espace (closures, carottage
-  premier-gagné), le langage (tokenizer, parseur, compilateur,
-  citations), les checks sémantiques, la validation, les vues (lentilles).
-  Il n'importe ni React, ni Node, ni fichier : du calcul pur sur données.
-- `src/application/` — les cas d'usage : assemblage du corpus depuis les
-  sources, staging des ajouts (le refus d'un candidat casseur), vues
-  aplaties, linting.
-- `src/infrastructure/` — les effets vers l'extérieur : chargement du
-  corpus (glob Vite), client HTTP de la carrière, stockage du code d'accès.
-- `src/presentation/` — les composants React : purs dans le rendu, sans
-  logique métier.
-- `src/App.tsx` — la racine de composition : le noyau y est assemblé,
-  les états y vivent, les panneaux (① couches, ② formalisme, ③ lecture,
-  ④ point de vue) y sont câblés.
-- `formalisms/kernel/` — les 47 couches du socle, une par fichier `.ld`.
-- `formalisms/users/` — la carrière personnelle (vide au départ).
-- `server.ts` — la carrière : API des couches + géologue IA + statique.
-- `tests/` — les sept harnais de vérification : audit, spécification
-  exécutable, staging, boucle du géologue, éditeur vivant, atelier
-  bilingue, vocabulaire du traité (voir plus bas).
-- `vscode/` — l'extension VS Code : coloration syntaxique du langage
-  `.ld` (build et installation plus bas).
-- `docs/specification.md` — la spécification normative du noyau
-  (obligations O1–O18, conformité C1–C8, théorèmes deux-régimes
-  T1–T3), rendue exécutable par
-  `tests/specification-properties.mts`.
-- `docs/filiation.md` — la filiation intellectuelle : les
-  prédécesseurs nommés (frames et KL-ONE, l'héritage par défaut de
-  Touretzky, les prototypes de Self, la cascade CSS, les modules
-  Nix, RDF/RDFS), les métamodélisations comparées (MOF, EMF/Ecore,
-  modélisation multi-niveaux, XML/JSON Schema, feature models),
-  puis la divergence mesurée — le papier fondateur (PNSE'16) y est
-  cité.
+- `src/domain/` — the layered-data kernel, pure: the space (closures,
+  first-wins reading), the language (tokenizer, parser, compiler,
+  citations), the semantic checks, the validation, the views (lenses).
+  It imports neither React, nor Node, nor any file: pure computation on
+  data.
+- `src/application/` — the use cases: corpus assembly from sources,
+  staging of additions (a breaking candidate is refused), flattened
+  views, linting.
+- `src/infrastructure/` — the effects towards the outside: corpus
+  loading (Vite glob), HTTP client of the quarry, access-code storage.
+- `src/presentation/` — the React components: pure in rendering, no
+  business logic.
+- `src/App.tsx` — the composition root: the kernel is assembled there,
+  the states live there, the panels (① layers, ② formalism, ③ reading,
+  ④ point of view) are wired there.
+- `formalisms/kernel/` — the 85 layers of the bedrock, one `.ld` file
+  per layer.
+- `formalisms/users/` — the personal quarry (empty at first).
+- `server.ts` — the quarry: layers API + AI geologist + static serving.
+- `tests/` — the verification harnesses (see below).
+- `vscode/` — the VS Code extension: syntax highlighting for the `.ld`
+  language (build and installation below).
+- `docs/specification.md` — the normative specification of the kernel
+  (obligations O1–O18, conformance C1–C8, two-regime theorems T1–T3),
+  made executable by `tests/specification-properties.mts`.
+- `docs/archive/filiation.md` — the intellectual history (archived,
+  kept for reference).
 
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) — humans and agents follow the protocol in `AGENTS.md` and `docs/branching.md`.
 
-## Démarrage
+## Quick start
 
 ```bash
 npm install
-cp .env.example .env          # puis éditez API_TOKEN
-npm run serve                 # carrière (API 127.0.0.1:8791) + atelier avec rechargement à chaud (localhost:5173, proxy /api)
-npm run dev                    # l'atelier seul, avec rechargement à chaud
-npm run build && npm run serve:prod # l'atelier construit, servi par la carrière
-npm test                       # non-régression du noyau (voir plus bas)
-npm run check:structure        # équilibre JSX/tsx (filet, sans compilateur)
+cp .env.example .env          # then edit API_TOKEN
+npm run serve                 # quarry (API 127.0.0.1:8791) + workshop with hot reload (localhost:5173, proxy /api)
+npm run dev                   # the workshop alone, with hot reload
+npm run build && npm run serve:prod # the built workshop, served by the quarry
+npm test                      # the verification harnesses (see below)
+npm run check:structure       # JSX/tsx balance (safety net, no compiler)
 ```
 
-### Avec Docker
+### With Docker
 
 ```bash
-cp .env.example .env           # puis éditez API_TOKEN, POSTGRES_USER, POSTGRES_PASSWORD
-docker compose up --build      # atelier sur 0.0.0.0:8791 + PostgreSQL (rate limiting actif)
+cp .env.example .env           # then edit API_TOKEN, POSTGRES_USER, POSTGRES_PASSWORD
+docker compose up --build      # workshop on 0.0.0.0:8791 + PostgreSQL (rate limiting active)
 ```
 
-Le `docker-compose.yml` déploie deux services : `postgres` (volume nommé
-`postgres-data`, schéma initialisé au premier démarrage via
-`docker-entrypoint-initdb.d/`) et `atelier`, qui attend la base et reçoit
-`DATABASE_URL` — les compteurs du rate limiting vivent alors en base.
-Sans base (dev local) : `DATABASE_URL= docker compose up --no-deps --build atelier`.
+The `docker-compose.yml` deploys two services: `postgres` (named volume
+`postgres-data`, schema initialized on first start via
+`docker-entrypoint-initdb.d/`) and `atelier`, which waits for the database
+and receives `DATABASE_URL` — the rate-limit counters then live in the
+database. Without a database (local dev): `DATABASE_URL= docker compose up --no-deps --build atelier`.
 
-`API_TOKEN`, `POSTGRES_USER` et `POSTGRES_PASSWORD` doivent être définis
-dans l'environnement ou `.env` (compose refuse de démarrer sinon). Voir
-[docs/deployment.md](docs/deployment.md) pour le déploiement derrière un
-reverse proxy.
+`API_TOKEN`, `POSTGRES_USER` and `POSTGRES_PASSWORD` must be defined in the
+environment or `.env` (compose refuses to start otherwise). See
+[docs/deployment.md](docs/deployment.md) for deployment behind a reverse
+proxy.
 
-## Coloration syntaxique dans VS Code
+## Syntax highlighting in VS Code
 
-L'extension déclarative vit dans `vscode/` : grammaire TextMate
-(`syntaxes/ld.tmLanguage.json`) et manifeste, sans dépendance ni
-compilation. Détails dans `vscode/README.md`.
+The declarative extension lives in `vscode/`: TextMate grammar
+(`syntaxes/ld.tmLanguage.json`) and manifest, no dependency, no compilation.
+Details in `vscode/README.md`.
 
 ```bash
-# essayer sans installer, depuis la racine du dépôt :
+# try without installing, from the repository root:
 code --extensionDevelopmentPath=vscode
 
-# empaqueter le .vsix (vsce via npx, depuis le dossier de l'extension) :
+# package the .vsix (vsce via npx, from the extension folder):
 cd vscode && npx @vscode/vsce package
 
-# installer (le .vsix pré-construit est fourni dans vscode/) :
+# install (a prebuilt .vsix is provided in vscode/):
 code --install-extension vscode/layered-data-0.2.0.vsix
 ```
 
-Après toute modification de la grammaire, re-générez le `.vsix` avant
-installation. Le harnais `node tests/vscode-checks.mts` valide la
-grammaire contre tout le corpus `.ld`.
+After any grammar change, regenerate the `.vsix` before installing. The
+harness `node tests/vscode-checks.mts` validates the grammar against the
+whole `.ld` corpus.
 
-## L'API de la carrière
+## The quarry API
 
-Voir [docs/deployment.md](docs/deployment.md) pour le déploiement en
-production (reverse proxy, HTTPS, checklist).
+See [docs/deployment.md](docs/deployment.md) for production deployment
+(reverse proxy, HTTPS, checklist).
 
-Le code d'accès passe dans l'en-tête `x-access-code` (le `Authorization:
-Bearer <API_TOKEN>` de compatibilité reste accepté). Toutes les routes le
-demandent et rendent du JSON, sauf indication.
+The access code travels in the `x-access-code` header. All routes require
+it and return JSON, unless stated otherwise.
 
-| Route                  | Effet                                                             |
+| Route                  | Effect                                                            |
 | ---------------------- | ----------------------------------------------------------------- |
-| `GET /api/whoami`      | 200 avec code valide, 401 sinon                                   |
-| `GET /api/layers`      | `{ layers: [{ name, builtIn }] }` — socle + couches des visiteurs |
-| `GET /api/layers/:nom` | `{ name, builtIn, source }` — la couche `.ld`                     |
-| `PUT /api/layers/:nom` | pose une couche visiteur (403 sur le socle, 400 nom invalide)     |
-| `POST /api/generate`   | corps `{ prompt }`, réponse **texte brut** : la couche en langage |
+| `GET /api/whoami`      | 200 with a valid code, 401 otherwise                              |
+| `GET /api/layers`      | `{ layers: [{ name, builtIn }] }` — bedrock + visitors' layers    |
+| `GET /api/layers/:nom` | `{ name, builtIn, source }` — the `.ld` layer                     |
+| `PUT /api/layers/:nom` | writes a visitor layer (403 on the bedrock, 400 invalid name)     |
+| `POST /api/generate`   | body `{ prompt }`, **plain text** response: the layer in the language |
 
-L'ancienne API `api/formalismes` reste servie à l'identique (liste,
-lecture, pose, effacement) : c'est un alias d'héritage, les nouvelles
-intégrations parlent `api/layers`.
+The bedrock (the 85 layers of the corpus) is read-only: `PUT` and `DELETE`
+answer 403 there — and since ADR-0103, the rule lives in the protocol
+itself, not only at the quarry's door: staging and edition carry the
+bedrock's signature and refuse to touch it themselves ("bedrock-occupied",
+"bedrock-edited").
 
-Le socle (les 47 couches du corpus) est en lecture seule : `PUT` et
-`DELETE` y répondent 403 — et depuis l'ADR-0103, la règle vit dans le
-protocole lui-même, pas seulement à la porte de la carrière : staging et
-édition portent la signature du socle et refusent eux-mêmes d'y
-toucher (« socle-occupé », « socle-édité »). Le vocabulaire du produit
-suit le traité de l'ADR-0104 : trois strates, un seul récit.
+## The geologist and the contract
 
-## Le géologue et le contrat
+The system prompt of `/api/generate` embeds the workshop's state, read from
+disk on each call: the layered-data manifesto (refinement, first-wins
+reading, citations, lenses), the complete stratigraphic column (one
+`layer … refines …` line per bedrock layer, plus the visitors' layers), a
+full corpus example and the tests contract. Upstream errors (refused key,
+unknown model, exhausted quota) are returned as-is in the response, never
+silenced.
 
-Le prompt système de `/api/generate` embarque l'état de l'atelier, lu sur
-le disque à chaque appel : le manifeste des données en strates (raffinement,
-carottage premier-gagné, citations, lentilles), la colonne stratigraphique
-complète (une ligne `layer … refines …` par couche du socle, plus les
-couches des visiteurs), un exemple complet du corpus et le contrat de
-tests. L'erreur amont (clé refusée, modèle inconnu, quota épuisé) est
-rendue telle quelle dans la réponse, jamais muette.
+**The geologist proposes, the staging judges**: every `/api/generate`
+proposal is verified server-side by the workshop's own staging (syntax,
+unknown target, betrayed expectations…); a refusal goes back to the model
+with its verdicts, up to `PEN_MAX_ATTEMPTS` proposals (3 by default).
+Since ADR-0102, the checks registry is itself a bedrock layer
+(`formalisms/kernel/check-registry.ld`): contracts are data, and the lint
+audits the seams ("contract-without-algorithm", "algorithm-without-contract",
+"contract-unreadable"). The response is always a staged layer: plain text
+on 200, spoken refusal on 422 — and the browser's staging remains the
+final judge.
 
-**Le géologue propose, le staging juge** : chaque proposition de
-`/api/generate` est vérifiée côté serveur par le staging même de
-l'atelier (syntaxe, cible inconnue, attendus trahis…) ; un refus
-revient au modèle avec ses verdicts, jusqu'à `PEN_MAX_ATTEMPTS`
-propositions (3 par défaut). `PEN_STRICT_CONFLICTS=1` arme le bras
-strict (ADR-0100, retiré comme sémantique par l'ADR-0106) : le
-géologue ne peut plus proposer une lecture que l'ordre des refines
-tranche entre sources incomparables — la résoudre, c'est
-restructurer, jamais signer. `PEN_STRICT_CHECKS=1` arme le
-second bras strict (ADR-0101) : les checks portés par la candidate
-s'exécutent enfin, et le géologue ne peut plus proposer une couche que
-ses propres contraintes refusent (« check-trahi »). Depuis l'ADR-0102,
-le registre des checks est lui-même une couche du socle
-(`formalisms/kernel/check-registry.ld`) : les contrats sont des
-données, l'existence d'une étiquette est l'existence dans les
-données, et le lint audite la couture (« contrat-sans-algorithme »,
-« algorithme-sans-contrat », « contrat-illisible »). La réponse est
-toujours une couche stagée : texte brut sur 200, refus parlé sur 422 —
-et le staging du navigateur reste juge en dernier ressort.
+The tests contract: expectations (`expect … = …`, `expect … absent`)
+travel with the layer and replay at validation; a betrayed expectation
+becomes an "expectation-betrayed" verdict. Protocol: **the geologist
+proposes, never the truth — expectations are measured, not guessed**.
 
-Le contrat de tests : les attendus (`expect … = …`, `expect … absent`)
-voyagent avec la couche et se rejouent à la validation ; un attendu trahi
-devient un verdict « attendu-trahi ». Protocole : **le géologue propose,
-jamais la vérité — les attendus se mesurent, ils ne se devinent pas**.
+## Verification
 
-## Vérification
+All fronts run under bare Node (native type stripping) — the CI
+(`.github/workflows/ci.yml`) replays exactly the same chain as
+`npm run verify`:
 
-Sept fronts, tous sous Node nu (type stripping natif) — la CI
-(`.github/workflows/ci.yml`) rejoue exactement la même chaîne que
-`npm run verify` :
+0. **Strict typing** (`npm run typecheck`): `tsc --noEmit` on both
+   configurations — `tsconfig.json` (the workshop: `src`, no Node types,
+   so the domain stays pure) and `tsconfig.node.json` (the server side:
+   `server.ts`, the harnesses, `vite.config.ts`, with `@types/node`).
+   Node never checks types at load time: that front lives only in the
+   compiler.
+1. **The executable specification** (`npm run test:specification`,
+   `tests/specification-properties.mts`) checks the obligations O1–O18
+   and requirements C1–C8 of `docs/specification.md` as properties —
+   conformance measurements, not formal proofs: closures (dedup, own
+   node first, the measured diamond), reads (first-wins, statuses),
+   keys, anchors, immutability (call-order independence, permutation
+   invariance of the 85-layer assembly), the cycle guard, late binding,
+   desugaring (topological order, idempotence), the exact invalidation
+   protocol — and, since ADR-0106, the two-regime algebra theorems.
+2. **The staging checks** (`npm run test:staging`,
+   `tests/staging-checks.mts`) pin the additions protocol: a healthy
+   draft accepted and applied, broken syntax refused at the "syntax"
+   step, unknown target refused, betrayed expectation refused, a draft
+   claiming a bedrock name refused ("bedrock-occupied", ADR-0103).
+3. **The geologist loop** (`npm run test:pen-loop`,
+   `tests/pen-loop-checks.mts`) checks the server-side loop
+   (`src/application/penLoop.ts`, injected geologist — offline).
+4. **The living editor checks** (`npm run test:editor`,
+   `tests/editor-checks.mts`) pin the edition protocol
+   (`src/application/edition.ts`).
+5. **The i18n mechanism checks** (`npm run test:i18n`,
+   `tests/i18n-checks.mts`) verify the translation plumbing: English
+   content by default, English fallback when French is absent
+   (ADR-0113); the kernel codes stay stable in the data.
+6. Plus the pages, model editor, editor session, validation stream,
+   performance, server HTTP, reviewer, error boundary, access-code
+   consent, rate-limit, PostgreSQL and VS Code harnesses — see the
+   `scripts` section of `package.json`.
 
-0. **Le typage strict** (`npm run typecheck`) : `tsc --noEmit` sur les
-   deux configurations — `tsconfig.json` (l'atelier : `src`, sans
-   types Node, pour que le domaine reste pur) et `tsconfig.node.json`
-   (le côté serveur : `server.ts`, les harnais, `vite.config.ts`,
-   avec `@types/node`). Node ne vérifie jamais les types au
-   chargement : ce front-là ne vit que dans le compilateur.
-1. **Le harnais d'audit** (`npm run test:audit`) rejoue le noyau
-   (`src/domain/`) sur le corpus entier, dump toutes les lectures
-   observables — stats de validation, verdicts, diagnostics, closures,
-   clés visibles, lectures, clés spéciales — et les compare au bit près à
-   `tests/baseline-kernel.txt` (725 déclarations, 7 tests, 0 trahi,
-   0 verdict). Aucune évolution du noyau ne passe sans dump identique.
-2. **La spécification exécutable** (`npm run test:specification`,
-   `tests/specification-properties.mts`) vérifie les obligations O1–O18
-   et exigences C1–C8 de `docs/specification.md` comme des propriétés —
-   des mesures de conformance, pas des démonstrations formelles :
-   closures (dédoublonnage, nœud propre premier, diamant mesuré),
-   lectures (premier-gagné, statuts), clés, ancres, immutabilité
-   (indépendance de l'ordre d'appel, invariance par permutation des 47
-   couches), garde de cycle, liaison tardive, désucrage (ordre
-   topologique, idempotence), protocole d'invalidation exact — et,
-   depuis l'ADR-0106, les théorèmes de l'algèbre deux-régimes (§14 :
-   confluence, conservativité, monotonie), mesurés retrait par
-   retrait et croissance par croissance.
-3. **Les checks de staging** (`npm run test:staging`,
-   `tests/staging-checks.mts`) figent le protocole des ajouts : brouillon
-   sain accepté et appliqué, syntaxe cassée refusée à l'étape « syntaxe »,
-   cible inconnue refusée (« cible-inconnue »), attendu trahi
-   (« attendu-trahi »), conflit d'ordre refusé en mode strict sans
-   exception (« conflit-d'ordre », ADR-0100 retiré comme sémantique
-   par l'ADR-0106), check posé mais incapable de juger refusé
-   (« check-vacant », ADR-0101), et checks portés exécutés en mode
-   strict (« check-trahi »). Brouillon réclamant un nom du socle
-   refusé (« socle-occupé », ADR-0103) — le vol nommé, la pièce
-   forgée jamais jugée.
-4. **La boucle du géologue** (`npm run test:pen-loop`,
-   `tests/pen-loop-checks.mts`) vérifie la boucle côté serveur
-   (`src/application/penLoop.ts`, géologue injecté — hors ligne) : refus
-   syntaxique puis correction acceptée, verdicts en français au modèle,
-   budget épuisé (3 refus), géologue muet refusé, proposition raffinant
-   une couche d'utilisateur acceptée quand la carrière est dans le contexte,
-   proposition réclamant le nom d'une couche du socle refusée
-   (« socle-occupé », ADR-0103) puis corrigée vers un raffinement accepté.
-5. **Les checks de l'éditeur vivant** (`npm run test:editor`,
-   `tests/editor-checks.mts`) figent le protocole des éditions
-   (`src/application/edition.ts`) : la couche vivante quitte le
-   contexte le temps du jugement, le staging revalide corpus +
-   suppléments entiers et rejoue les attendus des autres couches
-   vivantes ; l'édition acceptée remplace l'arbre en place, déclare
-   l'écriture — le touch invalide la fermeture de la couche ET celle
-   de l'enfant qui la lit (O18 à travers la chaîne de raffinement) ;
-   renommage refusé, couche glissée dans l'édition refusée, attendu
-   trahi d'une autre couche refusé (l'espace reste intact), édition
-   visant le socle refusée (« socle-édité », ADR-0103) — et sans
-   le touch, la fermeture mémoïsée sert l'ancienne chaîne en silence :
-   le protocole est obligatoire.
-6. **Les checks de l'atelier bilingue** (`npm run test:i18n`,
-   `tests/i18n-checks.mts`) vérifient la parité des deux langues :
-   l'anglais par défaut, le français en miroir. Les codes du noyau
-   (statuts, kinds, étapes) restent stables dans les données —
-   `renderMessage`/`kernelLabel` les habillent dans la langue de
-   l'atelier ; chaque surface pédagogique (glossaire, tutoriel,
-   scénarios, notes de vue, rôle des 47 couches, diagnostics,
-   instructions du géologue) porte ses deux textes, mesurés par le
-   harnais. Les formalismes `.ld` du corpus restent dans leur langue.
-7. **Les checks du vocabulaire du traité** (`npm run test:terminology`,
-   `tests/terminology-checks.mts`) figent le traité de l'ADR-0104 :
-   trois strates, un seul récit. Les mots de l'informatique gardent
-   leur nom adopté (staging, linter — « la linteuse » est retirée),
-   les marques ⟪…⟫ citent le glossaire dans la langue de chacun, et
-   le récit vit chez le géologue (socle, carrière, colonne
-   stratigraphique) ; les mots retirés (la plume, l'armoire, le
-   tronc, la colonne vertébrale) n'apparaissent dans aucune chaîne
-   rendue, mesuré.
+`npm test` runs the harness chain; `npm run verify` runs the whole chain
+(typing, structure, harnesses, build). The normative specification lives in
+`docs/specification.md` (kept in French: the product's observable vocabulary
+is French).
 
-`npm test` lance les sept harnais ; `npm run verify` lance toute la
-chaîne (typage, structure, harnais, build). La spécification normative
-vit dans `docs/specification.md` (texte en français : le vocabulaire
-observable du produit l'est aussi).
+Under Node, the harnesses import the domain directly (native type
+stripping); under Vite, the workshop loads the same domain — the corpus
+exists only once.
 
-Sous Node, le harnais importe le domaine directement (type stripping
-natif) ; sous Vite, l'atelier charge le même domaine — le corpus ne vit
-qu'une fois.
+## Guardrails
 
-## Garde-fous
-
-- Le serveur écoute sur `127.0.0.1` par défaut ; ne changez `HOST`
-  que derrière un reverse-proxy authentifié.
-- Aucune clé n'est embarquée : le géologue sort seulement si
-  `MISTRAL_API_KEY` est posée dans l'environnement ou le `.env`.
+- The server listens on `127.0.0.1` by default; only change `HOST` behind
+  an authenticated reverse proxy.
+- No key is embedded: the geologist only goes out if `MISTRAL_API_KEY` is
+  set in the environment or `.env`.

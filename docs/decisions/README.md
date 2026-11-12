@@ -68,6 +68,7 @@ What this decision implies - good and bad.
 | [ADR-0108](adr-0108-streamed-validation.md) | Streamed validation - chunked generator + event-loop pacing, synchronous drain kept as the API | accepted | 2026-11-09 |
 | [ADR-0109](adr-0109-inline-checks-english-formalisms.md) | Inline checks, English-first formalisms, i18next for translations | proposed | 2026-11-09 |
 | [ADR-0110](adr-0110-shared-editor-session.md) | A shared editor session - SSE state, judged gestures, optimistic locking | proposed | 2026-11-09 |
+| [ADR-0111](adr-0111-postgres-persistence.md) | PostgreSQL persistence for user layers and the editor session | accepted | 2026-11-11 |
 | [ADR-0112](adr-0112-retire-audit-treaty.md) | Retiring the audit treaty - the executable specification is the contract | accepted | 2026-11-12 |
 | [ADR-0113](adr-0113-one-tongue.md) | One tongue for now - English-only content, the translation system is kept | accepted | 2026-11-12 |
 
