@@ -161,14 +161,10 @@ try {
     (dbRows.rows[0] as { source: string }).source.includes("value = 2"),
   );
 
-  response = await fetch(base + "/api/formalismes/pg-test-layer", { method: "DELETE", headers: auth });
-  check("DELETE the layer is 200", response.status === 200);
-  dbRows = await pool.query("SELECT name FROM user_layers WHERE name = $1", ["pg-test-layer"]);
-  check("the row is gone from PostgreSQL", dbRows.rowCount === 0);
   response = await fetch(base + "/api/layers/pg-test-layer", { headers: auth });
-  check("GET the deleted layer is 404", response.status === 404);
-  response = await fetch(base + "/api/formalismes/pg-test-layer", { method: "DELETE", headers: auth });
-  check("DELETE the deleted layer is 404", response.status === 404);
+  check("GET the written layer is 200", response.status === 200);
+  response = await fetch(base + "/api/layers/never-written-layer", { headers: auth });
+  check("GET an unknown layer is 404", response.status === 404);
 
   // ---- the editor session: two SSE clients, journal, restore ----
   const sseController = new AbortController();

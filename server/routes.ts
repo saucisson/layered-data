@@ -2,10 +2,8 @@
 // Layered Data — the routes: quarry API, geologist, editor
 // session (SSE), static host
 //
-// The quarry API exists in two vocabularies: `api/layers` (the
-// workshop protocol — English keys, one shape for every client)
-// and `api/formalismes` (the compatibility API — French keys,
-// kept for the already-published geologist clients).
+// The quarry API is `api/layers` — the workshop protocol, one shape
+// for every client.
 // ============================================================
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
@@ -189,81 +187,6 @@ export function createQuarryServer({
               statusCode: created ? 201 : 200,
               body: { name, builtIn: false, écrit: true },
             });
-          }
-        }
-
-        // ---- the compatibility API: api/formalismes ----
-        if (request.method === "GET" && url.pathname === "/api/formalismes") {
-          const userNames = await stores.userLayers.listNames();
-          return sendJson({
-            response,
-            statusCode: 200,
-            body: {
-              version: VERSION,
-              noyau: KERNEL_LAYER_NAMES,
-              utilisateurs: userNames,
-              total: KERNEL_LAYER_NAMES.length + userNames.length,
-            },
-          });
-        }
-
-        if (segments[1] === "formalismes" && segments[2]) {
-          const nameCheck = asLayerName({ candidate: segments[2] });
-          if ("reason" in nameCheck)
-            return sendJson({ response, statusCode: 400, body: { erreur: nameCheck.reason } });
-          const name = nameCheck.name;
-
-          if (request.method === "GET") {
-            const lookup = await lookupLayer({ name, userLayerStore: stores.userLayers });
-            if (!lookup.found)
-              return sendJson({
-                response,
-                statusCode: 404,
-                body: { erreur: "couche inconnue : " + name },
-              });
-            return sendJson({
-              response,
-              statusCode: 200,
-              body: { nom: name, origine: lookup.location, source: lookup.source },
-            });
-          }
-
-          if (request.method === "PUT") {
-            if (KERNEL_LAYER_NAMES.includes(name)) {
-              return sendJson({
-                response,
-                statusCode: 403,
-                body: { erreur: "le socle est en lecture seule : " + name },
-              });
-            }
-            const bodyCheck = sourceOfRequestBody({ rawBody: await readRequestBody({ request }) });
-            if ("reason" in bodyCheck)
-              return sendJson({ response, statusCode: 400, body: { erreur: bodyCheck.reason } });
-            const { created } = await stores.userLayers.write({ name, source: bodyCheck.source });
-            return sendJson({
-              response,
-              statusCode: created ? 201 : 200,
-              body: { nom: name, origine: "utilisateurs", écrit: true },
-            });
-          }
-
-          if (request.method === "DELETE") {
-            if (KERNEL_LAYER_NAMES.includes(name)) {
-              return sendJson({
-                response,
-                statusCode: 403,
-                body: { erreur: "le socle est en lecture seule : " + name },
-              });
-            }
-            const { existed } = await stores.userLayers.delete({ name });
-            if (!existed) {
-              return sendJson({
-                response,
-                statusCode: 404,
-                body: { erreur: "couche inconnue : " + name },
-              });
-            }
-            return sendJson({ response, statusCode: 200, body: { nom: name, effacé: true } });
           }
         }
 
