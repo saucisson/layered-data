@@ -44,9 +44,6 @@ typecheck:
 test:
 	npm test
 
-test-audit:
-	npm run test:audit
-
 test-specification:
 	npm run test:specification
 

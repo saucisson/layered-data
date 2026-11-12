@@ -76,9 +76,10 @@ They are written for two readers at once: humans and AI.
 16. **Deterministic by construction** — the domain uses no clock, no
     randomness, no environment. Anything time- or environment-dependent
     is injected from the outside.
-17. **The audit is the contract** — every domain change must keep the
-    kernel dump byte-identical (`npm test`). A refactor is not done
-    until the dump is identical.
+17. **The executable specification is the contract** — every domain
+    change must keep the O/C/T properties of
+    `tests/specification-properties.mts` green (`npm test`). A refactor
+    is not done until they pass.
 
 ## React (presentation)
 
