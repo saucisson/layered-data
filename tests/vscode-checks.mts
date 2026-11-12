@@ -513,13 +513,13 @@ const betrayedLine =
     ) + 1;
 rmSync(betrayedRoot, { recursive: true, force: true });
 check(
-  "a betrayed expect is a verdict on its own expect line, rendered in French",
+  "a betrayed expect is a verdict on its own expect line — the code stays French, the message falls back to English (ADR-0113)",
   betrayedAnswer.diagnostics.length === 1 &&
     at(betrayedAnswer.diagnostics, 0).file ===
       "formalisms/kernel/pn-philosophers-5.ld" &&
     at(betrayedAnswer.diagnostics, 0).line === betrayedLine &&
     at(betrayedAnswer.diagnostics, 0).code === "attendu-trahi" &&
-    at(betrayedAnswer.diagnostics, 0).message.includes("attendu 7, lu 1"),
+    at(betrayedAnswer.diagnostics, 0).message.includes("expected 7, read 1"),
 );
 
 const overloadRoot = brokenCorpus({
