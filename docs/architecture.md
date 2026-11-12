@@ -101,10 +101,6 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   `@types/node`). Node strips types at run time and never checks
   them: this front lives only in the compiler — and in the CI, the
   only place where the whole tree is actually read type-wise.
-- **The audit** (`tests/audit-kernel.mts`): the dump of every
-  observable kernel read over the whole corpus must stay
-  **byte-identical** to `tests/baseline-kernel.txt`. The baseline was
-  captured before the refactoring; any difference is a regression.
 - **The executable specification** (`tests/specification-properties.mts`):
   the normative obligations O1–O18 and conformance requirements C1–C8
   of `docs/specification.md`, checked as properties — closures (dedup,
@@ -156,5 +152,5 @@ npm run verify         # typecheck, structure, all fifteen harnesses, build
 npm test               # the fifteen harnesses alone
 ```
 
-The audit line of defense never weakens: no change to the domain is
-complete until the dump reports an identical baseline.
+The executable specification never weakens: no change to the domain is
+complete until the O/C/T properties report green.

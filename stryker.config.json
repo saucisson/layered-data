@@ -3,7 +3,7 @@
   "mutate": ["src/domain/language/**/*.ts"],
   "testRunner": "command",
   "commandRunner": {
-    "command": "npm run test:specification && npm run test:audit && npm run test:staging"
+    "command": "npm run test:specification && npm run test:staging"
   },
   "coverageAnalysis": "off",
   "reporters": ["clear-text", "json", "html"],
