@@ -135,21 +135,21 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   living layer is refused and the space stays intact. Without the
   touch, the memoized closure would keep serving the old chain
   silently — the protocol is mandatory, and the harness measures it.
-- **The bilingual workshop** (`tests/i18n-checks.mts`): the workshop
-  speaks two languages — English by default, French one click away.
-  The kernel codes (statuses, kinds, steps) stay stable in the data;
-  `renderMessage` and `kernelLabel` dress them in the workshop
-  language, threaded to every leaf by an explicit `language` prop (no
-  React context). Every pedagogical surface — the glossary, the
-  tutorial, the scenarios, the view notes, the role of the 47 layers,
-  the diagnostics fold, the geologist's system prompt — carries its two
-  texts, and the harness measures the parity. The corpus `.ld`
-  formalisms stay in their own tongue; the French audit half stays
-  byte-identical from one version to the next.
+- **The i18n mechanism** (`tests/i18n-checks.mts`): the workshop is
+  English-first (ADR-0113) — English by default, French as optional
+  content that every renderer falls back from. The kernel codes
+  (statuses, kinds, steps) stay stable in the data; `renderMessage`
+  and `kernelLabel` dress them in the workshop language, threaded to
+  every leaf by an explicit `language` prop (no React context). Every
+  pedagogical surface — the glossary, the tutorial, the scenarios, the
+  view notes, the role of the 85 layers, the diagnostics fold, the
+  geologist's system prompt — carries a non-empty English text, and
+  the harness measures the fallback. The corpus `.ld` formalisms stay
+  in their own tongue.
 
 ```bash
-npm run verify         # typecheck, structure, all fifteen harnesses, build
-npm test               # the fifteen harnesses alone
+npm run verify         # typecheck, structure, all nineteen harnesses, build
+npm test               # the nineteen harnesses alone
 ```
 
 The executable specification never weakens: no change to the domain is
