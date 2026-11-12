@@ -8,13 +8,13 @@ layer pn-philosophers-1 refines @pn-philosophers then @positions-grid
   extend places
     think1 refines @pn-philosophers/specification/think
       identifier = 1
-      marking = 1
+      override marking = 1
     eat1 refines @pn-philosophers/specification/eat
       identifier = 1
-      marking = 0
+      override marking = 0
     fork1 refines @pn-philosophers/specification/fork
       identifier = 1
-      marking = 1
+      override marking = 1
   extend transitions
     take1 refines @pn-philosophers/specification/take
       identifier = 1
