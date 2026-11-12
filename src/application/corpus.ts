@@ -18,6 +18,8 @@ import { type ValidationOutcome, validateSpace } from "../domain/validation.ts";
 export const KERNEL_LAYER_NAMES: LayerName[] = [
   "record",
   "collection",
+  "multiset",
+  "pt-multiset",
   "positions-scheme",
   "positions-grid",
   "positions-polar",
