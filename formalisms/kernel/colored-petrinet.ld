@@ -31,3 +31,10 @@ layer colored-petrinet refines @petrinet-scheme
     extend specification
       extend record
         abstract inscription
+  // l'inscription d'un arc est un multiensemble de jetons (les jetons
+  // sont des tuples de couleurs) — un terme à variables que la
+  // transition instancie au tir
+  arc_inscription refines @multiset
+    extend specification
+      extend multiset
+        override element_type = @colored-petrinet/specification/token_type
