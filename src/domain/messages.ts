@@ -267,6 +267,14 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       text(p, "layer") +
       " » masks a bedrock name — the contextual resolution (user, then kernel) would hide the read-only layer: rename the visitor layer (issue #145)",
   },
+  "version-conflict": {
+    en: (p) =>
+      "the formalism « " +
+      text(p, "formalism") +
+      " » is pinned to divergent majors (" +
+      text(p, "majors") +
+      ") in this assembly — one major per name per closure (ADR-0116 rule 3): re-pin one of the diamond paths",
+  },
 };
 
 /** All message codes, in template declaration order. */
@@ -348,6 +356,7 @@ export const VOCABULARY: Record<string, { en: string; fr?: string | undefined }>
   "formule-épuisée": { en: "exhausted-formula"},
   "socle-occupé": { en: "bedrock-occupied"},
   "masquage-socle": { en: "kernel-shadowing"},
+  "conflit-de-version": { en: "version-conflict"},
   "refines-inversés": { en: "refines-inverted"},
   "ombre-émergente": { en: "emerging-shadow"},
   ombre: { en: "shadow"},

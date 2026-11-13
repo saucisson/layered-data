@@ -1477,6 +1477,52 @@ check(
   );
 }
 
+// ---- version-conflict detection (issue #151, ADR-0116 rule 3) --------
+{
+  const { detectVersionConflicts } = await import("../src/domain/versioning.ts");
+  const diamond = spaceFromLayerTrees({
+    f1: {},
+    f2: {},
+    a: { refines: [new LayerReference(asLayerName("f"), 1)] },
+    b: { refines: [new LayerReference(asLayerName("f"), 2)] },
+    c: {
+      refines: [new LayerReference(asLayerName("a")), new LayerReference(asLayerName("b"))],
+    },
+    f: {},
+  });
+  const conflicts = detectVersionConflicts({ space: diamond });
+  check(
+    "a divergent-major diamond is a version-conflict",
+    conflicts.length === 1 &&
+      conflicts[0].formalism === "f" &&
+      conflicts[0].majors.join(",") === "1,2",
+  );
+  const sameMajor = spaceFromLayerTrees({
+    a: { refines: [new LayerReference(asLayerName("f"), 2)] },
+    b: { refines: [new LayerReference(asLayerName("f"), 2)] },
+    c: {
+      refines: [new LayerReference(asLayerName("a")), new LayerReference(asLayerName("b"))],
+    },
+    f: {},
+  });
+  check(
+    "the same major on both paths never conflicts",
+    detectVersionConflicts({ space: sameMajor }).length === 0,
+  );
+  const unpinned = spaceFromLayerTrees({
+    a: { refines: [new LayerReference(asLayerName("f"))] },
+    b: { refines: [new LayerReference(asLayerName("f"))] },
+    c: {
+      refines: [new LayerReference(asLayerName("a")), new LayerReference(asLayerName("b"))],
+    },
+    f: {},
+  });
+  check(
+    "unpinned references never conflict (bare name = latest frozen of latest major)",
+    detectVersionConflicts({ space: unpinned }).length === 0,
+  );
+}
+
 // =====================================================================
 // the ledger
 // =====================================================================
