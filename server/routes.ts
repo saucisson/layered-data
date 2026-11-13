@@ -473,6 +473,14 @@ export function createQuarryServer({
                 source: lookup.source,
                 dumpFingerprint: null,
               });
+              // issue #159: the first freeze is the publication —
+              // the formalism becomes public and published (draft → 1.0.0)
+              if (previousSemver === null) {
+                await pool.query(
+                  "UPDATE user_layers SET visibility = 'public', status = 'published', updated_at = now() WHERE name = $1",
+                  [name],
+                );
+              }
             } finally {
               await pool.end();
             }
@@ -480,7 +488,14 @@ export function createQuarryServer({
           return sendJson({
             response,
             statusCode: 201,
-            body: { name, semver, status: "frozen", frozenAt, persisted: DATABASE_URL !== "" },
+            body: {
+              name,
+              semver,
+              status: "frozen",
+              frozenAt,
+              persisted: DATABASE_URL !== "",
+              published: previousSemver === null,
+            },
           });
         }
 
