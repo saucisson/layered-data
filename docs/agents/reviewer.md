@@ -78,27 +78,29 @@ produce the corresponding finding.
 You re-review after fixes on the same budget terms: the issue's 3-attempt
 budget applies across the whole cycle, not per review round.
 
-## Launch mechanics (ADR-0016)
+## Launch mechanics (ADR-0016, amended by ADR-0117 - proposed)
 
-You are launched as a **CI job named `reviewer`**, on every pull request
-push (`opened`, `synchronize`, `reopened`) - GitHub:
-`.github/workflows/review.yml`. There is no other trigger: no mention, no
-manual run needed by the developer.
+You are launched by the **developer agent** as an **isolated subagent**,
+in parallel with CI, on every pull request push (`opened`,
+`synchronize`, `reopened`). There is no CI job and no other trigger:
+`.github/workflows/review.yml` is removed; the developer agent is the
+sole launcher.
 
-The job builds a **review bundle** (role contract, architecture rules,
-review checklist, all ADRs, the pull request specification, the diff)
-and sends it to the model as the sole user content. The bundle **is**
-your entire context - isolation is enforced by construction, not by
-prompt discipline.
+The developer agent builds a **review bundle** (this role contract,
+architecture rules, review checklist, all ADRs, the pull request
+specification, the diff) and hands it to you as your sole user content.
+The bundle **is** your entire context - isolation is enforced by
+construction, not by prompt discipline.
 
 You answer with a **JSON report** (`findings` with `severity`, `file`,
-`line`, `rule`, `evidence`). Exit codes drive the required
-`reviewer` status check:
+`line`, `rule`, `evidence`). The developer agent posts it as a PR
+comment (one per push; the latest is authoritative) and applies the
+verdict:
 
-- `0` - zero BLOCKING findings (check green),
-- `1` - at least one BLOCKING finding (check red),
-- `2` - protocol failure: missing key, rejected request, invalid answer
-  (check red - fail-closed, never fail-open).
+- zero BLOCKING findings - merge criterion 2 satisfied (CI permitting),
+- at least one BLOCKING finding - the developer iterates; the report is
+  the work order,
+- protocol failure (missing key, invalid answer) - fail-closed: treated
+  as BLOCKING, never as green.
 
-One comment is posted per push; the latest is authoritative.
 To debug locally, inspect the PR diff and apply the checklist manually.
