@@ -58,7 +58,7 @@ export function UserAccountForm({ language }: { language: Language }) {
   const [displayName, setDisplayName] = useState("");
   const [accessCode, setAccessCode] = useState("");
   const [stateMessage, setStateMessage] = useState<string | null>(null);
-  const [connectedUser, setConnectedUser] = useState<ConnectedUser | null>(readConnectedUser());
+  const [connectedUser, setConnectedUser] = useState<ConnectedUser | null>(() => readConnectedUser());
 
   async function handleCreate() {
     setStateMessage(null);
@@ -99,9 +99,11 @@ export function UserAccountForm({ language }: { language: Language }) {
 
   async function handleLogin() {
     setStateMessage(null);
-    writeAccessCode({ accessCode: accessCode.trim(), remember: true });
     try {
-      const response = await apiFetch({ endpoint: "api/whoami" });
+      // Verify the code first: a refused or shared code must not be
+      // persisted as the active credential.
+      const probeHeaders: Record<string, string> = { "x-access-code": accessCode.trim() };
+      const response = await fetch("api/whoami", { headers: probeHeaders });
       if (response.ok) {
         const body = (await response.json()) as {
           identity: string;
@@ -113,6 +115,7 @@ export function UserAccountForm({ language }: { language: Language }) {
             displayName: body.user.displayName,
             role: body.user.role,
           };
+          writeAccessCode({ accessCode: accessCode.trim(), remember: true });
           writeConnectedUser({ user });
           setConnectedUser(user);
           setStateMessage(
