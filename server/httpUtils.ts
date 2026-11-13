@@ -2,9 +2,11 @@
 // Layered Data — HTTP helpers: JSON/text answers, access code,
 // request bodies
 // ============================================================
+import { createHash } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
 import { API_TOKEN } from "./config.ts";
+import { clientKeyOf } from "./rateLimit.ts";
 
 /** The conservative security header baseline (approved on issue #84):
  * every response carries it — API, SSE and static files alike. A full
@@ -62,6 +64,42 @@ export function isAccessGranted({ request }: { request: IncomingMessage }): bool
     workshopHeader.trim() !== "" &&
     workshopHeader.trim() === API_TOKEN
   );
+}
+
+/** The resolved identity behind a request (ADR-0114, issue #140).
+ * The legacy shared code maps to the shared identity; a personal
+ * access code will resolve to its user row (hashed lookup in
+ * `users`, when the database is wired). Without any code the
+ * identity is anonymous-local. */
+export type ResolvedIdentity =
+  | { kind: "shared-code" }
+  | { kind: "personal-code"; accessCodeHash: string }
+  | { kind: "anonymous-local" };
+
+export function resolveIdentity({ request }: { request: IncomingMessage }): ResolvedIdentity {
+  const workshopHeader = request.headers["x-access-code"];
+  if (typeof workshopHeader !== "string" || workshopHeader.trim() === "") {
+    return { kind: "anonymous-local" };
+  }
+  const code = workshopHeader.trim();
+  if (code === API_TOKEN) return { kind: "shared-code" };
+  // A personal access code: the hash is the stable key — the clear
+  // code never persists, never logs.
+  return { kind: "personal-code", accessCodeHash: hashAccessCode({ code }) };
+}
+
+/** SHA-256 of an access code — the value stored in users.access_code_hash. */
+export function hashAccessCode({ code }: { code: string }): string {
+  return createHash("sha256").update(code).digest("hex");
+}
+
+/** The rate-limit key of a request (issue #140): keyed per resolved
+ * user when a code is present, per client address otherwise. */
+export function rateLimitKeyOf({ request }: { request: IncomingMessage }): string {
+  const identity = resolveIdentity({ request });
+  if (identity.kind === "shared-code") return "shared-code";
+  if (identity.kind === "personal-code") return "user:" + identity.accessCodeHash;
+  return clientKeyOf({ request });
 }
 
 /** Read a request body, refusing bodies over one megabyte — a

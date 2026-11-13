@@ -51,6 +51,11 @@ try {
   check("whoami with a wrong token is 401", response.status === 401);
   response = await fetch(base + "/api/whoami", { headers: auth });
   check("whoami with the token is 200", response.status === 200);
+  const whoamiBody = (await response.json()) as { utilisateur: string; identity: string };
+  check(
+    "whoami with the legacy shared code resolves to the shared identity (issue #140)",
+    whoamiBody.utilisateur === "porteur-du-code" && whoamiBody.identity === "shared-code",
+  );
   response = await fetch(base + "/api/layers");
   check("layers without token is 401", response.status === 401);
 
