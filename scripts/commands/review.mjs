@@ -2,9 +2,11 @@
 /**
  * Agent Review Script for saucisson/layered-data
  * 
- * This script implements the reviewer agent that checks PRs against
- * the review checklist and architecture rules. It runs as part of
- * the GitHub Actions workflow in .github/workflows/review.yml
+ * This script implements the mechanical checks of the reviewer agent
+ * (see docs/agents/reviewer.md). The reviewer itself is launched by
+ * the developer agent as an isolated subagent in parallel with CI
+ * (ADR-0016 as amended by ADR-0117, proposed); this script can be run
+ * locally on a diff to reproduce the mechanical findings.
  * 
  * Exit codes:
  *   0 - Zero BLOCKING findings (merge criteria satisfied)
