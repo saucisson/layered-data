@@ -33,6 +33,7 @@ import { LayerBadge } from "./presentation/layerBadge.tsx";
 import { RefinesGraph } from "./presentation/refinesGraph.tsx";
 import { FormalismPanel } from "./presentation/formalismPanel.tsx";
 import { AccessCodeForm } from "./presentation/accessForm.tsx";
+import { UserAccountForm } from "./presentation/userAccountForm.tsx";
 import { AddFormalismComposer, type AcceptedAddition } from "./presentation/addFormalism.tsx";
 import { DiskWardrobe } from "./presentation/diskWardrobe.tsx";
 import { LayerEditor } from "./presentation/layerEditor.tsx";
@@ -593,6 +594,7 @@ export function WorkshopPage({
             {composerOpen && (
               <div className="space-y-2">
                 <AccessCodeForm language={language} />
+                <UserAccountForm language={language} />
                 <AddFormalismComposer
                   kernel={KERNEL}
                   language={language}
