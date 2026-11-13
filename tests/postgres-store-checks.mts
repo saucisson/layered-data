@@ -107,6 +107,7 @@ await initQuarryStores({ stores });
 // clean slate — after init, so the schema exists even on a fresh volume
 await pool.query("DELETE FROM editor_session_events");
 await pool.query("DELETE FROM editor_session");
+await pool.query("DELETE FROM formalism_versions");
 await pool.query("DELETE FROM user_layers");
 
 // ---- the users schema (issue #139, ADR-0114) ----
@@ -141,6 +142,18 @@ await pool.query("DELETE FROM user_layers");
   ]);
   await pool.query("DELETE FROM user_layers WHERE owner = $1", [userId]);
   await pool.query("DELETE FROM users WHERE id = $1", [userId]);
+}
+
+// ---- the formalism_versions schema (issue #148, ADR-0116) ----
+{
+  const versionsTable = await pool.query(
+    "SELECT table_name FROM information_schema.tables WHERE table_name = 'formalism_versions'",
+  );
+  check("the formalism_versions table exists", versionsTable.rowCount === 1);
+  const fingerprintColumn = await pool.query(
+    "SELECT column_name FROM information_schema.columns WHERE table_name = 'formalism_versions' AND column_name = 'dump_fingerprint'",
+  );
+  check("formalism_versions.dump_fingerprint exists", fingerprintColumn.rowCount === 1);
 }
 
 const server: Server = createQuarryServer({ stores });
