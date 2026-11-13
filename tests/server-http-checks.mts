@@ -78,6 +78,20 @@ try {
     body: JSON.stringify({ id: 1 }),
   });
   check("admin revoke with the shared code is 403", response.status === 403);
+  // Account creation (issue #141): without DATABASE_URL the null
+  // user store refuses creation with a 500 typed error.
+  response = await fetch(base + "/api/users", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ displayName: "test", accessCode: "long-enough-code" }),
+  });
+  check("account creation without DATABASE_URL fails (no user store)", response.status === 500);
+  response = await fetch(base + "/api/users", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ displayName: "", accessCode: "short" }),
+  });
+  check("account creation with invalid body is 400", response.status === 400);
 
   // ---- qualified formalism identifiers (issue #143, ADR-0115) ----
   const { asFormalismId } = await import("../server/layerStore.ts");
