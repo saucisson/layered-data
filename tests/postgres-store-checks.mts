@@ -330,6 +330,57 @@ try {
     await stores.users.revoke({ id: profile.id });
   }
 
+  // ---- admin routes over HTTP (issue #142, ADR-0114) ----
+  {
+    const { hashAccessCode } = await import("../server/httpUtils.ts");
+    const adminCode = "pg-admin-code-142";
+    const adminProfile = await stores.users.create({
+      displayName: "pg-admin",
+      accessCodeHash: hashAccessCode({ code: adminCode }),
+      role: "admin",
+    });
+    const adminAuth = { "x-access-code": adminCode };
+
+    response = await fetch(base + "/api/admin/users", { headers: adminAuth });
+    const adminBody = (await response.json()) as {
+      users: { id: number; displayName: string; role: string }[];
+    };
+    check(
+      "GET /api/admin/users with an admin code lists users",
+      response.status === 200 && adminBody.users.some((u) => u.id === adminProfile.id),
+    );
+
+    // a regular user is refused on admin routes
+    const userCode = "pg-user-code-142";
+    const userProfile = await stores.users.create({
+      displayName: "pg-user-142",
+      accessCodeHash: hashAccessCode({ code: userCode }),
+      role: "user",
+    });
+    response = await fetch(base + "/api/admin/users", { headers: { "x-access-code": userCode } });
+    check("GET /api/admin/users with a non-admin code is 403", response.status === 403);
+
+    response = await fetch(base + "/api/admin/users/revoke", {
+      method: "POST",
+      headers: { ...adminAuth, "Content-Type": "application/json" },
+      body: JSON.stringify({ id: userProfile.id }),
+    });
+    check("POST /api/admin/users/revoke with an admin code is 200", response.status === 200);
+    const revokedCheck = await stores.users.findByAccessCodeHash({
+      accessCodeHash: hashAccessCode({ code: userCode }),
+    });
+    check("the revoked user is gone", revokedCheck === null);
+
+    response = await fetch(base + "/api/admin/users/revoke", {
+      method: "POST",
+      headers: { ...adminAuth, "Content-Type": "application/json" },
+      body: JSON.stringify({ id: 999999 }),
+    });
+    check("revoke of an unknown id is 404", response.status === 404);
+
+    await stores.users.revoke({ id: adminProfile.id });
+  }
+
   // ---- the editor session: two SSE clients, journal, restore ----
   const sseController = new AbortController();
   const clientA = connectSse({ url: base + "/api/editor/session", headers: auth, signal: sseController.signal });
