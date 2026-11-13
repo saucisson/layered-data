@@ -49,6 +49,7 @@ import {
   applySecurityHeaders,
   sendJson,
   sendText,
+  hashAccessCode,
   rateLimitKeyOf,
   readRequestBody,
   resolveIdentity,
@@ -168,6 +169,64 @@ export function createQuarryServer({
             },
           });
         }
+        // ---- account creation (issue #141, ADR-0114): optional,
+        // consent-based, no auth required — the rate limiter blunts
+        // abuse. The access code is hashed before it ever persists. ----
+        if (request.method === "POST" && url.pathname === "/api/users") {
+          const body = JSON.parse((await readRequestBody({ request })) || "{}") as {
+            displayName?: unknown;
+            accessCode?: unknown;
+          };
+          if (
+            typeof body?.displayName !== "string" ||
+            !body.displayName.trim() ||
+            typeof body?.accessCode !== "string" ||
+            body.accessCode.trim().length < 8
+          ) {
+            return sendJson({
+              response,
+              statusCode: 400,
+              body: {
+                erreur:
+                  'corps JSON attendu : { "displayName": "…", "accessCode": "…" } — code d’au moins 8 caractères',
+              },
+            });
+          }
+          const accessCodeHash = hashAccessCode({ code: body.accessCode.trim() });
+          try {
+            const profile = await stores.users.create({
+              displayName: body.displayName.trim(),
+              accessCodeHash,
+              role: "user",
+            });
+            return sendJson({
+              response,
+              statusCode: 201,
+              body: {
+                id: profile.id,
+                displayName: profile.displayName,
+                role: profile.role,
+                createdAt: profile.createdAt,
+              },
+            });
+          } catch (error) {
+            // unique violation on access_code_hash: the code is taken
+            if (
+              typeof error === "object" &&
+              error !== null &&
+              "code" in error &&
+              (error as { code: string }).code === "23505"
+            ) {
+              return sendJson({
+                response,
+                statusCode: 409,
+                body: { erreur: "ce code d'accès est déjà pris" },
+              });
+            }
+            throw error;
+          }
+        }
+
         // Resolve the access: the shared code or a personal code
         // with a matching user row (issue #140, ADR-0114).
         const identity = resolveIdentity({ request });

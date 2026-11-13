@@ -381,6 +381,52 @@ try {
     await stores.users.revoke({ id: adminProfile.id });
   }
 
+  // ---- account creation over HTTP (issue #141, ADR-0114) ----
+  {
+    response = await fetch(base + "/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ displayName: "pg-created-user", accessCode: "pg-created-code-141" }),
+    });
+    const createdBody = (await response.json()) as {
+      id: number;
+      displayName: string;
+      role: string;
+    };
+    check(
+      "POST /api/users creates a user (201)",
+      response.status === 201 && createdBody.displayName === "pg-created-user" && createdBody.role === "user",
+    );
+
+    // the new personal code now authenticates
+    response = await fetch(base + "/api/whoami", {
+      headers: { "x-access-code": "pg-created-code-141" },
+    });
+    const whoamiCreated = (await response.json()) as { identity: string; user?: { id: number } };
+    check(
+      "the created user's code authenticates via whoami",
+      response.status === 200 && whoamiCreated.identity === "personal-code" && whoamiCreated.user?.id === createdBody.id,
+    );
+
+    // duplicate access code is a 409
+    response = await fetch(base + "/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ displayName: "other", accessCode: "pg-created-code-141" }),
+    });
+    check("POST /api/users with a taken code is 409", response.status === 409);
+
+    // invalid body is a 400
+    response = await fetch(base + "/api/users", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ displayName: "x", accessCode: "short" }),
+    });
+    check("POST /api/users with a short code is 400", response.status === 400);
+
+    await stores.users.revoke({ id: createdBody.id });
+  }
+
   // ---- the editor session: two SSE clients, journal, restore ----
   const sseController = new AbortController();
   const clientA = connectSse({ url: base + "/api/editor/session", headers: auth, signal: sseController.signal });
