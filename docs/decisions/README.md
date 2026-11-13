@@ -55,6 +55,7 @@ What this decision implies - good and bad.
 | [ADR-0010](adr-0010-branch-model.md) | Branch model - main/daily/work with codified autonomous merges | accepted | 2026-11-02 |
 | [ADR-0011](adr-0011-agent-protocol.md) | Agent protocol - developer and reviewer roles | accepted | 2026-11-02 |
 | [ADR-0016](adr-0016-reviewer-launch-mechanics.md) | Reviewer launch mechanics - CI job as status check | accepted | 2026-11-02 |
+| [ADR-0117](adr-0117-reviewer-launched-by-developer-agent.md) | Reviewer launch mechanics - developer agent launches the reviewer in parallel with CI (amends ADR-0016) | proposed | 2026-11-13 |
 | [ADR-0100](adr-0100-order-as-semantics.md) | Order as semantics - first-wins conflicts made visible, signable, contractual | accepted | 2026-11-04 |
 | [ADR-0101](adr-0101-checks-as-contracts.md) | Checks as contracts - the constraint semantics made nominal, visible, executable | accepted | 2026-11-04 |
 | [ADR-0102](adr-0102-registry-as-data.md) | Registry as data - the meta-model comes home: the checks' contracts written in the language | accepted | 2026-11-05 |

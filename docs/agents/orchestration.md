@@ -35,6 +35,10 @@ The agent moves to the next issue in the directive.
 4. **Implement**: Follow the developer contract (`docs/agents/developer.md`).
 5. **Verify**: Run `npm run verify` - all gates must pass.
 6. **Open PR**: Push branch, open pull request with the required template.
+7. **Review in parallel**: Launch the reviewer subagent in parallel with
+   CI (ADR-0016 as amended by ADR-0117, proposed); post its report as a
+   PR comment. Merge into `daily` (rebase-only) only when CI is green
+   and the report has zero BLOCKING findings.
 
 ## Priority rules
 

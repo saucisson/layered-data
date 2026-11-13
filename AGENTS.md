@@ -10,9 +10,9 @@ You are one of two roles in the protocol (ADR-0011):
 - **Developer agent** - implements issues. Full contract:
   `docs/agents/developer.md`.
 - **Reviewer agent** - reviews diffs with isolated context, seeking
-  counterexamples. Launched as a CI job on every PR push; its exit code
-  is the required `reviewer` status check (ADR-0016). Full contract:
-  `docs/agents/reviewer.md`.
+  counterexamples. Launched by the **developer agent** as an isolated
+  subagent, in parallel with CI, on every PR push (ADR-0016 as amended
+  by ADR-0117, proposed). Full contract: `docs/agents/reviewer.md`.
 
 If you are unsure which role this session assigns you, stop and ask.
 
@@ -38,9 +38,9 @@ If you are unsure which role this session assigns you, stop and ask.
 Merge into `daily` requires ALL of:
 
 1. CI green on the PR head (TypeScript strict, tests pass, build succeeds),
-2. the `reviewer` status check green: **zero BLOCKING findings**
-   (ADR-0016) — when the `reviewer` workflow is enabled; while it is
-   disabled, criterion 1 plus a clean review of the diff is the gate,
+2. the reviewer report green: **zero BLOCKING findings** (ADR-0016 as
+   amended by ADR-0117, proposed) — the developer agent launches the
+   reviewer subagent in parallel with CI and waits for its report,
 3. the change is not on the escalation list.
 
 The **developer agent** executes the merge into `daily` (rebase-only,

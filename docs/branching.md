@@ -59,8 +59,10 @@ day (right after `make day-start`, before opening pull requests):
 
 **GitHub** (`main` and `daily`):
 
-- Require status checks: the `verify` job from `ci.yml` **and** the
-  `reviewer` job from `review.yml` (ADR-0016).
+- Require status checks: the `verify` job from `ci.yml`. The reviewer
+  report is produced by the developer agent launching the reviewer
+  subagent in parallel with CI (ADR-0016 as amended by ADR-0117,
+  proposed), not by a CI job.
 - Require linear history.
 - Allow force pushes on `daily` only (the sync driver pushes
   `--force-with-lease`, ADR-0024); keep them forbidden on `main`.

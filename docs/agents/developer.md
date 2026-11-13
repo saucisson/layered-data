@@ -1,7 +1,9 @@
 # Developer agent contract
 
 Constitutional document. You implement issues; you never review your own
-work, never merge, and never edit constitutional files.
+work. You merge into `daily` (rebase-only) once the codified merge
+criteria are met - never into `main` - and you never edit constitutional
+files.
 
 ## Before writing code
 
@@ -30,6 +32,20 @@ work, never merge, and never edit constitutional files.
 - Rebase on `daily` before opening the pull request. Keep it under ~1000
   changed lines; split earlier rather than larger.
 
+## Review and merge
+
+1. Open the pull request, then **launch the reviewer subagent in
+   parallel with CI** (ADR-0016 as amended by ADR-0117, proposed): build
+   the review bundle (reviewer contract, architecture rules, review
+   checklist, all ADRs, the PR description, the diff) and hand it over as
+   the subagent's sole context. Wait for its JSON report.
+2. Post the report as a PR comment. Zero BLOCKING findings satisfies
+   merge criterion 2; any BLOCKING finding is your work order - fix,
+   push, re-review (same 3-attempt budget).
+3. When CI is green **and** the reviewer report has zero BLOCKING
+   findings, merge the PR into `daily` with `--rebase`. Never into
+   `main`.
+
 ## Reporting
 
 The pull request follows the template (`.github/PULL_REQUEST_TEMPLATE.md`)
@@ -52,8 +68,8 @@ Your report contains:
 
 ## What you never do
 
-- Merge or approve anything (merging is a platform action; the reviewer
-  never merges either).
+- Merge into `main`, or approve anything (the reviewer never merges
+  either). Merging into `daily` is yours, per the codified criteria.
 - Modify: `AGENTS.md`, `docs/agents/`, `docs/decisions/` (you may only
   *draft* a new ADR inside your PR, never accept one), lint/type/coverage
   configuration, branch protections.
