@@ -77,6 +77,9 @@ check(
 
 // ---- the per-user rate-limit key (issue #140) --------------------------
 
+// Pin the legacy code before importing the server modules: config.ts
+// reads .env, which CI does not have (same pattern as server-http-checks).
+process.env.API_TOKEN = "test-token";
 const { rateLimitKeyOf, resolveIdentity, hashAccessCode } = await import("../server/httpUtils.ts");
 check(
   "the legacy shared code keys the limiter as shared-code",
