@@ -14,12 +14,16 @@ import { run as review } from './commands/review.mjs';
 import { run as serve } from './commands/serve.mjs';
 import { run as checkStructure } from './commands/check-structure.mjs';
 import { run as syncDaily } from './commands/sync-daily.mjs';
+import { run as freeze } from './commands/freeze.mjs';
+import { run as publish } from './commands/publish.mjs';
 
 const COMMANDS = {
   review,
   serve,
   'check-structure': checkStructure,
   'sync-daily': syncDaily,
+  freeze,
+  publish,
 };
 
 const [command, ...args] = process.argv.slice(2);
