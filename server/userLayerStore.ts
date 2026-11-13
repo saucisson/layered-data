@@ -25,8 +25,18 @@ export interface UserLayerStore {
    * Throws StoreUnavailableError when it cannot. */
   init(): Promise<void>;
   /** The layer names, sorted. When ownerId is given, only that
-   * owner's layers are listed (issue #140, ADR-0114). */
-  listNames({ ownerId }?: { ownerId?: number }): Promise<string[]>;
+   * owner's layers are listed (issue #140, ADR-0114). When viewerId
+   * is given (issue #146), the caller sees their own layers plus
+   * other users' public layers. */
+  listNames({ ownerId, viewerId }?: { ownerId?: number; viewerId?: number }): Promise<string[]>;
+  /** Flip a layer's visibility (issue #146, owner only). */
+  setVisibility({
+    name,
+    visibility,
+  }: {
+    name: LayerName;
+    visibility: "private" | "public";
+  }): Promise<{ found: boolean }>;
   /** Read one layer's source. */
   read({ name }: { name: LayerName }): Promise<{ found: true; source: string } | { found: false }>;
   /** Write a layer (upsert). A trailing newline is added: every
@@ -96,8 +106,12 @@ export function createDiskUserLayerStore({ directory }: { directory: string }): 
       mkdirSync(directory, { recursive: true });
     },
     async listNames() {
-      // The disk store has no owner concept — dev/tests only.
+      // The disk store has no owner/visibility concept — dev/tests only.
       return listLayerNames({ directory });
+    },
+    async setVisibility() {
+      // The disk store has no visibility concept — dev/tests only.
+      return { found: false };
     },
     async read({ name }) {
       if (!existsSync(filePath({ name }))) return { found: false };
@@ -161,7 +175,8 @@ export function createPostgresUserLayerStore({
         await clientPool.query(`
           ALTER TABLE user_layers
           ADD COLUMN IF NOT EXISTS owner INTEGER REFERENCES users(id) ON DELETE SET NULL,
-          ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published'))
+          ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
+          ADD COLUMN IF NOT EXISTS visibility TEXT NOT NULL DEFAULT 'private' CHECK (visibility IN ('private', 'public'))
         `);
         await clientPool.query(`
           CREATE TABLE IF NOT EXISTS formalism_versions (
@@ -179,15 +194,32 @@ export function createPostgresUserLayerStore({
         throw new StoreUnavailableError({ store: "user_layers (PostgreSQL)", cause: error });
       }
     },
-    async listNames({ ownerId } = {}) {
-      const result =
-        ownerId === undefined
-          ? await (await getPool()).query("SELECT name FROM user_layers ORDER BY name")
-          : await (await getPool()).query(
-              "SELECT name FROM user_layers WHERE owner = $1 ORDER BY name",
-              [ownerId],
-            );
+    async listNames({ ownerId, viewerId } = {}) {
+      let result;
+      if (ownerId !== undefined) {
+        result = await (await getPool()).query(
+          "SELECT name FROM user_layers WHERE owner = $1 ORDER BY name",
+          [ownerId],
+        );
+      } else if (viewerId !== undefined) {
+        // issue #146: the viewer sees their own layers plus public ones
+        result = await (await getPool()).query(
+          `SELECT name FROM user_layers
+           WHERE owner = $1 OR visibility = 'public'
+           ORDER BY name`,
+          [viewerId],
+        );
+      } else {
+        result = await (await getPool()).query("SELECT name FROM user_layers ORDER BY name");
+      }
       return (result.rows as { name: string }[]).map((row) => row.name);
+    },
+    async setVisibility({ name, visibility }) {
+      const result = await (await getPool()).query(
+        "UPDATE user_layers SET visibility = $2, updated_at = now() WHERE name = $1",
+        [name, visibility],
+      );
+      return { found: (result.rowCount ?? 0) > 0 };
     },
     async read({ name }) {
       const result = await (await getPool()).query(
