@@ -196,6 +196,77 @@ export function createQuarryServer({
           }
         }
 
+        // ---- freeze a formalism (issue #155, ADR-0116): timestamped
+        // snapshot, version stamp assigned by the classifier ----
+        if (request.method === "POST" && segments[1] === "formalisms" && segments[2] && segments[3] === "freeze") {
+          const nameCheck = asLayerName({ candidate: segments[2] });
+          if ("reason" in nameCheck)
+            return sendJson({ response, statusCode: 400, body: { erreur: nameCheck.reason } });
+          const name = nameCheck.name;
+          if (KERNEL_LAYER_NAMES.includes(name)) {
+            return sendJson({
+              response,
+              statusCode: 403,
+              body: { erreur: "le socle est déjà figé : " + name },
+            });
+          }
+          const lookup = await lookupLayer({ name, userLayerStore: stores.userLayers });
+          if (!lookup.found || lookup.location !== "users")
+            return sendJson({
+              response,
+              statusCode: 404,
+              body: { erreur: "formalisme inconnu : " + name },
+            });
+          const { classifyVersionDiff } = await import("../src/domain/versionClassifier.ts");
+          const { parseLanguage } = await import("../src/domain/language/parser.ts");
+          const { compileLanguage } = await import("../src/domain/language/compiler.ts");
+          const { nextSemVer, resolveBareName, insertFrozenVersion } = await import(
+            "./formalismVersionStore.ts"
+          );
+          let previousSemver: string | null = null;
+          let previousSource: string | null = null;
+          if (DATABASE_URL) {
+            const { Pool } = await import("pg");
+            const pool = new Pool({ connectionString: DATABASE_URL });
+            try {
+              const resolved = await resolveBareName({ pool, formalismId: name });
+              previousSemver = resolved?.semver ?? null;
+              previousSource = resolved?.source ?? null;
+            } finally {
+              await pool.end();
+            }
+          }
+          const level =
+            previousSource === null
+              ? "MINOR"
+              : classifyVersionDiff({
+                  previous: compileLanguage(parseLanguage(previousSource).layers).layers[name] ?? {},
+                  next: compileLanguage(parseLanguage(lookup.source).layers).layers[name] ?? {},
+                });
+          const semver = nextSemVer({ previousSemver, level });
+          const frozenAt = new Date().toISOString();
+          if (DATABASE_URL) {
+            const { Pool } = await import("pg");
+            const pool = new Pool({ connectionString: DATABASE_URL });
+            try {
+              await insertFrozenVersion({
+                pool,
+                formalismId: name,
+                semver,
+                source: lookup.source,
+                dumpFingerprint: null,
+              });
+            } finally {
+              await pool.end();
+            }
+          }
+          return sendJson({
+            response,
+            statusCode: 201,
+            body: { name, semver, status: "frozen", frozenAt, persisted: DATABASE_URL !== "" },
+          });
+        }
+
         // ---- the geologist: prompt (workshop protocol) or instruction
         // (compatibility), answered with a STAGED draft in plain
         // text. Every proposal is judged by the exact staging the
