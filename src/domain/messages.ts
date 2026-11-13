@@ -281,6 +281,14 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       text(p, "layer") +
       " » is frozen — read-only by protocol (ADR-0116): to change it, fork into the next version, whose level the workshop computes",
   },
+  drift: {
+    en: (p) =>
+      "the assembly « " +
+      text(p, "layer") +
+      " » drifted: a minor lift of a dependency changed its measured dump (fingerprint " +
+      text(p, "fingerprint") +
+      ") — re-certify the dependent explicitly, never silently (ADR-0116 rule 4)",
+  },
 };
 
 /** All message codes, in template declaration order. */
@@ -364,6 +372,7 @@ export const VOCABULARY: Record<string, { en: string; fr?: string | undefined }>
   "masquage-socle": { en: "kernel-shadowing"},
   "conflit-de-version": { en: "version-conflict"},
   "formalisme-figé": { en: "formalism-frozen"},
+  dérive: { en: "drift"},
   "refines-inversés": { en: "refines-inverted"},
   "ombre-émergente": { en: "emerging-shadow"},
   ombre: { en: "shadow"},
