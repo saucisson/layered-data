@@ -302,8 +302,10 @@ export function createQuarryServer({
 
         // ---- the workshop protocol: api/layers ----
         if (request.method === "GET" && url.pathname === "/api/layers") {
+          // issue #146: a personal code sees own + public layers;
+          // the shared code sees everything (legacy behavior).
           const userNames = await stores.userLayers.listNames(
-            ownerId === undefined ? {} : { ownerId },
+            ownerId === undefined ? {} : { viewerId: ownerId },
           );
           const layers = [
             ...KERNEL_LAYER_NAMES.map((name) => ({ name, builtIn: true })),
@@ -356,6 +358,34 @@ export function createQuarryServer({
               response,
               statusCode: created ? 201 : 200,
               body: { name, builtIn: false, écrit: true },
+            });
+          }
+
+          // ---- publish a layer (issue #146, ADR-0114 addendum):
+          // owner-only, flips visibility private → public ----
+          if (request.method === "POST" && segments[3] === "publish") {
+            if (ownerId === undefined) {
+              return sendJson({
+                response,
+                statusCode: 403,
+                body: { erreur: "la publication exige un compte personnel" },
+              });
+            }
+            const { found } = await stores.userLayers.setVisibility({
+              name,
+              visibility: "public",
+            });
+            if (!found) {
+              return sendJson({
+                response,
+                statusCode: 404,
+                body: { erreur: "couche inconnue : " + name },
+              });
+            }
+            return sendJson({
+              response,
+              statusCode: 200,
+              body: { name, visibility: "public" },
             });
           }
         }

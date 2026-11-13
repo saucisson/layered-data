@@ -427,6 +427,67 @@ try {
     await stores.users.revoke({ id: createdBody.id });
   }
 
+  // ---- cross-user visibility (issue #146, ADR-0114 addendum) ----
+  {
+    const { hashAccessCode } = await import("../server/httpUtils.ts");
+    const aliceCode = "pg-alice-code-146";
+    const bobCode = "pg-bob-code-146";
+    const alice = await stores.users.create({
+      displayName: "alice",
+      accessCodeHash: hashAccessCode({ code: aliceCode }),
+      role: "user",
+    });
+    const bob = await stores.users.create({
+      displayName: "bob",
+      accessCodeHash: hashAccessCode({ code: bobCode }),
+      role: "user",
+    });
+    const aliceAuth = { "x-access-code": aliceCode };
+    const bobAuth = { "x-access-code": bobCode };
+
+    // alice writes a private layer
+    response = await fetch(base + "/api/layers/alice-private", {
+      method: "PUT",
+      headers: { ...aliceAuth, "Content-Type": "application/json" },
+      body: JSON.stringify({ source: "layer alice-private refines @record\n  v = 1" }),
+    });
+    check("alice PUT her private layer is 201", response.status === 201);
+
+    // bob cannot see alice's private layer in the list
+    response = await fetch(base + "/api/layers", { headers: bobAuth });
+    const bobLayers = (await response.json()) as { layers: { name: string }[] };
+    check(
+      "bob does not see alice's private layer",
+      !bobLayers.layers.some((l) => l.name === "alice-private"),
+    );
+
+    // alice publishes the layer
+    response = await fetch(base + "/api/layers/alice-private/publish", {
+      method: "POST",
+      headers: aliceAuth,
+    });
+    check("alice publishes her layer (200)", response.status === 200);
+
+    // bob now sees it
+    response = await fetch(base + "/api/layers", { headers: bobAuth });
+    const bobLayersAfter = (await response.json()) as { layers: { name: string }[] };
+    check(
+      "bob sees alice's public layer after publish",
+      bobLayersAfter.layers.some((l) => l.name === "alice-private"),
+    );
+
+    // the shared code cannot publish (no personal account)
+    response = await fetch(base + "/api/layers/alice-private/publish", {
+      method: "POST",
+      headers: auth,
+    });
+    check("publish with the shared code is 403", response.status === 403);
+
+    await pool.query("DELETE FROM user_layers WHERE owner IN ($1, $2)", [alice.id, bob.id]);
+    await stores.users.revoke({ id: alice.id });
+    await stores.users.revoke({ id: bob.id });
+  }
+
   // ---- the editor session: two SSE clients, journal, restore ----
   const sseController = new AbortController();
   const clientA = connectSse({ url: base + "/api/editor/session", headers: auth, signal: sseController.signal });
