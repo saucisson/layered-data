@@ -30,6 +30,7 @@ import {
   type LayerName,
 } from "./layerStore.ts";
 import { lookupLayer } from "./userLayerStore.ts";
+import type { UserProfile } from "./userStore.ts";
 import { createQuarryStoresFromEnv, type QuarryStores } from "./stores.ts";
 import { PenInfraFailure, generateLayer } from "./mistralClient.ts";
 import {
@@ -171,6 +172,7 @@ export function createQuarryServer({
         // with a matching user row (issue #140, ADR-0114).
         const identity = resolveIdentity({ request });
         let ownerId: number | undefined;
+        let currentUser: UserProfile | null = null;
         if (identity.kind === "shared-code") {
           // the legacy shared identity — no owner scoping
         } else if (identity.kind === "personal-code") {
@@ -185,8 +187,58 @@ export function createQuarryServer({
             });
           }
           ownerId = profile.id;
+          currentUser = profile;
         } else {
           return sendJson({ response, statusCode: 401, body: { erreur: "code d'accès requis" } });
+        }
+
+        // ---- admin routes (issue #142, ADR-0114): admin role only ----
+        if (segments[1] === "admin") {
+          if (currentUser === null || currentUser.role !== "admin") {
+            return sendJson({
+              response,
+              statusCode: 403,
+              body: { erreur: "rôle admin requis" },
+            });
+          }
+          if (request.method === "GET" && url.pathname === "/api/admin/users") {
+            const users = await stores.users.list();
+            return sendJson({
+              response,
+              statusCode: 200,
+              body: {
+                users: users.map((user) => ({
+                  id: user.id,
+                  displayName: user.displayName,
+                  role: user.role,
+                  createdAt: user.createdAt,
+                })),
+              },
+            });
+          }
+          if (request.method === "POST" && url.pathname === "/api/admin/users/revoke") {
+            const body = JSON.parse((await readRequestBody({ request })) || "{}") as {
+              id?: unknown;
+            };
+            if (typeof body?.id !== "number") {
+              return sendJson({
+                response,
+                statusCode: 400,
+                body: { erreur: 'corps JSON attendu : { "id": 1 }' },
+              });
+            }
+            const { existed } = await stores.users.revoke({ id: body.id });
+            return sendJson({
+              response,
+              statusCode: existed ? 200 : 404,
+              body: existed ? { révoqué: true, id: body.id } : { erreur: "utilisateur inconnu : " + body.id },
+            });
+          }
+          return sendJson({
+            response,
+            statusCode: 404,
+            body: { erreur: "route admin inconnue : " + request.method + " " + url.pathname },
+          });
         }
 
         // ---- the workshop protocol: api/layers ----

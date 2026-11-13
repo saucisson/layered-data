@@ -68,6 +68,16 @@ try {
     headers: { "x-access-code": "personal-code-without-user" },
   });
   check("layers with an unknown personal code is 401", response.status === 401);
+  // Admin routes require an admin user (issue #142): the shared code
+  // is not an admin, so 403.
+  response = await fetch(base + "/api/admin/users", { headers: auth });
+  check("admin users list with the shared code is 403", response.status === 403);
+  response = await fetch(base + "/api/admin/users/revoke", {
+    method: "POST",
+    headers: { ...auth, "Content-Type": "application/json" },
+    body: JSON.stringify({ id: 1 }),
+  });
+  check("admin revoke with the shared code is 403", response.status === 403);
 
   // ---- qualified formalism identifiers (issue #143, ADR-0115) ----
   const { asFormalismId } = await import("../server/layerStore.ts");
