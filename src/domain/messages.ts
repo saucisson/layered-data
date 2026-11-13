@@ -275,6 +275,12 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       text(p, "majors") +
       ") in this assembly — one major per name per closure (ADR-0116 rule 3): re-pin one of the diamond paths",
   },
+  "formalism-frozen": {
+    en: (p) =>
+      "the formalism « " +
+      text(p, "layer") +
+      " » is frozen — read-only by protocol (ADR-0116): to change it, fork into the next version, whose level the workshop computes",
+  },
 };
 
 /** All message codes, in template declaration order. */
@@ -357,6 +363,7 @@ export const VOCABULARY: Record<string, { en: string; fr?: string | undefined }>
   "socle-occupé": { en: "bedrock-occupied"},
   "masquage-socle": { en: "kernel-shadowing"},
   "conflit-de-version": { en: "version-conflict"},
+  "formalisme-figé": { en: "formalism-frozen"},
   "refines-inversés": { en: "refines-inverted"},
   "ombre-émergente": { en: "emerging-shadow"},
   ombre: { en: "shadow"},
