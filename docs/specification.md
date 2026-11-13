@@ -56,6 +56,15 @@ autre clé est un **membre** du nœud.
 **Conventions.** L'ordre d'insertion des clés est significatif et préservé par toute
 implantation. Un nœud dict dont une clé vaut `null` *déclare* la clé sans la fournir.
 
+**Identifiants de formalismes (ADR-0115).** Une couche porte un **nom nu**
+(`[a-z0-9][a-z0-9-]{0,63}`) : celui du noyau (lecture seule) ou de la carrière
+visiteurs. Un **formalisme qualifié** s'écrit `@user/formalism` — exactement deux
+segments, le premier nomme le propriétaire, le second le formalisme. Le nom qualifié
+est réservé : il ne peut pas désigner une couche du noyau, et un nom nu de la carrière
+ne peut pas masquer un nom du noyau (verdict de staging, issue #144). La version
+éventuelle s'ajoute en suffixe (`@user/formalism@2`, ADR-0116) — hors périmètre de
+cette section.
+
 ---
 
 ## 2. Adresses et brut
