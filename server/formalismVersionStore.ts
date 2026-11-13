@@ -62,3 +62,44 @@ export async function resolveBareName({
     dumpFingerprint: winner.row.dump_fingerprint,
   };
 }
+
+/** The next semver after a freeze: 1.0.0 for the first publication
+ * (the draft replaces semver's 0.x.y zone), otherwise the classifier
+ * (ADR-0116 rule 1) picks the level and the corresponding component
+ * is incremented. */
+export function nextSemVer({
+  previousSemver,
+  level,
+}: {
+  previousSemver: string | null;
+  level: "PATCH" | "MINOR" | "MAJOR";
+}): string {
+  if (previousSemver === null) return "1.0.0";
+  const parsed = parseSemVer({ semver: previousSemver });
+  if (parsed === null) return "1.0.0";
+  if (level === "MAJOR") return `${parsed.major + 1}.0.0`;
+  if (level === "MINOR") return `${parsed.major}.${parsed.minor + 1}.0`;
+  return `${parsed.major}.${parsed.minor}.${parsed.patch + 1}`;
+}
+
+/** Persist a frozen snapshot (PostgreSQL). */
+export async function insertFrozenVersion({
+  pool,
+  formalismId,
+  semver,
+  source,
+  dumpFingerprint,
+}: {
+  pool: Pool;
+  formalismId: string;
+  semver: string;
+  source: string;
+  dumpFingerprint: string | null;
+}): Promise<void> {
+  await pool.query(
+    `INSERT INTO formalism_versions (formalism_id, semver, source, status, frozen_at, dump_fingerprint)
+     VALUES ($1, $2, $3, 'frozen', now(), $4)
+     ON CONFLICT (formalism_id, semver) DO NOTHING`,
+    [formalismId, semver, source, dumpFingerprint],
+  );
+}
