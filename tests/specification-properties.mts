@@ -1580,12 +1580,14 @@ check(
     measured: { petri: "fp-bbb", graph: "fp-ggg" },
     assembly: "host",
   });
+  const drift = drifts[0];
   check(
     "a changed dump fingerprint is a drift",
     drifts.length === 1 &&
-      drifts[0].dependency === "petri" &&
-      drifts[0].previousFingerprint === "fp-aaa" &&
-      drifts[0].currentFingerprint === "fp-bbb",
+      drift !== undefined &&
+      drift.dependency === "petri" &&
+      drift.previousFingerprint === "fp-aaa" &&
+      drift.currentFingerprint === "fp-bbb",
   );
   check(
     "an unchanged fingerprint is no drift",
