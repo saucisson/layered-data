@@ -75,6 +75,49 @@ check(
   clientKeyOf({ request: { headers: {}, socket: { remoteAddress: "127.0.0.1" } } as never }) === "127.0.0.1",
 );
 
+// ---- the per-user rate-limit key (issue #140) --------------------------
+
+const { rateLimitKeyOf, resolveIdentity, hashAccessCode } = await import("../server/httpUtils.ts");
+check(
+  "the legacy shared code keys the limiter as shared-code",
+  rateLimitKeyOf({
+    request: {
+      headers: { "x-access-code": process.env.API_TOKEN ?? "test-token" },
+      socket: { remoteAddress: "127.0.0.1" },
+    } as never,
+  }) === "shared-code",
+);
+check(
+  "a personal code keys the limiter per user hash, never per IP",
+  rateLimitKeyOf({
+    request: {
+      headers: { "x-access-code": "personal-secret" },
+      socket: { remoteAddress: "127.0.0.1" },
+    } as never,
+  }) === "user:" + hashAccessCode({ code: "personal-secret" }),
+);
+check(
+  "without any code the limiter falls back to the client address",
+  rateLimitKeyOf({
+    request: { headers: {}, socket: { remoteAddress: "127.0.0.1" } } as never,
+  }) === "127.0.0.1",
+);
+check(
+  "resolveIdentity maps the legacy code to shared-code",
+  resolveIdentity({
+    request: { headers: { "x-access-code": process.env.API_TOKEN ?? "test-token" } } as never,
+  }).kind === "shared-code",
+);
+check(
+  "resolveIdentity maps a personal code to personal-code with a hash",
+  resolveIdentity({ request: { headers: { "x-access-code": "personal-secret" } } as never }).kind ===
+    "personal-code",
+);
+check(
+  "resolveIdentity without a code is anonymous-local",
+  resolveIdentity({ request: { headers: {} } as never }).kind === "anonymous-local",
+);
+
 // ---- the wiring --------------------------------------------------------
 
 const rootDirectory = join(import.meta.dirname, "..");
