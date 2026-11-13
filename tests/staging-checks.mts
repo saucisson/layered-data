@@ -471,6 +471,36 @@ check(
 );
 
 // =====================================================================
+// (k) kernel shadowing is refused BY PROTOCOL (issue #145): a
+//     visitors' layer bearing a bedrock name masks it under the
+//     contextual resolution (user, then kernel) — refused as
+//     « masquage-socle », never a silent shadow
+// =====================================================================
+
+const shadowingVisitor = 'layer record\n  note = "visiteur"\n';
+const refusedShadowing = stage({
+  draftSource: "layer innocent-draft refines @record\n",
+  previousAdditionSources: [shadowingVisitor],
+});
+check(
+  "(k) a visitors' layer shadowing a bedrock name is refused at the validation step",
+  refusedShadowing.ok === false && refusedShadowing.step === "validation",
+);
+check(
+  '(k) the refusal carries exactly the "masquage-socle" verdict naming the masked layer',
+  refusedShadowing.verdicts.length === 1 &&
+    at(refusedShadowing.verdicts, 0).kind === "masquage-socle" &&
+    at(refusedShadowing.verdicts, 0).fact.code === "kernel-shadowing",
+);
+check(
+  "(k) a visitors' layer with its own name stays welcome — only the bedrock names are protected",
+  stage({
+    draftSource: "layer innocent-draft refines @record\n",
+    previousAdditionSources: ["layer my-own-layer\n  note = \"ok\"\n"],
+  }).ok === true,
+);
+
+// =====================================================================
 // the ledger
 // =====================================================================
 
