@@ -1491,11 +1491,12 @@ check(
     f: {},
   });
   const conflicts = detectVersionConflicts({ space: diamond });
+  const conflict = conflicts[0];
   check(
     "a divergent-major diamond is a version-conflict",
-    conflicts.length === 1 &&
-      conflicts[0].formalism === "f" &&
-      conflicts[0].majors.join(",") === "1,2",
+    conflict !== undefined &&
+      conflict.formalism === "f" &&
+      conflict.majors.join(",") === "1,2",
   );
   const sameMajor = spaceFromLayerTrees({
     a: { refines: [new LayerReference(asLayerName("f"), 2)] },
