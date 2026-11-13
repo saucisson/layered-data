@@ -63,11 +63,36 @@ export function rawTreesEqual(first: RawTree, second: RawTree): boolean {
   );
 }
 
+/** Is `nextValue` a pure addition over `previousValue`: equal, or a
+ * list whose previous items are an ordered prefix (an added alias at
+ * the end never displaces a first provider), or a dictionary that is
+ * a pure addition. Anything else — modification, removal, reorder —
+ * is not a pure addition. */
+export function isPureValueAddition({
+  previous,
+  next,
+}: {
+  previous: RawValue;
+  next: RawValue;
+}): boolean {
+  if (rawValuesEqual(previous, next)) return true;
+  if (Array.isArray(previous) && Array.isArray(next)) {
+    return (
+      previous.length <= next.length &&
+      previous.every((item, index) => rawValuesEqual(item, next[index] ?? null))
+    );
+  }
+  if (isDictionary(previous) && isDictionary(next)) {
+    return isPureAddition({ previous, next });
+  }
+  return false;
+}
+
 /** Is `next` a pure addition over `previous`: every key of `previous`
- * present in `next` with an equal value, in the same relative order;
- * `next` may add keys (new members, aliases) at any position. A key
- * whose value changed, a removed key, or a reordered existing key is
- * NOT a pure addition. */
+ * present in `next` with a pure-addition value, in the same relative
+ * order; `next` may add keys (new members, aliases) at any position.
+ * A key whose value changed, a removed key, or a reordered existing
+ * key is NOT a pure addition. */
 export function isPureAddition({ previous, next }: { previous: RawTree; next: RawTree }): boolean {
   const nextKeys = Object.keys(next);
   const nextIndex = new Map(nextKeys.map((key, index) => [key, index]));
@@ -77,7 +102,8 @@ export function isPureAddition({ previous, next }: { previous: RawTree; next: Ra
     if (index === undefined) return false; // removed key
     if (index < cursor) return false; // existing key displaced
     cursor = index;
-    if (!rawValuesEqual(previous[key] ?? null, next[key] ?? null)) return false; // modified
+    if (!isPureValueAddition({ previous: previous[key] ?? null, next: next[key] ?? null }))
+      return false; // modified
   }
   return true;
 }
