@@ -129,6 +129,27 @@ try {
     }),
   });
   check("PUT a user layer is 201", response.status === 201);
+
+  // ---- freeze a formalism (issue #155, ADR-0116) ----
+  response = await fetch(base + "/api/formalisms/http-test-demo/freeze", {
+    method: "POST",
+    headers: auth,
+  });
+  const freezeBody = (await response.json()) as { name: string; semver: string; status: string };
+  check(
+    "POST freeze stamps the first publication 1.0.0",
+    response.status === 201 && freezeBody.semver === "1.0.0" && freezeBody.status === "frozen",
+  );
+  response = await fetch(base + "/api/formalisms/record/freeze", {
+    method: "POST",
+    headers: auth,
+  });
+  check("freezing a bedrock layer is refused", response.status === 403);
+  response = await fetch(base + "/api/formalisms/unknown-layer/freeze", {
+    method: "POST",
+    headers: auth,
+  });
+  check("freezing an unknown formalism is 404", response.status === 404);
   response = await fetch(base + "/api/layers/http-test-demo", {
     headers: auth,
   });
