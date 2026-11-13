@@ -23,6 +23,7 @@ import {
   type Address,
   LayerReference,
   PathReference,
+  type RawTree,
   isDictionary,
 } from "../src/domain/addresses.ts";
 import {
@@ -1521,6 +1522,8 @@ check(
   check(
     "unpinned references never conflict (bare name = latest frozen of latest major)",
     detectVersionConflicts({ space: unpinned }).length === 0,
+  );
+}
 
 // ---- the version classifier (issue #149, ADR-0116 rule 1) ------------
 {
@@ -1541,10 +1544,10 @@ check(
     "a modified value is MAJOR",
     classifyVersionDiff({ previous: base, next: { ...base, note: "v2" } }) === "MAJOR",
   );
+  const { note: _removedNote, ...withoutNote } = base;
   check(
     "a removed key is MAJOR",
-    classifyVersionDiff({ previous: base, next: { specification: base["specification"] } }) ===
-      "MAJOR",
+    classifyVersionDiff({ previous: base, next: withoutNote }) === "MAJOR",
   );
   check(
     "a reordered existing key displaces a provider → MAJOR",
