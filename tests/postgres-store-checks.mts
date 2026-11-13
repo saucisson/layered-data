@@ -491,6 +491,43 @@ try {
     await stores.users.revoke({ id: bob.id });
   }
 
+  // ---- frozen formalism edit guard (issue #157, ADR-0116) ----
+  {
+    // write a layer, freeze it, then try to PUT again — must be 409
+    response = await fetch(base + "/api/layers/pg-frozen-layer", {
+      method: "PUT",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ source: "layer pg-frozen-layer refines @record\n  v = 1" }),
+    });
+    check("PUT the layer to freeze is 201", response.status === 201);
+
+    response = await fetch(base + "/api/formalisms/pg-frozen-layer/freeze", {
+      method: "POST",
+      headers: auth,
+    });
+    check("freeze the layer is 201", response.status === 201);
+
+    response = await fetch(base + "/api/layers/pg-frozen-layer", {
+      method: "PUT",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ source: "layer pg-frozen-layer refines @record\n  v = 2" }),
+    });
+    const frozenBody = (await response.json()) as { erreur: string; frozenSemver?: string };
+    check(
+      "PUT on a frozen formalism is 409 with the frozen semver",
+      response.status === 409 && frozenBody.frozenSemver === "1.0.0",
+    );
+
+    // the frozen version stays readable
+    response = await fetch(base + "/api/layers/pg-frozen-layer", { headers: auth });
+    check("GET the frozen layer is still 200", response.status === 200);
+
+    await pool.query("DELETE FROM formalism_versions WHERE formalism_id = $1", [
+      "pg-frozen-layer",
+    ]);
+    await pool.query("DELETE FROM user_layers WHERE name = $1", ["pg-frozen-layer"]);
+  }
+
   // ---- the editor session: two SSE clients, journal, restore ----
   const sseController = new AbortController();
   const clientA = connectSse({ url: base + "/api/editor/session", headers: auth, signal: sseController.signal });
