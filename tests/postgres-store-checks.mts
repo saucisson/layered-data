@@ -505,7 +505,20 @@ try {
       method: "POST",
       headers: auth,
     });
-    check("freeze the layer is 201", response.status === 201);
+    const freezeBody = (await response.json()) as { semver: string; published?: boolean };
+    check(
+      "freeze the layer is 201 and published=true on first freeze (issue #159)",
+      response.status === 201 && freezeBody.semver === "1.0.0" && freezeBody.published === true,
+    );
+    const pubRow = await pool.query(
+      "SELECT visibility, status FROM user_layers WHERE name = $1",
+      ["pg-frozen-layer"],
+    );
+    check(
+      "the first freeze makes the layer public and published",
+      (pubRow.rows[0] as { visibility: string; status: string }).visibility === "public" &&
+        (pubRow.rows[0] as { visibility: string; status: string }).status === "published",
+    );
 
     response = await fetch(base + "/api/layers/pg-frozen-layer", {
       method: "PUT",
