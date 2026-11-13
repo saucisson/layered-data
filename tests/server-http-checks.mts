@@ -58,6 +58,16 @@ try {
   );
   response = await fetch(base + "/api/layers");
   check("layers without token is 401", response.status === 401);
+  // A personal access code without a matching user row is refused
+  // (issue #140): without DATABASE_URL the null user store misses.
+  response = await fetch(base + "/api/whoami", {
+    headers: { "x-access-code": "personal-code-without-user" },
+  });
+  check("whoami with an unknown personal code is 401", response.status === 401);
+  response = await fetch(base + "/api/layers", {
+    headers: { "x-access-code": "personal-code-without-user" },
+  });
+  check("layers with an unknown personal code is 401", response.status === 401);
 
   // ---- qualified formalism identifiers (issue #143, ADR-0115) ----
   const { asFormalismId } = await import("../server/layerStore.ts");

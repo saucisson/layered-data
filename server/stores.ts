@@ -18,11 +18,13 @@ import {
   createEditorSessionStore,
   type EditorSessionStore,
 } from "./editorSessionStore.ts";
+import { createPostgresUserStore, createNullUserStore, type UserStore } from "./userStore.ts";
 
 /** The server's persistent stores. */
 export interface QuarryStores {
   userLayers: UserLayerStore;
   editorSession: EditorSessionStore;
+  users: UserStore;
 }
 
 /** The stores selected by the environment (config.ts). */
@@ -37,6 +39,9 @@ export function createQuarryStoresFromEnv(): QuarryStores {
       editorSessionFile: EDITOR_SESSION_FILE,
       historyDepth: EDITOR_SESSION_HISTORY_DEPTH,
     }),
+    users: DATABASE_URL
+      ? createPostgresUserStore({ databaseUrl: DATABASE_URL })
+      : createNullUserStore(),
   };
 }
 
@@ -45,4 +50,5 @@ export function createQuarryStoresFromEnv(): QuarryStores {
 export async function initQuarryStores({ stores }: { stores: QuarryStores }): Promise<void> {
   await stores.userLayers.init();
   await stores.editorSession.init();
+  await stores.users.init();
 }

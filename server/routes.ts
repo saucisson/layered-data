@@ -48,7 +48,6 @@ import {
   applySecurityHeaders,
   sendJson,
   sendText,
-  isAccessGranted,
   rateLimitKeyOf,
   readRequestBody,
   resolveIdentity,
@@ -125,9 +124,39 @@ export function createQuarryServer({
         }
 
         if (url.pathname === "/api/whoami") {
-          if (!isAccessGranted({ request }))
-            return sendJson({ response, statusCode: 401, body: { erreur: "code d'accès requis" } });
           const identity = resolveIdentity({ request });
+          if (identity.kind === "anonymous-local") {
+            return sendJson({ response, statusCode: 401, body: { erreur: "code d'accès requis" } });
+          }
+          // A personal access code resolves to the user profile
+          // (issue #140, ADR-0114); the shared code keeps the legacy
+          // porteur-du-code identity.
+          if (identity.kind === "personal-code") {
+            const profile = await stores.users.findByAccessCodeHash({
+              accessCodeHash: identity.accessCodeHash,
+            });
+            if (profile === null) {
+              return sendJson({
+                response,
+                statusCode: 401,
+                body: { erreur: "code d'accès personnel inconnu" },
+              });
+            }
+            return sendJson({
+              response,
+              statusCode: 200,
+              body: {
+                version: VERSION,
+                utilisateur: profile.displayName,
+                identity: identity.kind,
+                user: {
+                  id: profile.id,
+                  displayName: profile.displayName,
+                  role: profile.role,
+                },
+              },
+            });
+          }
           return sendJson({
             response,
             statusCode: 200,
@@ -138,13 +167,33 @@ export function createQuarryServer({
             },
           });
         }
-        if (!isAccessGranted({ request })) {
+        // Resolve the access: the shared code or a personal code
+        // with a matching user row (issue #140, ADR-0114).
+        const identity = resolveIdentity({ request });
+        let ownerId: number | undefined;
+        if (identity.kind === "shared-code") {
+          // the legacy shared identity — no owner scoping
+        } else if (identity.kind === "personal-code") {
+          const profile = await stores.users.findByAccessCodeHash({
+            accessCodeHash: identity.accessCodeHash,
+          });
+          if (profile === null) {
+            return sendJson({
+              response,
+              statusCode: 401,
+              body: { erreur: "code d'accès requis" },
+            });
+          }
+          ownerId = profile.id;
+        } else {
           return sendJson({ response, statusCode: 401, body: { erreur: "code d'accès requis" } });
         }
 
         // ---- the workshop protocol: api/layers ----
         if (request.method === "GET" && url.pathname === "/api/layers") {
-          const userNames = await stores.userLayers.listNames();
+          const userNames = await stores.userLayers.listNames(
+            ownerId === undefined ? {} : { ownerId },
+          );
           const layers = [
             ...KERNEL_LAYER_NAMES.map((name) => ({ name, builtIn: true })),
             ...userNames.map((name) => ({
@@ -187,7 +236,11 @@ export function createQuarryServer({
             const bodyCheck = sourceOfRequestBody({ rawBody: await readRequestBody({ request }) });
             if ("reason" in bodyCheck)
               return sendJson({ response, statusCode: 400, body: { erreur: bodyCheck.reason } });
-            const { created } = await stores.userLayers.write({ name, source: bodyCheck.source });
+            const { created } = await stores.userLayers.write({
+              name,
+              source: bodyCheck.source,
+              ownerId,
+            });
             return sendJson({
               response,
               statusCode: created ? 201 : 200,
@@ -289,7 +342,9 @@ export function createQuarryServer({
           // visitors' layers read at the call through the store —
           // a layer written seconds ago stays refinable for the
           // geologist.
-          const userNames = await stores.userLayers.listNames();
+          const userNames = await stores.userLayers.listNames(
+            ownerId === undefined ? {} : { ownerId },
+          );
           const visitorLayers: { name: string; source: string }[] = [];
           for (const name of userNames) {
             const read = await stores.userLayers.read({ name: name as LayerName });
