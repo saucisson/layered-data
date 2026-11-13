@@ -58,9 +58,11 @@ const kernel = assembleLayeredDataKernel({ layerSources });
 function stage({
   draftSource,
   previousAdditionSources = [],
+  frozenFormalismNames = [],
 }: {
   draftSource: string;
   previousAdditionSources?: string[];
+  frozenFormalismNames?: string[];
 }) {
   return stageLayerAddition({
     languageSource: kernel.languageSource,
@@ -68,6 +70,7 @@ function stage({
     draftSource,
     livingLayerNames: [...KERNEL_LAYER_NAMES],
     readonlyLayerNames: [...KERNEL_LAYER_NAMES],
+    frozenFormalismNames,
   });
 }
 
@@ -475,7 +478,7 @@ check(
 //     visitors' layer bearing a bedrock name masks it under the
 //     contextual resolution (user, then kernel) — refused as
 //     « masquage-socle », never a silent shadow
-// =====================================================================
+// ======================================================================
 
 const shadowingVisitor = 'layer record\n  note = "visiteur"\n';
 const refusedShadowing = stage({
@@ -498,6 +501,31 @@ check(
     draftSource: "layer innocent-draft refines @record\n",
     previousAdditionSources: ["layer my-own-layer\n  note = \"ok\"\n"],
   }).ok === true,
+);
+
+// (l) a frozen formalism is read-only BY PROTOCOL (issue #156,
+//     ADR-0116): a draft claiming its name is refused as
+//     « formalisme-figé » — the way out is a superior version
+// =====================================================================
+
+const refusedFrozen = stage({
+  draftSource: "layer frozen-demo\n  x = 2\n",
+  frozenFormalismNames: ["frozen-demo"],
+});
+check(
+  "(l) a draft claiming a frozen formalism is refused at the validation step",
+  refusedFrozen.ok === false && refusedFrozen.step === "validation",
+);
+check(
+  '(l) the refusal carries exactly the "formalisme-figé" verdict',
+  refusedFrozen.verdicts.length === 1 &&
+    at(refusedFrozen.verdicts, 0).kind === "formalisme-figé" &&
+    at(refusedFrozen.verdicts, 0).fact.code === "formalism-frozen",
+);
+check(
+  "(l) a draft on a non-frozen name stays welcome",
+  stage({ draftSource: "layer fresh-draft\n  x = 1\n", frozenFormalismNames: ["frozen-demo"] })
+    .ok === true,
 );
 
 // =====================================================================
