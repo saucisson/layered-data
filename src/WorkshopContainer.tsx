@@ -876,7 +876,7 @@ export function WorkshopPage({
                       <button type="button"
                         className="ml-auto shrink-0 rounded border border-slate-300 dark:border-slate-600 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800 dark:text-slate-100"
                         onClick={() =>
-                          goto((info.value as AddressView).layer, (info.value as AddressView).path)
+                          goto((info.value as unknown as AddressView).layer, (info.value as unknown as AddressView).path)
                         }
                       >
                         {say({ language, en: "→ go there" })}
@@ -972,8 +972,8 @@ export function WorkshopPage({
                     className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600"
                     onClick={() =>
                       goto(
-                        (selectedKeyDetail!.value as AddressView).layer,
-                        (selectedKeyDetail!.value as AddressView).path,
+                        (selectedKeyDetail!.value as unknown as AddressView).layer,
+                        (selectedKeyDetail!.value as unknown as AddressView).path,
                       )
                     }
                   >
