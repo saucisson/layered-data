@@ -81,3 +81,45 @@ export function detectVersionConflicts({ space }: { space: Space }): VersionConf
   }
   return conflicts;
 }
+
+/** One detected drift: the host assembly whose measured dump changed
+ * after a minor lift of a dependency, with the old and new
+ * fingerprints. */
+export type Drift = {
+  assembly: string;
+  dependency: string;
+  previousFingerprint: string;
+  currentFingerprint: string;
+};
+
+/** Drift policing (ADR-0116 rule 4, issue #152): compare the
+ * certified dump fingerprint of each frozen dependency with the
+ * fingerprint the host assembly now measures. A difference means the
+ * minor lift displaced something in the host (namespace collision,
+ * first-provider displacement) — a drift verdict, never silent. */
+export function detectDrift({
+  certified,
+  measured,
+  assembly,
+}: {
+  /** certified fingerprints: dependency name → fingerprint */
+  certified: Readonly<Record<string, string>>;
+  /** measured fingerprints of the host assembly per dependency */
+  measured: Readonly<Record<string, string>>;
+  assembly: string;
+}): Drift[] {
+  const drifts: Drift[] = [];
+  for (const [dependency, previousFingerprint] of Object.entries(certified)) {
+    const currentFingerprint = measured[dependency];
+    if (currentFingerprint !== undefined && currentFingerprint !== previousFingerprint) {
+      drifts.push({
+        assembly,
+        dependency,
+        previousFingerprint,
+        currentFingerprint,
+      });
+    }
+  }
+  return drifts;
+}
+}
