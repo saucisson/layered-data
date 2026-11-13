@@ -12,7 +12,7 @@ import { type LanguageToken, tokenizeLanguage } from "./tokenizer.ts";
 export type LanguageValue =
   | { kind: "literal"; value: string | number | boolean | null }
   /** `@anchor/first/second` — cls "R" when a path follows, "LR" for a bare layer. */
-  | { kind: "reference"; referenceClass: "R" | "LR"; segments: string[] }
+  | { kind: "reference"; referenceClass: "R" | "LR"; segments: string[]; major: number | null }
   | { kind: "list"; items: LanguageValue[] };
 
 // The declaration modes of the members: three gestures since
@@ -108,6 +108,7 @@ export function parseLanguage(
   // ---- token stream helpers
   let position = 0;
   const peek = () => tokens[position];
+  const peekAt = (offset: number) => tokens[position + offset];
   const eat = (expectedKind: string): LanguageToken => {
     const token = tokens[position];
     if (token === undefined || token.kind !== expectedKind) {
@@ -150,10 +151,21 @@ export function parseLanguage(
       position++;
       segments.push(eat("id").text);
     }
+    // major pin (ADR-0116 rule 2, issue #150): `@user/name@2` — the
+    // `@` here is a version suffix, not a new reference: a reference
+    // is never nested inside another.
+    let major: number | null = null;
+    if (peek()?.kind === "@" && peekAt(1)?.kind === "num") {
+      position++;
+      const versionToken = eat("num").text;
+      const parsed = Number(versionToken);
+      if (Number.isInteger(parsed) && parsed >= 0) major = parsed;
+    }
     return {
       kind: "reference",
       referenceClass: segments.length > 1 ? "R" : "LR",
       segments,
+      major,
     };
   };
   // The parent order IS the consultation order — the closure walks

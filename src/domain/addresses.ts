@@ -9,23 +9,30 @@
 
 import { type LayerName, type LayerPath } from "./identifiers.ts";
 
-/** A reference to a node: `@anchor/first/second`, re-rootable. */
+/** A reference to a node: `@anchor/first/second`, re-rootable.
+ * `major` is the pinned major version (`@anchor@2`, ADR-0116 rule 2)
+ * — null when the reference is unpinned. */
 export class PathReference {
   readonly anchor: LayerName;
   readonly path: LayerPath;
+  readonly major: number | null;
 
-  constructor(anchor: LayerName, path: LayerPath) {
+  constructor(anchor: LayerName, path: LayerPath, major: number | null = null) {
     this.anchor = anchor;
     this.path = path;
+    this.major = major;
   }
 }
 
-/** A reference to a whole layer: `@layer`. */
+/** A reference to a whole layer: `@layer`, optionally major-pinned
+ * (`@layer@2`, ADR-0116 rule 2). */
 export class LayerReference {
   readonly layer: LayerName;
+  readonly major: number | null;
 
-  constructor(layer: LayerName) {
+  constructor(layer: LayerName, major: number | null = null) {
     this.layer = layer;
+    this.major = major;
   }
 }
 
