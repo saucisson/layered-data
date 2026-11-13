@@ -232,6 +232,41 @@ function prepareStaging({
     };
   }
 
+  // ---- kernel shadowing (issue #145): a visitors' layer bearing a
+  // bedrock name masks it under the contextual resolution (user, then
+  // kernel) — refused as « masquage-socle », never a silent shadow ----
+  const visitorsOnly = parseLanguage(
+    previousAdditionSources.join("\n") + "\n",
+    language,
+  );
+  const shadowedNames: string[] = [];
+  if (visitorsOnly.errors.length === 0) {
+    for (const visitorLayer of visitorsOnly.layers) {
+      if (
+        readonlyLayerNames.includes(visitorLayer.name) &&
+        !shadowedNames.includes(visitorLayer.name)
+      ) {
+        shadowedNames.push(visitorLayer.name);
+      }
+    }
+  }
+  if (shadowedNames.length > 0) {
+    return {
+      early: {
+        ok: false,
+        step: "validation" as const,
+        errors: [],
+        verdicts: shadowedNames.map((shadowedName) => ({
+          kind: "masquage-socle" as const,
+          fact: fact("kernel-shadowing", { layer: shadowedName }),
+        })),
+        layerNames: parsed.layers.map((parsedLayer) => asLayerName(parsedLayer.name)),
+        compiledLanguage: null,
+        blocks: {},
+      },
+    };
+  }
+
   // ---- validation step: one token space over the whole staging
   // text; the draft layers are the ones under judgment ----
   const compiledLanguage = compileLanguage(parsed.layers);
