@@ -1418,6 +1418,32 @@ check(
     gdApplicability.guarded === 4,
 );
 
+// ---- formalism status (issue #144, ADR-0115) ------------------------
+{
+  const { isFormalismStatus, isResolvableByBareName, isRefinableByOthers, FORMALISM_STATUSES } =
+    await import("../src/domain/formalism.ts");
+  check("draft and published are the only statuses", FORMALISM_STATUSES.length === 2);
+  check("isFormalismStatus accepts draft", isFormalismStatus("draft"));
+  check("isFormalismStatus accepts published", isFormalismStatus("published"));
+  check("isFormalismStatus refuses anything else", !isFormalismStatus("frozen"));
+  check(
+    "a draft never resolves by the bare name",
+    !isResolvableByBareName({ status: "draft" }),
+  );
+  check(
+    "a published formalism resolves by the bare name",
+    isResolvableByBareName({ status: "published" }),
+  );
+  check(
+    "a draft is not refinable by others",
+    !isRefinableByOthers({ status: "draft" }),
+  );
+  check(
+    "a published formalism is refinable",
+    isRefinableByOthers({ status: "published" }),
+  );
+}
+
 // =====================================================================
 // the ledger
 // =====================================================================
