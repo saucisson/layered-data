@@ -54,6 +54,26 @@ try {
   response = await fetch(base + "/api/layers");
   check("layers without token is 401", response.status === 401);
 
+  // ---- qualified formalism identifiers (issue #143, ADR-0115) ----
+  const { asFormalismId } = await import("../server/layerStore.ts");
+  const qualified = asFormalismId({ candidate: "@alice/petri" });
+  check(
+    "@alice/petri is a valid formalism id",
+    "formalismId" in qualified && qualified.user === "alice" && qualified.formalism === "petri",
+  );
+  check(
+    "a bare name is not a formalism id",
+    !("formalismId" in asFormalismId({ candidate: "petri" })),
+  );
+  check(
+    "three segments are not a formalism id",
+    !("formalismId" in asFormalismId({ candidate: "@a/b/c" })),
+  );
+  check(
+    "uppercase is refused",
+    !("formalismId" in asFormalismId({ candidate: "@Alice/petri" })),
+  );
+
   // ---- the security header baseline (issue #84) ----
   response = await fetch(base + "/api/whoami", { headers: auth });
   check("X-Content-Type-Options is nosniff", response.headers.get("x-content-type-options") === "nosniff");
