@@ -40,7 +40,18 @@ check(
 );
 check(
   "the form calls api/whoami for login verification",
-  formSource.includes('endpoint: "api/whoami"'),
+  formSource.includes('"api/whoami"'),
+);
+check(
+  "the form verifies the code BEFORE persisting it in handleLogin",
+  (() => {
+    const loginStart = formSource.indexOf("async function handleLogin");
+    const loginEnd = formSource.indexOf("function handleLogout");
+    const loginBody = formSource.slice(loginStart, loginEnd);
+    const fetchIdx = loginBody.indexOf('fetch("api/whoami"');
+    const writeIdx = loginBody.indexOf("writeAccessCode({ accessCode: accessCode.trim(), remember: true })");
+    return fetchIdx >= 0 && writeIdx >= 0 && fetchIdx < writeIdx;
+  })(),
 );
 check(
   "the form stores the connected user in localStorage",
