@@ -120,6 +120,10 @@ await pool.query("DELETE FROM user_layers");
     "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_layers' AND column_name = 'owner'",
   );
   check("user_layers.owner exists", ownerColumn.rowCount === 1);
+  const statusColumn = await pool.query(
+    "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_layers' AND column_name = 'status'",
+  );
+  check("user_layers.status exists", statusColumn.rowCount === 1);
   const ownerNullable = await pool.query(
     "SELECT is_nullable FROM information_schema.columns WHERE table_name = 'user_layers' AND column_name = 'owner'",
   );
@@ -136,10 +140,32 @@ await pool.query("DELETE FROM user_layers");
   ]);
   check("a user row can be inserted and read back", userRow.rowCount === 1);
   const userId = (userRow.rows[0] as { id: number }).id;
-  await pool.query("UPDATE user_layers SET owner = $1 WHERE name = $2", [
-    userId,
-    "pg-test-layer",
-  ]);
+
+  // owner stamping through the store (issue #139)
+  await stores.userLayers.write({
+    name: "pg-owned-layer" as never,
+    source: "layer pg-owned-layer refines @record\n  value = 42",
+    ownerId: userId,
+  });
+  const ownedRow = await pool.query(
+    "SELECT owner FROM user_layers WHERE name = $1",
+    ["pg-owned-layer"],
+  );
+  check(
+    "write with ownerId stamps the row",
+    (ownedRow.rows[0] as { owner: number }).owner === userId,
+  );
+  const ownedNames = await stores.userLayers.listNames({ ownerId: userId });
+  check(
+    "listNames({ ownerId }) returns only that owner's layers",
+    ownedNames.includes("pg-owned-layer"),
+  );
+  const allNames = await stores.userLayers.listNames();
+  check(
+    "listNames() without ownerId returns all layers",
+    allNames.includes("pg-owned-layer"),
+  );
+
   await pool.query("DELETE FROM user_layers WHERE owner = $1", [userId]);
   await pool.query("DELETE FROM users WHERE id = $1", [userId]);
 }
