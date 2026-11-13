@@ -142,8 +142,11 @@ await pool.query("DELETE FROM user_layers");
   const userId = (userRow.rows[0] as { id: number }).id;
 
   // owner stamping through the store (issue #139)
+  const { asLayerName } = await import("../server/layerStore.ts");
+  const ownedNameCheck = asLayerName({ candidate: "pg-owned-layer" });
+  if ("reason" in ownedNameCheck) throw new Error("bad test layer name");
   await stores.userLayers.write({
-    name: "pg-owned-layer" as never,
+    name: ownedNameCheck.name,
     source: "layer pg-owned-layer refines @record\n  value = 42",
     ownerId: userId,
   });
@@ -158,7 +161,7 @@ await pool.query("DELETE FROM user_layers");
   const ownedNames = await stores.userLayers.listNames({ ownerId: userId });
   check(
     "listNames({ ownerId }) returns only that owner's layers",
-    ownedNames.includes("pg-owned-layer"),
+    ownedNames.includes("pg-owned-layer") && !ownedNames.includes("pg-test-layer"),
   );
   const allNames = await stores.userLayers.listNames();
   check(
