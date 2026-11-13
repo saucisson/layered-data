@@ -124,6 +124,12 @@ sémantique : toute lecture la parcourt dans cet ordre (§6).
 LRefs de la racine. L'espace DOIT être **acyclique en LRef au niveau couche** (pré-requis
 du désucrage, §8) ; les cycles dans les types sont neutralisés par O5.
 
+**Pinning de majeure (ADR-0116, règle 2).** Une référence peut épingler une majeure :
+`@user/formalism@2` (ou `@layer@2` pour un nom nu). La résolution d'un nom épinglé vise la
+dernière version figée de cette majeure ; le nom nu vise la dernière version figée de la
+dernière majeure. La résolution a lieu **une fois par nom et par assemblage**, jamais par
+chemin. Un brouillon (`draft`) ne résout jamais, épinglé ou non.
+
 ---
 
 ## 4. Résolution des désignations et re-racination
