@@ -32,15 +32,16 @@ try {
   `);
   await pool.query(`
     ALTER TABLE user_layers
-    ADD COLUMN IF NOT EXISTS owner INTEGER REFERENCES users(id) ON DELETE SET NULL
+    ADD COLUMN IF NOT EXISTS owner INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published'))
   `);
   const { rows } = await pool.query(
-    "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_layers' AND column_name = 'owner'",
+    "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_layers' AND column_name IN ('owner', 'status')",
   );
-  if (rows.length === 0) {
-    throw new Error("la colonne owner n'a pas été créée sur user_layers");
+  if (rows.length < 2) {
+    throw new Error("les colonnes owner et status n'ont pas été créées sur user_layers");
   }
-  console.log("OK — table users et colonne user_layers.owner en place");
+  console.log("OK — table users et colonnes user_layers.owner / user_layers.status en place");
 } finally {
   await pool.end();
 }

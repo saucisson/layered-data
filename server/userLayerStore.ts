@@ -24,13 +24,23 @@ export interface UserLayerStore {
   /** Verify the store can serve and create the schema if needed.
    * Throws StoreUnavailableError when it cannot. */
   init(): Promise<void>;
-  /** The layer names, sorted. */
-  listNames(): Promise<string[]>;
+  /** The layer names, sorted. When ownerId is given, only that
+   * owner's layers are listed (issue #140, ADR-0114). */
+  listNames({ ownerId }?: { ownerId?: number }): Promise<string[]>;
   /** Read one layer's source. */
   read({ name }: { name: LayerName }): Promise<{ found: true; source: string } | { found: false }>;
   /** Write a layer (upsert). A trailing newline is added: every
-   * layer ends with one. */
-  write({ name, source }: { name: LayerName; source: string }): Promise<{ created: boolean }>;
+   * layer ends with one. ownerId (issue #139, ADR-0114) stamps the
+   * row with the owning user; NULL means the legacy shared code. */
+  write({
+    name,
+    source,
+    ownerId,
+  }: {
+    name: LayerName;
+    source: string;
+    ownerId?: number;
+  }): Promise<{ created: boolean }>;
   /** Delete a layer. */
   delete({ name }: { name: LayerName }): Promise<{ existed: boolean }>;
 }
@@ -86,6 +96,7 @@ export function createDiskUserLayerStore({ directory }: { directory: string }): 
       mkdirSync(directory, { recursive: true });
     },
     async listNames() {
+      // The disk store has no owner concept — dev/tests only.
       return listLayerNames({ directory });
     },
     async read({ name }) {
@@ -168,8 +179,14 @@ export function createPostgresUserLayerStore({
         throw new StoreUnavailableError({ store: "user_layers (PostgreSQL)", cause: error });
       }
     },
-    async listNames() {
-      const result = await (await getPool()).query("SELECT name FROM user_layers ORDER BY name");
+    async listNames({ ownerId } = {}) {
+      const result =
+        ownerId === undefined
+          ? await (await getPool()).query("SELECT name FROM user_layers ORDER BY name")
+          : await (await getPool()).query(
+              "SELECT name FROM user_layers WHERE owner = $1 ORDER BY name",
+              [ownerId],
+            );
       return (result.rows as { name: string }[]).map((row) => row.name);
     },
     async read({ name }) {
@@ -182,7 +199,7 @@ export function createPostgresUserLayerStore({
         ? { found: true as const, source: rows[0].source }
         : { found: false as const };
     },
-    async write({ name, source }) {
+    async write({ name, source, ownerId }) {
       const normalized = source.endsWith("\n") ? source : source + "\n";
       const clientPool = await getPool();
       const client = await clientPool.connect();
@@ -191,14 +208,14 @@ export function createPostgresUserLayerStore({
         const existing = await client.query("SELECT 1 FROM user_layers WHERE name = $1", [name]);
         const created = existing.rowCount === 0;
         if (created) {
-          await client.query("INSERT INTO user_layers (name, source) VALUES ($1, $2)", [
-            name,
-            normalized,
-          ]);
+          await client.query(
+            "INSERT INTO user_layers (name, source, owner) VALUES ($1, $2, $3)",
+            [name, normalized, ownerId ?? null],
+          );
         } else {
           await client.query(
-            "UPDATE user_layers SET source = $2, updated_at = now() WHERE name = $1",
-            [name, normalized],
+            "UPDATE user_layers SET source = $2, owner = COALESCE($3, owner), updated_at = now() WHERE name = $1",
+            [name, normalized, ownerId ?? null],
           );
         }
         await client.query("COMMIT");
