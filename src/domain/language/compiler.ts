@@ -42,8 +42,8 @@ export interface CompiledLanguage {
 
 const makeReference = (value: LanguageValue & { kind: "reference" }): LayerReference | PathReference =>
   value.referenceClass === "LR"
-    ? new LayerReference(asLayerName(value.segments[0] ?? ""))
-    : new PathReference(asLayerName(value.segments[0] ?? ""), asLayerPath(value.segments.slice(1)));
+    ? new LayerReference(asLayerName(value.segments[0] ?? ""), value.major)
+    : new PathReference(asLayerName(value.segments[0] ?? ""), asLayerPath(value.segments.slice(1)), value.major);
 
 const makeValue = (value: LanguageValue): RawValue => {
   if (value.kind === "literal") return value.value;
