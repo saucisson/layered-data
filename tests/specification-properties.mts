@@ -1572,6 +1572,35 @@ check(
   );
 }
 
+// ---- drift policing (issue #152, ADR-0116 rule 4) --------------------
+{
+  const { detectDrift } = await import("../src/domain/versioning.ts");
+  const drifts = detectDrift({
+    certified: { petri: "fp-aaa", graph: "fp-ggg" },
+    measured: { petri: "fp-bbb", graph: "fp-ggg" },
+    assembly: "host",
+  });
+  check(
+    "a changed dump fingerprint is a drift",
+    drifts.length === 1 &&
+      drifts[0].dependency === "petri" &&
+      drifts[0].previousFingerprint === "fp-aaa" &&
+      drifts[0].currentFingerprint === "fp-bbb",
+  );
+  check(
+    "an unchanged fingerprint is no drift",
+    detectDrift({
+      certified: { petri: "fp-aaa" },
+      measured: { petri: "fp-aaa" },
+      assembly: "host",
+    }).length === 0,
+  );
+  check(
+    "a missing measurement is no drift (nothing measured, nothing displaced)",
+    detectDrift({ certified: { petri: "fp-aaa" }, measured: {}, assembly: "host" }).length === 0,
+  );
+}
+
 // =====================================================================
 // the ledger
 // =====================================================================
