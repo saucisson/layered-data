@@ -109,6 +109,40 @@ await pool.query("DELETE FROM editor_session_events");
 await pool.query("DELETE FROM editor_session");
 await pool.query("DELETE FROM user_layers");
 
+// ---- the users schema (issue #139, ADR-0114) ----
+{
+  const usersTable = await pool.query(
+    "SELECT table_name FROM information_schema.tables WHERE table_name = 'users'",
+  );
+  check("the users table exists", usersTable.rowCount === 1);
+  const ownerColumn = await pool.query(
+    "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_layers' AND column_name = 'owner'",
+  );
+  check("user_layers.owner exists", ownerColumn.rowCount === 1);
+  const ownerNullable = await pool.query(
+    "SELECT is_nullable FROM information_schema.columns WHERE table_name = 'user_layers' AND column_name = 'owner'",
+  );
+  check(
+    "user_layers.owner is nullable (legacy layers keep NULL)",
+    (ownerNullable.rows[0] as { is_nullable: string }).is_nullable === "YES",
+  );
+  await pool.query(
+    "INSERT INTO users (display_name, access_code_hash, role) VALUES ($1, $2, $3) ON CONFLICT (access_code_hash) DO NOTHING",
+    ["pg-test-user", "hash-pg-test-user", "user"],
+  );
+  const userRow = await pool.query("SELECT id, role FROM users WHERE access_code_hash = $1", [
+    "hash-pg-test-user",
+  ]);
+  check("a user row can be inserted and read back", userRow.rowCount === 1);
+  const userId = (userRow.rows[0] as { id: number }).id;
+  await pool.query("UPDATE user_layers SET owner = $1 WHERE name = $2", [
+    userId,
+    "pg-test-layer",
+  ]);
+  await pool.query("DELETE FROM user_layers WHERE owner = $1", [userId]);
+  await pool.query("DELETE FROM users WHERE id = $1", [userId]);
+}
+
 const server: Server = createQuarryServer({ stores });
 await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
 const port = (server.address() as AddressInfo).port;
