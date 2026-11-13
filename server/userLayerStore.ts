@@ -39,7 +39,7 @@ export interface UserLayerStore {
   }: {
     name: LayerName;
     source: string;
-    ownerId?: number;
+    ownerId?: number | undefined;
   }): Promise<{ created: boolean }>;
   /** Delete a layer. */
   delete({ name }: { name: LayerName }): Promise<{ existed: boolean }>;

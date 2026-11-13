@@ -170,6 +170,32 @@ await pool.query("DELETE FROM user_layers");
   await pool.query("DELETE FROM users WHERE id = $1", [userId]);
 }
 
+// ---- the user store (issue #140, ADR-0114) ----
+{
+  const { hashAccessCode } = await import("../server/httpUtils.ts");
+  const personalCode = "pg-personal-code-140";
+  const hash = hashAccessCode({ code: personalCode });
+  const created = await stores.users.create({
+    displayName: "pg-user-140",
+    accessCodeHash: hash,
+    role: "user",
+  });
+  check("users.create returns a profile with an id", typeof created.id === "number");
+  const found = await stores.users.findByAccessCodeHash({ accessCodeHash: hash });
+  check(
+    "users.findByAccessCodeHash finds the created user",
+    found !== null && found.displayName === "pg-user-140" && found.role === "user",
+  );
+  const missing = await stores.users.findByAccessCodeHash({ accessCodeHash: "no-such-hash" });
+  check("users.findByAccessCodeHash misses an unknown hash", missing === null);
+  const all = await stores.users.list();
+  check("users.list includes the created user", all.some((u) => u.id === created.id));
+  const revoked = await stores.users.revoke({ id: created.id });
+  check("users.revoke removes the user", revoked.existed);
+  const afterRevoke = await stores.users.findByAccessCodeHash({ accessCodeHash: hash });
+  check("the revoked user is no longer found", afterRevoke === null);
+}
+
 // ---- the formalism_versions schema (issue #148, ADR-0116) ----
 {
   const versionsTable = await pool.query(
@@ -238,6 +264,71 @@ try {
   check("GET the written layer is 200", response.status === 200);
   response = await fetch(base + "/api/layers/never-written-layer", { headers: auth });
   check("GET an unknown layer is 404", response.status === 404);
+
+  // ---- per-user auth over HTTP (issue #140, ADR-0114) ----
+  {
+    const { hashAccessCode } = await import("../server/httpUtils.ts");
+    const personalCode = "pg-http-personal-140";
+    const profile = await stores.users.create({
+      displayName: "pg-http-user",
+      accessCodeHash: hashAccessCode({ code: personalCode }),
+      role: "user",
+    });
+    const personalAuth = { "x-access-code": personalCode };
+
+    response = await fetch(base + "/api/whoami", { headers: personalAuth });
+    const whoamiBody = (await response.json()) as {
+      utilisateur: string;
+      identity: string;
+      user?: { id: number; displayName: string; role: string };
+    };
+    check(
+      "whoami with a personal code returns the user profile",
+      response.status === 200 &&
+        whoamiBody.identity === "personal-code" &&
+        whoamiBody.user?.id === profile.id &&
+        whoamiBody.user?.displayName === "pg-http-user",
+    );
+
+    // the personal code scopes the layers to its owner
+    response = await fetch(base + "/api/layers/pg-personal-layer", {
+      method: "PUT",
+      headers: { ...personalAuth, "Content-Type": "application/json" },
+      body: JSON.stringify({ source: "layer pg-personal-layer refines @record\n  v = 1" }),
+    });
+    check("PUT a layer with a personal code is 201", response.status === 201);
+    const ownerRow = await pool.query("SELECT owner FROM user_layers WHERE name = $1", [
+      "pg-personal-layer",
+    ]);
+    check(
+      "the layer is stamped with the personal owner",
+      (ownerRow.rows[0] as { owner: number }).owner === profile.id,
+    );
+
+    response = await fetch(base + "/api/layers", { headers: personalAuth });
+    const personalLayers = (await response.json()) as {
+      layers: { name: string; builtIn: boolean }[];
+    };
+    check(
+      "GET /api/layers with a personal code lists only the owner's layers",
+      personalLayers.layers.some((l) => l.name === "pg-personal-layer") &&
+        !personalLayers.layers.some((l) => l.name === "pg-test-layer"),
+    );
+
+    // the shared code still sees all layers (no scoping)
+    response = await fetch(base + "/api/layers", { headers: auth });
+    const sharedLayers = (await response.json()) as {
+      layers: { name: string; builtIn: boolean }[];
+    };
+    check(
+      "GET /api/layers with the shared code lists all layers",
+      sharedLayers.layers.some((l) => l.name === "pg-personal-layer") &&
+        sharedLayers.layers.some((l) => l.name === "pg-test-layer"),
+    );
+
+    await pool.query("DELETE FROM user_layers WHERE owner = $1", [profile.id]);
+    await stores.users.revoke({ id: profile.id });
+  }
 
   // ---- the editor session: two SSE clients, journal, restore ----
   const sseController = new AbortController();
