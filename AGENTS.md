@@ -19,7 +19,8 @@ If you are unsure which role this session assigns you, stop and ask.
 ## The working day (ADR-0010)
 
 - `main` is merged by the **human only**. `daily` receives agent work
-  via platform auto-merge. Full model: `docs/branching.md`.
+  merged by the **developer agent** (rebase-only) once the merge
+  criteria below are met. Full model: `docs/branching.md`.
 - One issue at a time, one branch per issue (`feat/<issue>` or
   `fix/<issue>` from `daily`), pull requests under ~1000 lines.
 - The morning directive (issue list) is set by the human and is **never
@@ -34,14 +35,17 @@ If you are unsure which role this session assigns you, stop and ask.
 
 ## Merge criteria (codified - not vibes)
 
-Auto-merge into `daily` requires ALL of:
+Merge into `daily` requires ALL of:
 
 1. CI green on the PR head (TypeScript strict, tests pass, build succeeds),
 2. the `reviewer` status check green: **zero BLOCKING findings**
-   (ADR-0016),
+   (ADR-0016) — when the `reviewer` workflow is enabled; while it is
+   disabled, criterion 1 plus a clean review of the diff is the gate,
 3. the change is not on the escalation list.
 
-No agent executes a merge. Ever. That is a platform action.
+The **developer agent** executes the merge into `daily` (rebase-only,
+never a merge commit) once all criteria are met. No agent ever merges
+into `main` — that stays human-only.
 
 ## The non-negotiable style
 
