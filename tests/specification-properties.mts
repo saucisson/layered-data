@@ -1521,6 +1521,51 @@ check(
   check(
     "unpinned references never conflict (bare name = latest frozen of latest major)",
     detectVersionConflicts({ space: unpinned }).length === 0,
+
+// ---- the version classifier (issue #149, ADR-0116 rule 1) ------------
+{
+  const { classifyVersionDiff } = await import("../src/domain/versionClassifier.ts");
+  const base: RawTree = { specification: { record: { abstract: null } }, note: "v1" };
+  check(
+    "identical trees are PATCH",
+    classifyVersionDiff({ previous: base, next: { ...base } }) === "PATCH",
+  );
+  check(
+    "a new key is a pure addition → MINOR",
+    classifyVersionDiff({
+      previous: base,
+      next: { ...base, extra: { alias: "x" } },
+    }) === "MINOR",
+  );
+  check(
+    "a modified value is MAJOR",
+    classifyVersionDiff({ previous: base, next: { ...base, note: "v2" } }) === "MAJOR",
+  );
+  check(
+    "a removed key is MAJOR",
+    classifyVersionDiff({ previous: base, next: { specification: base["specification"] } }) ===
+      "MAJOR",
+  );
+  check(
+    "a reordered existing key displaces a provider → MAJOR",
+    classifyVersionDiff({
+      previous: { a: 1, b: 2 },
+      next: { b: 2, a: 1 },
+    }) === "MAJOR",
+  );
+  check(
+    "a reordered refines list is MAJOR (first provider displaced)",
+    classifyVersionDiff({
+      previous: { refines: [new LayerReference(asLayerName("a")), new LayerReference(asLayerName("b"))] },
+      next: { refines: [new LayerReference(asLayerName("b")), new LayerReference(asLayerName("a"))] },
+    }) === "MAJOR",
+  );
+  check(
+    "an added alias in refines is MINOR",
+    classifyVersionDiff({
+      previous: { refines: [new LayerReference(asLayerName("a"))] },
+      next: { refines: [new LayerReference(asLayerName("a")), new LayerReference(asLayerName("b"))] },
+    }) === "MINOR",
   );
 }
 
