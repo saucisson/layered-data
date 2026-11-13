@@ -15,6 +15,7 @@ import { LayerSourceView, type SourceLineTarget } from "./layerSourceView.tsx";
 import { FlatView } from "./flatView.tsx";
 import { LayerContractTests } from "./contractTests.tsx";
 import { DiagnosticsPanel } from "./diagnosticsPanel.tsx";
+import { StatusBadge } from "./statusBadge.tsx";
 import { say, type BilingualText } from "./i18n.ts";
 
 type FormalismTab = "language" | "raw" | "flattened";
@@ -52,6 +53,12 @@ export function FormalismPanel({
         <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "② The formalism"})}
           <span className="ml-1 font-mono text-xs font-normal text-slate-600">{layer}</span>
+          <span className="ml-1.5">
+            <StatusBadge
+              status={addedLayerSources[layer] === undefined ? "published" : "draft"}
+              language={language}
+            />
+          </span>
         </h2>
         <div className="flex gap-1">
           {tabs.map(([tab, label]) => (
