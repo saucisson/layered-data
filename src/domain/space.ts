@@ -872,14 +872,16 @@ export class Space {
     raw: RawValue;
     tracer: Tracer | null;
   }): RawValue {
-    if (isDictionary(raw)) return new AddressView(layer, [...path, key as PathSegment]);
-    if (raw instanceof LayerReference) return new AddressView(raw.layer, asLayerPath([]));
+    if (isDictionary(raw))
+      return new AddressView(layer, [...path, key as PathSegment]) as unknown as RawValue;
+    if (raw instanceof LayerReference)
+      return new AddressView(raw.layer, asLayerPath([])) as unknown as RawValue;
     if (raw instanceof PathReference) {
       const resolved = this.resolveReference({ reference: raw, holder: [layer, path], tracer });
       if (resolved === null) return null;
       if (Array.isArray(resolved)) {
         const resolvedAddress = resolved as Address;
-        return new AddressView(resolvedAddress[0], resolvedAddress[1]);
+        return new AddressView(resolvedAddress[0], resolvedAddress[1]) as unknown as RawValue;
       }
       return resolved;
     }
