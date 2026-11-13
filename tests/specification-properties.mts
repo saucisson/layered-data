@@ -1444,6 +1444,36 @@ check(
   );
 }
 
+// ---- major pinning in references (issue #150, ADR-0116 rule 2) -------
+{
+  const pinned = parseLanguage("layer pinned refines @alice/petri@2\n");
+  const pinnedRef = pinned.layers[0]?.refines[0];
+  check(
+    "@alice/petri@2 parses with major 2",
+    pinnedRef?.kind === "reference" &&
+      pinnedRef.major === 2 &&
+      pinnedRef.segments.join("/") === "alice/petri",
+  );
+  const unpinned = parseLanguage("layer plain refines @record\n");
+  const unpinnedRef = unpinned.layers[0]?.refines[0];
+  check(
+    "a bare reference carries no major",
+    unpinnedRef?.kind === "reference" && unpinnedRef.major === null,
+  );
+  const compiledPinned = compileLanguage(pinned.layers).layers["pinned"]?.["refines"];
+  const compiledRef = compiledPinned?.[0];
+  check(
+    "the compiled R (path reference) carries the pinned major",
+    compiledRef instanceof PathReference && compiledRef.major === 2,
+  );
+  const pinnedLayer = parseLanguage("layer pinned-layer refines @record@3\n");
+  const compiledLayerRef = compileLanguage(pinnedLayer.layers).layers["pinned-layer"]?.["refines"]?.[0];
+  check(
+    "the compiled LRef (bare layer) carries the pinned major",
+    compiledLayerRef instanceof LayerReference && compiledLayerRef.major === 3,
+  );
+}
+
 // =====================================================================
 // the ledger
 // =====================================================================
