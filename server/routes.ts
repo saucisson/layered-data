@@ -346,6 +346,29 @@ export function createQuarryServer({
                 body: { erreur: "le socle est en lecture seule : " + name },
               });
             }
+            // issue #157: a frozen formalism is immutable — any write is
+            // refused with the way out (fork into the next version)
+            if (DATABASE_URL) {
+              const { Pool } = await import("pg");
+              const { resolveBareName } = await import("./formalismVersionStore.ts");
+              const pool = new Pool({ connectionString: DATABASE_URL });
+              try {
+                const frozen = await resolveBareName({ pool, formalismId: name });
+                if (frozen !== null) {
+                  return sendJson({
+                    response,
+                    statusCode: 409,
+                    body: {
+                      erreur:
+                        "formalisme figé en " + frozen.semver + " — créez une version supérieure pour éditer",
+                      frozenSemver: frozen.semver,
+                    },
+                  });
+                }
+              } finally {
+                await pool.end();
+              }
+            }
             const bodyCheck = sourceOfRequestBody({ rawBody: await readRequestBody({ request }) });
             if ("reason" in bodyCheck)
               return sendJson({ response, statusCode: 400, body: { erreur: bodyCheck.reason } });
