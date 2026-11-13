@@ -129,12 +129,26 @@ export function createPostgresUserLayerStore({
         const clientPool = await getPool();
         await clientPool.query("SELECT 1");
         await clientPool.query(`
+          CREATE TABLE IF NOT EXISTS users (
+            id SERIAL PRIMARY KEY,
+            display_name TEXT NOT NULL,
+            access_code_hash TEXT NOT NULL UNIQUE,
+            role TEXT NOT NULL CHECK (role IN ('user', 'admin')),
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+          )
+        `);
+        await clientPool.query(`
           CREATE TABLE IF NOT EXISTS user_layers (
             name TEXT PRIMARY KEY,
             source TEXT NOT NULL,
+            owner INTEGER REFERENCES users(id) ON DELETE SET NULL,
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
           )
+        `);
+        await clientPool.query(`
+          ALTER TABLE user_layers
+          ADD COLUMN IF NOT EXISTS owner INTEGER REFERENCES users(id) ON DELETE SET NULL
         `);
       } catch (error) {
         throw new StoreUnavailableError({ store: "user_layers (PostgreSQL)", cause: error });
