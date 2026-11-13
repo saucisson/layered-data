@@ -118,6 +118,10 @@ export interface StageLayerAdditionInput {
    * refused as « socle-occupé », the theft named, the forgery
    * never judged */
   readonlyLayerNames: readonly string[];
+  /** the frozen formalisms (issue #156, ADR-0116): a draft claiming
+   * one of their names is refused as « formalisme-figé » — the way
+   * out is a superior version, never a rewrite */
+  frozenFormalismNames?: readonly string[];
   /** the workshop language — the syntax errors of the refusal speak
    * it; verdicts stay facts, rendered by the panels */
   language?: Language;
@@ -156,6 +160,7 @@ function prepareStaging({
   draftSource,
   livingLayerNames,
   readonlyLayerNames,
+  frozenFormalismNames = [],
   language = DEFAULT_LANGUAGE,
   strictConflicts = false,
   strictChecks = false,
@@ -204,6 +209,39 @@ function prepareStaging({
   // draft claiming `record` used to draw 13 ghost declarations on
   // layers that had done nothing).
   const draftOnly = parseLanguage(draftSource.trim(), language);
+
+  // ---- frozen formalisms (issue #156, ADR-0116): a draft claiming a
+  // frozen formalism's name is refused as « formalisme-figé » — the
+  // frozen version stays readable and refinable forever; the way out
+  // is a superior version, whose level the classifier computes ----
+  const claimedFrozenNames: string[] = [];
+  if (draftOnly.errors.length === 0) {
+    for (const draftLayer of draftOnly.layers) {
+      if (
+        frozenFormalismNames.includes(draftLayer.name) &&
+        !claimedFrozenNames.includes(draftLayer.name)
+      ) {
+        claimedFrozenNames.push(draftLayer.name);
+      }
+    }
+  }
+  if (claimedFrozenNames.length > 0) {
+    return {
+      early: {
+        ok: false,
+        step: "validation" as const,
+        errors: [],
+        verdicts: claimedFrozenNames.map((claimedName) => ({
+          kind: "formalisme-figé" as const,
+          fact: fact("formalism-frozen", { layer: claimedName }),
+        })),
+        layerNames: parsed.layers.map((parsedLayer) => asLayerName(parsedLayer.name)),
+        compiledLanguage: null,
+        blocks: {},
+      },
+    };
+  }
+
   const claimedBedrockNames: string[] = [];
   if (draftOnly.errors.length === 0) {
     for (const draftLayer of draftOnly.layers) {
