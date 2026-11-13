@@ -15,6 +15,26 @@ export interface UserProfile {
   createdAt: string;
 }
 
+/** The users store cannot serve: no DATABASE_URL (dev/tests) or the
+ * database is unreachable. Typed so the HTTP layer can map it. */
+export class UserStoreUnavailableError extends Error {
+  constructor({ cause }: { cause?: unknown } = {}) {
+    super(
+      "user store indisponible" +
+        (cause !== undefined ? " : " + String((cause as Error)?.message ?? cause) : ""),
+    );
+    this.name = "UserStoreUnavailableError";
+  }
+}
+
+/** A user creation failed: no row came back from the INSERT. */
+export class UserCreationError extends Error {
+  constructor() {
+    super("la création de l'utilisateur a échoué — aucune ligne retournée");
+    this.name = "UserCreationError";
+  }
+}
+
 /** The users store: the personal accounts behind the access codes. */
 export interface UserStore {
   /** Verify the store can serve and create the schema if needed. */
@@ -46,7 +66,7 @@ export function createNullUserStore(): UserStore {
       return null;
     },
     async create() {
-      throw new Error("no user store without DATABASE_URL — personal accounts need PostgreSQL");
+      throw new UserStoreUnavailableError();
     },
     async list() {
       return [];
@@ -111,7 +131,7 @@ export function createPostgresUserStore({ databaseUrl }: { databaseUrl: string }
       );
       const rows = result.rows as Parameters<typeof rowToProfile>[0][];
       if (rows.length === 0 || rows[0] === undefined) {
-        throw new Error("user creation failed — no row returned");
+        throw new UserCreationError();
       }
       return rowToProfile(rows[0]);
     },
