@@ -150,7 +150,18 @@ export function createPostgresUserLayerStore({
         await clientPool.query(`
           ALTER TABLE user_layers
           ADD COLUMN IF NOT EXISTS owner INTEGER REFERENCES users(id) ON DELETE SET NULL,
-          ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published'))
+          ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published'));
+        await clientPool.query(`
+          CREATE TABLE IF NOT EXISTS formalism_versions (
+            formalism_id TEXT NOT NULL REFERENCES user_layers(name) ON DELETE CASCADE,
+            semver TEXT NOT NULL,
+            source TEXT NOT NULL,
+            status TEXT NOT NULL CHECK (status IN ('draft', 'frozen')),
+            frozen_at TIMESTAMPTZ,
+            dump_fingerprint TEXT,
+            created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+            PRIMARY KEY (formalism_id, semver)
+          )
         `);
       } catch (error) {
         throw new StoreUnavailableError({ store: "user_layers (PostgreSQL)", cause: error });

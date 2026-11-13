@@ -79,6 +79,16 @@ try {
     !("formalismId" in asFormalismId({ candidate: "@Alice/petri" })),
   );
 
+  // ---- semver parsing and bare-name resolution rules (issue #148, ADR-0116) ----
+  const { parseSemVer, compareSemVer } = await import("../server/formalismVersionStore.ts");
+  check("parseSemVer reads 2.1.0", JSON.stringify(parseSemVer({ semver: "2.1.0" })) === '{"major":2,"minor":1,"patch":0}');
+  check("parseSemVer refuses garbage", parseSemVer({ semver: "v2" }) === null);
+  check(
+    "compareSemVer orders by major then minor then patch",
+    compareSemVer(parseSemVer({ semver: "2.0.0" })!, parseSemVer({ semver: "10.0.0" })!) < 0 &&
+      compareSemVer(parseSemVer({ semver: "1.9.0" })!, parseSemVer({ semver: "1.10.0" })!) < 0,
+  );
+
   // ---- the security header baseline (issue #84) ----
   response = await fetch(base + "/api/whoami", { headers: auth });
   check("X-Content-Type-Options is nosniff", response.headers.get("x-content-type-options") === "nosniff");
