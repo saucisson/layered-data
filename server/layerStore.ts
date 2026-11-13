@@ -32,6 +32,31 @@ export function asLayerName({
   return { reason: "nom invalide : minuscules, chiffres, tirets" };
 }
 
+/** A qualified formalism identifier `@user/formalism` (ADR-0115,
+ * issue #143): exactly two segments, each a bare layer name. */
+declare const formalismIdBrand: unique symbol;
+export type FormalismId = string & { readonly [formalismIdBrand]: never };
+
+const SEGMENT = "[a-z0-9][a-z0-9-]{0,63}";
+const FORMALISM_ID_PATTERN = new RegExp(`^@(${SEGMENT})/(${SEGMENT})$`);
+
+/** Accept a qualified formalism identifier, or explain the refusal. */
+export function asFormalismId({
+  candidate,
+}: {
+  candidate: string;
+}): { formalismId: FormalismId; user: string; formalism: string } | { reason: string } {
+  const match = FORMALISM_ID_PATTERN.exec(candidate);
+  if (match !== null && match[1] !== undefined && match[2] !== undefined) {
+    return {
+      formalismId: candidate as FormalismId,
+      user: match[1],
+      formalism: match[2],
+    };
+  }
+  return { reason: "identifiant qualifié invalide : attendu @user/formalism" };
+}
+
 /** List the layer names of a quarry folder, sorted. An absent
  * folder is an empty quarry, never an exception. */
 export function listLayerNames({ directory }: { directory: string }): string[] {
