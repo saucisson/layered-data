@@ -142,13 +142,15 @@ export function createPostgresUserLayerStore({
             name TEXT PRIMARY KEY,
             source TEXT NOT NULL,
             owner INTEGER REFERENCES users(id) ON DELETE SET NULL,
+            status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published')),
             created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
             updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
           )
         `);
         await clientPool.query(`
           ALTER TABLE user_layers
-          ADD COLUMN IF NOT EXISTS owner INTEGER REFERENCES users(id) ON DELETE SET NULL
+          ADD COLUMN IF NOT EXISTS owner INTEGER REFERENCES users(id) ON DELETE SET NULL,
+          ADD COLUMN IF NOT EXISTS status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published'))
         `);
       } catch (error) {
         throw new StoreUnavailableError({ store: "user_layers (PostgreSQL)", cause: error });
