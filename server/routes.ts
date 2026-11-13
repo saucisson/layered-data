@@ -49,11 +49,12 @@ import {
   sendJson,
   sendText,
   isAccessGranted,
+  rateLimitKeyOf,
   readRequestBody,
+  resolveIdentity,
   sourceOfRequestBody,
 } from "./httpUtils.ts";
 import {
-  clientKeyOf,
   createPostgresRateLimitStore,
   createRateLimiter,
   type RateLimitDecision,
@@ -108,7 +109,7 @@ export function createQuarryServer({
         if (request.method === "POST") {
           const limiter = url.pathname === "/api/generate" ? rateLimiters.generate : rateLimiters.post;
           if (limiter !== null) {
-            const decision = await limiter(clientKeyOf({ request }));
+            const decision = await limiter(rateLimitKeyOf({ request }));
             if (!decision.allowed) {
               response.setHeader("Retry-After", String(decision.retryAfterSeconds));
               return sendJson({
@@ -126,10 +127,15 @@ export function createQuarryServer({
         if (url.pathname === "/api/whoami") {
           if (!isAccessGranted({ request }))
             return sendJson({ response, statusCode: 401, body: { erreur: "code d'accès requis" } });
+          const identity = resolveIdentity({ request });
           return sendJson({
             response,
             statusCode: 200,
-            body: { version: VERSION, utilisateur: "porteur-du-code" },
+            body: {
+              version: VERSION,
+              utilisateur: "porteur-du-code",
+              identity: identity.kind,
+            },
           });
         }
         if (!isAccessGranted({ request })) {
