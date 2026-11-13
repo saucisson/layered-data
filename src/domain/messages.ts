@@ -261,6 +261,12 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       text(p, "layer") +
       " » belongs to the bedrock — the read-only corpus: its layers are never rewritten, a draft may refine them, never replace them (ADR-0103)",
   },
+  "kernel-shadowing": {
+    en: (p) =>
+      "the visitors' layer « " +
+      text(p, "layer") +
+      " » masks a bedrock name — the contextual resolution (user, then kernel) would hide the read-only layer: rename the visitor layer (issue #145)",
+  },
 };
 
 /** All message codes, in template declaration order. */
@@ -341,6 +347,7 @@ export const VOCABULARY: Record<string, { en: string; fr?: string | undefined }>
   "gabarit-hors-de-portée": { en: "template-out-of-scope"},
   "formule-épuisée": { en: "exhausted-formula"},
   "socle-occupé": { en: "bedrock-occupied"},
+  "masquage-socle": { en: "kernel-shadowing"},
   "refines-inversés": { en: "refines-inverted"},
   "ombre-émergente": { en: "emerging-shadow"},
   ombre: { en: "shadow"},
