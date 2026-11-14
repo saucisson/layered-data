@@ -2,9 +2,8 @@
 // bounded time and produces no console errors / page errors.
 //
 // Known exception: #editor calls /api/editor/session, which answers 401
-// when no access code is stored — tracked by issue #198 (the page must
-// show the access-code form instead of blocking). Until then, those 401
-// resource errors are filtered out here.
+// when no access code is stored — the page shows the access-code form
+// instead (issue #198). Those specific 401s are filtered by URL below.
 import { test, expect, type Page } from "@playwright/test";
 
 const ROUTES: ReadonlyArray<{ hash: string; heading: RegExp }> = [
@@ -14,20 +13,27 @@ const ROUTES: ReadonlyArray<{ hash: string; heading: RegExp }> = [
   { hash: "#hierarchy", heading: /hierarchy/i },
   { hash: "#creation", heading: /Create a formalism/ },
   { hash: "#workshop", heading: /workshop/i },
+  { hash: "#editor", heading: /model editor/i },
   { hash: "#formalism/petrinet", heading: /formalism/i },
   { hash: "#nimportequoi", heading: /Page not found/ },
 ];
 
+/** Console/page errors, excluding the known unauthorized session call
+ * (401 on /api/editor/session without a stored access code, #198) and
+ * the "Failed to load resource" console noise that duplicates HTTP
+ * error responses already collected via the response listener. */
 function collectErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(String(error)));
+  page.on("response", (response) => {
+    if (response.status() >= 400 && !response.url().includes("/api/editor/session")) {
+      errors.push(`${response.status()} ${response.url()}`);
+    }
+  });
   page.on("console", (message) => {
     if (message.type() !== "error") return;
-    const text = message.text();
-    // Known until #198 lands: the editor session call is unauthorized
-    // without an access code.
-    if (text.includes("401")) return;
-    errors.push(text);
+    if (message.text().includes("Failed to load resource")) return;
+    errors.push(message.text());
   });
   return errors;
 }
