@@ -1,20 +1,17 @@
 // The hierarchy page — the complete refinement graph of the
 // workshop, given a whole page: one pill per layer of the living
 // inventory, one curve per refinement, the generations in
-// horizontal bands. The layout is the workshop's own deterministic
-// barycenter (no new dependency: measured code, the same
-// algorithm panel ① uses), scaled by buttons and panned by the
-// scrollbars; hovering a layer brings its closure (upward) and its
+// horizontal bands. The layout wraps each generation onto as many
+// lines as needed to fit the page width (no horizontal scroll, no
+// zoom); hovering a layer brings its closure (upward) and its
 // descendants (downward) to the front; clicking a layer opens the
 // formalism page on it — the address is the artifact.
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "../components/Router";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import { materializeSessionAdditions } from "../application/session.ts";
 import { loadKernelLayerSources } from "../infrastructure/corpusLoader.ts";
-import { AddressView } from "../domain/addresses.ts";
-import { bindingOf, VIEW_NOTES, VIEWPOINT_LAYERS } from "../presentation/viewTree.ts";
 import {
   computeGraphLayout,
   LAYER_COLOR,
@@ -22,7 +19,6 @@ import {
   RefinementDag,
 } from "../presentation/workshopInventory.ts";
 import { localized, say } from "../presentation/i18n.ts";
-import type { BilingualText } from "../presentation/i18n.ts";
 import type { Language } from "../domain/messages.ts";
 
 interface HierarchyPageProps {
@@ -33,19 +29,99 @@ interface HierarchyPageProps {
 // The session additions materialize into it at each mount.
 const KERNEL = assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() });
 
-const MINIMUM_SCALE = 0.5;
-const MAXIMUM_SCALE = 2.5;
-const SCALE_STEP = 0.25;
+// Layout metrics for the wrapped graph (font-mono text-xs pills).
+const CHARACTER_WIDTH = 7.2;
+const NODE_PADDING = 44;
+const HORIZONTAL_GAP = 12;
+const VERTICAL_GAP = 10;
+const ROW = 34;
+const NODE_HEIGHT = 28;
+const MARGIN = 8;
+
+interface WrappedPosition {
+  x: number;
+  y: number;
+  w: number;
+}
+
+interface WrappedLayout {
+  W: number;
+  H: number;
+  position: (layerName: string) => WrappedPosition;
+  bands: { y: number; h: number }[];
+}
+
+/** Wrap each generation onto as many lines as needed to fit `width`.
+ * The order inside a generation is the deterministic barycenter order
+ * of computeGraphLayout. */
+function computeWrappedLayout({
+  layerNames,
+  dag,
+  width,
+}: {
+  layerNames: readonly string[];
+  dag: RefinementDag;
+  width: number;
+}): WrappedLayout {
+  const base = computeGraphLayout({ layerNames, dag });
+  const widthOf = (layerName: string) =>
+    Math.ceil(layerName.length * CHARACTER_WIDTH) + NODE_PADDING;
+
+  const positions: Record<string, WrappedPosition> = {};
+  const bands: { y: number; h: number }[] = [];
+  let cursorY = MARGIN;
+  for (const row of base.rows) {
+    const bandTop = cursorY;
+    let cursorX = MARGIN;
+    for (const layerName of row) {
+      const w = widthOf(layerName);
+      if (cursorX > MARGIN && cursorX + w > width - MARGIN) {
+        cursorX = MARGIN;
+        cursorY += ROW + VERTICAL_GAP;
+      }
+      positions[layerName] = { x: cursorX, y: cursorY, w };
+      cursorX += w + HORIZONTAL_GAP;
+    }
+    cursorY += ROW;
+    bands.push({ y: bandTop - 4, h: cursorY - bandTop + 4 });
+    cursorY += VERTICAL_GAP;
+  }
+  const H = cursorY + MARGIN;
+  return {
+    W: width,
+    H,
+    position: (layerName) => positions[layerName] ?? { x: 0, y: 0, w: 0 },
+    bands,
+  };
+}
 
 export function HierarchyPage({ language }: HierarchyPageProps) {
   const { navigate } = useRouter();
   const session = useMemo(() => materializeSessionAdditions({ kernel: KERNEL }), []);
   const layerNames = session.layerNames;
   const dag = useMemo(() => new RefinementDag({ space: KERNEL.space, layerNames }), [layerNames]);
-  const layout = useMemo(() => computeGraphLayout({ layerNames, dag }), [layerNames, dag]);
   const [search, setSearch] = useState("");
   const [hovered, setHovered] = useState<string | null>(null);
-  const [scale, setScale] = useState(1);
+
+  // The graph fits the width of its container: measure it and re-wrap
+  // on resize.
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState(1200);
+  useEffect(() => {
+    const element = containerRef.current;
+    if (!element) return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? 0;
+      if (width > 0) setContainerWidth(Math.floor(width));
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const layout = useMemo(
+    () => computeWrappedLayout({ layerNames, dag, width: containerWidth }),
+    [layerNames, dag, containerWidth],
+  );
 
   const focus = hovered;
   const ancestors = useMemo(
@@ -62,8 +138,8 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
     0,
   );
 
-  // One curve per refinement: on the focus chain it goes black and
-  // thick, between two descendants half-tone, otherwise it fades.
+  // One curve per refinement: on the focus chain it goes dark and
+  // thick, between two descendants half-tone, otherwise light.
   const edges: React.ReactNode[] = [];
   for (const layerName of layerNames) {
     for (const parentName of dag.targetsOf(layerName)) {
@@ -71,7 +147,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
       const to = layout.position(parentName);
       const onChain = ancestors.has(layerName) && ancestors.has(parentName);
       const betweenDescendants = descendants.has(layerName) && descendants.has(parentName);
-      const midHeight = (from.y + to.y + 24) / 2;
+      const midHeight = (from.y + to.y + NODE_HEIGHT) / 2;
       edges.push(
         <path
           key={layerName + "⇢" + parentName}
@@ -79,7 +155,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
             "M " +
             (from.x + from.w / 2) +
             " " +
-            (from.y + 2) +
+            (from.y + NODE_HEIGHT - 2) +
             " C " +
             (from.x + from.w / 2) +
             " " +
@@ -91,12 +167,12 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
             " " +
             (to.x + to.w / 2) +
             " " +
-            (to.y + 22)
+            (to.y + 2)
           }
           fill="none"
           stroke={onChain ? "#1e293b" : "#cbd5e1"}
           strokeWidth={onChain ? 2 : 1}
-          opacity={onChain ? 1 : betweenDescendants ? 0.5 : 0.15}
+          opacity={onChain ? 1 : betweenDescendants ? 0.5 : 0.25}
           markerEnd="url(#hierarchy-arrow)"
         />,
       );
@@ -116,31 +192,6 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
             placeholder={say({ language, en: "search a layer…"})}
             className="min-w-52 flex-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none"
           />
-          <span className="flex items-center gap-1 text-xs">
-            <button type="button"
-              onClick={() => setScale(Math.max(MINIMUM_SCALE, scale - SCALE_STEP))}
-              disabled={scale <= MINIMUM_SCALE}
-              className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 font-semibold text-slate-600 hover:border-slate-600 disabled:opacity-40"
-              aria-label={say({ language, en: "zoom out"})}
-            >
-              −
-            </button>
-            <span className="w-12 text-center font-mono text-[11px] text-slate-500">×{scale}</span>
-            <button type="button"
-              onClick={() => setScale(Math.min(MAXIMUM_SCALE, scale + SCALE_STEP))}
-              disabled={scale >= MAXIMUM_SCALE}
-              className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 font-semibold text-slate-600 hover:border-slate-600 disabled:opacity-40"
-              aria-label={say({ language, en: "zoom in"})}
-            >
-              ＋
-            </button>
-            <button type="button"
-              onClick={() => setScale(1)}
-              className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-[11px] text-slate-600 hover:border-slate-600"
-            >
-              {say({ language, en: "reset"})}
-            </button>
-          </span>
           <span className="text-[11px] text-slate-600">
             {layerNames.length + " "}
             {say({
@@ -154,183 +205,95 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
               en: refinementCount > 1 ? "refinements" : "refinement",
             })}
             {" · "}
-            {layout.rows.length + " "}
+            {layout.bands.length + " "}
             {say({ language, en: "generations"})}
           </span>
         </div>
 
-        <div className="overflow-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
-          <div style={{ position: "relative", width: layout.W * scale, height: layout.H * scale }}>
-            <div
-              style={{
-                position: "absolute",
-                left: 0,
-                top: 0,
-                width: layout.W,
-                height: layout.H,
-                transform: "scale(" + scale + ")",
-                transformOrigin: "top left",
-              }}
-            >
-              <svg
-                width={layout.W}
-                height={layout.H}
-                style={{ position: "absolute", left: 0, top: 0 }}
+        <div
+          ref={containerRef}
+          className="relative w-full overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+          style={{ height: layout.H }}
+        >
+          <svg
+            width={layout.W}
+            height={layout.H}
+            style={{ position: "absolute", left: 0, top: 0 }}
+          >
+            <defs>
+              <marker
+                id="hierarchy-arrow"
+                markerWidth="7"
+                markerHeight="7"
+                refX="6"
+                refY="3"
+                orient="auto"
               >
-                <defs>
-                  <marker
-                    id="hierarchy-arrow"
-                    markerWidth="7"
-                    markerHeight="7"
-                    refX="6"
-                    refY="3"
-                    orient="auto"
-                  >
-                    <path d="M0,0 L6,3 L0,6 Z" fill="#64748b" />
-                  </marker>
-                </defs>
-                {layout.rows.map((row, rowIndex) => (
-                  <rect
-                    key={"band" + rowIndex}
-                    x={0}
-                    y={30 + rowIndex * layout.ROW - 12}
-                    width={layout.W}
-                    height={layout.ROW}
-                    fill="#f1f5f9"
-                    opacity={0.55}
-                  />
-                ))}
-                {edges}
-              </svg>
-              {layerNames.map((layerName) => {
-                const position = layout.position(layerName);
-                const inAncestors = ancestors.has(layerName);
-                const inDescendants = descendants.has(layerName);
-                const matches = !needle || layerName.toLowerCase().includes(needle);
-                return (
-                  <button type="button"
-                    key={layerName}
-                    onClick={() => navigate("formalism", layerName)}
-                    onMouseEnter={() => setHovered(layerName)}
-                    onMouseLeave={() => setHovered(null)}
-                    style={{
-                      position: "absolute",
-                      left: position.x,
-                      top: position.y + 2,
-                      width: position.w,
-                    }}
-                    title={localized({
-                      language,
-                      text: LAYER_ROLE[layerName] ?? { en: layerName},
-                    })}
-                    className={
-                      "flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[9px] leading-4 transition-opacity " +
-                      (layerName === focus
-                        ? "border-slate-900 ring-2 ring-slate-900 "
-                        : inAncestors
-                          ? "border-slate-500 "
-                          : "border-slate-300 dark:border-slate-600 ") +
-                      (!matches
-                        ? "opacity-10"
-                        : inAncestors
-                          ? "font-semibold opacity-100"
-                          : inDescendants
-                            ? "opacity-60"
-                            : needle
-                              ? "opacity-50"
-                              : "opacity-20")
-                    }
-                  >
-                    <span
-                      className={
-                        "h-2 w-2 shrink-0 rounded-full " +
-                        (LAYER_COLOR[layerName] ?? "bg-slate-300")
-                      }
-                    />
-                    {layerName}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                <path d="M0,0 L6,3 L0,6 Z" fill="#64748b" />
+              </marker>
+            </defs>
+            {layout.bands.map((band, bandIndex) => (
+              <rect
+                key={"band" + bandIndex}
+                x={0}
+                y={band.y}
+                width={layout.W}
+                height={band.h}
+                fill="#f1f5f9"
+                opacity={0.55}
+              />
+            ))}
+            {edges}
+          </svg>
+          {layerNames.map((layerName) => {
+            const position = layout.position(layerName);
+            const inAncestors = ancestors.has(layerName);
+            const inDescendants = descendants.has(layerName);
+            const matches = !needle || layerName.toLowerCase().includes(needle);
+            return (
+              <button type="button"
+                key={layerName}
+                onClick={() => navigate("formalism", layerName)}
+                onMouseEnter={() => setHovered(layerName)}
+                onMouseLeave={() => setHovered(null)}
+                style={{
+                  position: "absolute",
+                  left: position.x,
+                  top: position.y,
+                  width: position.w,
+                  height: NODE_HEIGHT,
+                }}
+                title={localized({
+                  language,
+                  text: LAYER_ROLE[layerName] ?? { en: layerName},
+                })}
+                className={
+                  "flex items-center gap-1.5 rounded-full border px-2 font-mono text-xs leading-5 transition-opacity " +
+                  (layerName === focus
+                    ? "border-slate-900 ring-2 ring-slate-900 dark:border-slate-100 dark:ring-slate-100 "
+                    : inAncestors
+                      ? "border-slate-500 dark:border-slate-400 "
+                      : "border-slate-300 dark:border-slate-600 ") +
+                  (!matches
+                    ? "opacity-10"
+                    : focus === null
+                      ? "opacity-100"
+                      : inAncestors || inDescendants || layerName === focus
+                        ? "font-semibold opacity-100"
+                        : "opacity-40")
+                }
+              >
+                <span
+                  className={
+                    "h-2.5 w-2.5 shrink-0 rounded-full " +
+                    (LAYER_COLOR[layerName] ?? "bg-slate-300")
+                  }
+                />
+                {layerName}
+              </button>
+            );
+          })}
         </div>
-
-        {/* The viewpoints — the looks that read one model through
-            one lens; they live with the hierarchy, the whole
-            corpus in one glance. */}
-        <section className="mt-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
-          <h2 className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
-            {say({ language, en: "The viewpoints"})}
-          </h2>
-          <p className="mb-2 text-[10px] leading-4 text-slate-600">
-            {say({
-              language,
-              en: "A viewpoint is a layer that chooses a model and a lens: the data does not move, the reading changes. Click one: the formalism page opens on it.",
-            })}
-          </p>
-          <div className="grid gap-2 md:grid-cols-2">
-            {VIEWPOINT_LAYERS.map((view) => {
-              const modelBinding = bindingOf({ space: KERNEL.space, view, key: "model" }).value;
-              const modelLayer = modelBinding instanceof AddressView ? modelBinding.layer : null;
-              const displayBinding = bindingOf({ space: KERNEL.space, view, key: "display" }).value;
-              const displayLayer =
-                displayBinding instanceof AddressView ? displayBinding.layer : null;
-              return (
-                <div
-                  key={view}
-                  className="rounded-md border border-slate-100 bg-slate-50 dark:bg-slate-900 p-2 text-[11px] leading-4"
-                >
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    <button type="button"
-                      onClick={() => navigate("formalism", view)}
-                      className="font-mono font-semibold underline decoration-slate-300 hover:text-slate-900"
-                    >
-                      <span
-                        className={
-                          "mr-1 inline-block h-2 w-2 rounded-full " +
-                          (LAYER_COLOR[view] ?? "bg-slate-300")
-                        }
-                      />
-                      {view}
-                    </button>
-                    {modelLayer !== null && (
-                      <>
-                        <span className="text-slate-600">
-                          {say({ language, en: "model: "})}
-                        </span>
-                        <button type="button"
-                          onClick={() => navigate("formalism", modelLayer)}
-                          className="font-mono underline decoration-slate-300 hover:text-slate-900"
-                        >
-                          {modelLayer}
-                        </button>
-                      </>
-                    )}
-                    {displayLayer !== null && (
-                      <>
-                        <span className="text-slate-600">
-                          {say({ language, en: "lens: "})}
-                        </span>
-                        <button type="button"
-                          onClick={() => navigate("formalism", displayLayer)}
-                          className="font-mono underline decoration-slate-300 hover:text-slate-900"
-                        >
-                          {displayLayer}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  <p className="mt-1 text-slate-600">
-                    {localized({
-                      language,
-                      text: VIEW_NOTES[view] ?? ({ en: view} as BilingualText),
-                    })}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
 
         <p className="mt-2 text-[11px] leading-4 text-slate-500">
           {focus !== null
@@ -345,7 +308,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
           {" — "}
           {say({
             language,
-            en: "the bands are the generations (the rank is the longest path towards a base); one curve is one refinement; the search fades the non-matching layers.",
+            en: "the shaded bands are the generations (the rank is the longest path towards a base); one curve is one refinement; the search fades the non-matching layers.",
           })}
         </p>
       </div>
