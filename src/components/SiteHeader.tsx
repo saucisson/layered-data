@@ -57,7 +57,7 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, dark, onTo
                   "rounded-full px-3 py-1 font-medium transition-colors " +
                   (active
                     ? "bg-slate-800 text-white shadow-sm dark:bg-emerald-400 dark:text-slate-900"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white")
+                    : "text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 dark:hover:text-white")
                 }
               >
                 {entry.label}
