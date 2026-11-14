@@ -16,10 +16,20 @@ export default defineConfig({
     viewport: { width: 1280, height: 900 },
   },
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
-  webServer: {
-    command: "npm run dev -- --port 5199 --strictPort --host 127.0.0.1",
-    url: "http://127.0.0.1:5199",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  webServer: [
+    {
+      // the wardrobe API on its real port, so /api/* answers real 401s
+      // (no access code in the test browser) instead of proxy errors
+      command: "API_TOKEN=e2e-test-token PORT=8791 HOST=127.0.0.1 node server.ts",
+      url: "http://127.0.0.1:8791/",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+    {
+      command: "npm run dev -- --port 5199 --strictPort --host 127.0.0.1",
+      url: "http://127.0.0.1:5199",
+      reuseExistingServer: !process.env.CI,
+      timeout: 120_000,
+    },
+  ],
 });
