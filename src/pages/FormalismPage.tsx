@@ -338,7 +338,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
-      <main className="mx-auto max-w-6xl p-4 sm:p-6">
+      <div className="mx-auto max-w-6xl p-4 sm:p-6">
         <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "The formalism — understand one layer" })}
         </h1>
@@ -603,7 +603,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
             }}
           />
         </section>
-      </main>
+      </div>
     </div>
   );
 }
