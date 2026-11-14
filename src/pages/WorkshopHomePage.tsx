@@ -61,7 +61,7 @@ export function WorkshopHomePage({
         }
       >
         {tab === "workshop" ? (
-          <WorkshopPage language={language} onChooseLanguage={onChooseLanguage} />
+          <WorkshopPage language={language} />
         ) : (
           <ModelEditorPage language={language} onChooseLanguage={onChooseLanguage} />
         )}
