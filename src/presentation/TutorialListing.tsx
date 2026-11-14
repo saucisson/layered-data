@@ -130,7 +130,7 @@ export function TutorialListing({
             language,
             en: "read this line's parentage — the cascade opens below",
           })}
-          className="shrink-0 rounded text-left hover:ring-1 hover:ring-slate-500"
+          className="shrink-0 rounded text-left hover:ring-1 hover:ring-slate-500 dark:hover:ring-slate-400"
         >
           {renderLine(display)}
         </button>

@@ -133,7 +133,7 @@ export function CascadeCard({
                   language,
                   en: "the winning address — the value is provided there; this crank moves left, it opens on the right",
                 })}
-                className="rounded hover:ring-1 hover:ring-slate-500"
+                className="rounded hover:ring-1 hover:ring-slate-500 dark:hover:ring-slate-400"
               >
                 <LayerBadge layer={provenance.winner} small />
               </button>
@@ -172,7 +172,7 @@ export function CascadeCard({
                     language,
                     en: "the next crank of the chain — it opens on the right",
                   })}
-                  className="rounded hover:ring-1 hover:ring-slate-500"
+                  className="rounded hover:ring-1 hover:ring-slate-500 dark:hover:ring-slate-400"
                 >
                   <LayerBadge layer={step.layer} small />
                 </button>
