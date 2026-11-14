@@ -170,7 +170,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
             (to.y + 2)
           }
           fill="none"
-          stroke={onChain ? "#1e293b" : "#cbd5e1"}
+          className={onChain ? "stroke-slate-800 dark:stroke-slate-200" : "stroke-slate-300 dark:stroke-slate-600"}
           strokeWidth={onChain ? 2 : 1}
           opacity={onChain ? 1 : betweenDescendants ? 0.5 : 0.25}
           markerEnd="url(#hierarchy-arrow)"

@@ -1151,7 +1151,7 @@ export function ModelEditorPage({
           disabled={history.length === 0}
           title={t("undo (Ctrl+Z)")}
           aria-label={t("undo (Ctrl+Z)")}
-          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 disabled:opacity-40"
         >
           ↶
         </button>
@@ -1160,7 +1160,7 @@ export function ModelEditorPage({
           disabled={future.length === 0}
           title={t("redo (Ctrl+Shift+Z)")}
           aria-label={t("redo (Ctrl+Shift+Z)")}
-          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 disabled:opacity-40"
         >
           ↷
         </button>
@@ -1168,7 +1168,7 @@ export function ModelEditorPage({
           onClick={() => setShowSource((previous) => !previous)}
           disabled={model === null}
           title={t("show the model's source block")}
-          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 disabled:opacity-40"
         >
           {t("source")}
         </button>
@@ -1176,14 +1176,14 @@ export function ModelEditorPage({
           onClick={exportModel}
           disabled={model === null}
           title={t("download the model as .ld")}
-          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 disabled:opacity-40"
         >
           {t("export .ld")}
         </button>
         <button type="button"
           onClick={() => importInputRef.current?.click()}
           title={t("import a .ld draft — judged by the staging")}
-          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900"
         >
           {t("import .ld")}
         </button>
@@ -1490,7 +1490,7 @@ export function ModelEditorPage({
               })}
               <button type="button"
                 onClick={deleteSelectedMember}
-                className="mt-1 rounded border border-red-200 dark:border-red-800 px-2 py-1 text-[11px] text-red-600 dark:text-red-400 hover:bg-red-50"
+                className="mt-1 rounded border border-red-200 dark:border-red-800 px-2 py-1 text-[11px] text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
               >
                 {t("delete (Suppr)")}
               </button>
@@ -1630,7 +1630,7 @@ function EditorVertexGlyph({
         y={y + 3}
         textAnchor="middle"
         fontSize={9}
-        fill={shapeKind === "rectangle" ? "#f8fafc" : "#334155"}
+        className={shapeKind === "rectangle" ? "fill-slate-50 dark:fill-slate-100" : "fill-slate-700 dark:fill-slate-200"}
       >
         {name}
       </text>

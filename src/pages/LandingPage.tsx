@@ -84,7 +84,7 @@ export function LandingPage({ language }: LandingPageProps) {
             </p>
             <button type="button"
               onClick={() => navigate("hierarchy")}
-              className="mt-4 rounded-lg border-2 border-slate-400 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:bg-slate-900 transition-colors"
+              className="mt-4 rounded-lg border-2 border-slate-400 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-colors"
             >
               {say({ language, en: "Visualize the hierarchy →"})}
             </button>
@@ -136,7 +136,7 @@ export function LandingPage({ language }: LandingPageProps) {
           </button>
           <button type="button"
             onClick={() => navigate("filiation")}
-            className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:bg-slate-900 transition-colors"
+            className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-colors"
           >
             {say({ language, en: "Filiation & comparison →"})}
           </button>
