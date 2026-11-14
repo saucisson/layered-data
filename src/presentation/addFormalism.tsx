@@ -153,15 +153,15 @@ export function AddFormalismComposer({
   }
 
   return (
-    <div className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50/40 p-3">
+    <div className="mb-3 rounded-lg border border-emerald-200 dark:border-emerald-800 bg-emerald-50/40 dark:bg-emerald-950/40 p-3">
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
-        <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
+        <span className="rounded bg-emerald-600 dark:bg-emerald-700 px-1.5 py-0.5 text-[11px] font-bold text-white">
           ＋
         </span>
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
           {say({ language, en: "one more formalism"})}
         </span>
-        <span className="text-[11px] leading-4 text-slate-500">
+        <span className="text-[11px] leading-4 text-slate-500 dark:text-slate-400">
           {say({
             language,
             en: "the intention is said, the layer is written by hand or generated, the staging revalidates corpus + supplements and demands 0 assembly verdict — then the space extends, the corpus ranks stay frozen",
@@ -183,13 +183,13 @@ export function AddFormalismComposer({
             void requestProposal();
           }}
           disabled={busy}
-          className="rounded bg-slate-800 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
+          className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 disabled:opacity-50"
         >
           {busy ? "…" : say({ language, en: "ask the AI"})}
         </button>
       </div>
       {proposalOrigin !== null && (
-        <p className="mb-1 text-[10px] text-slate-500">
+        <p className="mb-1 text-[10px] text-slate-500 dark:text-slate-400">
           {say({ language, en: "draft proposed by: "})}
           {proposalOrigin}
         </p>
@@ -208,7 +208,7 @@ export function AddFormalismComposer({
             void validateAndAdd();
           }}
           disabled={busy || !draftSource.trim()}
-          className="rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+          className="rounded bg-emerald-600 dark:bg-emerald-700 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
         >
           {busy && stagingProgress !== null
             ? say({
@@ -217,7 +217,7 @@ export function AddFormalismComposer({
               })
             : say({ language, en: "staging — validate & add"})}
         </button>
-        <span className="text-[10px] leading-4 text-slate-600">
+        <span className="text-[10px] leading-4 text-slate-600 dark:text-slate-400">
           {say({
             language,
             en: "the least assembly verdict, anywhere, refuses the entry — the supplement never circumvents the contract",
@@ -227,7 +227,7 @@ export function AddFormalismComposer({
       {composerResult !== null && (
         <div className="mt-2 space-y-1">
           {composerResult.step === "syntaxe" && (
-            <div className="rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-[11px] leading-4 text-red-700">
+            <div className="rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 px-2 py-1.5 text-[11px] leading-4 text-red-700 dark:text-red-300">
               <div className="font-semibold">
                 {say({
                   language,
@@ -242,7 +242,7 @@ export function AddFormalismComposer({
             </div>
           )}
           {composerResult.step === "validation" && composerResult.verdicts.length > 0 && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] leading-4 text-amber-800">
+            <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 px-2 py-1.5 text-[11px] leading-4 text-amber-800 dark:text-amber-300">
               <div className="font-semibold">
                 {say({
                   language,
@@ -261,7 +261,7 @@ export function AddFormalismComposer({
             </div>
           )}
           {composerResult.ok && (composerResult.newLayerNames ?? []).length > 0 && (
-            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-[11px] leading-4 text-emerald-700">
+            <div className="rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 px-2 py-1.5 text-[11px] leading-4 text-emerald-700 dark:text-emerald-300">
               {say({
                 language,
                 en:
@@ -273,7 +273,7 @@ export function AddFormalismComposer({
             </div>
           )}
           {composerResult.ok && (composerResult.newLayerNames ?? []).length === 0 && (
-            <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 text-[11px] leading-4 text-slate-600">
+            <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 text-[11px] leading-4 text-slate-600 dark:text-slate-400">
               {say({
                 language,
                 en: "staging: 0 verdict — but these layers are already in the space: nothing to add.",

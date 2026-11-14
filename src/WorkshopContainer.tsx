@@ -399,7 +399,7 @@ export function WorkshopPage({
   // ---- the render --------------------------------------------------
   return (
     <div
-      className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900"
+      className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100"
       onKeyDown={(event: any) => {
         // Ctrl+K / ⌘K: bring the focus back on the search, from
         // anywhere — without useEffect, timer or context (the
@@ -420,7 +420,7 @@ export function WorkshopPage({
             })}
           </h1>
         </div>
-        <p className="mt-2 text-xs text-slate-500">
+        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           {say({
             language,
             en: "Formalism design workshop — Layered Data, refinement, first-winner reading",
@@ -451,8 +451,8 @@ export function WorkshopPage({
             className={
               "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
               (guidedTourOpen
-                ? "border-slate-800 bg-slate-800 text-white"
-                : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 hover:border-slate-500")
+                ? "border-slate-800 dark:border-slate-600 bg-slate-800 dark:bg-slate-600 text-white"
+                : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-500 dark:hover:border-slate-400")
             }
           >
             {say({ language, en: "Guided tour S1–S14" })}{" "}
@@ -469,8 +469,8 @@ export function WorkshopPage({
                 className={
                   "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
                   (scenarioIndex === index
-                    ? "border-slate-800 bg-slate-800 text-white"
-                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 hover:border-slate-500")
+                    ? "border-slate-800 dark:border-slate-600 bg-slate-800 dark:bg-slate-600 text-white"
+                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-500 dark:hover:border-slate-400")
                 }
               >
                 {scenario.id} · {localized({ language, text: scenario.label })}
@@ -488,14 +488,14 @@ export function WorkshopPage({
       {activeScenario && (
         <div className="mx-2 mt-3 sm:mx-4 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm leading-6 text-slate-700 dark:text-slate-200 shadow-sm">
           <div className="mb-1 flex items-center gap-2">
-            <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
+            <span className="rounded bg-slate-800 dark:bg-slate-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
               {activeScenario.id}
             </span>
             <span className="font-semibold">
               {localized({ language, text: activeScenario.label })}
             </span>
             <button type="button"
-              className="ml-auto rounded px-2 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-700 dark:text-slate-200"
+              className="ml-auto rounded px-2 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300 dark:text-slate-200"
               onClick={() => setScenarioIndex(-1)}
               aria-label={say({ language, en: "close the scenario" })}
             >
@@ -518,7 +518,7 @@ export function WorkshopPage({
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
             <h2 id="panel-layers-heading" className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
               {say({ language, en: "① The layers" })}
-              <span className="font-normal text-slate-600">
+              <span className="font-normal text-slate-600 dark:text-slate-400">
                 {graphView
                   ? say({
                       language,
@@ -532,8 +532,8 @@ export function WorkshopPage({
                   className={
                     "px-2 " +
                     (!graphView
-                      ? "bg-slate-800 text-white"
-                      : "bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:bg-slate-900")
+                      ? "bg-slate-800 dark:bg-slate-600 text-white"
+                      : "bg-white text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900")
                   }
                 >
                   {say({ language, en: "list" })}
@@ -543,8 +543,8 @@ export function WorkshopPage({
                   className={
                     "px-2 " +
                     (graphView
-                      ? "bg-slate-800 text-white"
-                      : "bg-white dark:bg-slate-800 text-slate-500 hover:bg-slate-50 dark:bg-slate-900")
+                      ? "bg-slate-800 dark:bg-slate-600 text-white"
+                      : "bg-white text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900")
                   }
                 >
                   {say({ language, en: "graph" })}
@@ -561,8 +561,8 @@ export function WorkshopPage({
                 className={
                   "ml-1 rounded-full border px-2 text-sm font-bold leading-5 " +
                   (composerOpen
-                    ? "border-emerald-600 bg-emerald-600 text-white"
-                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 hover:border-emerald-500 hover:text-emerald-600")
+                    ? "border-emerald-600 bg-emerald-600 dark:bg-emerald-700 text-white"
+                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:border-emerald-500 hover:text-emerald-600")
                 }
               >
                 ＋
@@ -624,7 +624,7 @@ export function WorkshopPage({
                 buttons[nextIndex]?.focus();
               }}>
                 {livingLayerNames.filter(layerMatches).length === 0 && (
-                  <div className="py-2 text-xs text-slate-600">
+                  <div className="py-2 text-xs text-slate-600 dark:text-slate-400">
                     {say({
                       language,
                       en: "No layer matches « " + search + " ».",
@@ -674,7 +674,7 @@ export function WorkshopPage({
                                 language,
                                 en: "in the closure of the current address (③)",
                               })}
-                              className="ml-1 text-[10px] text-slate-600"
+                              className="ml-1 text-[10px] text-slate-600 dark:text-slate-400"
                             >
                               {inClosure ? "•" : ""}
                             </span>
@@ -699,8 +699,8 @@ export function WorkshopPage({
                             className={
                               "shrink-0 rounded-md px-1.5 py-1 text-xs transition-colors " +
                               (editorLayer === layerName
-                                ? "bg-sky-600 text-white"
-                                : "text-slate-600 hover:bg-sky-50 hover:text-sky-600")
+                                ? "bg-sky-600 dark:bg-sky-700 text-white"
+                                : "text-slate-600 dark:text-slate-400 hover:bg-sky-50 dark:hover:bg-sky-950 hover:text-sky-600 dark:hover:text-sky-300")
                             }
                           >
                             ✎
@@ -708,7 +708,7 @@ export function WorkshopPage({
                         )}
                       </div>
                       {layerName === layer && (
-                        <div className="ml-4 text-[10px] leading-4 text-slate-600">
+                        <div className="ml-4 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
                           {localized({
                             language,
                             text: LAYER_ROLE[layerName] ?? { en: layerName},
@@ -740,7 +740,7 @@ export function WorkshopPage({
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
             <h2 id="panel-flat-heading" className="mb-2 text-sm font-bold text-slate-800 dark:text-slate-100">
               {say({ language, en: "③ The flattened data" })}
-              <span className="ml-1 font-normal text-slate-600">
+              <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
                 {say({ language, en: "reading at an address" })}
               </span>
             </h2>
@@ -763,20 +763,20 @@ export function WorkshopPage({
                 className={
                   "rounded px-1.5 py-0.5 font-bold " +
                   (history.length
-                    ? "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200"
-                    : "text-slate-500")
+                    ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
+                    : "text-slate-500 dark:text-slate-400")
                 }
               >
                 ←
               </button>
               <LayerBadge layer={layer} />
-              <span className="text-slate-600">::</span>
-              <button type="button" className="text-slate-600 hover:text-slate-600" onClick={() => setPath([])} aria-label={say({ language, en: "reset path" })}>
+              <span className="text-slate-600 dark:text-slate-400">::</span>
+              <button type="button" className="text-slate-600 dark:text-slate-400 hover:text-slate-600" onClick={() => setPath([])} aria-label={say({ language, en: "reset path" })}>
                 ()
               </button>
               {path.map((segment, index) => (
                 <span key={index} className="flex items-center gap-1">
-                  <span className="text-slate-500">/</span>
+                  <span className="text-slate-500 dark:text-slate-400">/</span>
                   <button type="button"
                     className="font-mono font-medium text-slate-700 dark:text-slate-200 hover:underline"
                     onClick={() => setPath(path.slice(0, index + 1))}
@@ -797,8 +797,8 @@ export function WorkshopPage({
                 className={
                   "ml-auto rounded px-1.5 py-0.5 text-[10px] " +
                   (copied
-                    ? "bg-emerald-50 text-emerald-700"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200")
+                    ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600")
                 }
               >
                 {copied
@@ -807,9 +807,9 @@ export function WorkshopPage({
               </button>
             </div>
 
-            <div className="mt-3 divide-y divide-slate-100">
+            <div className="mt-3 divide-y divide-slate-100 dark:divide-slate-700">
               {shownKeys.length === 0 && (
-                <div className="py-2 text-xs text-slate-600">
+                <div className="py-2 text-xs text-slate-600 dark:text-slate-400">
                   {addressKeys.length === 0
                     ? say({
                         language,
@@ -829,7 +829,7 @@ export function WorkshopPage({
                     key={info.key}
                     className={
                       "flex items-center gap-2 py-1.5 text-xs " +
-                      (active ? "rounded-md bg-sky-50 px-1 ring-1 ring-sky-200" : "")
+                      (active ? "rounded-md bg-sky-50 dark:bg-sky-950 px-1 ring-1 ring-sky-200 dark:ring-sky-800" : "")
                     }
                   >
                     <button type="button"
@@ -844,7 +844,7 @@ export function WorkshopPage({
                     {info.winner ? (
                       <LayerBadge layer={info.winner[0]} small />
                     ) : (
-                      <span className="text-[10px] text-slate-600">
+                      <span className="text-[10px] text-slate-600 dark:text-slate-400">
                         {say({ language, en: "no value" })}
                       </span>
                     )}
@@ -853,7 +853,7 @@ export function WorkshopPage({
                     </span>
                     {isNode && (
                       <button type="button"
-                        className="ml-auto shrink-0 rounded border border-slate-300 dark:border-slate-600 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800 dark:text-slate-100"
+                        className="ml-auto shrink-0 rounded border border-slate-300 dark:border-slate-600 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-800 dark:hover:text-slate-200 dark:text-slate-100"
                         onClick={() =>
                           goto((info.value as unknown as AddressView).layer, (info.value as unknown as AddressView).path)
                         }
@@ -865,7 +865,7 @@ export function WorkshopPage({
                 );
               })}
             </div>
-            <p className="mt-2 text-[10px] leading-4 text-slate-600">
+            <p className="mt-2 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
               {say({
                 language,
                 en:
@@ -883,7 +883,7 @@ export function WorkshopPage({
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
             <h2 id="panel-mechanism-heading" className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
               {say({ language, en: "③ The mechanism" })}
-              <span className="ml-1 font-normal text-slate-600">
+              <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
                 {say({
                   language,
                   en:
@@ -891,15 +891,15 @@ export function WorkshopPage({
                 })}
               </span>
             </h2>
-            <p className="mb-2 text-[10px] leading-4 text-slate-600">
+            <p className="mb-2 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
               {say({ language, en: "Current address:" })}{" "}
-              <span className="font-mono font-semibold text-slate-600">
+              <span className="font-mono font-semibold text-slate-600 dark:text-slate-400">
                 {addressText(currentAddress)}
               </span>
               {selectedKey ? (
                 <>
                   {say({ language, en: " — key read: " })}
-                  <span className="font-mono font-semibold text-slate-600">{selectedKey}</span>
+                  <span className="font-mono font-semibold text-slate-600 dark:text-slate-400">{selectedKey}</span>
                 </>
               ) : (
                 say({
@@ -918,10 +918,10 @@ export function WorkshopPage({
                     key={index}
                     className={
                       "flex items-center gap-2 rounded-md px-1.5 py-1 text-[11px] " +
-                      (index === winnerIndex ? "bg-emerald-50 ring-1 ring-emerald-300" : "")
+                      (index === winnerIndex ? "bg-emerald-50 dark:bg-emerald-950 ring-1 ring-emerald-300 dark:ring-emerald-700" : "")
                     }
                   >
-                    <span className="w-5 shrink-0 text-right font-mono text-slate-600">
+                    <span className="w-5 shrink-0 text-right font-mono text-slate-600 dark:text-slate-400">
                       {index}
                     </span>
                     <LayerBadge layer={address[0]} small />
@@ -939,7 +939,7 @@ export function WorkshopPage({
             </div>
             {selectedKey && (
               <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-slate-50 dark:bg-slate-900 px-2 py-1.5 text-[11px]">
-                <span className="text-slate-500">
+                <span className="text-slate-500 dark:text-slate-400">
                   <span className="font-mono font-semibold text-slate-700 dark:text-slate-200">{selectedKey}</span> =
                 </span>
                 <KernelValue
@@ -948,7 +948,7 @@ export function WorkshopPage({
                 />
                 {selectedKeyDetail && selectedKeyDetail.value instanceof AddressView && (
                   <button type="button"
-                    className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600"
+                    className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500"
                     onClick={() =>
                       goto(
                         (selectedKeyDetail!.value as unknown as AddressView).layer,
@@ -967,8 +967,8 @@ export function WorkshopPage({
           </div>
 
           {selectedKeyDetail && selectedKeyDetail.referenceEvents.length > 0 && (
-            <div className="rounded-lg border border-sky-200 bg-sky-50/50 p-3">
-              <h3 className="mb-1 text-xs font-bold text-sky-800">
+            <div className="rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/50 p-3">
+              <h3 className="mb-1 text-xs font-bold text-sky-800 dark:text-sky-300">
                 {say({ language, en: "Reference resolution" })}
               </h3>
               <div className="space-y-2">
@@ -987,7 +987,7 @@ export function WorkshopPage({
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
             <h2 className="mb-2 text-sm font-bold text-slate-800 dark:text-slate-100">
               {say({ language, en: "③ The resolution cascade" })}
-              <span className="ml-1 font-normal text-slate-600">
+              <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
                 {cascade.length +
                   " " +
                   say({ language, en: "crank" }) +
@@ -1000,7 +1000,7 @@ export function WorkshopPage({
               </span>
             </h2>
             {cascade.length > 10 && (
-              <p className="mb-1 text-[10px] leading-4 text-slate-600">
+              <p className="mb-1 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
                 {"… " +
                   say({ language, en: "and " }) +
                   (cascade.length - 10) +
@@ -1043,7 +1043,7 @@ export function WorkshopPage({
                   en: "How this closure is calculated",
                 })}
               </span>
-              <span className="text-slate-600">{showClosureCalculation ? "▾" : "▸"}</span>
+              <span className="text-slate-600 dark:text-slate-400">{showClosureCalculation ? "▾" : "▸"}</span>
             </button>
             {showClosureCalculation && (
               <div className="mt-2 space-y-1.5">
@@ -1059,14 +1059,14 @@ export function WorkshopPage({
       <section className="mx-2 mt-3 sm:mx-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
         <h2 id="panel-viewpoint-heading" className="text-sm font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "④ The point of view" })}
-          <span className="ml-1 font-normal text-slate-600">
+          <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
             {say({
               language,
               en: "the tree on the left, the drawing on the right",
             })}
           </span>
         </h2>
-        <p className="mb-3 mt-1 text-[11px] leading-4 text-slate-500">
+        <p className="mb-3 mt-1 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
           {say({
             language,
             en:
@@ -1089,7 +1089,7 @@ export function WorkshopPage({
               changes the look and deselects the shape */}
           <div className="space-y-3">
             <div>
-              <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+              <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {say({ language, en: "Lenses" })}
               </div>
               <div className="space-y-1">
@@ -1100,8 +1100,8 @@ export function WorkshopPage({
                         className={
                           "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
                           (selectedView === viewLayer
-                            ? "bg-slate-800 text-white"
-                            : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 ring-1 ring-slate-200 hover:bg-slate-100 dark:bg-slate-800")
+                            ? "bg-slate-800 dark:bg-slate-600 text-white"
+                            : "bg-white text-slate-700 dark:text-slate-200 ring-1 ring-slate-200 dark:ring-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800")
                         }
                         onClick={() => {
                           setSelectedView(viewLayer);
@@ -1109,7 +1109,7 @@ export function WorkshopPage({
                         }}
                       >
                         <LayerBadge layer={viewLayer} small />
-                        <span className="truncate text-slate-600">
+                        <span className="truncate text-slate-600 dark:text-slate-400">
                           {say({
                             language,
                             en: "lens — model: the current one of ①",
@@ -1122,7 +1122,7 @@ export function WorkshopPage({
               </div>
             </div>
             <div>
-              <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500">
+              <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
                 {say({ language, en: "Viewpoints" })}
               </div>
               <div className="space-y-1">
@@ -1133,8 +1133,8 @@ export function WorkshopPage({
                         className={
                           "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
                           (selectedView === viewLayer
-                            ? "bg-slate-800 text-white"
-                            : "bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 ring-1 ring-slate-200 hover:bg-slate-100 dark:bg-slate-800")
+                            ? "bg-slate-800 dark:bg-slate-600 text-white"
+                            : "bg-white text-slate-700 dark:text-slate-200 ring-1 ring-slate-200 dark:ring-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800")
                         }
                         onClick={() => {
                           setSelectedView(viewLayer);
@@ -1142,7 +1142,7 @@ export function WorkshopPage({
                         }}
                       >
                         <LayerBadge layer={viewLayer} small />
-                        <span className="truncate text-slate-600">
+                        <span className="truncate text-slate-600 dark:text-slate-400">
                           {bindingOf({ space: KERNEL.space, view: viewLayer, key: "model" })
                             .value instanceof AddressView
                             ? say({ language, en: "→ designated model" })
@@ -1163,18 +1163,18 @@ export function WorkshopPage({
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-2 md:col-span-2">
             <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[11px]">
               <LayerBadge layer={look.model} small />
-              <span className="text-slate-500">
+              <span className="text-slate-500 dark:text-slate-400">
                 {say({ language, en: "seen through" })}
               </span>
               {look.lens !== null ? (
                 <LayerBadge layer={look.lens} small />
               ) : (
-                <span className="font-mono text-slate-600">
+                <span className="font-mono text-slate-600 dark:text-slate-400">
                   {say({ language, en: "∅ without a lens" })}
                 </span>
               )}
-              <span className="text-slate-500">·</span>
-              <span className="text-slate-500">
+              <span className="text-slate-500 dark:text-slate-400">·</span>
+              <span className="text-slate-500 dark:text-slate-400">
                 {look.isLens
                   ? say({
                       language,
@@ -1271,13 +1271,13 @@ export function WorkshopPage({
                   });
                   return (
                     <div key={slotKey} className="flex items-center gap-1">
-                      <span className="w-11 shrink-0 font-mono text-slate-600">{slotKey}</span>
+                      <span className="w-11 shrink-0 font-mono text-slate-600 dark:text-slate-400">{slotKey}</span>
                       {binding.winner ? (
                         <LayerBadge layer={binding.winner[0]} small />
                       ) : (
-                        <span className="text-slate-600">∅</span>
+                        <span className="text-slate-600 dark:text-slate-400">∅</span>
                       )}
-                      <span className="truncate text-slate-500">
+                      <span className="truncate text-slate-500 dark:text-slate-400">
                         {binding.value instanceof AddressView
                           ? "→ " + binding.value.layer
                           : binding.value === null
@@ -1291,7 +1291,7 @@ export function WorkshopPage({
             )}
             {/* Honest applicability: nothing hidden — no lens, no
                   graph, blind or partial lens, every case speaks */}
-            <div className="mt-1 text-[10px] text-slate-500">
+            <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
               {look.lens === null
                 ? say({
                     language,
@@ -1327,7 +1327,7 @@ export function WorkshopPage({
                         })
                       : "")}
             </div>
-            <p className="mt-1 text-[10px] leading-4 text-slate-600">
+            <p className="mt-1 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
               {localized({ language, text: VIEW_NOTES[selectedView] ?? { en: ""} })}
             </p>
           </div>
@@ -1361,23 +1361,23 @@ export function WorkshopPage({
             return (
               <div className="mt-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-3">
                 <div className="mb-1 flex items-center gap-2">
-                  <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
+                  <span className="rounded bg-slate-800 dark:bg-slate-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
                     {selectedGlyph.name}
                   </span>
-                  <span className="text-xs text-slate-500">
+                  <span className="text-xs text-slate-500 dark:text-slate-400">
                     {look.model} :: {glyphPath.join("/")} —{" "}
                     {say({ language, en: "dressing by" })}{" "}
                     <span className="font-medium">{look.lens}</span>
                   </span>
                   <button type="button"
-                    className="ml-auto rounded px-2 text-slate-600 hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-700 dark:text-slate-200"
+                    className="ml-auto rounded px-2 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300 dark:text-slate-200"
                     onClick={() => setSelectedGlyph(null)}
                   >
                     ×
                   </button>
                 </div>
                 {matches.length === 0 && (
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-slate-500 dark:text-slate-400">
                     {say({
                       language,
                       en:
@@ -1394,30 +1394,30 @@ export function WorkshopPage({
                         key={index}
                         className={
                           "flex flex-wrap items-center gap-1.5 rounded-md px-2 py-1 text-[11px] " +
-                          (isBest ? "bg-emerald-50 ring-1 ring-emerald-300" : "bg-white dark:bg-slate-800")
+                          (isBest ? "bg-emerald-50 ring-1 ring-emerald-300 dark:ring-emerald-700" : "bg-white dark:bg-slate-800")
                         }
                       >
                         <span className="font-semibold text-slate-800 dark:text-slate-100">
                           {shapeLabel({ shape: match.spec, language })}
                         </span>
-                        <span className="text-slate-600">
+                        <span className="text-slate-600 dark:text-slate-400">
                           {say({ language, en: "← entry" })}
                         </span>
-                        <span className="font-mono text-slate-600">{match.path.join("/")}</span>
-                        <span className="text-slate-600">
+                        <span className="font-mono text-slate-600 dark:text-slate-400">{match.path.join("/")}</span>
+                        <span className="text-slate-600 dark:text-slate-400">
                           {say({ language, en: "dresses" })}
                         </span>
                         {match.hit.map((hitAddress, hitIndex) => (
                           <span key={hitIndex} className="inline-flex items-center gap-0.5">
-                            {hitIndex > 0 && <span className="text-slate-600">,</span>}
+                            {hitIndex > 0 && <span className="text-slate-600 dark:text-slate-400">,</span>}
                             <LayerBadge layer={hitAddress[0]} small />
-                            <span className="font-mono text-slate-500">
+                            <span className="font-mono text-slate-500 dark:text-slate-400">
                               {hitAddress[1].length ? hitAddress[1].join("/") : "()"}
                             </span>
                           </span>
                         ))}
                         {isBest && (
-                          <span className="ml-auto rounded bg-emerald-600 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                          <span className="ml-auto rounded bg-emerald-600 dark:bg-emerald-700 px-1.5 py-0.5 text-[10px] font-bold text-white">
                             {say({
                               language,
                               en: "winner — the most specific",
@@ -1429,7 +1429,7 @@ export function WorkshopPage({
                   })}
                 </div>
                 {matches.length > 1 && (
-                  <p className="mt-1.5 text-[11px] leading-4 text-slate-500">
+                  <p className="mt-1.5 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
                     {language === "fr" ? (
                       <>
                         Deux entrées habillent ce nœud : celle de la famille et le cercle générique.
@@ -1450,7 +1450,7 @@ export function WorkshopPage({
                   </p>
                 )}
                 {matches.length === 1 && (
-                  <p className="mt-1.5 text-[11px] text-slate-500">
+                  <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
                     {say({
                       language,
                       en: "A single entry dresses this node: no choice to make.",
@@ -1472,7 +1472,7 @@ export function WorkshopPage({
           flattened view and the language in its tabs; no
           standalone panel at the end of the page */}
 
-      <footer className="px-5 pb-6 text-[10px] leading-4 text-slate-600">
+      <footer className="px-5 pb-6 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
         {say({
           language,
           en:

@@ -93,7 +93,7 @@ export function RefinesGraph({
                 y={30 + rowIndex * layout.ROW - 12}
                 width={layout.W}
                 height={layout.ROW}
-                fill="#f1f5f9"
+                className="fill-slate-100 dark:fill-slate-700"
                 opacity={0.55}
               />
             ))}
@@ -123,9 +123,9 @@ export function RefinesGraph({
                 className={
                   "flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[9px] leading-4 transition-opacity " +
                   (layerName === layer
-                    ? "border-slate-900 ring-2 ring-slate-900 "
+                    ? "border-slate-900 dark:border-slate-100 ring-2 ring-slate-900 dark:ring-slate-100 "
                     : inAncestors
-                      ? "border-slate-500 "
+                      ? "border-slate-500 dark:border-slate-400 "
                       : "border-slate-300 dark:border-slate-600 ") +
                   (!matches
                     ? "opacity-10"
@@ -154,7 +154,7 @@ export function RefinesGraph({
           })}
         </div>
       </div>
-      <p className="mt-1 text-[10px] leading-4 text-slate-600">
+      <p className="mt-1 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
         {localized({ language, text: LAYER_ROLE[focus] ?? { en: focus} })}{" "}
         {say({
           language,

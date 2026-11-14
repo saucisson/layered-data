@@ -280,7 +280,7 @@ export function NotionTip({
         {children ?? termText}
       </span>
       {open && (
-        <span className="absolute bottom-full left-1/2 z-30 mb-1 block w-64 -translate-x-1/2 rounded-md border border-slate-600 bg-slate-800 px-2 py-1.5 text-[10px] font-normal leading-4 text-slate-50 shadow-lg">
+        <span className="absolute bottom-full left-1/2 z-30 mb-1 block w-64 -translate-x-1/2 rounded-md border border-slate-600 bg-slate-800 dark:bg-slate-600 px-2 py-1.5 text-[10px] font-normal leading-4 text-slate-50 shadow-lg">
           {definition}
         </span>
       )}

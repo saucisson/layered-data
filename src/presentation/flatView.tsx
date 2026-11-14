@@ -153,7 +153,7 @@ export function FlatView({
   const renderRow = (row: FlatRow): ReactNode => {
     if (row.kind === "declaration") {
       return (
-        <div className="py-0.5 text-[10px] text-slate-600" style={{ paddingLeft: row.depth * 12 }}>
+        <div className="py-0.5 text-[10px] text-slate-600 dark:text-slate-400" style={{ paddingLeft: row.depth * 12 }}>
           {say({
             language,
             en: "declaration node (no visible key)",
@@ -177,7 +177,7 @@ export function FlatView({
                   ? say({ language, en: "collapse"})
                   : say({ language, en: "expand"})
               }
-              className="w-4 shrink-0 rounded text-slate-600 hover:bg-slate-100 dark:bg-slate-800 hover:text-slate-700 dark:text-slate-200"
+              className="w-4 shrink-0 rounded text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300 dark:text-slate-200"
             >
               {childOpen ? "▾" : "▸"}
             </button>
@@ -201,13 +201,13 @@ export function FlatView({
                 en: "abstract slot: the key is declared, no layer provides its value",
               })}
             >
-              <span className="text-[10px] text-slate-600">∅</span>
+              <span className="text-[10px] text-slate-600 dark:text-slate-400">∅</span>
               <LayerBadge layer={entry.winner} small />
             </span>
           )}
           <span className="min-w-0">
             {entry.status === "transparent" ? (
-              <span className="text-slate-600">
+              <span className="text-slate-600 dark:text-slate-400">
                 {say({ language, en: "abstract slot"})}
               </span>
             ) : (
@@ -221,14 +221,14 @@ export function FlatView({
                 language,
                 en: "open this address in panel ③ — the detailed read: chain, scan, winner",
               })}
-              className="shrink-0 rounded border border-slate-300 dark:border-slate-600 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 hover:text-slate-800 dark:text-slate-100"
+              className="shrink-0 rounded border border-slate-300 dark:border-slate-600 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-800 dark:hover:text-slate-200 dark:text-slate-100"
             >
               {say({ language, en: "→ go there"})}
             </button>
           )}
         </div>
         {child !== null && !childOpen && !needle && (
-          <div className="ml-4 text-[10px] text-slate-600">
+          <div className="ml-4 text-[10px] text-slate-600 dark:text-slate-400">
             {"+ "}
             {child.nAddrs}{" "}
             {say({
@@ -263,14 +263,14 @@ export function FlatView({
 
   return (
     <div>
-      <p className="mb-2 text-[11px] leading-4 text-slate-500">
+      <p className="mb-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
         {say({
           language,
           en: "The whole formalism, without hierarchy: every node shows the effective state of its address after first-wins — the key, the layer providing the value (badge), the resolved value. The special keys appear there; only refines is absent: the hierarchy is precisely what the view removes. An abstract slot shows ∅ with its declarer; a resolved reference stays a leaf — its content opens by « go there ». Pure observer: nothing is written.",
         })}
       </p>
       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
-        <span className="text-slate-600">
+        <span className="text-slate-600 dark:text-slate-400">
           {layer} — {flattened.addrs}{" "}
           {say({
             language,
@@ -286,7 +286,7 @@ export function FlatView({
           {flattened.winners.length}{" "}
           {say({ language, en: "contributing layers"})}
         </span>
-        <label className="flex items-center gap-1 text-slate-500">
+        <label className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
           <input
             type="checkbox"
             checked={showProvenance}
@@ -294,7 +294,7 @@ export function FlatView({
           />
           {say({ language, en: "provenance"})}
         </label>
-        <label className="flex items-center gap-1 text-slate-500">
+        <label className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
           <input
             type="checkbox"
             checked={showSpecialKeys}
@@ -308,7 +308,7 @@ export function FlatView({
           placeholder={say({ language, en: "filter keys…"})}
           className="min-w-32 flex-1 rounded border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 text-xs"
         />
-        <span className="text-slate-600">
+        <span className="text-slate-600 dark:text-slate-400">
           {say({ language, en: "root chain: "})}
           {flattened.chaîne}{" "}
           {say({
@@ -322,7 +322,7 @@ export function FlatView({
             language,
             en: "copy the complete flattened dump — every key, its resolved value, its winning layer",
           })}
-          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-800 dark:text-slate-100"
+          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-800 dark:hover:text-slate-200 dark:text-slate-100"
         >
           {copied
             ? say({ language, en: "✓ dump copied"})
@@ -330,8 +330,8 @@ export function FlatView({
         </button>
       </div>
       {needle && rows.length === 0 ? (
-        <div className="rounded-md border border-slate-100 bg-slate-50 dark:bg-slate-900/50 p-2">
-          <div className="py-1 text-xs text-slate-600">
+        <div className="rounded-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2">
+          <div className="py-1 text-xs text-slate-600 dark:text-slate-400">
             {say({
               language,
               en: "No key of " + layer + " matches the filter.",
@@ -342,7 +342,7 @@ export function FlatView({
         <VirtualList
           items={rows}
           estimateSize={24}
-          maxHeightClass="max-h-72 rounded-md border border-slate-100 bg-slate-50 dark:bg-slate-900/50 p-2"
+          maxHeightClass="max-h-72 rounded-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2"
           keyOf={(row, index) =>
             row.kind === "entry"
               ? folderKey(row.node.addr) + "/" + row.entry.key
