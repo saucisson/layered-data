@@ -14,7 +14,7 @@ export function LandingPage({ language }: LandingPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
-      <main className="mx-auto max-w-4xl p-4 sm:p-8">
+      <div className="mx-auto max-w-4xl p-4 sm:p-8">
         <section className="text-center">
           <h2 className="mb-4 text-3xl font-bold text-slate-800 dark:text-slate-100">
             {say({
@@ -160,7 +160,7 @@ export function LandingPage({ language }: LandingPageProps) {
             en: "Layered Data — A formalism design workshop where definitions are data",
           })}
         </footer>
-      </main>
+      </div>
     </div>
   );
 }

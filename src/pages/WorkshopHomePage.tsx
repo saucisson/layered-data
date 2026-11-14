@@ -26,11 +26,9 @@ const TABS: readonly WorkshopTab[] = ["workshop", "editor"];
 export function WorkshopHomePage({
   tab,
   language,
-  onChooseLanguage,
 }: {
   tab: WorkshopTab;
   language: Language;
-  onChooseLanguage: (language: Language) => void;
 }) {
   const { navigate } = useRouter();
   return (
@@ -63,7 +61,7 @@ export function WorkshopHomePage({
         {tab === "workshop" ? (
           <WorkshopPage language={language} />
         ) : (
-          <ModelEditorPage language={language} onChooseLanguage={onChooseLanguage} />
+          <ModelEditorPage language={language} />
         )}
       </Suspense>
     </div>

@@ -506,8 +506,7 @@ export function WorkshopPage({
         </div>
       )}
 
-      <main
-        id="main-content"
+      <div
         className={
           graphView
             ? "grid grid-cols-1 gap-3 p-2 sm:p-4"
@@ -1055,7 +1054,7 @@ export function WorkshopPage({
             )}
           </div>
         </section>
-      </main>
+      </div>
 
       <section className="mx-2 mt-3 sm:mx-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
         <h2 id="panel-viewpoint-heading" className="text-sm font-bold text-slate-800 dark:text-slate-100">
