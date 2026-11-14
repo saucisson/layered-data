@@ -145,10 +145,8 @@ interface Banner {
 
 export function ModelEditorPage({
   language,
-  onChooseLanguage,
 }: {
   language: Language;
-  onChooseLanguage: (language: Language) => void;
 }) {
   // ---- the kernel, the frame -----------------------------------------
   // Assembled from the corpus files — the same single source the
@@ -1177,12 +1175,6 @@ export function ModelEditorPage({
           className="hidden"
           onChange={handleImportFile}
         />
-        <button type="button"
-          onClick={() => onChooseLanguage(language === "fr" ? "en" : "fr")}
-          className="ml-auto rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900"
-        >
-          {language === "fr" ? "EN" : "FR"}
-        </button>
       </div>
 
       {creationOpen && (

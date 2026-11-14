@@ -141,7 +141,7 @@ export function TutorialPage({ language }: TutorialPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
-      <main className="mx-auto max-w-4xl space-y-4 p-4 sm:p-8">
+      <div className="mx-auto max-w-4xl space-y-4 p-4 sm:p-8">
         {blocks.map(renderBlock)}
 
         <section className="mt-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6">
@@ -181,7 +181,7 @@ export function TutorialPage({ language }: TutorialPageProps) {
             {say({ language, en: "Workshop →"})}
           </button>
         </div>
-      </main>
+      </div>
     </div>
   );
 }

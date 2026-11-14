@@ -103,7 +103,6 @@ function AppContent() {
               <WorkshopHomePage
                 tab={page}
                 language={language}
-                onChooseLanguage={handleChooseLanguage}
               />
             );
           case "hierarchy":
@@ -115,7 +114,6 @@ function AppContent() {
               <FormalismPage
                 layer={parameter}
                 language={language}
-               
               />
             );
           case "landing":

@@ -344,7 +344,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
-      <main className="mx-auto max-w-4xl space-y-12 p-4 sm:p-8">
+      <div className="mx-auto max-w-4xl space-y-12 p-4 sm:p-8">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "Filiation — history and comparison" })}
         </h1>
@@ -608,7 +608,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
             en: "Layered Data — the filiation is part of the rigor: the story names its ancestors, the comparison measures its differences",
           })}
         </footer>
-      </main>
+      </div>
     </div>
   );
 }

@@ -105,7 +105,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
-      <main className="mx-auto max-w-[95rem] p-4 sm:p-6">
+      <div className="mx-auto max-w-[95rem] p-4 sm:p-6">
         <h1 className="mb-3 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "The hierarchy — the complete refinement graph" })}
         </h1>
@@ -348,7 +348,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
             en: "the bands are the generations (the rank is the longest path towards a base); one curve is one refinement; the search fades the non-matching layers.",
           })}
         </p>
-      </main>
+      </div>
     </div>
   );
 }
