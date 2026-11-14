@@ -343,7 +343,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
   const cell = (text: BilingualText) => say({ language, en: text.en});
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
       <div className="mx-auto max-w-4xl space-y-12 p-4 sm:p-8">
         <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "Filiation — history and comparison" })}
@@ -364,7 +364,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
           <h2 className="mb-1 text-base font-bold text-slate-800 dark:text-slate-100">
             {say({ language, en: "1 · A history of the gesture"})}
           </h2>
-          <p className="mb-4 text-xs leading-5 text-slate-500">
+          <p className="mb-4 text-xs leading-5 text-slate-500 dark:text-slate-400">
             {say({
               language,
               en: "ten eras, one gesture: linked things, values carried by default, a read that walks the chain when the local value is missing",
@@ -374,7 +374,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
             {FILIATION_ERAS.map((era) => (
               <li key={era.years} className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4">
                 <div className="flex flex-wrap items-baseline gap-3">
-                  <span className="rounded bg-amber-100 px-2 py-0.5 font-mono text-xs font-bold text-amber-800">
+                  <span className="rounded bg-amber-100 dark:bg-amber-900/60 px-2 py-0.5 font-mono text-xs font-bold text-amber-800 dark:text-amber-300">
                     {era.years}
                   </span>
                   <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100">{cell(era.title)}</h3>
@@ -406,7 +406,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
           <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <table className="w-full text-xs leading-5">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-left text-slate-500">
+                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-left text-slate-500 dark:text-slate-400">
                   <th className="px-3 py-2 font-semibold">
                     {say({ language, en: "floors ↓ / merge →"})}
                   </th>
@@ -425,8 +425,8 @@ export function FiliationPage({ language }: FiliationPageProps) {
                 </tr>
               </thead>
               <tbody>
-                <tr className="border-b border-slate-100">
-                  <th className="px-3 py-2 text-left align-top font-semibold text-slate-600">
+                <tr className="border-b border-slate-100 dark:border-slate-700">
+                  <th className="px-3 py-2 text-left align-top font-semibold text-slate-600 dark:text-slate-400">
                     {say({ language, en: "fixed levels"})}
                   </th>
                   <td className="px-3 py-2 align-top text-slate-700 dark:text-slate-200">
@@ -443,10 +443,10 @@ export function FiliationPage({ language }: FiliationPageProps) {
                   </td>
                 </tr>
                 <tr>
-                  <th className="px-3 py-2 text-left align-top font-semibold text-slate-600">
+                  <th className="px-3 py-2 text-left align-top font-semibold text-slate-600 dark:text-slate-400">
                     {say({ language, en: "continuum"})}
                   </th>
-                  <td className="rounded bg-sky-50 px-3 py-2 align-top font-semibold text-sky-800">
+                  <td className="rounded bg-sky-50 dark:bg-sky-950 px-3 py-2 align-top font-semibold text-sky-800 dark:text-sky-300">
                     {say({
                       language,
                       en: "layered data — this workshop",
@@ -462,7 +462,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
               </tbody>
             </table>
           </div>
-          <p className="mt-2 text-[11px] leading-4 text-slate-500">
+          <p className="mt-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
             {say({
               language,
               en: "Layered data sits in a corner few systems occupy: the ordered merge of CSS, applied to a continuum of formalisms and models. The price of that corner — order is meaning — is paid openly on this page's last section.",
@@ -477,7 +477,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
               en: "3 · The neighbors, side by side",
             })}
           </h2>
-          <p className="mb-4 text-xs leading-5 text-slate-500">
+          <p className="mb-4 text-xs leading-5 text-slate-500 dark:text-slate-400">
             {say({
               language,
               en: "one row per neighbor: how it merges, how many floors it keeps, and where it diverges from layered data",
@@ -486,7 +486,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
           <div className="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
             <table className="w-full text-xs leading-5">
               <thead>
-                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-left text-slate-500">
+                <tr className="border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-left text-slate-500 dark:text-slate-400">
                   <th className="px-3 py-2 font-semibold">
                     {say({ language, en: "system"})}
                   </th>
@@ -503,13 +503,13 @@ export function FiliationPage({ language }: FiliationPageProps) {
               </thead>
               <tbody>
                 {COMPARISON_ROWS.map((row) => (
-                  <tr key={row.system} className="border-b border-slate-100 align-top">
+                  <tr key={row.system} className="border-b border-slate-100 dark:border-slate-700 align-top">
                     <th className="px-3 py-2 text-left font-semibold text-slate-700 dark:text-slate-200">
                       {row.system}
                     </th>
                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{cell(row.merge)}</td>
                     <td className="px-3 py-2 text-slate-700 dark:text-slate-200">{cell(row.floors)}</td>
-                    <td className="px-3 py-2 text-slate-600">{cell(row.diverges)}</td>
+                    <td className="px-3 py-2 text-slate-600 dark:text-slate-400">{cell(row.diverges)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -525,8 +525,8 @@ export function FiliationPage({ language }: FiliationPageProps) {
             })}
           </h2>
           <div className="mt-4 grid gap-4 sm:p-6 md:grid-cols-2">
-            <div className="rounded-lg border border-sky-200 bg-sky-50 p-4">
-              <h3 className="mb-2 text-sm font-bold text-sky-800">
+            <div className="rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50 dark:bg-sky-950 p-4">
+              <h3 className="mb-2 text-sm font-bold text-sky-800 dark:text-sky-300">
                 {say({ language, en: "What it adds, measured"})}
               </h3>
               <ul className="list-disc space-y-2 pl-4 text-sm leading-6 text-slate-700 dark:text-slate-200">
@@ -535,8 +535,8 @@ export function FiliationPage({ language }: FiliationPageProps) {
                 ))}
               </ul>
             </div>
-            <div className="rounded-lg border border-rose-200 bg-rose-50 p-4">
-              <h3 className="mb-2 text-sm font-bold text-rose-800">
+            <div className="rounded-lg border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950 p-4">
+              <h3 className="mb-2 text-sm font-bold text-rose-800 dark:text-rose-300">
                 {say({
                   language,
                   en: "What it does not — and says so",
@@ -562,7 +562,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
                   href={reference.url}
                   target="_blank"
                   rel="noreferrer"
-                  className="text-sky-700 underline decoration-dotted hover:text-sky-900"
+                  className="text-sky-700 dark:text-sky-300 underline decoration-dotted hover:text-sky-900 dark:hover:text-sky-200"
                 >
                   {cell(reference.label)}
                 </a>
@@ -570,10 +570,10 @@ export function FiliationPage({ language }: FiliationPageProps) {
             ))}
           </ul>
           <details className="mt-3 rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2">
-            <summary className="cursor-pointer text-xs font-semibold text-slate-500">
+            <summary className="cursor-pointer text-xs font-semibold text-slate-500 dark:text-slate-400">
               {say({ language, en: "the printed references"})}
             </summary>
-            <ul className="mt-2 list-disc space-y-0.5 pl-4 text-[11px] leading-4 text-slate-600">
+            <ul className="mt-2 list-disc space-y-0.5 pl-4 text-[11px] leading-4 text-slate-600 dark:text-slate-400">
               {PRINTED_REFERENCES.map((reference) => (
                 <li key={reference}>{reference}</li>
               ))}
@@ -590,19 +590,19 @@ export function FiliationPage({ language }: FiliationPageProps) {
           </button>
           <button type="button"
             onClick={() => navigate("tutorial")}
-            className="rounded-lg border-2 border-sky-600 px-6 py-3 text-sky-600 font-semibold hover:bg-sky-50 transition-colors"
+            className="rounded-lg border-2 border-sky-600 px-6 py-3 text-sky-600 dark:text-sky-400 font-semibold hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors"
           >
             {say({ language, en: "Tutorial →"})}
           </button>
           <button type="button"
             onClick={() => navigate("workshop")}
-            className="rounded-lg bg-sky-600 px-6 py-3 text-white font-semibold hover:bg-sky-500 transition-colors"
+            className="rounded-lg bg-sky-600 dark:bg-sky-700 px-6 py-3 text-white font-semibold hover:bg-sky-500 dark:hover:bg-sky-600 transition-colors"
           >
             {say({ language, en: "Workshop →"})}
           </button>
         </div>
 
-        <footer className="border-t border-slate-200 dark:border-slate-700 pt-6 text-center text-xs text-slate-600">
+        <footer className="border-t border-slate-200 dark:border-slate-700 pt-6 text-center text-xs text-slate-600 dark:text-slate-400">
           {say({
             language,
             en: "Layered Data — the filiation is part of the rigor: the story names its ancestors, the comparison measures its differences",

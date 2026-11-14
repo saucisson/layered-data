@@ -199,7 +199,7 @@ export function DiskWardrobe({
 
   const onDiskNames = new Set((entries ?? []).map((entry) => entry.name));
   return (
-    <div className="rounded-lg border border-sky-200 bg-sky-50/40 p-3">
+    <div className="rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50/40 dark:bg-sky-950/40 p-3">
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
         <span className="rounded bg-sky-700 px-1.5 py-0.5 text-[11px] font-bold text-white">
           {say({ language, en: "disk"})}
@@ -211,11 +211,11 @@ export function DiskWardrobe({
           onClick={() => {
             void refresh();
           }}
-          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 text-[10px] text-slate-600 hover:border-sky-500 hover:text-sky-700"
+          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-sky-500 hover:text-sky-700"
         >
           {say({ language, en: "refresh"})}
         </button>
-        <span className="text-[11px] leading-4 text-slate-500">
+        <span className="text-[11px] leading-4 text-slate-500 dark:text-slate-400">
           {say({
             language,
             en: "one file per formalism, in the language format — the bedrock read-only, the visitors' layers visible to all; every entry passes through the staging, the disk never bypasses the contract",
@@ -230,7 +230,7 @@ export function DiskWardrobe({
         </div>
       )}
       {entries !== null && entries.length === 0 && (
-        <p className="text-[11px] text-slate-500">
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">
           {say({
             language,
             en: "the quarry is empty or closed — without proxy, the workshop lives alone",
@@ -264,8 +264,8 @@ export function DiskWardrobe({
                   (selectedName === entry.name
                     ? "bg-sky-700 text-white"
                     : entry.builtIn
-                      ? "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 hover:border-sky-500"
-                      : "border border-emerald-300 bg-white dark:bg-slate-800 text-emerald-700 hover:border-emerald-500")
+                      ? "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-sky-500"
+                      : "border border-emerald-300 bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 hover:border-emerald-500")
                 }
                 title={
                   entry.builtIn
@@ -299,14 +299,14 @@ export function DiskWardrobe({
             <button type="button"
               onClick={loadIntoWorkshop}
               disabled={!source.trim()}
-              className="rounded bg-emerald-600 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+              className="rounded bg-emerald-600 dark:bg-emerald-700 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
             >
               {say({
                 language,
                 en: "staging — load into the workshop",
               })}
             </button>
-            <span className="text-[10px] leading-4 text-slate-600">
+            <span className="text-[10px] leading-4 text-slate-600 dark:text-slate-400">
               {say({
                 language,
                 en: "the layer is corrected here like any other — the staging revalidates corpus + supplements + candidate, 0 verdict demanded",
@@ -316,8 +316,8 @@ export function DiskWardrobe({
         </>
       )}
       {Object.keys(localLayerSources).filter((name) => !onDiskNames.has(name)).length > 0 && (
-        <div className="mt-2 border-t border-sky-200 pt-2">
-          <p className="mb-1 text-[11px] font-semibold text-slate-600">
+        <div className="mt-2 border-t border-sky-200 dark:border-sky-800 pt-2">
+          <p className="mb-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             {say({
               language,
               en: "the local layers, not yet on the disk:",
@@ -332,7 +332,7 @@ export function DiskWardrobe({
                   onClick={() => {
                     void putOnDisk(name, localLayerSources[name] ?? "");
                   }}
-                  className="rounded border border-emerald-300 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono leading-4 text-emerald-700 hover:border-emerald-500"
+                  className="rounded border border-emerald-300 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono leading-4 text-emerald-700 dark:text-emerald-300 hover:border-emerald-500"
                   title={say({
                     language,
                     en: "lay this formalism on the disk — visible to the other visitors",
@@ -344,11 +344,11 @@ export function DiskWardrobe({
           </div>
         </div>
       )}
-      {message !== null && <p className="mt-2 text-[10px] leading-4 text-slate-500">{message}</p>}
+      {message !== null && <p className="mt-2 text-[10px] leading-4 text-slate-500 dark:text-slate-400">{message}</p>}
       {loadResult !== null && (
         <div className="mt-2 space-y-1">
           {loadResult.step === "syntaxe" && (
-            <div className="rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-[11px] leading-4 text-red-700">
+            <div className="rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 px-2 py-1.5 text-[11px] leading-4 text-red-700 dark:text-red-300">
               <div className="font-semibold">
                 {say({
                   language,
@@ -363,7 +363,7 @@ export function DiskWardrobe({
             </div>
           )}
           {loadResult.step === "validation" && (loadResult.verdicts ?? []).length > 0 && (
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] leading-4 text-amber-800">
+            <div className="rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 px-2 py-1.5 text-[11px] leading-4 text-amber-800 dark:text-amber-300">
               <div className="font-semibold">
                 {say({
                   language,
@@ -382,7 +382,7 @@ export function DiskWardrobe({
             </div>
           )}
           {loadResult.ok && (loadResult.newLayerNames ?? []).length > 0 && (
-            <div className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1.5 text-[11px] leading-4 text-emerald-700">
+            <div className="rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 px-2 py-1.5 text-[11px] leading-4 text-emerald-700 dark:text-emerald-300">
               {say({
                 language,
                 en:
@@ -394,7 +394,7 @@ export function DiskWardrobe({
             </div>
           )}
           {loadResult.ok && (loadResult.newLayerNames ?? []).length === 0 && (
-            <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 text-[11px] leading-4 text-slate-600">
+            <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 text-[11px] leading-4 text-slate-600 dark:text-slate-400">
               {say({
                 language,
                 en: "staging: 0 verdict — but these layers are already in the space: nothing to add.",

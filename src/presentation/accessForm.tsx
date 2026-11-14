@@ -54,13 +54,13 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
   return (
     <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
       <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
-        <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-bold text-white">
+        <span className="rounded bg-slate-800 dark:bg-slate-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
           {say({ language, en: "key"})}
         </span>
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
           {say({ language, en: "site access code"})}
         </span>
-        <span className="text-[11px] leading-4 text-slate-500">
+        <span className="text-[11px] leading-4 text-slate-500 dark:text-slate-400">
           {say({
             language,
             en: "a shared key, laid in the proxy's .env — it protects the chatbot and the disk quarry; the workshop stays open to all",
@@ -79,12 +79,12 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
           onClick={() => {
             void verify();
           }}
-          className="rounded bg-slate-800 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
+          className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
         >
           {say({ language, en: "verify"})}
         </button>
       </div>
-      <label className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-500">
+      <label className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
         <input
           type="checkbox"
           checked={remember}
@@ -95,7 +95,7 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
           en: "remember this code on this browser for 30 days (stored locally, expires automatically) — otherwise it is kept for this tab only",
         })}
       </label>
-      {stateMessage !== null && <p className="mt-1.5 text-[10px] text-slate-500">{stateMessage}</p>}
+      {stateMessage !== null && <p className="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">{stateMessage}</p>}
     </div>
   );
 }

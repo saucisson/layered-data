@@ -156,7 +156,7 @@ export function UserAccountForm({ language }: { language: Language }) {
           <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
             {connectedUser.displayName}
           </span>
-          <span className="text-[11px] text-slate-500">
+          <span className="text-[11px] text-slate-500 dark:text-slate-400">
             {connectedUser.role === "admin"
               ? say({ language, en: "admin" })
               : say({ language, en: "personal account — your layers are scoped to you" })}
@@ -164,13 +164,13 @@ export function UserAccountForm({ language }: { language: Language }) {
           <button
             type="button"
             onClick={handleLogout}
-            className="ml-auto rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-700"
+            className="ml-auto rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
           >
             {say({ language, en: "disconnect" })}
           </button>
         </div>
         {stateMessage !== null && (
-          <p className="mt-1.5 text-[10px] text-slate-500">{stateMessage}</p>
+          <p className="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">{stateMessage}</p>
         )}
       </div>
     );
@@ -185,7 +185,7 @@ export function UserAccountForm({ language }: { language: Language }) {
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
           {say({ language, en: "personal account" })}
         </span>
-        <span className="text-[11px] leading-4 text-slate-500">
+        <span className="text-[11px] leading-4 text-slate-500 dark:text-slate-400">
           {say({
             language,
             en: "without an account everything stays in this browser — invisible to others; with one, your layers publish to the shared quarry",
@@ -197,7 +197,7 @@ export function UserAccountForm({ language }: { language: Language }) {
           <button
             type="button"
             onClick={() => setMode("create")}
-            className="rounded bg-slate-800 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
+            className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
           >
             {say({ language, en: "create an account" })}
           </button>
@@ -230,14 +230,14 @@ export function UserAccountForm({ language }: { language: Language }) {
             <button
               type="button"
               onClick={() => void handleCreate()}
-              className="rounded bg-slate-800 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
+              className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
             >
               {say({ language, en: "create" })}
             </button>
             <button
               type="button"
               onClick={() => setMode("idle")}
-              className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-500"
+              className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-500 dark:text-slate-400"
             >
               {say({ language, en: "cancel" })}
             </button>
@@ -257,14 +257,14 @@ export function UserAccountForm({ language }: { language: Language }) {
             <button
               type="button"
               onClick={() => void handleLogin()}
-              className="rounded bg-slate-800 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
+              className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
             >
               {say({ language, en: "connect" })}
             </button>
             <button
               type="button"
               onClick={() => setMode("idle")}
-              className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-500"
+              className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-500 dark:text-slate-400"
             >
               {say({ language, en: "cancel" })}
             </button>
@@ -272,7 +272,7 @@ export function UserAccountForm({ language }: { language: Language }) {
         </div>
       )}
       {stateMessage !== null && (
-        <p className="mt-1.5 text-[10px] text-slate-500">{stateMessage}</p>
+        <p className="mt-1.5 text-[10px] text-slate-500 dark:text-slate-400">{stateMessage}</p>
       )}
     </div>
   );

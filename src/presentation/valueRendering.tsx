@@ -19,14 +19,14 @@ export function addressText(address: [string, string[]]): string {
 export function KernelValue({ value, language }: { value: any; language: Language }) {
   if (value === null || value === undefined) {
     return (
-      <span className="text-slate-600">
+      <span className="text-slate-600 dark:text-slate-400">
         {say({ language, en: "∅ undefined"})}
       </span>
     );
   }
   if (value instanceof AddressView) {
     return (
-      <span className="font-medium text-emerald-700">
+      <span className="font-medium text-emerald-700 dark:text-emerald-300">
         {say({ language, en: "node → "})}
         {value.layer} :: {value.path.length ? value.path.join("/") : "()"}
       </span>
@@ -34,15 +34,15 @@ export function KernelValue({ value, language }: { value: any; language: Languag
   }
   if (value instanceof PathReference) {
     return (
-      <span className="text-sky-700">
+      <span className="text-sky-700 dark:text-sky-300">
         → ({value.anchor}) {value.path.join("/")}
       </span>
     );
   }
   if (value instanceof LayerReference) {
-    return <span className="text-sky-700">→ {value.layer}</span>;
+    return <span className="text-sky-700 dark:text-sky-300">→ {value.layer}</span>;
   }
-  return <span className="font-medium text-slate-900">{String(value)}</span>;
+  return <span className="font-medium text-slate-900 dark:text-slate-100">{String(value)}</span>;
 }
 
 /** Render one flattened value: a value dictionary (the bindings of
@@ -92,16 +92,16 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
         <span className="font-semibold">① base</span>{" "}
         {say({ language, en: "— own node: "})}
         {event.own ? (
-          <span className="font-medium text-emerald-700">
+          <span className="font-medium text-emerald-700 dark:text-emerald-300">
             {say({ language, en: "present"})}
           </span>
         ) : (
-          <span className="text-slate-500">{say({ language, en: "absent"})}</span>
+          <span className="text-slate-500 dark:text-slate-400">{say({ language, en: "absent"})}</span>
         )}
         {event.fatherMembers.length > 0 && (
           <>
             {say({ language, en: " ; father's members: "})}
-            <span className="text-slate-500">
+            <span className="text-slate-500 dark:text-slate-400">
               {event.fatherMembers.map((member: any) => addressText(member)).join(" · ")}
             </span>
           </>
@@ -127,8 +127,8 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
         {say({ language, en: "— defined by "})}
         {event.from ? addressText(event.from) : "—"}
         {say({ language, en: ", resolved from the holder "})}
-        <span className="text-slate-500">{addressText(event.holder)}</span> :
-        <span className="ml-1 text-sky-700">
+        <span className="text-slate-500 dark:text-slate-400">{addressText(event.holder)}</span> :
+        <span className="ml-1 text-sky-700 dark:text-sky-300">
           {event.entries
             .map((entry: any) =>
               entry.ref ? `→ (${entry.ref[0]}) ${entry.ref[1].join("/")}` : `→ ${entry.lref}`,
@@ -142,15 +142,15 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
     const result = Array.isArray(event.result) ? addressText(event.result) : String(event.result);
     return (
       <div className="text-slate-700 dark:text-slate-200">
-        <span className="font-semibold text-sky-700">
+        <span className="font-semibold text-sky-700 dark:text-sky-300">
           {say({ language, en: "⟦resolution⟧"})}
         </span>{" "}
-        <span className="text-sky-700">
+        <span className="text-sky-700 dark:text-sky-300">
           → ({event.ref[0]}) {event.ref[1].join("/")}
         </span>{" "}
         {say({ language, en: "from "})}
         {addressText(event.holder)} :
-        <div className="ml-3 mt-0.5 space-y-0.5 text-[11px] text-slate-500">
+        <div className="ml-3 mt-0.5 space-y-0.5 text-[11px] text-slate-500 dark:text-slate-400">
           {event.search.map((searchStep: any, index: number) => (
             <div key={index}>
               {say({ language, en: "prefix "})}
@@ -162,14 +162,14 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
               {searchStep.anchors.length ? (
                 searchStep.anchors.map((anchor: string, anchorIndex: number) => (
                   <span key={anchorIndex}>
-                    <span className={anchor === event.ref[0] ? "font-bold text-sky-700" : ""}>
+                    <span className={anchor === event.ref[0] ? "font-bold text-sky-700 dark:text-sky-300" : ""}>
                       {anchor}
                     </span>
                     {anchorIndex < searchStep.anchors.length - 1 ? ", " : ""}
                   </span>
                 ))
               ) : (
-                <span className="text-slate-600">
+                <span className="text-slate-600 dark:text-slate-400">
                   {say({
                     language,
                     en: "— computing, conservative jump kept",
@@ -198,7 +198,7 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
       <div className="text-slate-700 dark:text-slate-200">
         <span className="font-semibold">③ + source</span>{" "}
         <span className="font-medium">{addressText(event.addr)}</span>{" "}
-        <span className="text-slate-600">({labelOf({ code: event.via, language })})</span>
+        <span className="text-slate-600 dark:text-slate-400">({labelOf({ code: event.via, language })})</span>
       </div>
     );
   }
@@ -209,10 +209,10 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
 
 /** The read statuses of a first-winner scan. */
 const STATUS_STYLE: Record<string, string> = {
-  fournit: "bg-emerald-50 text-emerald-700 border-emerald-200",
-  transparent: "bg-amber-50 text-amber-700 border-amber-200",
-  absent: "bg-slate-50 dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700",
-  "non atteint": "bg-slate-50 dark:bg-slate-900 text-slate-500 border-slate-100",
+  fournit: "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800",
+  transparent: "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800",
+  absent: "bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700",
+  "non atteint": "bg-slate-50 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-100 dark:border-slate-700",
 };
 
 /** A shape prefix so the status is not conveyed by color alone (WCAG 1.4.1). */
