@@ -99,7 +99,7 @@ export function LayerContractTests({
         <div className="mt-2 space-y-1">
           {rows.map((row, index) => (
             <div key={index} className="font-mono text-[11px] leading-4">
-              <span className={row.matching ? "text-emerald-600 " : "text-red-600 dark:text-red-400"}>
+              <span className={row.matching ? "text-emerald-600 dark:text-emerald-400 " : "text-red-600 dark:text-red-400"}>
                 {row.matching ? "✓" : "✗"}
               </span>{" "}
               <span className="text-slate-700 dark:text-slate-200">{row.expectation.address}</span>
