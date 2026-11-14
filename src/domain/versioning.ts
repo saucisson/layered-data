@@ -82,6 +82,89 @@ export function detectVersionConflicts({ space }: { space: Space }): VersionConf
   return conflicts;
 }
 
+/** One entry of the transitive closure with the full path that
+ * brought it in: the chain of layer names from the root layer down
+ * to this entry (issue #154 — the diamond paths are displayed as
+ * such). */
+export type ClosurePathEntry = {
+  name: string;
+  major: number | null;
+  path: string[];
+};
+
+/** The transitive LRef closure of a layer, each entry carrying the
+ * path of layer names that brought it in. Same walk as
+ * `layerClosureMajors`, path-tracking added. */
+export function layerClosurePaths({
+  space,
+  layer,
+}: {
+  space: Space;
+  layer: LayerName;
+}): ClosurePathEntry[] {
+  const seen = new Set<string>();
+  const result: ClosurePathEntry[] = [];
+  const visit = (name: string, major: number | null, path: string[]): void => {
+    const key = name + "@" + String(major);
+    if (seen.has(key)) return;
+    seen.add(key);
+    result.push({ name, major, path });
+    const refinements = space.layers[name as LayerName]?.["refines"] ?? [];
+    if (Array.isArray(refinements)) {
+      for (const entry of refinements) {
+        if (entry instanceof LayerReference) {
+          const label =
+            entry.major === null ? String(entry.layer) : String(entry.layer) + "@" + String(entry.major);
+          visit(String(entry.layer), entry.major, [...path, label]);
+        }
+      }
+    }
+  };
+  visit(String(layer), null, [String(layer)]);
+  return result;
+}
+
+/** One diamond conflict inside the closure of ONE layer: the
+ * formalism, the divergent majors, and one full path per divergent
+ * major (root → … → formalism@major) — the two paths of the diamond. */
+export type ClosureConflict = {
+  formalism: string;
+  majors: number[];
+  paths: string[][];
+};
+
+/** The divergent-major diamonds of the closure of a single layer,
+ * with full paths (issue #154). Unpinned (null) references never
+ * conflict — they resolve to the latest frozen of the latest major. */
+export function conflictPathsInClosure({
+  space,
+  layer,
+}: {
+  space: Space;
+  layer: LayerName;
+}): ClosureConflict[] {
+  const closure = layerClosurePaths({ space, layer });
+  const byName = new Map<string, { majors: Set<number>; paths: string[][] }>();
+  for (const entry of closure) {
+    if (entry.major === null) continue;
+    const bucket = byName.get(entry.name) ?? { majors: new Set<number>(), paths: [] };
+    bucket.majors.add(entry.major);
+    bucket.paths.push(entry.path);
+    byName.set(entry.name, bucket);
+  }
+  const conflicts: ClosureConflict[] = [];
+  for (const [name, bucket] of byName) {
+    if (bucket.majors.size > 1) {
+      conflicts.push({
+        formalism: name,
+        majors: [...bucket.majors].sort((a, b) => a - b),
+        paths: bucket.paths,
+      });
+    }
+  }
+  return conflicts;
+}
+
 /** One detected drift: the host assembly whose measured dump changed
  * after a minor lift of a dependency, with the old and new
  * fingerprints. */
