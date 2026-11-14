@@ -5,6 +5,7 @@
 
 import { lazy, Suspense, useEffect, useState } from "react";
 import { RouterProvider, useRouter } from "./components/Router";
+import { SiteHeader } from "./components/SiteHeader";
 import { ToastProvider } from "./components/Toast";
 import { readWorkshopLanguage, writeWorkshopLanguage } from "./infrastructure/browserLanguage";
 import { setI18nLanguage } from "./infrastructure/i18n";
@@ -82,21 +83,20 @@ function AppContent() {
 
   return (
     <Suspense fallback={<PageFallback />}>
-      <button
-        type="button"
-        onClick={toggleDark}
-        aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-        title={dark ? "Light mode" : "Dark mode"}
-        className="fixed right-3 top-3 z-50 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs text-slate-600 shadow-sm hover:bg-slate-50 dark:bg-slate-900 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-      >
-        {dark ? "☀ Light" : "☾ Dark"}
-      </button>
+      <SiteHeader
+        currentPage={page}
+        language={language}
+        onChooseLanguage={handleChooseLanguage}
+        dark={dark}
+        onToggleDark={toggleDark}
+      />
+      <main id="main-content">
       {(() => {
         switch (page) {
           case "tutorial":
-            return <TutorialPage language={language} onChooseLanguage={handleChooseLanguage} />;
+            return <TutorialPage language={language} />;
           case "filiation":
-            return <FiliationPage language={language} onChooseLanguage={handleChooseLanguage} />;
+            return <FiliationPage language={language} />;
           case "workshop":
           case "editor":
             return (
@@ -107,25 +107,26 @@ function AppContent() {
               />
             );
           case "hierarchy":
-            return <HierarchyPage language={language} onChooseLanguage={handleChooseLanguage} />;
+            return <HierarchyPage language={language} />;
           case "creation":
-            return <CreationPage language={language} onChooseLanguage={handleChooseLanguage} />;
+            return <CreationPage language={language} />;
           case "formalism":
             return (
               <FormalismPage
                 layer={parameter}
                 language={language}
-                onChooseLanguage={handleChooseLanguage}
+               
               />
             );
           case "landing":
-            return <LandingPage language={language} onChooseLanguage={handleChooseLanguage} />;
+            return <LandingPage language={language} />;
           case "notfound":
             return <NotFoundPage language={language} />;
           default:
-            return <LandingPage language={language} onChooseLanguage={handleChooseLanguage} />;
+            return <LandingPage language={language} />;
         }
       })()}
+      </main>
     </Suspense>
   );
 }

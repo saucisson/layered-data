@@ -24,7 +24,6 @@ import type { Language } from "../domain/messages.ts";
 
 interface CreationPageProps {
   language: Language;
-  onChooseLanguage: (lang: Language) => void;
 }
 
 // The kernel of the page: assembled once from the corpus files.
@@ -46,7 +45,7 @@ const EXAMPLE_INTENTIONS: { en: string; fr?: string | undefined }[] = [
   },
 ];
 
-export function CreationPage({ language, onChooseLanguage }: CreationPageProps) {
+export function CreationPage({ language }: CreationPageProps) {
   const { navigate } = useRouter();
   const [sessionVersion, setSessionVersion] = useState(readSessionVersion());
   const session = useMemo(() => materializeSessionAdditions({ kernel: KERNEL }), [sessionVersion]);
@@ -61,57 +60,10 @@ export function CreationPage({ language, onChooseLanguage }: CreationPageProps) 
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
-      <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h1 className="text-lg font-bold">
-            {say({
-              language,
-              en: "Create a formalism — with the assistance of the geologist",
-            })}
-          </h1>
-          <span className="flex shrink-0 items-center gap-1 text-xs">
-            <span className="mr-1 text-slate-600">
-              {say({ language, en: "language: "})}
-            </span>
-            {(["en", "fr"] as Language[]).map((choice) => (
-              <button type="button"
-                key={choice}
-                onClick={() => onChooseLanguage(choice)}
-                className={
-                  "rounded border px-1.5 py-0.5 font-bold uppercase " +
-                  (language === choice
-                    ? "border-slate-800 bg-slate-800 text-white"
-                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 hover:border-slate-500")
-                }
-              >
-                {choice}
-              </button>
-            ))}
-          </span>
-        </div>
-        <div className="mt-2 flex flex-wrap gap-2 text-xs">
-          <button type="button"
-            onClick={() => navigate("landing")}
-            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
-          >
-            {say({ language, en: "← home"})}
-          </button>
-          <button type="button"
-            onClick={() => navigate("hierarchy")}
-            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
-          >
-            {say({ language, en: "the hierarchy →"})}
-          </button>
-          <button type="button"
-            onClick={() => navigate("workshop")}
-            className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-slate-600 hover:border-slate-600"
-          >
-            {say({ language, en: "the workshop →"})}
-          </button>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-4xl p-4 sm:p-6">
+        <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
+          {say({ language, en: "Create a formalism — with the assistance of the geologist" })}
+        </h1>
         <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-sm leading-6 text-slate-600">
           <h2 className="mb-2 text-base font-bold text-slate-800 dark:text-slate-100">
             {say({ language, en: "The protocol"})}
