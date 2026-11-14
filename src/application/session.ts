@@ -49,6 +49,63 @@ export function writeSessionAddition({ addition }: { addition: SessionAddition }
   sessionVersion++;
 }
 
+/** Escape a formalism name for safe use inside a RegExp. */
+function escapeRegExp({ text }: { text: string }): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Re-pin one formalism inside a session layer (issue #154): rewrite
+ * the layer's block in the source of the addition that carries it,
+ * replacing every `@formalism@<major>` pin — and every bare
+ * `@formalism` reference — by `@formalism@<targetMajor>`. The corpus
+ * is read-only: when no session addition carries the layer, nothing
+ * is written and the function returns false. */
+export function writeSessionRepin({
+  layer,
+  formalism,
+  targetMajor,
+}: {
+  layer: string;
+  formalism: string;
+  targetMajor: number;
+}): boolean {
+  const index = SESSION_ADDITIONS.findIndex((addition) => addition.layerNames.includes(layer));
+  if (index < 0) return false;
+  const addition = SESSION_ADDITIONS[index];
+  if (addition === undefined) return false;
+  const block = extractLayerBlock({ name: layer, source: addition.source });
+  if (block === null) return false;
+  const pinned = new RegExp("@" + escapeRegExp({ text: formalism }) + "@\\d+", "g");
+  const bare = new RegExp("@" + escapeRegExp({ text: formalism }) + "(?![\\w@-])", "g");
+  const replacement = "@" + formalism + "@" + String(targetMajor);
+  const repinned = block.replace(pinned, replacement).replace(bare, replacement);
+  if (repinned === block) return false;
+  // Splice the rewritten block back into the addition source, at the
+  // same line boundaries extractLayerBlock used.
+  const lines = addition.source.split("\n");
+  let start = -1;
+  for (const [lineIndex, line] of lines.entries()) {
+    if (line.startsWith("layer ") && line.slice(6).trim().split(/\s+/)[0] === layer) {
+      start = lineIndex;
+      break;
+    }
+  }
+  if (start < 0) return false;
+  let end = start;
+  for (const [lineIndex, line] of lines.entries()) {
+    if (lineIndex <= start) continue;
+    if (line.length === 0 || line[0] === " " || line[0] === "\t") {
+      if (line.trim().length > 0) end = lineIndex;
+    } else {
+      break;
+    }
+  }
+  lines.splice(start, end - start + 1, ...repinned.split("\n"));
+  SESSION_ADDITIONS[index] = { source: lines.join("\n"), layerNames: [...addition.layerNames] };
+  sessionVersion++;
+  return true;
+}
+
 /** Materialize the session ledger into a kernel: each addition is
  * staged and applied again, against the corpus and the additions
  * before it — the deterministic replay of its acceptance. An
