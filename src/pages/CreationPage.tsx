@@ -60,7 +60,7 @@ export function CreationPage({ language }: CreationPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
-      <main className="mx-auto max-w-4xl p-4 sm:p-6">
+      <div className="mx-auto max-w-4xl p-4 sm:p-6">
         <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "Create a formalism — with the assistance of the geologist" })}
         </h1>
@@ -169,7 +169,7 @@ export function CreationPage({ language }: CreationPageProps) {
             {say({ language, en: "the tutorial →"})}
           </button>
         </section>
-      </main>
+      </div>
     </div>
   );
 }
