@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
-  "mutate": ["src/domain/language/**/*.ts"],
+  "mutate": ["src/domain/language/**/*.ts", "src/domain/versionClassifier.ts"],
   "testRunner": "command",
   "commandRunner": {
     "command": "npm run test:specification && npm run test:staging"
@@ -9,9 +9,9 @@
   "reporters": ["clear-text", "json", "html"],
   "concurrency": 4,
   "thresholds": {
-    "high": 80,
+    "high": 90,
     "low": 60,
-    "break": 50
+    "break": 80
   },
   "ignorePatterns": ["dist", "coverage", "reports", "vscode", ".stryker-tmp"]
 }
