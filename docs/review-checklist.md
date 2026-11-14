@@ -77,6 +77,25 @@ binary**: yes or no, with `file:line` evidence for every "no".
 - [ ] Files kebab-case; `UPPER_CASE` constants at module top; no
       abbreviations (`id`, `url`, `http` excepted).
 
+## 8. Versioning and schema (ADR-0116, ADR-0114)
+
+- [ ] New verdicts (`version-conflict`, `drift`, `formalism-frozen`,
+      `kernel-shadowing`) are emitted with structured diagnostics naming
+      the formalism, the conflicting versions, and both diamond paths.
+- [ ] The version classifier (`src/domain/versionClassifier.ts`) assigns
+      PATCH/MINOR/MAJOR structurally — the author never declares a level.
+- [ ] `refines` pins the major (`@user/name@2`); bare names resolve to the
+      latest frozen version of the latest major; drafts never resolve.
+- [ ] Single major per formalism name per closure; diamond conflicts are
+      diagnosed, never silently resolved.
+- [ ] Drift policing: a minor lift that changes the measured dump of a
+      host assembly emits a `drift` verdict requiring explicit re-certification.
+- [ ] Schema changes (PostgreSQL: `users`, `user_layers`, versions tables)
+      include a migration SQL file in `docker-entrypoint-initdb.d/` and
+      are backward-compatible (additive columns, no destructive drops).
+- [ ] Resolution rules: private layers are 404 for other users (existence
+      not leaked); public layers are read-only for non-owners (PUT → 403).
+
 ## Verdict
 
 Every finding is reported as **BLOCKING** (violates a rule above; no merge),
