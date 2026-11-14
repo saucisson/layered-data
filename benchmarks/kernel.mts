@@ -108,6 +108,7 @@ interface Row {
   readWarmMs: number;
   memoEntries: number;
   heapMiB: number;
+  space: Space;
 }
 
 const SIZES: { copies: number; repetitions: number }[] = [
@@ -169,6 +170,7 @@ for (const { copies, repetitions } of SIZES) {
     readWarmMs: median(readWarmSamples),
     memoEntries: warmSpace.closureMemo.size,
     heapMiB: heapMiB(),
+    space: warmSpace,
   });
 }
 
@@ -200,6 +202,23 @@ const sessionEditionMs = elapsed(() =>
 );
 const sessionRebuilt = session.rebuiltWalks();
 
+// ---- versioned resolution (issue #163): pinned-major closure and
+// conflict detection cost at each corpus size, so uniqueness and
+// acyclicity checks stay cheap ----
+
+import { detectVersionConflicts, layerClosureMajors } from "../src/domain/versioning.ts";
+
+const versionRows: { layers: number; closureMajorsMs: number; conflictsMs: number; conflicts: number }[] = [];
+for (const row of rows) {
+  const space = row.space;
+  const closureMs = elapsed(() => {
+    for (const layerName of KERNEL_LAYER_NAMES) layerClosureMajors({ space, layer: layerName });
+  });
+  const conflictsMs = elapsed(() => detectVersionConflicts({ space }));
+  const conflicts = detectVersionConflicts({ space }).length;
+  versionRows.push({ layers: row.layers, closureMajorsMs: closureMs, conflictsMs, conflicts });
+}
+
 // ---- the report ---------------------------------------------------------
 
 const cell = (value: number, digits = 1): string => value.toFixed(digits);
@@ -227,3 +246,14 @@ console.log("| session (1x + draft) | ms | walks rebuilt |");
 console.log("|---|---:|---:|");
 console.log("| initial validation | " + cell(sessionInitialMs) + " | — |");
 console.log("| revalidation after a draft edition | " + cell(sessionEditionMs) + " | " + sessionRebuilt + " |");
+console.log("");
+console.log("| versioned resolution (issue #163) | layers | closure majors (ms) | conflict detection (ms) | conflicts |");
+console.log("|---|---:|---:|---:|---:|");
+for (const row of versionRows) {
+  console.log(
+    "| pinned-major closure + conflicts | " + row.layers +
+    " | " + cell(row.closureMajorsMs, 2) +
+    " | " + cell(row.conflictsMs, 2) +
+    " | " + row.conflicts + " |",
+  );
+}
