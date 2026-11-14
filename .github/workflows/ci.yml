@@ -27,7 +27,7 @@ permissions:
 
 jobs:
   check:
-    name: quality gate
+    name: quality gate (types, lint, structure, build)
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -53,18 +53,112 @@ jobs:
       - name: "Lint (ESLint: boundaries, no-console, named exports)"
         run: npm run lint
 
-      - name: The harnesses under coverage (specification, staging, i18n)
-        run: npm run test:coverage
+      - name: Build
+        run: npm run build
 
+  harness-kernel:
+    name: "harness: kernel (specification, staging, pen-loop, stream, perf, validation-session)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run test:specification
+      - run: npm run test:staging
+      - run: npm run test:pen-loop
+      - run: npm run test:stream
+      - run: npm run test:perf
+      - run: npm run test:validation-session
+
+  harness-editor:
+    name: "harness: editor (editor, model-editor, editor-session, pages)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run test:editor
+      - run: npm run test:model-editor
+      - run: npm run test:editor-session
+      - run: npm run test:pages
+
+  harness-i18n:
+    name: "harness: i18n (i18n, i18n:check)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run test:i18n
+      - run: npm run i18n:check
+
+  harness-server:
+    name: "harness: server (server, rate-limit, postgres, user-account, access-code-consent)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run test:server
+      - run: npm run test:rate-limit
+      - run: npm run test:postgres
+      - run: npm run test:user-account
+      - run: npm run test:access-code-consent
+
+  harness-versioning:
+    name: "harness: versioning (vscode, stratigraphy, repin-harness)"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run test:vscode
+      - run: npm run test:stratigraphy
+      - run: npm run test:repin-harness
+
+  harness-meta:
+    name: "harness: meta (reviewer, error-boundary) + coverage"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci
+      - run: npm run test:reviewer
+      - run: npm run test:error-boundary
+      - name: Coverage gate (c8, lines >= 85%)
+        run: npm run test:coverage
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
         with:
           name: coverage-report
           path: coverage/
           retention-days: 7
-
-      - name: Build
-        run: npm run build
 
   security:
     name: security gates
