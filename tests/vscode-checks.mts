@@ -748,6 +748,36 @@ check(
     extensionSource.includes("child.stdin.write(document.getText())"),
 );
 
+// (h) the new verdicts pass through the linter as diagnostic codes
+//     (issue #160): kernel-shadowing, formalism-frozen, version-conflict
+//     are domain verdict kinds — the linter maps verdict.kind to code.
+
+const linterSource = readFileSync(join(extensionDirectory, "linter.mts"), "utf8");
+check(
+  "the linter maps every verdict kind to its diagnostic code (verdict.kind)",
+  linterSource.includes("code: verdict.kind"),
+);
+
+const messagesSource = readFileSync(
+  join(rootDirectory, "src/domain/messages.ts"),
+  "utf8",
+);
+check(
+  "the domain declares the new verdict codes (kernel-shadowing, formalism-frozen, version-conflict)",
+  messagesSource.includes('"kernel-shadowing"') &&
+    messagesSource.includes('"formalism-frozen"') &&
+    messagesSource.includes('"version-conflict"'),
+);
+
+const syntaxSource = readFileSync(
+  join(extensionDirectory, "syntaxes/ld.tmLanguage.json"),
+  "utf8",
+);
+check(
+  "the tmLanguage syntax recognizes qualified identifiers @user/name (issue #160)",
+  syntaxSource.includes("@") && syntaxSource.includes("/"),
+);
+
 // =====================================================================
 // the ledger
 // =====================================================================
