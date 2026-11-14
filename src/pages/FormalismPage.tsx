@@ -17,7 +17,11 @@ import {
   type FlattenedLayerText,
   type FlattenedSection,
 } from "../application/flattenSource.ts";
-import { materializeSessionAdditions } from "../application/session.ts";
+import {
+  materializeSessionAdditions,
+  readSessionVersion,
+  writeSessionRepin,
+} from "../application/session.ts";
 import { loadKernelLayerSources } from "../infrastructure/corpusLoader.ts";
 import { asLayerName } from "../domain/identifiers.ts";
 import { highlightSourceLine, SPAN_CLASSES } from "../presentation/layerSourceView.tsx";
@@ -25,6 +29,7 @@ import { buildWorkshopLook, type WorkshopLook } from "../presentation/lensDrawin
 import { LAYER_COLOR, LAYER_ROLE, RefinementDag } from "../presentation/workshopInventory.ts";
 import { LENS_LAYERS, VIEW_NOTES } from "../presentation/viewTree.ts";
 import { NodeGlyph, EdgeGlyph } from "../presentation/glyphs.tsx";
+import { StratigraphyView } from "../presentation/stratigraphyView.tsx";
 import { localized, say } from "../presentation/i18n.ts";
 import type { BilingualText } from "../presentation/i18n.ts";
 import type { Language } from "../domain/messages.ts";
@@ -272,7 +277,11 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
 
 export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPageProps) {
   const { navigate } = useRouter();
-  const session = useMemo(() => materializeSessionAdditions({ kernel: KERNEL }), []);
+  // The session version moves at each accepted addition and at each
+  // re-pin (issue #154): the materialization replays, the page stays
+  // in step.
+  const [sessionVersion, setSessionVersion] = useState(readSessionVersion());
+  const session = useMemo(() => materializeSessionAdditions({ kernel: KERNEL }), [sessionVersion]);
   const livingLayerNames = session.layerNames;
   const [search, setSearch] = useState("");
   const [lensChoice, setLensChoice] = useState<string | null>(null);
@@ -614,6 +623,39 @@ export function FormalismPage({ layer, language, onChooseLanguage }: FormalismPa
               </div>
             </div>
           )}
+        </section>
+
+        {/* The stratigraphy: the strata of the closure (versions,
+            what each refines, status), the diamond conflicts as two
+            paths, and the one-click re-pin suggestions certified
+            observationally inert (issue #154, ADR-0116). */}
+        <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+          <h2 className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
+            {say({ language, en: "④ The stratigraphy — versions and pins" })}
+          </h2>
+          <p className="mb-2 text-[10px] leading-4 text-slate-600">
+            {say({
+              language,
+              en: "The closure of the formalism as strata: one row per formalism with the major its reference pins (a bare name resolves to the latest frozen of the latest major), what it refines, and its status. A diamond pinned to divergent majors is a version-conflict, shown as its two paths; when the measured dump is unchanged under a re-pin, the re-pin is suggested one click.",
+            })}
+          </p>
+          <StratigraphyView
+            space={KERNEL.space}
+            layer={selectedLayer}
+            language={language}
+            statusOf={(layerName) =>
+              KERNEL.layerNames.includes(asLayerName(layerName)) ? "published" : "draft"
+            }
+            canRepin={!inCorpus}
+            onRepin={({ formalism, targetMajor }) => {
+              const repinned = writeSessionRepin({
+                layer: selectedLayer,
+                formalism,
+                targetMajor,
+              });
+              if (repinned) setSessionVersion(readSessionVersion());
+            }}
+          />
         </section>
       </main>
     </div>
