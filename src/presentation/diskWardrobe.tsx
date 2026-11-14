@@ -211,7 +211,7 @@ export function DiskWardrobe({
           onClick={() => {
             void refresh();
           }}
-          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-sky-500 hover:text-sky-700"
+          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-sky-500 hover:text-sky-700 dark:hover:text-sky-300"
         >
           {say({ language, en: "refresh"})}
         </button>

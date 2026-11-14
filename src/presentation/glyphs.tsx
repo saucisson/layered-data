@@ -97,7 +97,7 @@ export function NodeGlyph({
         y={y + 3}
         textAnchor="middle"
         fontSize={9}
-        fill={shapeKind === "rectangle" ? "#f8fafc" : "#334155"}
+        className={shapeKind === "rectangle" ? "fill-slate-50 dark:fill-slate-100" : "fill-slate-700 dark:fill-slate-200"}
       >
         {name}
       </text>

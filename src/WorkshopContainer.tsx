@@ -533,7 +533,7 @@ export function WorkshopPage({
                     "px-2 " +
                     (!graphView
                       ? "bg-slate-800 dark:bg-slate-600 text-white"
-                      : "bg-white text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900")
+                      : "bg-white text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900")
                   }
                 >
                   {say({ language, en: "list" })}
@@ -544,7 +544,7 @@ export function WorkshopPage({
                     "px-2 " +
                     (graphView
                       ? "bg-slate-800 dark:bg-slate-600 text-white"
-                      : "bg-white text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900")
+                      : "bg-white text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900")
                   }
                 >
                   {say({ language, en: "graph" })}
@@ -658,7 +658,7 @@ export function WorkshopPage({
                             "flex flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-xs transition-colors " +
                             (layerName === layer
                               ? "bg-slate-100 dark:bg-slate-800 ring-1 ring-slate-400"
-                              : "hover:bg-slate-50 dark:bg-slate-900") +
+                              : "hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900") +
                             (inClosure ? " font-semibold" : "")
                           }
                         >
