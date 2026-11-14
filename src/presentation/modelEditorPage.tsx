@@ -1597,7 +1597,7 @@ function EditorVertexGlyph({
               height={24}
               rx={3}
               fill="#ffffff"
-              stroke="#455555"
+              className="stroke-slate-600 dark:stroke-slate-400"
               strokeWidth={strokeWidth}
             />
           );

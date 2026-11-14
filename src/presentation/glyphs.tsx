@@ -56,7 +56,7 @@ function vertexGlyphElement({
         height={24}
         rx={3}
         fill="#ffffff"
-        stroke="#455555"
+        className="stroke-slate-600 dark:stroke-slate-400"
         strokeWidth={strokeWidth}
       />
     );
@@ -158,8 +158,8 @@ export function EdgeGlyph({
       />
       {hasPorts && (
         <>
-          <rect x={x1 - 2.5} y={y1 - 2.5} width={5} height={5} fill="#455555" />
-          <rect x={x2 - 2.5} y={y2 - 2.5} width={5} height={5} fill="#455555" />
+          <rect x={x1 - 2.5} y={y1 - 2.5} width={5} height={5} className="fill-slate-600 dark:fill-slate-400" />
+          <rect x={x2 - 2.5} y={y2 - 2.5} width={5} height={5} className="fill-slate-600 dark:fill-slate-400" />
         </>
       )}
       {hasArrow && (
@@ -168,7 +168,7 @@ export function EdgeGlyph({
             `${x2},${y2} ${x2 - unitX * 8 - unitY * 3},${y2 - unitY * 8 + unitX * 3} ` +
             `${x2 - unitX * 8 + unitY * 3},${y2 - unitY * 8 - unitX * 3}`
           }
-          fill="#455555"
+          className="fill-slate-600 dark:fill-slate-400"
         />
       )}
       <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 3} textAnchor="middle" fontSize={8} fill="#94a3b8">
