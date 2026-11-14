@@ -562,7 +562,7 @@ export function WorkshopPage({
                   "ml-1 rounded-full border px-2 text-sm font-bold leading-5 " +
                   (composerOpen
                     ? "border-emerald-600 bg-emerald-600 dark:bg-emerald-700 text-white"
-                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:border-emerald-500 hover:text-emerald-600")
+                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:border-emerald-500 dark:hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400")
                 }
               >
                 ＋
@@ -771,7 +771,7 @@ export function WorkshopPage({
               </button>
               <LayerBadge layer={layer} />
               <span className="text-slate-600 dark:text-slate-400">::</span>
-              <button type="button" className="text-slate-600 dark:text-slate-400 hover:text-slate-600" onClick={() => setPath([])} aria-label={say({ language, en: "reset path" })}>
+              <button type="button" className="text-slate-600 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" onClick={() => setPath([])} aria-label={say({ language, en: "reset path" })}>
                 ()
               </button>
               {path.map((segment, index) => (

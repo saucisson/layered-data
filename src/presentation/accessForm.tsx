@@ -79,7 +79,7 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
           onClick={() => {
             void verify();
           }}
-          className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
+          className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-slate-500"
         >
           {say({ language, en: "verify"})}
         </button>
