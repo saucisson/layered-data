@@ -1630,7 +1630,7 @@ function EditorVertexGlyph({
         y={y + 3}
         textAnchor="middle"
         fontSize={9}
-        className={shapeKind === "rectangle" ? "fill-slate-50 dark:fill-slate-100" : "fill-slate-700 dark:fill-slate-200"}
+        className={shapeKind === "rectangle" ? "fill-slate-50 dark:fill-slate-100" : "fill-slate-700"}
       >
         {name}
       </text>
