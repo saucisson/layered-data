@@ -6,7 +6,7 @@
 // Without DATABASE_URL these checks SKIP (CI stays green). Run them
 // locally against the compose stack:
 //
-//     POSTGRES_USER=u POSTGRES_PASSWORD=p docker compose up -d postgres
+//     POSTGRES_USERNAME=u POSTGRES_PASSWORD=p docker compose up -d postgres
 //     DATABASE_URL=postgres://u:p@127.0.0.1:5432/layered_data \
 //       node tests/postgres-store-checks.mts   (exit 1 on any failure)
 

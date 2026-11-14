@@ -24,7 +24,7 @@ npm run serve:prod    # sert dist/ + l'API sur $HOST:$PORT (127.0.0.1:8791 par d
 Un seul `docker compose up --build` déploie **l'atelier + PostgreSQL** :
 
 ```bash
-cp .env.example .env    # puis éditez API_TOKEN, POSTGRES_USER, POSTGRES_PASSWORD
+cp .env.example .env    # puis éditez API_TOKEN, POSTGRES_USERNAME, POSTGRES_PASSWORD
 docker compose up --build
 ```
 

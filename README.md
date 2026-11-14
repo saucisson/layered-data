@@ -62,7 +62,7 @@ npm run check:structure       # JSX/tsx balance (safety net, no compiler)
 ### With Docker
 
 ```bash
-cp .env.example .env           # then edit API_TOKEN, POSTGRES_USER, POSTGRES_PASSWORD
+cp .env.example .env           # then edit API_TOKEN, POSTGRES_USERNAME, POSTGRES_PASSWORD
 docker compose up --build      # workshop on 0.0.0.0:8791 + PostgreSQL (rate limiting active)
 ```
 
@@ -72,7 +72,7 @@ The `docker-compose.yml` deploys two services: `postgres` (named volume
 and receives `DATABASE_URL` — the rate-limit counters then live in the
 database. Without a database (local dev): `DATABASE_URL= docker compose up --no-deps --build atelier`.
 
-`API_TOKEN`, `POSTGRES_USER` and `POSTGRES_PASSWORD` must be defined in the
+`API_TOKEN`, `POSTGRES_USERNAME` and `POSTGRES_PASSWORD` must be defined in the
 environment or `.env` (compose refuses to start otherwise). See
 [docs/deployment.md](docs/deployment.md) for deployment behind a reverse
 proxy.
