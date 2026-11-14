@@ -77,10 +77,9 @@ function TutorialCode({ source, language }: { source: string; language: string }
 
 interface TutorialPageProps {
   language: Language;
-  onChooseLanguage: (lang: Language) => void;
 }
 
-export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) {
+export function TutorialPage({ language }: TutorialPageProps) {
   const { navigate } = useRouter();
   const source = RAW_TUTORIAL_EN;
   const blocks = useMemo(() => parseTutorialMarkdown({ source }), [source]);
@@ -142,41 +141,6 @@ export function TutorialPage({ language, onChooseLanguage }: TutorialPageProps) 
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
-      <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <div className="flex items-center gap-4">
-            <button type="button"
-              onClick={() => navigate("landing")}
-              className="rounded-lg border border-slate-300 dark:border-slate-600 px-3 py-1 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:bg-slate-900"
-            >
-              {say({ language, en: "← Back"})}
-            </button>
-            <h1 className="text-lg font-bold">
-              {say({ language, en: "Tutorial"})}
-            </h1>
-          </div>
-          <span className="flex shrink-0 items-center gap-1 text-xs">
-            <span className="mr-1 text-slate-600">
-              {say({ language, en: "language: "})}
-            </span>
-            {(["en", "fr"] as Language[]).map((choice) => (
-              <button type="button"
-                key={choice}
-                onClick={() => onChooseLanguage(choice)}
-                className={
-                  "rounded border px-1.5 py-0.5 font-bold uppercase " +
-                  (language === choice
-                    ? "border-slate-800 bg-slate-800 text-white"
-                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 hover:border-slate-500")
-                }
-              >
-                {choice}
-              </button>
-            ))}
-          </span>
-        </div>
-      </header>
-
       <main className="mx-auto max-w-4xl space-y-4 p-4 sm:p-8">
         {blocks.map(renderBlock)}
 

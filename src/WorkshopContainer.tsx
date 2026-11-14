@@ -9,7 +9,6 @@ import { asLayerName, asLayerPath } from "./domain/identifiers.ts";
 import { AddressView, PathReference, addressesEqual } from "./domain/addresses.ts";
 import { Tracer } from "./domain/space.ts";
 import { type Language } from "./domain/messages.ts";
-import { SUPPORTED_LANGUAGES } from "./infrastructure/i18n.ts";
 import { coversAddresses, dressingEntries, type Glyph } from "./domain/views.ts";
 import { assembleLayeredDataKernel } from "./application/corpus.ts";
 import { loadKernelLayerSources } from "./infrastructure/corpusLoader.ts";
@@ -88,10 +87,8 @@ interface AcceptedAdditionState {
 
 export function WorkshopPage({
   language,
-  onChooseLanguage,
 }: {
   language: Language;
-  onChooseLanguage: (lang: Language) => void;
 }) {
   // The workshop tongue: remembered from the last visit, else
   // detected from the browser, English by default. The choice is
@@ -422,25 +419,6 @@ export function WorkshopPage({
               en: "The formalism design workshop — data in strata",
             })}
           </h1>
-          <span className="flex shrink-0 items-center gap-1 text-xs">
-            <span className="mr-1 text-slate-600">
-              {say({ language, en: "language: "})}
-            </span>
-            {SUPPORTED_LANGUAGES.map((choice) => (
-              <button type="button"
-                key={choice}
-                onClick={() => onChooseLanguage(choice)}
-                className={
-                  "rounded border px-1.5 py-0.5 font-bold uppercase " +
-                  (language === choice
-                    ? "border-slate-800 bg-slate-800 text-white"
-                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 hover:border-slate-500")
-                }
-              >
-                {choice}
-              </button>
-            ))}
-          </span>
         </div>
         <p className="mt-2 text-xs text-slate-500">
           {say({
