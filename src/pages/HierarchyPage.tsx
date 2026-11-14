@@ -180,7 +180,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
       <div className="mx-auto max-w-[95rem] p-4 sm:p-6">
         <h1 className="mb-3 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "The hierarchy — the complete refinement graph" })}
@@ -192,7 +192,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
             placeholder={say({ language, en: "search a layer…"})}
             className="min-w-52 flex-1 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none"
           />
-          <span className="text-[11px] text-slate-600">
+          <span className="text-[11px] text-slate-600 dark:text-slate-400">
             {layerNames.length + " "}
             {say({
               language,
@@ -239,7 +239,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
                 y={band.y}
                 width={layout.W}
                 height={band.h}
-                fill="#f1f5f9"
+                className="fill-slate-100 dark:fill-slate-700"
                 opacity={0.55}
               />
             ))}
@@ -286,7 +286,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
                 <span
                   className={
                     "h-2.5 w-2.5 shrink-0 rounded-full " +
-                    (LAYER_COLOR[layerName] ?? "bg-slate-300")
+                    (LAYER_COLOR[layerName] ?? "bg-slate-300 dark:bg-slate-600")
                   }
                 />
                 {layerName}
@@ -295,7 +295,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
           })}
         </div>
 
-        <p className="mt-2 text-[11px] leading-4 text-slate-500">
+        <p className="mt-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
           {focus !== null
             ? localized({
                 language,

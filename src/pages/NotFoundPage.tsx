@@ -22,7 +22,7 @@ export function NotFoundPage({ language }: { language: Language }) {
       <button
         type="button"
         onClick={() => navigate("landing")}
-        className="rounded bg-sky-600 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500"
+        className="rounded bg-sky-600 dark:bg-sky-700 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 dark:hover:bg-sky-600"
       >
         {say({ language, en: "Back to home" })}
       </button>

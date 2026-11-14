@@ -75,8 +75,8 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, dark, onTo
               className={
                 "rounded border px-1.5 py-0.5 font-bold uppercase " +
                 (language === choice
-                  ? "border-emerald-600 bg-emerald-600 text-white"
-                  : "border-slate-300 bg-white text-slate-500 hover:border-slate-500 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300")
+                  ? "border-emerald-600 bg-emerald-600 dark:bg-emerald-700 text-white"
+                  : "border-slate-300 bg-white text-slate-500 hover:border-slate-500 dark:hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300")
               }
             >
               {choice}
