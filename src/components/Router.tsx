@@ -6,7 +6,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 
-type Page =
+export type Page =
   | "landing"
   | "tutorial"
   | "filiation"
