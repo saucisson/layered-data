@@ -26,7 +26,8 @@ function collectErrors(page: Page): string[] {
   const errors: string[] = [];
   page.on("pageerror", (error) => errors.push(String(error)));
   page.on("response", (response) => {
-    if (response.status() >= 400 && !response.url().includes("/api/editor/session")) {
+    const knownRefusal = response.status() === 401 && response.url().includes("/api/editor/session");
+    if (response.status() >= 400 && !knownRefusal) {
       errors.push(`${response.status()} ${response.url()}`);
     }
   });
