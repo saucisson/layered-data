@@ -51,7 +51,7 @@ export function LandingPage({ language, onChooseLanguage }: LandingPageProps) {
           <h2 className="mb-4 text-3xl font-bold text-slate-800 dark:text-slate-100">
             {say({
               language,
-              en: "Data in Strata",
+              en: "Layered Data",
             })}
           </h2>
           <p className="mx-auto max-w-2xl text-lg text-slate-600">
