@@ -78,7 +78,9 @@ export function writeSessionRepin({
   const pinned = new RegExp("@" + escapeRegExp({ text: formalism }) + "@\\d+", "g");
   const bare = new RegExp("@" + escapeRegExp({ text: formalism }) + "(?![\\w@-])", "g");
   const replacement = "@" + formalism + "@" + String(targetMajor);
-  const repinned = block.replace(pinned, replacement).replace(bare, replacement);
+  const repinned = block
+    .replace(pinned, () => replacement)
+    .replace(bare, () => replacement);
   if (repinned === block) return false;
   // Splice the rewritten block back into the addition source, at the
   // same line boundaries extractLayerBlock used.
