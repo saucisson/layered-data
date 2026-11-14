@@ -11,7 +11,7 @@ import {
 import { say } from "./i18n.ts";
 import type { Language } from "../domain/messages.ts";
 
-export function AccessCodeForm({ language }: { language: Language }) {
+export function AccessCodeForm({ language, onVerified }: { language: Language; onVerified?: () => void }) {
   const [accessCode, setAccessCode] = useState(readAccessCode());
   const [remember, setRemember] = useState(hasValidAccessCodeConsent());
   const [stateMessage, setStateMessage] = useState<string | null>(null);
@@ -26,6 +26,7 @@ export function AccessCodeForm({ language }: { language: Language }) {
             en: "code verified — the quarry and the AI geologist are open",
           }),
         );
+        onVerified?.();
       } else if (response.status === 401) {
         setStateMessage(
           say({
