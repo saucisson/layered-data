@@ -1394,7 +1394,7 @@ export function WorkshopPage({
                         key={index}
                         className={
                           "flex flex-wrap items-center gap-1.5 rounded-md px-2 py-1 text-[11px] " +
-                          (isBest ? "bg-emerald-50 ring-1 ring-emerald-300 dark:ring-emerald-700" : "bg-white dark:bg-slate-800")
+                          (isBest ? "bg-emerald-50 dark:bg-emerald-950 ring-1 ring-emerald-300 dark:ring-emerald-700" : "bg-white dark:bg-slate-800")
                         }
                       >
                         <span className="font-semibold text-slate-800 dark:text-slate-100">

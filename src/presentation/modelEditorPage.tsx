@@ -1506,7 +1506,7 @@ export function ModelEditorPage({
                   key={expectation.address}
                   className={
                     "mb-0.5 font-mono text-[10px] leading-4 " +
-                    (expectation.holds ? "text-emerald-600 " : "text-red-600 dark:text-red-400")
+                    (expectation.holds ? "text-emerald-600 dark:text-emerald-400 " : "text-red-600 dark:text-red-400")
                   }
                 >
                   {expectation.address} = {expectation.expected}
