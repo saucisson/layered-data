@@ -20,8 +20,10 @@ export default defineConfig({
     {
       // the wardrobe API on its real port, so /api/* answers real 401s
       // (no access code in the test browser) instead of proxy errors
-      command: "API_TOKEN=e2e-test-token PORT=8791 HOST=127.0.0.1 node server.ts",
-      url: "http://127.0.0.1:8791/",
+      command: "API_TOKEN=e2e-test-token PORT=8791 HOST=127.0.0.1 node --experimental-strip-types server.ts",
+      // /api/whoami answers 401 without a code — an accepted readiness
+      // status, and it does not depend on dist/ being built
+      url: "http://127.0.0.1:8791/api/whoami",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,
     },
