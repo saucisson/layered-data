@@ -1093,7 +1093,7 @@ export function ModelEditorPage({
         </div>
       )}
       <div className="mb-4 flex flex-wrap items-center gap-2">
-        <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
+        <span className="rounded bg-emerald-600 dark:bg-emerald-700 px-1.5 py-0.5 text-[11px] font-bold text-white">
           ✎
         </span>
         <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">
@@ -1101,13 +1101,13 @@ export function ModelEditorPage({
         </span>
         {shared ? (
           <span
-            className="rounded border border-emerald-300 bg-emerald-50 px-1.5 py-0.5 text-[11px] text-emerald-700"
+            className="rounded border border-emerald-300 bg-emerald-50 dark:bg-emerald-950 px-1.5 py-0.5 text-[11px] text-emerald-700 dark:text-emerald-300"
             title={presence.map((entry) => entry.focus ?? "…").join(", ")}
           >
             {t("shared — {{editors}} other editor(s) online", { editors: presence.length })}
           </span>
         ) : (
-          <span className="rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 text-[11px] text-slate-500">
+          <span className="rounded border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-1.5 py-0.5 text-[11px] text-slate-500 dark:text-slate-400">
             {t("local — no shared session")}
           </span>
         )}
@@ -1142,7 +1142,7 @@ export function ModelEditorPage({
         </select>
         <button type="button"
           onClick={() => setCreationOpen(!creationOpen)}
-          className="rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500"
+          className="rounded bg-sky-600 dark:bg-sky-700 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500 dark:hover:bg-sky-600"
         >
           {t("+ new model")}
         </button>
@@ -1151,7 +1151,7 @@ export function ModelEditorPage({
           disabled={history.length === 0}
           title={t("undo (Ctrl+Z)")}
           aria-label={t("undo (Ctrl+Z)")}
-          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
         >
           ↶
         </button>
@@ -1160,7 +1160,7 @@ export function ModelEditorPage({
           disabled={future.length === 0}
           title={t("redo (Ctrl+Shift+Z)")}
           aria-label={t("redo (Ctrl+Shift+Z)")}
-          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
         >
           ↷
         </button>
@@ -1168,7 +1168,7 @@ export function ModelEditorPage({
           onClick={() => setShowSource((previous) => !previous)}
           disabled={model === null}
           title={t("show the model's source block")}
-          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
         >
           {t("source")}
         </button>
@@ -1176,14 +1176,14 @@ export function ModelEditorPage({
           onClick={exportModel}
           disabled={model === null}
           title={t("download the model as .ld")}
-          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900 disabled:opacity-40"
         >
           {t("export .ld")}
         </button>
         <button type="button"
           onClick={() => importInputRef.current?.click()}
           title={t("import a .ld draft — judged by the staging")}
-          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:bg-slate-900"
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:bg-slate-900"
         >
           {t("import .ld")}
         </button>
@@ -1197,8 +1197,8 @@ export function ModelEditorPage({
       </div>
 
       {creationOpen && (
-        <div className="mb-4 rounded-lg border border-sky-200 bg-sky-50/40 p-3">
-          <p className="mb-2 text-[11px] leading-4 text-slate-500">
+        <div className="mb-4 rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50/40 dark:bg-sky-950/40 p-3">
+          <p className="mb-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
             {t(
               "a model is a layer that refines a formalism — the staging judges the draft, the palette is read from what it refines",
             )}
@@ -1210,7 +1210,7 @@ export function ModelEditorPage({
               placeholder={t("model name")}
               className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs"
             />
-            <span className="text-xs text-slate-600">refines</span>
+            <span className="text-xs text-slate-600 dark:text-slate-400">refines</span>
             <input
               value={creationRefines}
               onChange={(event) => setCreationRefines(event.target.value)}
@@ -1220,7 +1220,7 @@ export function ModelEditorPage({
             <button type="button"
               onClick={handleCreateModel}
               disabled={creationName.trim().length === 0}
-              className="rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
+              className="rounded bg-sky-600 dark:bg-sky-700 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500 dark:hover:bg-sky-600 disabled:opacity-50"
             >
               {t("staging — create the model")}
             </button>
@@ -1231,11 +1231,11 @@ export function ModelEditorPage({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         {/* the palette: read from the formalism, never hardcoded */}
         <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 lg:col-span-2">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
             {t("palette")}
           </div>
           {model === null && (
-            <p className="text-[11px] leading-4 text-slate-600">
+            <p className="text-[11px] leading-4 text-slate-600 dark:text-slate-400">
               {t("no model — create or pick one, the palette follows its formalism")}
             </p>
           )}
@@ -1245,8 +1245,8 @@ export function ModelEditorPage({
               className={
                 "rounded px-2 py-1 text-left text-[11px] " +
                 (tool.kind === "select"
-                  ? "bg-sky-600 text-white"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200")
+                  ? "bg-sky-600 dark:bg-sky-700 text-white"
+                  : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600")
               }
             >
               {t("pointer")}
@@ -1258,8 +1258,8 @@ export function ModelEditorPage({
                 className={
                   "rounded px-2 py-1 text-left text-[11px] " +
                   (tool.kind === "sommet" && tool.container === container.name
-                    ? "bg-sky-600 text-white"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200")
+                    ? "bg-sky-600 dark:bg-sky-700 text-white"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600")
                 }
                 title={container.name + " — " + container.annotationKeys.join(", ")}
               >
@@ -1272,8 +1272,8 @@ export function ModelEditorPage({
                 className={
                   "rounded px-2 py-1 text-left text-[11px] " +
                   (tool.kind === "arc"
-                    ? "bg-sky-600 text-white"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 hover:bg-slate-200")
+                    ? "bg-sky-600 dark:bg-sky-700 text-white"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600")
                 }
                 title={t(
                   "drag from a vertex to another — pre or post, the formalism's rules decide",
@@ -1383,8 +1383,8 @@ export function ModelEditorPage({
               className={
                 "mt-2 rounded-md border px-2 py-1.5 text-[11px] leading-4 " +
                 (banner.tone === "refused"
-                  ? "border-amber-200 bg-amber-50 text-amber-800"
-                  : "border-sky-200 bg-white dark:bg-slate-800 text-sky-700")
+                  ? "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 text-amber-800 dark:text-amber-300"
+                  : "border-sky-200 dark:border-sky-800 bg-white dark:bg-slate-800 text-sky-700 dark:text-sky-300")
               }
             >
               {banner.text}
@@ -1396,10 +1396,10 @@ export function ModelEditorPage({
             the canvas on demand, the only truth made visible */}
         {showSource && model !== null && (
           <div className="lg:col-span-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
-            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+            <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
               {t("source — the only truth")}
             </div>
-            <pre className="max-h-[540px] overflow-auto whitespace-pre-wrap font-mono text-[10px] leading-4 text-slate-600">
+            <pre className="max-h-[540px] overflow-auto whitespace-pre-wrap font-mono text-[10px] leading-4 text-slate-600 dark:text-slate-400">
               {modelSource}
             </pre>
           </div>
@@ -1407,11 +1407,11 @@ export function ModelEditorPage({
 
         {/* the inspector: the selected member and its declared keys */}
         <div className="lg:col-span-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
-          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+          <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
             {t("inspector")}
           </div>
           {selected === null || selectedDeclaration === null || model === null ? (
-            <p className="text-[11px] leading-4 text-slate-600">
+            <p className="text-[11px] leading-4 text-slate-600 dark:text-slate-400">
               {t(
                 "pick a member on the canvas — its declared keys open here, every edition goes through the staging",
               )}
@@ -1438,9 +1438,9 @@ export function ModelEditorPage({
                   return (
                     <label
                       key={key}
-                      className="mb-1 flex items-center gap-1 text-[11px] text-slate-600"
+                      className="mb-1 flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-400"
                     >
-                      <span className="w-20 shrink-0 font-mono text-slate-600">{key}</span>
+                      <span className="w-20 shrink-0 font-mono text-slate-600 dark:text-slate-400">{key}</span>
                       <input
                         value={shown}
                         spellCheck={false}
@@ -1470,9 +1470,9 @@ export function ModelEditorPage({
                 return (
                   <label
                     key={key}
-                    className="mb-1 flex items-center gap-1 text-[11px] text-slate-600"
+                    className="mb-1 flex items-center gap-1 text-[11px] text-slate-600 dark:text-slate-400"
                   >
-                    <span className="w-20 shrink-0 font-mono text-slate-600">{key}</span>
+                    <span className="w-20 shrink-0 font-mono text-slate-600 dark:text-slate-400">{key}</span>
                     <input
                       value={shown}
                       onChange={(event) =>
@@ -1490,15 +1490,15 @@ export function ModelEditorPage({
               })}
               <button type="button"
                 onClick={deleteSelectedMember}
-                className="mt-1 rounded border border-red-200 px-2 py-1 text-[11px] text-red-600 hover:bg-red-50"
+                className="mt-1 rounded border border-red-200 dark:border-red-800 px-2 py-1 text-[11px] text-red-600 dark:text-red-400 hover:bg-red-50"
               >
                 {t("delete (Suppr)")}
               </button>
             </div>
           )}
           {model !== null && expectations.length > 0 && (
-            <div className="mt-2 border-t border-slate-100 pt-2">
-              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600">
+            <div className="mt-2 border-t border-slate-100 dark:border-slate-700 pt-2">
+              <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
                 {t("declared expectations")}
               </div>
               {expectations.map((expectation) => (
@@ -1506,7 +1506,7 @@ export function ModelEditorPage({
                   key={expectation.address}
                   className={
                     "mb-0.5 font-mono text-[10px] leading-4 " +
-                    (expectation.holds ? "text-emerald-600" : "text-red-600")
+                    (expectation.holds ? "text-emerald-600 " : "text-red-600 dark:text-red-400")
                   }
                 >
                   {expectation.address} = {expectation.expected}

@@ -32,7 +32,7 @@ function RawBranch({
     return (
       <div style={{ marginLeft: depth === 0 ? 0 : 12 }}>
         <span className={keyClassName}>{keyName}</span>
-        <span className="text-slate-600"> : {"{"}</span>
+        <span className="text-slate-600 dark:text-slate-400"> : {"{"}</span>
         {Object.keys(value).map((childKey) => (
           <RawBranch
             key={childKey}
@@ -42,7 +42,7 @@ function RawBranch({
             language={language}
           />
         ))}
-        <span className="text-slate-600">{"}"}</span>
+        <span className="text-slate-600 dark:text-slate-400">{"}"}</span>
       </div>
     );
   }
@@ -50,29 +50,29 @@ function RawBranch({
     return (
       <div style={{ marginLeft: depth === 0 ? 0 : 12 }}>
         <span className={keyClassName}>{keyName}</span>
-        <span className="text-slate-600"> : [</span>
+        <span className="text-slate-600 dark:text-slate-400"> : [</span>
         {value.map((element, index) => (
           <div key={index} style={{ marginLeft: 12 }}>
             <KernelValue value={element} language={language} />
-            {index < value.length - 1 ? <span className="text-slate-600">,</span> : null}
+            {index < value.length - 1 ? <span className="text-slate-600 dark:text-slate-400">,</span> : null}
           </div>
         ))}
-        <span className="text-slate-600">]</span>
+        <span className="text-slate-600 dark:text-slate-400">]</span>
       </div>
     );
   }
   let rendered: React.ReactNode;
   if (value instanceof PathReference) {
     rendered = (
-      <span className="text-sky-700">
+      <span className="text-sky-700 dark:text-sky-300">
         → ({value.anchor}) {value.path.join("/")}
       </span>
     );
   } else if (value instanceof LayerReference) {
-    rendered = <span className="text-sky-700">→ {value.layer}</span>;
+    rendered = <span className="text-sky-700 dark:text-sky-300">→ {value.layer}</span>;
   } else if (value === null) {
     rendered = (
-      <span className="text-slate-600">
+      <span className="text-slate-600 dark:text-slate-400">
         {say({ language, en: "∅ abstract slot"})}
       </span>
     );
@@ -82,7 +82,7 @@ function RawBranch({
   return (
     <div style={{ marginLeft: depth === 0 ? 0 : 12 }}>
       <span className={keyClassName}>{keyName}</span>
-      <span className="text-slate-600"> : </span>
+      <span className="text-slate-600 dark:text-slate-400"> : </span>
       {rendered}
     </div>
   );

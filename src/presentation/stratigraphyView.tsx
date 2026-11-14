@@ -52,7 +52,7 @@ export function StratigraphyView({
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-left text-[11px] leading-4">
           <thead>
-            <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500">
+            <tr className="border-b border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400">
               <th className="py-1 pr-3 font-semibold">
                 {say({ language, en: "stratum" })}
               </th>
@@ -74,12 +74,12 @@ export function StratigraphyView({
                 className="border-b border-slate-100 dark:border-slate-700/50"
               >
                 <td className="py-1 pr-3 font-mono">{stratum.name}</td>
-                <td className="py-1 pr-3 font-mono text-slate-600">
+                <td className="py-1 pr-3 font-mono text-slate-600 dark:text-slate-400">
                   {stratum.major === null
                     ? say({ language, en: "latest (bare name)" })
                     : "@" + String(stratum.major)}
                 </td>
-                <td className="py-1 pr-3 font-mono text-slate-600">
+                <td className="py-1 pr-3 font-mono text-slate-600 dark:text-slate-400">
                   {stratum.refines.length === 0
                     ? "∅"
                     : stratum.refines
@@ -113,12 +113,12 @@ export function StratigraphyView({
             <div key={conflict.formalism} className="mb-1 text-[11px] leading-4">
               <span className="font-mono font-semibold">{conflict.formalism}</span>
               {" "}
-              <span className="text-slate-600">
+              <span className="text-slate-600 dark:text-slate-400">
                 {say({ language, en: "pinned to divergent majors" }) +
                   " " +
                   conflict.majors.map((major) => "@" + String(major)).join(", ")}
               </span>
-              <ul className="ml-3 mt-0.5 space-y-0.5 font-mono text-[10px] text-slate-600">
+              <ul className="ml-3 mt-0.5 space-y-0.5 font-mono text-[10px] text-slate-600 dark:text-slate-400">
                 {conflict.paths.map((path, pathIndex) => (
                   <li key={pathIndex}>{path.join(" → ")}</li>
                 ))}

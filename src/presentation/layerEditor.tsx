@@ -92,9 +92,9 @@ export function LayerEditor({
   const staging: StagingOutcome | null = result ? result.outcome.staging : null;
 
   return (
-    <div className="mb-3 rounded-lg border border-sky-200 bg-sky-50/40 p-3">
+    <div className="mb-3 rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50/40 dark:bg-sky-950/40 p-3">
       <div className="mb-2 flex flex-wrap items-center gap-1.5">
-        <span className="rounded bg-sky-600 px-1.5 py-0.5 text-[11px] font-bold text-white">✎</span>
+        <span className="rounded bg-sky-600 dark:bg-sky-700 px-1.5 py-0.5 text-[11px] font-bold text-white">✎</span>
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
           {say({
             language,
@@ -107,12 +107,12 @@ export function LayerEditor({
             language,
             en: "close the editor — nothing is written into the space",
           })}
-          className="ml-auto rounded px-1.5 py-0.5 text-[11px] text-slate-600 hover:text-slate-700 dark:text-slate-200"
+          className="ml-auto rounded px-1.5 py-0.5 text-[11px] text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 dark:text-slate-200"
         >
           ✕
         </button>
       </div>
-      <p className="mb-2 text-[11px] leading-4 text-slate-500">
+      <p className="mb-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
         {say({
           language,
           en: "the layer leaves the living context for the time of the judgement: the staging revalidates the whole corpus + supplements, replays the expectations of the other living layers and demands 0 verdict; renaming the layer or sliding another one in is not editing; and the bedrock is read-only by protocol — an edition never aims at it (ADR-0103)",
@@ -131,7 +131,7 @@ export function LayerEditor({
             void judgeAndApply();
           }}
           disabled={busy || !source.trim()}
-          className="rounded bg-sky-600 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500 disabled:opacity-50"
+          className="rounded bg-sky-600 dark:bg-sky-700 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500 dark:hover:bg-sky-600 disabled:opacity-50"
         >
           {busy && stagingProgress !== null
             ? say({
@@ -143,7 +143,7 @@ export function LayerEditor({
                 en: "staging — re-judge & rewrite the layer",
               })}
         </button>
-        <span className="text-[10px] leading-4 text-slate-600">
+        <span className="text-[10px] leading-4 text-slate-600 dark:text-slate-400">
           {say({
             language,
             en: "the accepted tree replaces the old one in place, the invalidation protocol re-reads the workshop — the corpus ranks stay frozen",
@@ -151,7 +151,7 @@ export function LayerEditor({
         </span>
       </div>
       {result !== null && staging !== null && staging.step === "syntaxe" && !result.applied && (
-        <div className="mt-2 rounded-md border border-red-200 bg-red-50 px-2 py-1.5 text-[11px] leading-4 text-red-700">
+        <div className="mt-2 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 px-2 py-1.5 text-[11px] leading-4 text-red-700 dark:text-red-300">
           <div className="font-semibold">
             {say({
               language,
@@ -170,7 +170,7 @@ export function LayerEditor({
         staging.step === "validation" &&
         staging.verdicts.length > 0 &&
         !result.applied && (
-          <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] leading-4 text-amber-800">
+          <div className="mt-2 rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 px-2 py-1.5 text-[11px] leading-4 text-amber-800 dark:text-amber-300">
             <div className="font-semibold">
               {say({
                 language,
@@ -189,7 +189,7 @@ export function LayerEditor({
           </div>
         )}
       {result !== null && result.outcome.refusals.length > 0 && !result.applied && (
-        <div className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 text-[11px] leading-4 text-amber-800">
+        <div className="mt-2 rounded-md border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 px-2 py-1.5 text-[11px] leading-4 text-amber-800 dark:text-amber-300">
           <div className="font-semibold">
             {say({ language, en: "the edition is refused:"})}
           </div>
@@ -199,7 +199,7 @@ export function LayerEditor({
         </div>
       )}
       {result !== null && result.applied && (
-        <div className="mt-2 rounded-md border border-sky-200 bg-white dark:bg-slate-800 px-2 py-1.5 text-[11px] leading-4 text-sky-700">
+        <div className="mt-2 rounded-md border border-sky-200 dark:border-sky-800 bg-white dark:bg-slate-800 px-2 py-1.5 text-[11px] leading-4 text-sky-700 dark:text-sky-300">
           {say({
             language,
             en:

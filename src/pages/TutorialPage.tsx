@@ -34,7 +34,7 @@ function TutorialInline({ text, language }: { text: string; language: Language }
       {chunks.map((chunk, index) => {
         if (chunk.startsWith("**") && chunk.endsWith("**") && chunk.length > 4) {
           return (
-            <strong key={index} className="font-semibold text-slate-900">
+            <strong key={index} className="font-semibold text-slate-900 dark:text-slate-100">
               <NotionText text={chunk.slice(2, -2)} language={language} />
             </strong>
           );
@@ -140,7 +140,7 @@ export function TutorialPage({ language }: TutorialPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
       <div className="mx-auto max-w-4xl space-y-4 p-4 sm:p-8">
         {blocks.map(renderBlock)}
 
@@ -148,7 +148,7 @@ export function TutorialPage({ language }: TutorialPageProps) {
           <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
             {say({ language, en: "Glossary"})}
           </h2>
-          <p className="mt-1 text-xs leading-5 text-slate-500">
+          <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
             {say({
               language,
               en: "every notion this page cites — hover a term for its one-line definition.",
@@ -176,7 +176,7 @@ export function TutorialPage({ language }: TutorialPageProps) {
           </button>
           <button type="button"
             onClick={() => navigate("workshop")}
-            className="rounded-lg bg-sky-600 px-6 py-3 text-white font-semibold hover:bg-sky-500 transition-colors"
+            className="rounded-lg bg-sky-600 dark:bg-sky-700 px-6 py-3 text-white font-semibold hover:bg-sky-500 dark:hover:bg-sky-600 transition-colors"
           >
             {say({ language, en: "Workshop →"})}
           </button>

@@ -76,7 +76,7 @@ export function LayerContractTests({
       >
         <span>
           {say({ language, en: "Tests"})}
-          <span className="ml-1 font-normal text-slate-600">
+          <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
             {expectations.length}{" "}
             {say({
               language,
@@ -93,34 +93,34 @@ export function LayerContractTests({
                 })}
           </span>
         </span>
-        <span className="shrink-0 text-slate-600">{open ? "▾" : "▸"}</span>
+        <span className="shrink-0 text-slate-600 dark:text-slate-400">{open ? "▾" : "▸"}</span>
       </button>
       {open && (
         <div className="mt-2 space-y-1">
           {rows.map((row, index) => (
             <div key={index} className="font-mono text-[11px] leading-4">
-              <span className={row.matching ? "text-emerald-600" : "text-red-600"}>
+              <span className={row.matching ? "text-emerald-600 " : "text-red-600 dark:text-red-400"}>
                 {row.matching ? "✓" : "✗"}
               </span>{" "}
               <span className="text-slate-700 dark:text-slate-200">{row.expectation.address}</span>
-              <span className="text-slate-600">
+              <span className="text-slate-600 dark:text-slate-400">
                 {" " +
                   say({ language, en: "— expected "}) +
                   formatExpectation(row.expectation.expectation)}
               </span>
               {!row.matching && (
-                <span className="text-red-600">
+                <span className="text-red-600 dark:text-red-400">
                   {", " + say({ language, en: "read "}) + formatExpectation(row.read)}
                 </span>
               )}
               {row.provenance !== null && (
-                <span className="text-slate-600">
+                <span className="text-slate-600 dark:text-slate-400">
                   {" (" + say({ language, en: "by "}) + row.provenance + ")"}
                 </span>
               )}
             </div>
           ))}
-          <p className="pt-1 text-[10px] leading-4 text-slate-600">
+          <p className="pt-1 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
             {say({
               language,
               en: "the contract lives in the layer (special key « tests ») — it travels with it, file, disk, staging; the validation replays it at every assembly, a betrayed read is a verdict",
