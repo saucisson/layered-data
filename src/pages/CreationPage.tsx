@@ -59,12 +59,12 @@ export function CreationPage({ language }: CreationPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
       <div className="mx-auto max-w-4xl p-4 sm:p-6">
         <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "Create a formalism — with the assistance of the geologist" })}
         </h1>
-        <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-sm leading-6 text-slate-600">
+        <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-sm leading-6 text-slate-600 dark:text-slate-400">
           <h2 className="mb-2 text-base font-bold text-slate-800 dark:text-slate-100">
             {say({ language, en: "The protocol"})}
           </h2>
@@ -74,13 +74,13 @@ export function CreationPage({ language }: CreationPageProps) {
               en: "You say the intention; the geologist (the workshop's AI, grounded in the real state of the corpus and verified by the staging loop) proposes a draft in the language; you correct it freely; the staging judges corpus + supplement and demands 0 verdict; the accepted layer enters the living session. Without a server or a key, the deterministic simulated AI of the canvas answers instead — degraded, honestly labeled, never a silent failure.",
             })}
           </p>
-          <p className="mt-2 text-[11px] text-slate-600">
+          <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
             {say({
               language,
               en: "Examples of intentions — copy one, or write your own: ",
             })}
             {EXAMPLE_INTENTIONS.map((example, index) => (
-              <span key={index} className="font-mono text-slate-500">
+              <span key={index} className="font-mono text-slate-500 dark:text-slate-400">
                 {"« " + say({ language, en: example.en}) + " »"}
                 {index < EXAMPLE_INTENTIONS.length - 1 ? " · " : ""}
               </span>
@@ -115,7 +115,7 @@ export function CreationPage({ language }: CreationPageProps) {
             })}
           </h2>
           {createdLayerNames.length === 0 ? (
-            <p className="text-[11px] text-slate-600">
+            <p className="text-[11px] text-slate-600 dark:text-slate-400">
               {say({
                 language,
                 en: "Nothing yet — an accepted draft appears here, and stays visible from the hierarchy and formalism pages for as long as the tab lives (the disk quarry, through the workshop, remains the durable path).",
@@ -127,19 +127,19 @@ export function CreationPage({ language }: CreationPageProps) {
                 <div key={layerName} className="flex flex-wrap items-center gap-2 text-xs">
                   <span
                     className={
-                      "h-2 w-2 shrink-0 rounded-full " + (LAYER_COLOR[layerName] ?? "bg-slate-300")
+                      "h-2 w-2 shrink-0 rounded-full " + (LAYER_COLOR[layerName] ?? "bg-slate-300 dark:bg-slate-600")
                     }
                   />
                   <span className="font-mono font-semibold">{layerName}</span>
                   <button type="button"
                     onClick={() => navigate("formalism", layerName)}
-                    className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
+                    className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
                   >
                     {say({ language, en: "understand it →"})}
                   </button>
                   <button type="button"
                     onClick={() => navigate("hierarchy")}
-                    className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
+                    className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
                   >
                     {say({
                       language,
@@ -152,7 +152,7 @@ export function CreationPage({ language }: CreationPageProps) {
           )}
         </section>
 
-        <section className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-[11px] leading-5 text-slate-500">
+        <section className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-[11px] leading-5 text-slate-500 dark:text-slate-400">
           <h2 className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
             {say({ language, en: "The gestures of the language"})}
           </h2>
@@ -164,7 +164,7 @@ export function CreationPage({ language }: CreationPageProps) {
           </p>
           <button type="button"
             onClick={() => navigate("tutorial")}
-            className="mt-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-[11px] text-slate-600 hover:border-slate-600 hover:text-slate-900"
+            className="mt-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-[11px] text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
           >
             {say({ language, en: "the tutorial →"})}
           </button>

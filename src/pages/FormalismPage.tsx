@@ -52,13 +52,13 @@ function SourceText({ source, maxHeightClass }: { source: string; maxHeightClass
   return (
     <div
       className={
-        "overflow-auto rounded-md border border-slate-100 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4 " +
+        "overflow-auto rounded-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4 " +
         maxHeightClass
       }
     >
       {source.split("\n").map((line, index) => (
         <div key={index} className="flex">
-          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500">
+          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500 dark:text-slate-400">
             {index + 1}
           </span>
           <span className="whitespace-pre">
@@ -146,7 +146,7 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
     const isFolded = folded.has(key);
     const nodes: React.ReactNode[] = [
       <div key={key} className="flex">
-        <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500">
+        <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500 dark:text-slate-400">
           {lineNumbers.get(key)}
         </span>
         {hasSections ? (
@@ -160,7 +160,7 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
               });
             }}
             aria-label={say({ language, en: "fold / unfold"})}
-            className="mr-1 w-4 shrink-0 text-left font-bold text-slate-600 hover:text-slate-700 dark:text-slate-200"
+            className="mr-1 w-4 shrink-0 text-left font-bold text-slate-600 hover:text-slate-700 dark:hover:text-slate-300 dark:text-slate-200"
           >
             {isFolded ? "▸" : "▾"}
           </button>
@@ -172,7 +172,7 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
             {lineOf({ line: section.line })}
           </span>
           {isFolded && (
-            <span className="ml-2 font-sans text-[10px] text-slate-600">
+            <span className="ml-2 font-sans text-[10px] text-slate-600 dark:text-slate-400">
               {"+ " +
                 (countFlattenedSectionLines({ section }) - section.line.split("\n").length) +
                 " " +
@@ -190,11 +190,11 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
     return nodes;
   };
   return (
-    <div className="overflow-auto rounded-md border border-slate-100 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4 max-h-[32rem]">
+    <div className="overflow-auto rounded-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4 max-h-[32rem]">
       <div className="mb-1 flex flex-wrap gap-2">
         <button type="button"
           onClick={() => setFolded(new Set())}
-          className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
+          className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 dark:text-slate-400 hover:border-slate-500 dark:hover:border-slate-400"
         >
           {say({ language, en: "unfold all"})}
         </button>
@@ -202,17 +202,17 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
           onClick={() =>
             setFolded(new Set(collectSectionKeys({ sections: text.sections, prefix: "" })))
           }
-          className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 hover:border-slate-500"
+          className="rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-1.5 py-0.5 font-sans text-[10px] text-slate-500 dark:text-slate-400 hover:border-slate-500 dark:hover:border-slate-400"
         >
           {say({ language, en: "fold all"})}
         </button>
       </div>
       {text.headerLines.map((line, index) => (
         <div key={"head" + index} className="flex">
-          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500">
+          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500 dark:text-slate-400">
             {index + 1}
           </span>
-          <span className="whitespace-pre text-slate-600">{line}</span>
+          <span className="whitespace-pre text-slate-600 dark:text-slate-400">{line}</span>
         </div>
       ))}
       {text.sections.map((section, index) =>
@@ -337,7 +337,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
     null;
 
   return (
-    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900">
+    <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
       <div className="mx-auto max-w-6xl p-4 sm:p-6">
         <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "The formalism — understand one layer" })}
@@ -355,7 +355,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
               placeholder={say({ language, en: "search a layer…"})}
               className="min-w-40 flex-1 rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
             />
-            <span className="text-[10px] text-slate-600">
+            <span className="text-[10px] text-slate-600 dark:text-slate-400">
               {livingLayerNames.length + " "}
               {say({
                 language,
@@ -371,13 +371,13 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 className={
                   "flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] transition-colors " +
                   (layerName === selectedLayer
-                    ? "border-slate-900 bg-slate-50 dark:bg-slate-900 ring-1 ring-slate-900"
-                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-500")
+                    ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-900 ring-1 ring-slate-900 dark:ring-slate-100"
+                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-500 dark:hover:border-slate-400")
                 }
               >
                 <span
                   className={
-                    "h-2 w-2 shrink-0 rounded-full " + (LAYER_COLOR[layerName] ?? "bg-slate-300")
+                    "h-2 w-2 shrink-0 rounded-full " + (LAYER_COLOR[layerName] ?? "bg-slate-300 dark:bg-slate-600")
                   }
                 />
                 {layerName}
@@ -391,32 +391,32 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
           <div className="flex flex-wrap items-center gap-2 text-sm">
             <span className="text-lg font-bold font-mono">{selectedLayer}</span>
             {!inCorpus && (
-              <span className="rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700">
+              <span className="rounded bg-emerald-100 dark:bg-emerald-900/60 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-300">
                 {say({ language, en: "created in this session"})}
               </span>
             )}
           </div>
-          <p className="mt-1 text-xs leading-5 text-slate-600">
+          <p className="mt-1 text-xs leading-5 text-slate-600 dark:text-slate-400">
             {localized({ language, text: role })}
           </p>
           <div className="mt-2 space-y-1 text-[11px]">
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-semibold text-slate-500">
+              <span className="font-semibold text-slate-500 dark:text-slate-400">
                 {say({ language, en: "refines:"})}
               </span>
               {parentNames.length === 0 ? (
-                <span className="font-mono text-slate-600">∅</span>
+                <span className="font-mono text-slate-600 dark:text-slate-400">∅</span>
               ) : (
                 parentNames.map((parentName) => (
                   <button type="button"
                     key={parentName}
                     onClick={() => navigate("formalism", parentName)}
-                    className="underline decoration-slate-300 hover:text-slate-900"
+                    className="underline decoration-slate-300 dark:decoration-slate-600 hover:text-slate-900 dark:hover:text-slate-100"
                   >
                     <span
                       className={
                         "mr-1 inline-block h-2 w-2 rounded-full " +
-                        (LAYER_COLOR[parentName] ?? "bg-slate-300")
+                        (LAYER_COLOR[parentName] ?? "bg-slate-300 dark:bg-slate-600")
                       }
                     />
                     {parentName}
@@ -425,7 +425,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
               )}
             </div>
             <div className="flex flex-wrap items-center gap-1.5">
-              <span className="font-semibold text-slate-500">
+              <span className="font-semibold text-slate-500 dark:text-slate-400">
                 {say({
                   language,
                   en: "closure (" + closureNames.length + "):",
@@ -435,12 +435,12 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 <button type="button"
                   key={closureName}
                   onClick={() => navigate("formalism", closureName)}
-                  className="underline decoration-slate-300 hover:text-slate-900"
+                  className="underline decoration-slate-300 dark:decoration-slate-600 hover:text-slate-900 dark:hover:text-slate-100"
                 >
                   <span
                     className={
                       "mr-1 inline-block h-2 w-2 rounded-full " +
-                      (LAYER_COLOR[closureName] ?? "bg-slate-300")
+                      (LAYER_COLOR[closureName] ?? "bg-slate-300 dark:bg-slate-600")
                     }
                   />
                   {closureName}
@@ -459,14 +459,14 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 en: "① The DSL of the formalism — as written",
               })}
             </h2>
-            <p className="mb-2 text-[10px] leading-4 text-slate-600">
+            <p className="mb-2 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
               {say({
                 language,
                 en: "The .ld source of the layer: the acts that write it, its declared refinements, its blocks. What shines in violet is an act, in green an @path, in amber a string.",
               })}
             </p>
             {sourceBlock === null ? (
-              <p className="text-xs text-slate-600">
+              <p className="text-xs text-slate-600 dark:text-slate-400">
                 {say({
                   language,
                   en: "layer unknown to the geologist",
@@ -483,7 +483,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 en: "② The DSL of the complete flattened formalism",
               })}
             </h2>
-            <p className="mb-2 text-[10px] leading-4 text-slate-600">
+            <p className="mb-2 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
               {say({
                 language,
                 en: "The whole closure, resolved in place — first-wins decides: every key carries its effective value and, as a comment, the layer that provides it (or declares the slot nobody provides — abstract). refines is absent: the hierarchy is what the flattening removes. Each indented part folds: one click hides it, one click opens it.",
@@ -499,7 +499,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
           <h2 className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
             {say({ language, en: "③ The lenses"})}
           </h2>
-          <p className="mb-2 text-[10px] leading-4 text-slate-600">
+          <p className="mb-2 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
             {say({
               language,
               en: "A lens is a display layer that refines the formalism and draws everything descending from it — it displays only what it knows, the unknown types fall back to the generic circle, without an error. Choose a lens: the drawing shows the formalism seen through it.",
@@ -513,14 +513,14 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 className={
                   "rounded-full border px-2 py-0.5 font-mono text-[10px] transition-colors " +
                   (selectedLookEntry !== null && selectedLookEntry.lens === lens
-                    ? "border-slate-900 bg-slate-50 dark:bg-slate-900 ring-1 ring-slate-900"
-                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-500")
+                    ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-900 ring-1 ring-slate-900 dark:ring-slate-100"
+                    : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-500 dark:hover:border-slate-400")
                 }
               >
                 <span
                   className={
                     "mr-1 inline-block h-2 w-2 rounded-full " +
-                    (LAYER_COLOR[lens] ?? "bg-slate-300")
+                    (LAYER_COLOR[lens] ?? "bg-slate-300 dark:bg-slate-600")
                   }
                 />
                 {lens}
@@ -533,11 +533,11 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
           </div>
           {selectedLookEntry !== null && (
             <div className="grid gap-3 md:grid-cols-2">
-              <div className="rounded-md border border-slate-100 bg-slate-50 dark:bg-slate-900 p-2">
+              <div className="rounded-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-2">
                 <LensDrawing look={selectedLookEntry.look} language={language} />
               </div>
               <div className="space-y-2 text-[11px] leading-4">
-                <p className="text-slate-600">
+                <p className="text-slate-600 dark:text-slate-400">
                   {localized({
                     language,
                     text:
@@ -545,7 +545,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                       ({ en: selectedLookEntry.lens} as BilingualText),
                   })}
                 </p>
-                <p className="text-slate-500">
+                <p className="text-slate-500 dark:text-slate-400">
                   {selectedLookEntry.look.applicability.total === -1
                     ? say({
                         language,
@@ -579,7 +579,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
           <h2 className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
             {say({ language, en: "④ The stratigraphy — versions and pins" })}
           </h2>
-          <p className="mb-2 text-[10px] leading-4 text-slate-600">
+          <p className="mb-2 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
             {say({
               language,
               en: "The closure of the formalism as strata: one row per formalism with the major its reference pins (a bare name resolves to the latest frozen of the latest major), what it refines, and its status. A diamond pinned to divergent majors is a version-conflict, shown as its two paths; when the measured dump is unchanged under a re-pin, the re-pin is suggested one click.",

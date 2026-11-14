@@ -43,7 +43,7 @@ export function WorkshopHomePage({
               className={
                 candidate === tab
                   ? "rounded-t-lg border border-b-0 border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-800 dark:text-slate-100"
-                  : "rounded-t-lg border border-transparent px-4 py-2 text-sm text-slate-500 hover:bg-slate-50 dark:bg-slate-900 hover:text-slate-700 dark:text-slate-200"
+                  : "rounded-t-lg border border-transparent px-4 py-2 text-sm text-slate-500 hover:bg-slate-50 dark:bg-slate-900 hover:text-slate-700 dark:hover:text-slate-300 dark:text-slate-200"
               }
             >
               {candidate === "workshop" ? t("the workshop") : t("the graphical model editor")}

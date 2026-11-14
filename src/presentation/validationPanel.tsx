@@ -26,7 +26,7 @@ export function ValidationPanel({
     <div aria-live="polite" aria-atomic="false" role="status">
       <h3 className="mt-2 text-xs font-bold text-slate-800 dark:text-slate-100">
         {say({ language, en: "Assembly validation"})}
-        <span className="ml-1 font-normal text-slate-600">
+        <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
           {say({
             language,
             en:
@@ -34,14 +34,14 @@ export function ValidationPanel({
           })}
         </span>
       </h3>
-      <p className="mb-3 mt-1 text-[11px] leading-4 text-slate-500">
+      <p className="mb-3 mt-1 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
         {say({
           language,
           en: "JSON is no longer the writing tool: the 85 layers are written in the design language, where inheritance (refines), transparency (extend), overloading (override), bindings (bind) and tags (check) are explicit acts. The assembly validation confronts every declared act with the reality of the closures BEFORE any execution: implicit overload, ghost declaration, unknown tag, binding laid at the wrong level. The first-wins shadows become declared acts; only an undeclared shadow is an error. The silences logged below remain the safety net.",
         })}
       </p>
       {stats.erreursSyntaxe > 0 && (
-        <p className="mb-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">
+        <p className="mb-2 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 px-3 py-2 text-xs text-red-700 dark:text-red-300">
           {say({
             language,
             en:
@@ -52,7 +52,7 @@ export function ValidationPanel({
         </p>
       )}
       {verdicts.length === 0 ? (
-        <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+        <p className="rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
           {say({
             language,
             en:
@@ -72,14 +72,14 @@ export function ValidationPanel({
           maxHeightClass="max-h-40"
           keyOf={(_verdict, index) => index}
           renderItem={(verdict) => (
-            <div className="font-mono text-[10px] text-red-700">
+            <div className="font-mono text-[10px] text-red-700 dark:text-red-300">
               {labelOf({ code: verdict.kind, language })} —{" "}
               {renderMessage({ message: verdict.fact, language })}
             </div>
           )}
         />
       )}
-      <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[11px] text-slate-500">
+      <div className="mt-2 flex flex-wrap items-baseline gap-x-4 gap-y-1 text-[11px] text-slate-500 dark:text-slate-400">
         <span>
           <span className="font-semibold text-slate-700 dark:text-slate-200">{stats.nouveau}</span>{" "}
           {say({ language, en: "new"})}

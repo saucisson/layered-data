@@ -110,9 +110,9 @@ export function CascadeCard({
       className={
         "w-64 shrink-0 rounded-lg border p-2 " +
         (isLast
-          ? "border-slate-500 bg-slate-50 dark:bg-slate-900 ring-2 ring-slate-400"
+          ? "border-slate-500 dark:border-slate-400 bg-slate-50 dark:bg-slate-900 ring-2 ring-slate-400"
           : isSecondToLast
-            ? "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 ring-1 ring-slate-300"
+            ? "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 ring-1 ring-slate-300 dark:ring-slate-600"
             : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 opacity-50")
       }
     >
@@ -141,14 +141,14 @@ export function CascadeCard({
               <LayerBadge layer={provenance.winner} small />
             )
           ) : (
-            <span className="text-slate-600">
+            <span className="text-slate-600 dark:text-slate-400">
               {provenance && provenance.status
                 ? labelOf({ code: provenance.status, language })
                 : say({ language, en: "not provided"})}
             </span>
           )}
           {provenance && (
-            <span className="ml-1 text-slate-600">
+            <span className="ml-1 text-slate-600 dark:text-slate-400">
               ({provenance.readCount}{" "}
               {say({
                 language,
@@ -161,10 +161,10 @@ export function CascadeCard({
       )}
       {chain.length > 0 && (
         <div className="mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5 text-[11px] leading-4">
-          <span className="text-slate-600">{say({ language, en: "refines"})}</span>
+          <span className="text-slate-600 dark:text-slate-400">{say({ language, en: "refines"})}</span>
           {chain.map((step, index) => (
             <span key={index} className="flex flex-wrap items-center gap-1">
-              {index > 0 && <span className="text-slate-500">→</span>}
+              {index > 0 && <span className="text-slate-500 dark:text-slate-400">→</span>}
               {isLast ? (
                 <button type="button"
                   onClick={() => onOpen(step.layer, step.path)}
@@ -179,7 +179,7 @@ export function CascadeCard({
               ) : (
                 <LayerBadge layer={step.layer} small />
               )}
-              <span className="font-mono text-slate-500">
+              <span className="font-mono text-slate-500 dark:text-slate-400">
                 {step.path.length ? step.path.join("/") : "()"}
               </span>
             </span>
@@ -187,7 +187,7 @@ export function CascadeCard({
         </div>
       )}
       {target.key === null && chain.length === 0 && (
-        <div className="mt-1 text-[11px] text-slate-600">
+        <div className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
           {say({ language, en: "closure: "})}
           {
             space.closure({ layer: asLayerName(target.layer), path: asLayerPath(target.path) })

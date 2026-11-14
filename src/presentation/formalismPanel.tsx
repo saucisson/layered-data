@@ -52,7 +52,7 @@ export function FormalismPanel({
       <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
         <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "② The formalism"})}
-          <span className="ml-1 font-mono text-xs font-normal text-slate-600">{layer}</span>
+          <span className="ml-1 font-mono text-xs font-normal text-slate-600 dark:text-slate-400">{layer}</span>
           <span className="ml-1.5">
             <StatusBadge
               status={addedLayerSources[layer] === undefined ? "published" : "draft"}
@@ -68,8 +68,8 @@ export function FormalismPanel({
               className={
                 "rounded-md px-2.5 py-1 text-[11px] font-semibold " +
                 (tab === activeTab
-                  ? "bg-slate-800 text-white"
-                  : "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 hover:border-slate-600")
+                  ? "bg-slate-800 dark:bg-slate-600 text-white"
+                  : "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500")
               }
             >
               {say({ language, en: label.en})}
@@ -90,7 +90,7 @@ export function FormalismPanel({
       )}
       {activeTab === "raw" && (
         <>
-          <p className="mb-2 text-[10px] leading-4 text-slate-600">
+          <p className="mb-2 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
             {say({
               language,
               en: "What the layer actually stores — no more, no less. The amber keys (refines, specification) are structural.",

@@ -26,56 +26,56 @@ const DIAGNOSTIC_LABELS: Record<
 > = {
   "refines-inversés": {
     label: { en: "inverted refines"},
-    tone: "border-red-200 bg-red-50 text-red-700",
+    tone: "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300",
     note: {
       en: "the generic precedes the specific: structural error, before any behavior",
     },
   },
   "garde-de-cycle": {
     label: { en: "cycle guard"},
-    tone: "border-red-200 bg-red-50 text-red-700",
+    tone: "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300",
     note: {
       en: "truncated closure: order-dependent read",
     },
   },
   "check-vacant": {
     label: { en: "vacant check"},
-    tone: "border-red-200 bg-red-50 text-red-700",
+    tone: "border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300",
     note: {
       en: "bounds read, never verified (or unbound check slots)",
     },
   },
   "étiquette-inconnue": {
     label: { en: "unknown tag"},
-    tone: "border-amber-200 bg-amber-50 text-amber-700",
+    tone: "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400",
     note: {
       en: "a wanted check that does not exist is a vacant check",
     },
   },
   "entrée-ignorée": {
     label: { en: "ignored entry"},
-    tone: "border-amber-200 bg-amber-50 text-amber-700",
+    tone: "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400",
     note: {
       en: "a wanted refinement can disappear without a trace: every silence is listed",
     },
   },
   "ombre-émergente": {
     label: { en: "emerging shadow"},
-    tone: "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600",
+    tone: "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400",
     note: {
       en: "language — the diamond decides: nobody declared the shadow, the closure order decides — to inspect",
     },
   },
   ombre: {
     label: { en: "shadow"},
-    tone: "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600",
+    tone: "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-600 dark:text-slate-400",
     note: {
       en: "inventory: first-wins decided; to inspect, not a fault",
     },
   },
   "conflit-d'ordre": {
     label: { en: "order conflict"},
-    tone: "border-amber-200 bg-amber-50 text-amber-700",
+    tone: "border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400",
     note: {
       en: "first-wins decided between incomparable sources: the refines order, a convention — to inspect, or to restructure (ADR-0106)",
     },
@@ -136,7 +136,7 @@ export function DiagnosticsPanel({
       >
         <span>
           {say({ language, en: "Diagnostics & validation"})}
-          <span className="ml-1 font-normal text-slate-600">
+          <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
             {verdicts.length}{" "}
             {say({
               language,
@@ -150,19 +150,19 @@ export function DiagnosticsPanel({
             })}
           </span>
         </span>
-        <span className="shrink-0 text-slate-600">{open ? "▾" : "▸"}</span>
+        <span className="shrink-0 text-slate-600 dark:text-slate-400">{open ? "▾" : "▸"}</span>
       </button>
       {open && (
         <>
           <ValidationPanel validation={validation} language={language} />
-          <p className="mb-1 mt-2 text-[11px] leading-4 text-slate-500">
+          <p className="mb-1 mt-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
             {say({
               language,
               en: "The kernel stays total — never an exception — but everything it ignores is logged: ignored entries, cycle guards, unknown tags, vacant checks, first-wins shadows, specificity inversions detected by the closure. The generic checks read no hard-coded name: their slots are bound by the layers (bindings). The kernel logs, it does not judge — the severity is yours.",
             })}
           </p>
           {events.length === 0 && (
-            <p className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+            <p className="rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
               {say({
                 language,
                 en: "Space sweep: 0 logged silence — verified, nothing to list.",
@@ -186,10 +186,10 @@ export function DiagnosticsPanel({
                       >
                         {say({ language, en: meta.label.en})}
                       </span>
-                      <span className="text-[11px] text-slate-600">
+                      <span className="text-[11px] text-slate-600 dark:text-slate-400">
                         {say({ language, en: meta.note.en})}
                       </span>
-                      <span className="ml-auto font-mono text-[11px] text-slate-600">
+                      <span className="ml-auto font-mono text-[11px] text-slate-600 dark:text-slate-400">
                         {kindEvents.length}
                       </span>
                     </div>
@@ -200,8 +200,8 @@ export function DiagnosticsPanel({
                         maxHeightClass="max-h-40"
                         keyOf={(_event, index) => index}
                         renderItem={(event) => (
-                          <div className="font-mono text-[10px] leading-4 text-slate-600">
-                            <span className="text-slate-600">
+                          <div className="font-mono text-[10px] leading-4 text-slate-600 dark:text-slate-400">
+                            <span className="text-slate-600 dark:text-slate-400">
                               {event.address[0]}::{event.address[1].join("/") || "."}
                             </span>{" "}
                             {renderMessage({ message: event.fact, language })}
@@ -215,7 +215,7 @@ export function DiagnosticsPanel({
             {[...byKind.keys()]
               .filter((kind) => !kindOrder.includes(kind))
               .map((kind) => (
-                <div key={kind} className="font-mono text-[10px] text-slate-600">
+                <div key={kind} className="font-mono text-[10px] text-slate-600 dark:text-slate-400">
                   {kind} × {byKind.get(kind)!.length}
                 </div>
               ))}

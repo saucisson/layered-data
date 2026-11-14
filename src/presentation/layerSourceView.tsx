@@ -147,14 +147,14 @@ export function highlightSourceLine(line: string): { text: string; kind: string 
 }
 
 export const SPAN_CLASSES: Record<string, string> = {
-  kw: "font-semibold text-violet-700",
-  bo: "font-semibold text-violet-700",
-  rf: "text-emerald-700",
-  st: "text-amber-700",
-  nu: "text-sky-700",
-  cm: "italic text-slate-600",
+  kw: "font-semibold text-violet-700 dark:text-violet-300",
+  bo: "font-semibold text-violet-700 dark:text-violet-300",
+  rf: "text-emerald-700 dark:text-emerald-300",
+  st: "text-amber-700 dark:text-amber-400",
+  nu: "text-sky-700 dark:text-sky-300",
+  cm: "italic text-slate-600 dark:text-slate-400",
   id: "text-slate-800 dark:text-slate-100",
-  pu: "text-slate-500",
+  pu: "text-slate-500 dark:text-slate-400",
 };
 
 /** The "Language" tab of ②: the source follows the current layer of
@@ -185,15 +185,15 @@ export function LayerSourceView({
   );
   return (
     <div>
-      <p className="mb-2 text-[11px] leading-4 text-slate-500">
+      <p className="mb-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
         {say({
           language,
           en: "The grammar as it writes itself. « refines @a then @b »: the parents in their consultation order — the first wins, the closure follows the list; « abstract key » declares an unbound slot; « bind slot -&gt; name » binds a check slot to the concrete key name — on the left the checks' stable API, on the right the layer's vocabulary. What shines in violet is an act, in green an @path, in amber a string.",
         })}
       </p>
-      <div className="max-h-80 overflow-auto rounded-md border border-slate-100 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4">
+      <div className="max-h-80 overflow-auto rounded-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4">
         {block === null ? (
-          <div className="py-1 text-xs text-slate-600">
+          <div className="py-1 text-xs text-slate-600 dark:text-slate-400">
             {say({
               language,
               en: "layer unknown to the geologist",
@@ -211,7 +211,7 @@ export function LayerSourceView({
                 key={index}
                 className={
                   "flex " +
-                  (lineTarget !== undefined ? "cursor-pointer hover:bg-slate-100 dark:bg-slate-800 rounded" : "")
+                  (lineTarget !== undefined ? "cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800 rounded" : "")
                 }
                 onClick={lineTarget !== undefined ? () => onLine(lineTarget) : undefined}
                 title={
@@ -229,7 +229,7 @@ export function LayerSourceView({
                     : undefined
                 }
               >
-                <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500">
+                <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500 dark:text-slate-400">
                   {index + 1}
                 </span>
                 <span className="whitespace-pre">
