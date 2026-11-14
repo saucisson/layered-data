@@ -197,7 +197,7 @@ export function UserAccountForm({ language }: { language: Language }) {
           <button
             type="button"
             onClick={() => setMode("create")}
-            className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
+            className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-slate-500"
           >
             {say({ language, en: "create an account" })}
           </button>
@@ -230,7 +230,7 @@ export function UserAccountForm({ language }: { language: Language }) {
             <button
               type="button"
               onClick={() => void handleCreate()}
-              className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
+              className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-slate-500"
             >
               {say({ language, en: "create" })}
             </button>
@@ -257,7 +257,7 @@ export function UserAccountForm({ language }: { language: Language }) {
             <button
               type="button"
               onClick={() => void handleLogin()}
-              className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700"
+              className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-slate-500"
             >
               {say({ language, en: "connect" })}
             </button>

@@ -211,7 +211,7 @@ export function DiskWardrobe({
           onClick={() => {
             void refresh();
           }}
-          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-sky-500 hover:text-sky-700 dark:hover:text-sky-300"
+          className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-sky-500 dark:hover:border-sky-400 hover:text-sky-700 dark:hover:text-sky-300"
         >
           {say({ language, en: "refresh"})}
         </button>
@@ -264,8 +264,8 @@ export function DiskWardrobe({
                   (selectedName === entry.name
                     ? "bg-sky-700 text-white"
                     : entry.builtIn
-                      ? "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-sky-500"
-                      : "border border-emerald-300 bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 hover:border-emerald-500")
+                      ? "border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-sky-500 dark:hover:border-sky-400"
+                      : "border border-emerald-300 bg-white dark:bg-slate-800 text-emerald-700 dark:text-emerald-300 hover:border-emerald-500 dark:hover:border-emerald-400")
                 }
                 title={
                   entry.builtIn
@@ -299,7 +299,7 @@ export function DiskWardrobe({
             <button type="button"
               onClick={loadIntoWorkshop}
               disabled={!source.trim()}
-              className="rounded bg-emerald-600 dark:bg-emerald-700 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-50"
+              className="rounded bg-emerald-600 dark:bg-emerald-700 px-2 py-1 text-xs font-semibold text-white hover:bg-emerald-500 dark:hover:bg-emerald-600 disabled:opacity-50"
             >
               {say({
                 language,
@@ -332,7 +332,7 @@ export function DiskWardrobe({
                   onClick={() => {
                     void putOnDisk(name, localLayerSources[name] ?? "");
                   }}
-                  className="rounded border border-emerald-300 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono leading-4 text-emerald-700 dark:text-emerald-300 hover:border-emerald-500"
+                  className="rounded border border-emerald-300 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] font-mono leading-4 text-emerald-700 dark:text-emerald-300 hover:border-emerald-500 dark:hover:border-emerald-400"
                   title={say({
                     language,
                     en: "lay this formalism on the disk — visible to the other visitors",
