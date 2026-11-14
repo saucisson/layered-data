@@ -43,6 +43,7 @@ import {
   type EditorSyncHandle,
   type SessionSnapshot,
 } from "../infrastructure/editorSync.ts";
+import { AccessCodeForm } from "./accessForm.tsx";
 import {
   readMemberContainers,
   positionContainerOf,
@@ -166,6 +167,12 @@ export function ModelEditorPage({
   // SSE stream, or local when the server is absent ----
   const [shared, setShared] = useState(false);
   const [presence, setPresence] = useState<{ id: string; focus: string | null }[]>([]);
+  // true when the session stream was refused (401) or the server is
+  // absent — the access-code form is then shown instead of a silent
+  // local fallback (issue #198). accessVersion re-triggers the
+  // connection after a code is verified.
+  const [needsAccess, setNeedsAccess] = useState(false);
+  const [accessVersion, setAccessVersion] = useState(0);
   const syncRef = useRef<EditorSyncHandle | null>(null);
   const serverVersionRef = useRef(0);
   // ---- the editor's own choices ------------------------------------
@@ -426,14 +433,15 @@ export function ModelEditorPage({
         return;
       }
       syncRef.current = handle;
+      setNeedsAccess(handle === null);
     });
     return () => {
       cancelled = true;
       syncRef.current?.close();
       syncRef.current = null;
     };
-    // the connection lives for the page's lifetime — no dep array
-  }, []);
+    // reconnect when a new access code is verified (issue #198)
+  }, [accessVersion]);
 
   /** Report the edited model as this editor's focus. */
   useEffect(() => {
@@ -1073,6 +1081,17 @@ export function ModelEditorPage({
   return (
     <div className="mx-auto max-w-6xl px-4 py-6" aria-live="off">
       {/* Editor state changes are announced via the banner below */}
+      <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
+        {t("the graphical model editor")}
+      </h1>
+      {needsAccess && !shared && (
+        <div className="mb-4" role="status">
+          <p className="mb-2 text-sm text-slate-600 dark:text-slate-300">
+            {t("the shared session needs the site access code — enter it to collaborate; the editor also works locally")}
+          </p>
+          <AccessCodeForm language={language} onVerified={() => setAccessVersion((version) => version + 1)} />
+        </div>
+      )}
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="rounded bg-emerald-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
           ✎
