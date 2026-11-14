@@ -14,7 +14,7 @@
     "test:access-code-consent": "node tests/access-code-consent-checks.mts",
     "test:user-account": "node tests/user-account-checks.mts",
     "test:rate-limit": "node tests/rate-limit-checks.mts",
-    "test:coverage": "c8 --all --check-coverage --lines 80 --include='src/domain/**' --include='src/application/**' --reporter=lcov --reporter=text-summary npm test",
+    "test:coverage": "c8 --all --check-coverage --lines 85 --include='src/domain/**' --include='src/application/**' --reporter=lcov --reporter=text-summary npm test",
     "test:specification": "node tests/specification-properties.mts",
     "test:staging": "node tests/staging-checks.mts",
     "typecheck": "tsc --noEmit -p tsconfig.json && tsc --noEmit -p tsconfig.node.json",
