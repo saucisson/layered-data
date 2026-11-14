@@ -416,14 +416,14 @@ export function WorkshopPage({
           <h1 className="text-lg font-bold">
             {say({
               language,
-              en: "The formalism design workshop — data in strata",
+              en: "The formalism design workshop — Layered Data",
             })}
           </h1>
         </div>
         <p className="mt-2 text-xs text-slate-500">
           {say({
             language,
-            en: "Formalism design workshop — data in strata, refinement, first-winner reading",
+            en: "Formalism design workshop — Layered Data, refinement, first-winner reading",
           })}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
