@@ -3,87 +3,51 @@
 // ① the layers, ② the formalism, ③ the reading and its
 // resolution, ④ the point of view. The first render is a pure
 // pass: every derivation is a memo, nothing is written back.
+// The panels live in ./presentation/workshop/ (issue #200); this
+// file keeps only the state, the handlers and the memos.
 
 import { useMemo, useState } from "react";
 import { asLayerName, asLayerPath } from "./domain/identifiers.ts";
-import { AddressView, PathReference, addressesEqual } from "./domain/addresses.ts";
+import { addressesEqual, PathReference } from "./domain/addresses.ts";
 import { Tracer } from "./domain/space.ts";
 import { type Language } from "./domain/messages.ts";
-import { coversAddresses, dressingEntries, type Glyph } from "./domain/views.ts";
-import { assembleLayeredDataKernel } from "./application/corpus.ts";
-import { loadKernelLayerSources } from "./infrastructure/corpusLoader.ts";
 
-import {
-  LAYER_COLOR,
-  LAYER_ROLE,
-  PRINCIPAL_PARENT,
-  RefinementDag,
-} from "./presentation/workshopInventory.ts";
 import { WORKSHOP_SCENARIOS } from "./presentation/scenarios.ts";
 
-import { localized, say } from "./presentation/i18n.ts";
-import {
-  KernelValue,
-  StatusPill,
-  TraceEventRow,
-  addressText,
-} from "./presentation/valueRendering.tsx";
-import { LayerBadge } from "./presentation/layerBadge.tsx";
-import { RefinesGraph } from "./presentation/refinesGraph.tsx";
-import { FormalismPanel } from "./presentation/formalismPanel.tsx";
-import { AccessCodeForm } from "./presentation/accessForm.tsx";
-import { UserAccountForm } from "./presentation/userAccountForm.tsx";
-import { AddFormalismComposer, type AcceptedAddition } from "./presentation/addFormalism.tsx";
-import { DiskWardrobe } from "./presentation/diskWardrobe.tsx";
-import { LayerEditor } from "./presentation/layerEditor.tsx";
+import { say } from "./presentation/i18n.ts";
+import { addressText } from "./presentation/valueRendering.tsx";
 import {
   editableLayerNames,
   livingLayerBlock,
   rewriteLivingAddition,
   type AppliedEdition,
 } from "./application/edition.ts";
-import { CascadeCard } from "./presentation/cascadeMap.tsx";
-import { buildSourceLineTargets, type SourceLineTarget } from "./presentation/layerSourceView.tsx";
-import { NodeGlyph, EdgeGlyph } from "./presentation/glyphs.tsx";
-import {
-  LENS_LAYERS,
-  VIEWPOINT_LAYERS,
-  VIEW_NOTES,
-  bindingOf,
-  groupTree,
-  shapeLabel,
-} from "./presentation/viewTree.ts";
 import { buildWorkshopLook } from "./presentation/lensDrawing.ts";
 import { useToast } from "./components/Toast.tsx";
+
+import {
+  KERNEL,
+  REFINEMENT_DAG,
+  SOURCE_LINE_TARGETS,
+  type HistoryEntry,
+  type SelectedGlyph,
+  type AcceptedAdditionState,
+} from "./presentation/workshop/workshopKernel.ts";
+import { WorkshopHeader } from "./presentation/workshop/WorkshopHeader.tsx";
+import { WorkshopLayersPanel } from "./presentation/workshop/WorkshopLayersPanel.tsx";
+import { WorkshopFlatPanel, type AddressKeyInfo } from "./presentation/workshop/WorkshopFlatPanel.tsx";
+import {
+  WorkshopMechanismPanel,
+  type ClosureData,
+  type SelectedKeyDetail,
+} from "./presentation/workshop/WorkshopMechanismPanel.tsx";
+import { WorkshopViewpointPanel } from "./presentation/workshop/WorkshopViewpointPanel.tsx";
+import type { AcceptedAddition } from "./presentation/addFormalism.tsx";
 
 // ---- the kernel, the graph, the line-target table -------------
 // Assembled once from the corpus files — the single source, never
 // an embedded copy. The graph and the line-target table are pure
 // derivations of the assembled kernel.
-
-const KERNEL = assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() });
-const REFINEMENT_DAG = new RefinementDag({ space: KERNEL.space, layerNames: KERNEL.layerNames });
-const SOURCE_LINE_TARGETS = buildSourceLineTargets({ parsedLanguage: KERNEL.parsedLanguage });
-
-/** One entry of the address history: where we were, and which key
- * we were reading there. */
-interface HistoryEntry {
-  layer: string;
-  path: string[];
-  key: string | null;
-}
-
-/** One glyph selected in the drawing of ④. */
-interface SelectedGlyph {
-  kind: "vertex" | "edge";
-  name: string;
-}
-
-/** One accepted ＋ addition, kept as workshop state. */
-interface AcceptedAdditionState {
-  source: string;
-  layerNames: string[];
-}
 
 export function WorkshopPage({
   language,
@@ -180,7 +144,7 @@ export function WorkshopPage({
   // A line of the layer source opens its step — the address it writes
   // enters on the right of the cascade, the key is read there, the
   // calculation unfolds: the resolution becomes a story.
-  function openSourceLine(target: SourceLineTarget) {
+  function openSourceLine(target: { layer: string; path: string[]; key: string | null }) {
     goto(target.layer, target.path, target.key);
     setShowClosureCalculation(true);
   }
@@ -281,7 +245,7 @@ export function WorkshopPage({
       trace: true,
     });
     const events = tracer.events.filter((event) => event.depth === 1);
-    return { closure, events };
+    return { closure, events } as ClosureData;
   }, [layer, path, spaceVersion]);
 
   // Visible keys + winner for each key.
@@ -297,7 +261,7 @@ export function WorkshopPage({
       });
       const last = scan.length ? scan[scan.length - 1] : null;
       const winner = last && last.status === "fournit" ? last.source : null;
-      return { key, value, winner, scan };
+      return { key, value, winner, scan } as AddressKeyInfo;
     });
   }, [layer, path, spaceVersion]);
 
@@ -326,7 +290,7 @@ export function WorkshopPage({
         })
         .events.filter((event: any) => event.kind === "refsearch" && event.depth === 1);
     }
-    return { value, scan, winner, referenceEvents };
+    return { value, scan, winner, referenceEvents } as SelectedKeyDetail;
   }, [layer, path, selectedKey, spaceVersion]);
 
   const statusBySource = useMemo(() => {
@@ -342,7 +306,7 @@ export function WorkshopPage({
   const winnerIndex = useMemo(() => {
     if (!selectedKeyDetail || !selectedKeyDetail.winner) return -1;
     return closureData.closure.findIndex((address) =>
-      addressesEqual(address, selectedKeyDetail!.winner!),
+      addressesEqual(address, selectedKeyDetail.winner!),
     );
   }, [closureData, selectedKeyDetail]);
 
@@ -411,100 +375,18 @@ export function WorkshopPage({
         }
       }}
     >
-      <header className="border-b border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-5 py-4">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <h1 className="text-lg font-bold">
-            {say({
-              language,
-              en: "The formalism design workshop — Layered Data",
-            })}
-          </h1>
-        </div>
-        <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-          {say({
-            language,
-            en: "Formalism design workshop — Layered Data, refinement, first-winner reading",
-          })}
-        </p>
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          <input
-            id="workshop-search"
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            onKeyDown={(event: any) => {
-              if (event.key === "Enter") submitSearch();
-              if (event.key === "Escape") setSearch("");
-            }}
-            placeholder={say({
-              language,
-              en: "Search — layer, or key of the current address; " + "Enter: go there · Ctrl+K",
-            })}
-            className="min-w-0 flex-1 rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 font-mono text-xs focus:border-slate-500 focus:outline-none sm:min-w-[240px]"
-          />
-          <button type="button"
-            onClick={() => setGuidedTourOpen(!guidedTourOpen)}
-            aria-expanded={guidedTourOpen}
-            title={say({
-              language,
-              en: "the S1–S14 scenarios: the workshop's guided curriculum",
-            })}
-            className={
-              "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
-              (guidedTourOpen
-                ? "border-slate-800 dark:border-slate-600 bg-slate-800 dark:bg-slate-600 text-white"
-                : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-500 dark:hover:border-slate-400")
-            }
-          >
-            {say({ language, en: "Guided tour S1–S14" })}{" "}
-            {guidedTourOpen ? "▾" : "▸"}
-          </button>
-        </div>
-        {guidedTourOpen && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {WORKSHOP_SCENARIOS.map((scenario, index) => (
-              <button type="button"
-                key={scenario.id}
-                onClick={() => activateScenario(index)}
-                title={localized({ language, text: scenario.text }).slice(0, 120) + "…"}
-                className={
-                  "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
-                  (scenarioIndex === index
-                    ? "border-slate-800 dark:border-slate-600 bg-slate-800 dark:bg-slate-600 text-white"
-                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-500 dark:hover:border-slate-400")
-                }
-              >
-                {scenario.id} · {localized({ language, text: scenario.label })}
-              </button>
-            ))}
-          </div>
-        )}
-      </header>
-
-      {/* The tutorial at the top: the workshop is learned before
-              it is used — the addresses of the stratigraphic column navigate the
-              space like the rest of the tool (goto: the address is
-              the artifact) */}
-
-      {activeScenario && (
-        <div className="mx-2 mt-3 sm:mx-4 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-4 py-3 text-sm leading-6 text-slate-700 dark:text-slate-200 shadow-sm">
-          <div className="mb-1 flex items-center gap-2">
-            <span className="rounded bg-slate-800 dark:bg-slate-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
-              {activeScenario.id}
-            </span>
-            <span className="font-semibold">
-              {localized({ language, text: activeScenario.label })}
-            </span>
-            <button type="button"
-              className="ml-auto rounded px-2 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300 dark:text-slate-200"
-              onClick={() => setScenarioIndex(-1)}
-              aria-label={say({ language, en: "close the scenario" })}
-            >
-              ×
-            </button>
-          </div>
-          {localized({ language, text: activeScenario.text })}
-        </div>
-      )}
+      <WorkshopHeader
+        language={language}
+        search={search}
+        onSearchChange={setSearch}
+        onSubmitSearch={submitSearch}
+        guidedTourOpen={guidedTourOpen}
+        onToggleGuidedTour={() => setGuidedTourOpen(!guidedTourOpen)}
+        scenarioIndex={scenarioIndex}
+        onActivateScenario={activateScenario}
+        activeScenario={activeScenario ?? null}
+        onCloseScenario={() => setScenarioIndex(-1)}
+      />
 
       <div
         className={
@@ -513,954 +395,79 @@ export function WorkshopPage({
             : "grid grid-cols-1 gap-3 p-2 sm:p-4 lg:grid-cols-[240px_minmax(0,1fr)_430px]"
         }
       >
-        {/* ① the layers */}
-        <section className="space-y-3" role="region" aria-labelledby="panel-layers-heading">
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
-            <h2 id="panel-layers-heading" className="mb-2 flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
-              {say({ language, en: "① The layers" })}
-              <span className="font-normal text-slate-600 dark:text-slate-400">
-                {graphView
-                  ? say({
-                      language,
-                      en: "the graph of refinements",
-                    })
-                  : say({ language, en: "and their raws" })}
-              </span>
-              <span className="ml-auto flex overflow-hidden rounded border border-slate-300 dark:border-slate-600 text-[10px] leading-4">
-                <button type="button"
-                  onClick={() => setGraphView(false)}
-                  className={
-                    "px-2 " +
-                    (!graphView
-                      ? "bg-slate-800 dark:bg-slate-600 text-white"
-                      : "bg-white text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900")
-                  }
-                >
-                  {say({ language, en: "list" })}
-                </button>
-                <button type="button"
-                  onClick={() => setGraphView(true)}
-                  className={
-                    "px-2 " +
-                    (graphView
-                      ? "bg-slate-800 dark:bg-slate-600 text-white"
-                      : "bg-white text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900")
-                  }
-                >
-                  {say({ language, en: "graph" })}
-                </button>
-              </span>
-              <button type="button"
-                onClick={() => setComposerOpen(!composerOpen)}
-                title={say({
-                  language,
-                  en:
-                    "add a formalism — the candidate goes through staging: " +
-                    "whole corpus + supplements revalidated, 0 assembly verdict demanded",
-                })}
-                className={
-                  "ml-1 rounded-full border px-2 text-sm font-bold leading-5 " +
-                  (composerOpen
-                    ? "border-emerald-600 bg-emerald-600 dark:bg-emerald-700 text-white"
-                    : "border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:border-emerald-500 dark:hover:border-emerald-400 hover:text-emerald-600 dark:hover:text-emerald-400")
-                }
-              >
-                ＋
-              </button>
-            </h2>
-            {composerOpen && (
-              <div className="space-y-2">
-                <AccessCodeForm language={language} />
-                <UserAccountForm language={language} />
-                <AddFormalismComposer
-                  kernel={KERNEL}
-                  language={language}
-                  livingLayerNames={livingLayerNames}
-                  previousAdditionSources={additions.map((addition) => addition.source)}
-                  onAdded={handleComposerAdded}
-                />
-                <DiskWardrobe
-                  kernel={KERNEL}
-                  language={language}
-                  livingLayerNames={livingLayerNames}
-                  previousAdditionSources={additions.map((addition) => addition.source)}
-                  localLayerSources={addedLayerBlocks}
-                  onAdded={handleWardrobeAdded}
-                />
-              </div>
-            )}
-            {editorLayer !== null && (
-              <LayerEditor
-                kernel={KERNEL}
-                language={language}
-                layerName={editorLayer}
-                initialSource={editorInitialSource}
-                livingAdditions={additions}
-                livingLayerNames={livingLayerNames}
-                onApplied={handleEditorApplied}
-                onClose={() => setEditorLayer(null)}
-              />
-            )}
-            {graphView ? (
-              <RefinesGraph
-                layer={layer}
-                search={search}
-                language={language}
-                layerNames={livingLayerNames}
-                dag={REFINEMENT_DAG}
-                closureSet={new Set(closureData.closure.map((address) => address[0]))}
-                onPick={(layerName) => goto(layerName, [])}
-              />
-            ) : (
-              <div className="space-y-1" onKeyDown={(event) => {
-                if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return;
-                const buttons = Array.from(event.currentTarget.querySelectorAll("button"));
-                const currentIndex = buttons.findIndex((button) => button === document.activeElement);
-                if (currentIndex === -1) return;
-                event.preventDefault();
-                const nextIndex = event.key === "ArrowDown"
-                  ? Math.min(currentIndex + 1, buttons.length - 1)
-                  : Math.max(currentIndex - 1, 0);
-                buttons[nextIndex]?.focus();
-              }}>
-                {livingLayerNames.filter(layerMatches).length === 0 && (
-                  <div className="py-2 text-xs text-slate-600 dark:text-slate-400">
-                    {say({
-                      language,
-                      en: "No layer matches « " + search + " ».",
-                    })}
-                  </div>
-                )}
-                {livingLayerNames.filter(layerMatches).map((layerName) => {
-                  const depth = (() => {
-                    let steps = 0;
-                    let current: string | null = layerName;
-                    // != null covers undefined: a layer forgotten in
-                    // PRINCIPAL_PARENT gives a wrong indentation, not
-                    // an infinite loop.
-                    while (current != null) {
-                      current = PRINCIPAL_PARENT[current] ?? null;
-                      steps += 1;
-                    }
-                    return steps - 1;
-                  })();
-                  const inClosure = closureData.closure.some((address) => address[0] === layerName);
-                  return (
-                    <div key={layerName} style={{ marginLeft: depth * 10 }}>
-                      <div className="flex items-center gap-1">
-                        <button type="button"
-                          onClick={() => goto(layerName, [])}
-                          title={localized({
-                            language,
-                            text: LAYER_ROLE[layerName] ?? { en: layerName},
-                          })}
-                          className={
-                            "flex flex-1 items-center gap-2 rounded-md px-2 py-1 text-left text-xs transition-colors " +
-                            (layerName === layer
-                              ? "bg-slate-100 dark:bg-slate-800 ring-1 ring-slate-400"
-                              : "hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900") +
-                            (inClosure ? " font-semibold" : "")
-                          }
-                        >
-                          <span
-                            className={
-                              "h-2.5 w-2.5 shrink-0 rounded-full " + LAYER_COLOR[layerName]
-                            }
-                          />
-                          <span>
-                            {layerName}
-                            <span
-                              title={say({
-                                language,
-                                en: "in the closure of the current address (③)",
-                              })}
-                              className="ml-1 text-[10px] text-slate-600 dark:text-slate-400"
-                            >
-                              {inClosure ? "•" : ""}
-                            </span>
-                          </span>
-                        </button>
-                        {editableLayerSet.has(layerName) && (
-                          <button type="button"
-                            onClick={() =>
-                              setEditorLayer(editorLayer === layerName ? null : layerName)
-                            }
-                            title={say({
-                              language,
-                              en:
-                                "edit the living layer — staging rejudges it " +
-                                "(0 verdict demanded), the write is declared, " +
-                                "the workshop re-reads the space",
-                            })}
-                            aria-label={
-                              say({ language, en: "edit the layer " }) +
-                              layerName
-                            }
-                            className={
-                              "shrink-0 rounded-md px-1.5 py-1 text-xs transition-colors " +
-                              (editorLayer === layerName
-                                ? "bg-sky-600 dark:bg-sky-700 text-white"
-                                : "text-slate-600 dark:text-slate-400 hover:bg-sky-50 dark:hover:bg-sky-950 hover:text-sky-600 dark:hover:text-sky-300")
-                            }
-                          >
-                            ✎
-                          </button>
-                        )}
-                      </div>
-                      {layerName === layer && (
-                        <div className="ml-4 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
-                          {localized({
-                            language,
-                            text: LAYER_ROLE[layerName] ?? { en: layerName},
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+        <WorkshopLayersPanel
+          language={language}
+          kernel={KERNEL}
+          dag={REFINEMENT_DAG}
+          sourceLineTargets={SOURCE_LINE_TARGETS}
+          layer={layer}
+          search={search}
+          graphView={graphView}
+          onGraphViewChange={setGraphView}
+          composerOpen={composerOpen}
+          onComposerToggle={() => setComposerOpen(!composerOpen)}
+          additions={additions}
+          livingLayerNames={livingLayerNames}
+          addedLayerBlocks={addedLayerBlocks}
+          onComposerAdded={handleComposerAdded}
+          onWardrobeAdded={handleWardrobeAdded}
+          editorLayer={editorLayer}
+          editorInitialSource={editorInitialSource}
+          onEditorApplied={handleEditorApplied}
+          onEditorClose={() => setEditorLayer(null)}
+          onPickLayer={goto}
+          closureSet={new Set(closureData.closure.map((address) => address[0]))}
+          layerMatches={layerMatches}
+          editableLayerSet={editableLayerSet}
+          onEditorToggle={(layerName) => setEditorLayer(editorLayer === layerName ? null : layerName)}
+          onPickFormalism={goto}
+          onLine={openSourceLine}
+        />
 
-          {/* ② the formalism — three tabs (language, raw,
-              flattened); every line of the language is clickable */}
-          <FormalismPanel
-            kernel={KERNEL}
-            layer={layer}
-            language={language}
-            addedLayerSources={addedLayerBlocks}
-            sourceLineTargets={SOURCE_LINE_TARGETS}
-            onPick={goto}
-            onLine={openSourceLine}
-          />
-        </section>
+        <WorkshopFlatPanel
+          language={language}
+          layer={layer}
+          path={path}
+          onResetPath={() => setPath([])}
+          onSegmentClick={(index) => setPath(path.slice(0, index + 1))}
+          historyLength={history.length}
+          onBack={goBack}
+          copied={copied}
+          onCopyAddress={copyAddress}
+          shownKeys={shownKeys}
+          addressKeysCount={addressKeys.length}
+          search={search}
+          selectedKey={selectedKey}
+          onSelectKey={setSelectedKey}
+          onGotoAddress={goto}
+          onShowClosure={() => setShowClosureCalculation(true)}
+        />
 
-        {/* ③ the flattened view */}
-        <section className="space-y-3" role="region" aria-labelledby="panel-flat-heading">
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
-            <h2 id="panel-flat-heading" className="mb-2 text-sm font-bold text-slate-800 dark:text-slate-100">
-              {say({ language, en: "③ The flattened data" })}
-              <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
-                {say({ language, en: "reading at an address" })}
-              </span>
-            </h2>
-            <div className="flex flex-wrap items-center gap-1 text-xs">
-              <button type="button"
-                onClick={goBack}
-                disabled={!history.length}
-                title={
-                  history.length
-                    ? say({
-                        language,
-                        en: "back to the previous address (" + history.length + " in the stack)",
-                      })
-                    : say({
-                        language,
-                        en: "nothing to undo — no address visited",
-                      })
-                }
-                aria-label={say({ language, en: "previous address" })}
-                className={
-                  "rounded px-1.5 py-0.5 font-bold " +
-                  (history.length
-                    ? "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600"
-                    : "text-slate-500 dark:text-slate-400")
-                }
-              >
-                ←
-              </button>
-              <LayerBadge layer={layer} />
-              <span className="text-slate-600 dark:text-slate-400">::</span>
-              <button type="button" className="text-slate-600 dark:text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" onClick={() => setPath([])} aria-label={say({ language, en: "reset path" })}>
-                ()
-              </button>
-              {path.map((segment, index) => (
-                <span key={index} className="flex items-center gap-1">
-                  <span className="text-slate-500 dark:text-slate-400">/</span>
-                  <button type="button"
-                    className="font-mono font-medium text-slate-700 dark:text-slate-200 hover:underline"
-                    onClick={() => setPath(path.slice(0, index + 1))}
-                  >
-                    {segment}
-                  </button>
-                </span>
-              ))}
-              <button type="button"
-                onClick={copyAddress}
-                title={say({
-                  language,
-                  en:
-                    "copy the address (layer :: path :: key) — " +
-                    "the workshop's shareable artifact",
-                })}
-                aria-label={say({ language, en: "copy the address" })}
-                className={
-                  "ml-auto rounded px-1.5 py-0.5 text-[10px] " +
-                  (copied
-                    ? "bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300"
-                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600")
-                }
-              >
-                {copied
-                  ? say({ language, en: "address copied ✓" })
-                  : say({ language, en: "copy ⧉" })}
-              </button>
-            </div>
-
-            <div className="mt-3 divide-y divide-slate-100 dark:divide-slate-700">
-              {shownKeys.length === 0 && (
-                <div className="py-2 text-xs text-slate-600 dark:text-slate-400">
-                  {addressKeys.length === 0
-                    ? say({
-                        language,
-                        en: "No visible key at this address (declaration node).",
-                      })
-                    : say({
-                        language,
-                        en: "No key matches « " + search + " ».",
-                      })}
-                </div>
-              )}
-              {shownKeys.map((info) => {
-                const active = info.key === selectedKey;
-                const isNode = info.value instanceof AddressView;
-                return (
-                  <div
-                    key={info.key}
-                    className={
-                      "flex items-center gap-2 py-1.5 text-xs " +
-                      (active ? "rounded-md bg-sky-50 dark:bg-sky-950 px-1 ring-1 ring-sky-200 dark:ring-sky-800" : "")
-                    }
-                  >
-                    <button type="button"
-                      className="min-w-24 text-left font-mono font-semibold text-slate-800 dark:text-slate-100 hover:underline"
-                      onClick={() => {
-                        setSelectedKey(active ? null : info.key);
-                        if (!active) setShowClosureCalculation(true);
-                      }}
-                    >
-                      {info.key}
-                    </button>
-                    {info.winner ? (
-                      <LayerBadge layer={info.winner[0]} small />
-                    ) : (
-                      <span className="text-[10px] text-slate-600 dark:text-slate-400">
-                        {say({ language, en: "no value" })}
-                      </span>
-                    )}
-                    <span className="truncate">
-                      <KernelValue value={info.value} language={language} />
-                    </span>
-                    {isNode && (
-                      <button type="button"
-                        className="ml-auto shrink-0 rounded border border-slate-300 dark:border-slate-600 px-1.5 py-0.5 text-[10px] text-slate-500 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-800 dark:hover:text-slate-200 dark:text-slate-100"
-                        onClick={() =>
-                          goto((info.value as unknown as AddressView).layer, (info.value as unknown as AddressView).path)
-                        }
-                      >
-                        {say({ language, en: "→ go there" })}
-                      </button>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            <p className="mt-2 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
-              {say({
-                language,
-                en:
-                  "Each line: the key, the layer providing the value " +
-                  "(first-wins), the value. A node is traversed (« → go there »); " +
-                  "a resolved reference is recognized by its designated address.",
-              })}
-            </p>
-          </div>
-        </section>
-
-        {/* ③ the reading and its resolution —
-            the mechanism comes before the cascade */}
-        <section className="space-y-3" role="region" aria-labelledby="panel-mechanism-heading">
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
-            <h2 id="panel-mechanism-heading" className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
-              {say({ language, en: "③ The mechanism" })}
-              <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
-                {say({
-                  language,
-                  en:
-                    "the last crank in detail — closure by address, sources in " + "reading order",
-                })}
-              </span>
-            </h2>
-            <p className="mb-2 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
-              {say({ language, en: "Current address:" })}{" "}
-              <span className="font-mono font-semibold text-slate-600 dark:text-slate-400">
-                {addressText(currentAddress)}
-              </span>
-              {selectedKey ? (
-                <>
-                  {say({ language, en: " — key read: " })}
-                  <span className="font-mono font-semibold text-slate-600 dark:text-slate-400">{selectedKey}</span>
-                </>
-              ) : (
-                say({
-                  language,
-                  en: " — select a key on the left to see the reading path",
-                })
-              )}
-            </p>
-            <div className="space-y-1">
-              {closureData.closure.map((address, index) => {
-                const status = selectedKey
-                  ? statusBySource.get(addressText(address)) || "non atteint"
-                  : null;
-                return (
-                  <div
-                    key={index}
-                    className={
-                      "flex items-center gap-2 rounded-md px-1.5 py-1 text-[11px] " +
-                      (index === winnerIndex ? "bg-emerald-50 dark:bg-emerald-950 ring-1 ring-emerald-300 dark:ring-emerald-700" : "")
-                    }
-                  >
-                    <span className="w-5 shrink-0 text-right font-mono text-slate-600 dark:text-slate-400">
-                      {index}
-                    </span>
-                    <LayerBadge layer={address[0]} small />
-                    <span className="font-mono text-slate-700 dark:text-slate-200">
-                      {address[1].length ? address[1].join("/") : "()"}
-                    </span>
-                    {status && (
-                      <span className="ml-auto shrink-0">
-                        <StatusPill status={status} language={language} />
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-            {selectedKey && (
-              <div className="mt-2 flex flex-wrap items-center gap-2 rounded-md bg-slate-50 dark:bg-slate-900 px-2 py-1.5 text-[11px]">
-                <span className="text-slate-500 dark:text-slate-400">
-                  <span className="font-mono font-semibold text-slate-700 dark:text-slate-200">{selectedKey}</span> =
-                </span>
-                <KernelValue
-                  value={selectedKeyDetail ? selectedKeyDetail.value : null}
-                  language={language}
-                />
-                {selectedKeyDetail && selectedKeyDetail.value instanceof AddressView && (
-                  <button type="button"
-                    className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500"
-                    onClick={() =>
-                      goto(
-                        (selectedKeyDetail!.value as unknown as AddressView).layer,
-                        (selectedKeyDetail!.value as unknown as AddressView).path,
-                      )
-                    }
-                  >
-                    {say({
-                      language,
-                      en: "→ go to the designated address",
-                    })}
-                  </button>
-                )}
-              </div>
-            )}
-          </div>
-
-          {selectedKeyDetail && selectedKeyDetail.referenceEvents.length > 0 && (
-            <div className="rounded-lg border border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-sky-950/50 p-3">
-              <h3 className="mb-1 text-xs font-bold text-sky-800 dark:text-sky-300">
-                {say({ language, en: "Reference resolution" })}
-              </h3>
-              <div className="space-y-2">
-                {selectedKeyDetail.referenceEvents.map((event, index) => (
-                  <TraceEventRow key={index} event={event} language={language} />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* The cascade strip — click a line of the formalism
-              (②), its step opens on the right; click inside the
-              last step, it moves left and the new one opens on
-              the right; the second-to-last/last pair is
-              highlighted, the story scrolls, older steps fading */}
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
-            <h2 className="mb-2 text-sm font-bold text-slate-800 dark:text-slate-100">
-              {say({ language, en: "③ The resolution cascade" })}
-              <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
-                {cascade.length +
-                  " " +
-                  say({ language, en: "crank" }) +
-                  (cascade.length > 1 ? "s" : "") +
-                  " — " +
-                  say({
-                    language,
-                    en: "the story stays visible, the last one speaks",
-                  })}
-              </span>
-            </h2>
-            {cascade.length > 10 && (
-              <p className="mb-1 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
-                {"… " +
-                  say({ language, en: "and " }) +
-                  (cascade.length - 10) +
-                  " " +
-                  say({ language, en: "crank" }) +
-                  (cascade.length - 10 > 1 ? "s" : "") +
-                  " " +
-                  say({
-                    language,
-                    en: "before, in the stack — the ③ back button undoes them",
-                  })}
-              </p>
-            )}
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {cascade.slice(-10).map((step, index) => (
-                <CascadeCard
-                  key={cascade.length - Math.min(cascade.length, 10) + index}
-                  space={KERNEL.space}
-                  target={step}
-                  language={language}
-                  isLast={index === Math.min(cascade.length, 10) - 1}
-                  isSecondToLast={index === Math.min(cascade.length, 10) - 2}
-                  onOpen={goto}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* The calculation folds under the mechanism — opened
-              automatically by the click on a key */}
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
-            <button type="button"
-              className="flex w-full items-center justify-between gap-2 text-left text-xs font-bold text-slate-800 dark:text-slate-100"
-              onClick={() => setShowClosureCalculation(!showClosureCalculation)}
-              aria-expanded={showClosureCalculation}
-            >
-              <span>
-                {say({
-                  language,
-                  en: "How this closure is calculated",
-                })}
-              </span>
-              <span className="text-slate-600 dark:text-slate-400">{showClosureCalculation ? "▾" : "▸"}</span>
-            </button>
-            {showClosureCalculation && (
-              <div className="mt-2 space-y-1.5">
-                {closureData.events.map((event, index) => (
-                  <TraceEventRow key={index} event={event} language={language} />
-                ))}
-              </div>
-            )}
-          </div>
-        </section>
+        <WorkshopMechanismPanel
+          language={language}
+          kernel={KERNEL}
+          currentAddress={currentAddress}
+          selectedKey={selectedKey}
+          closureData={closureData}
+          statusBySource={statusBySource}
+          winnerIndex={winnerIndex}
+          selectedKeyDetail={selectedKeyDetail}
+          onGoto={goto}
+          cascade={cascade}
+          showClosureCalculation={showClosureCalculation}
+          onToggleClosure={() => setShowClosureCalculation(!showClosureCalculation)}
+        />
       </div>
 
-      <section className="mx-2 mt-3 sm:mx-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
-        <h2 id="panel-viewpoint-heading" className="text-sm font-bold text-slate-800 dark:text-slate-100">
-          {say({ language, en: "④ The point of view" })}
-          <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
-            {say({
-              language,
-              en: "the tree on the left, the drawing on the right",
-            })}
-          </span>
-        </h2>
-        <p className="mb-3 mt-1 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
-          {say({
-            language,
-            en:
-              "The look is chosen in the tree: lenses dress the types with a " +
-              "display templates scheme; viewpoints designate a model and " +
-              "a lens through LRef fields. A viewpoint imposes its model — " +
-              "a lone lens applies to the current model of ①. The " +
-              "positions are those of the course when the viewpoint " +
-              "decides them, otherwise the circle layout; and the " +
-              "inapplicability displays honestly (the lens dresses only " +
-              "what it knows, the model stays whole). Among the entries " +
-              "dressing a node, the most specific wins — measured by " +
-              "closure, not by the order of the chain. Click a shape or " +
-              "an arc to see the dressing.",
-          })}
-        </p>
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-          {/* The tree of looks: roots then descendants (refinements
-              internal to the group), indentation by depth; a click
-              changes the look and deselects the shape */}
-          <div className="space-y-3">
-            <div>
-              <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {say({ language, en: "Lenses" })}
-              </div>
-              <div className="space-y-1">
-                {groupTree({ space: KERNEL.space, members: LENS_LAYERS }).map(
-                  ({ layer: viewLayer, depth }) => (
-                    <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
-                      <button type="button"
-                        className={
-                          "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
-                          (selectedView === viewLayer
-                            ? "bg-slate-800 dark:bg-slate-600 text-white"
-                            : "bg-white text-slate-700 dark:text-slate-200 ring-1 ring-slate-200 dark:ring-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800")
-                        }
-                        onClick={() => {
-                          setSelectedView(viewLayer);
-                          setSelectedGlyph(null);
-                        }}
-                      >
-                        <LayerBadge layer={viewLayer} small />
-                        <span className="truncate text-slate-600 dark:text-slate-400">
-                          {say({
-                            language,
-                            en: "lens — model: the current one of ①",
-                          })}
-                        </span>
-                      </button>
-                    </div>
-                  ),
-                )}
-              </div>
-            </div>
-            <div>
-              <div className="mb-1 text-[11px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                {say({ language, en: "Viewpoints" })}
-              </div>
-              <div className="space-y-1">
-                {groupTree({ space: KERNEL.space, members: VIEWPOINT_LAYERS }).map(
-                  ({ layer: viewLayer, depth }) => (
-                    <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
-                      <button type="button"
-                        className={
-                          "flex w-full items-center gap-1.5 rounded px-1.5 py-1 text-left text-[11px] " +
-                          (selectedView === viewLayer
-                            ? "bg-slate-800 dark:bg-slate-600 text-white"
-                            : "bg-white text-slate-700 dark:text-slate-200 ring-1 ring-slate-200 dark:ring-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800")
-                        }
-                        onClick={() => {
-                          setSelectedView(viewLayer);
-                          setSelectedGlyph(null);
-                        }}
-                      >
-                        <LayerBadge layer={viewLayer} small />
-                        <span className="truncate text-slate-600 dark:text-slate-400">
-                          {bindingOf({ space: KERNEL.space, view: viewLayer, key: "model" })
-                            .value instanceof AddressView
-                            ? say({ language, en: "→ designated model" })
-                            : say({
-                                language,
-                                en: "→ model: the current one of ①",
-                              })}
-                        </span>
-                      </button>
-                    </div>
-                  ),
-                )}
-              </div>
-            </div>
-          </div>
-          {/* The drawing: the model "seen through" the lens, the
-              header says what is imposed, decided or fallback */}
-          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 p-2 md:col-span-2">
-            <div className="mb-1 flex flex-wrap items-center gap-1.5 text-[11px]">
-              <LayerBadge layer={look.model} small />
-              <span className="text-slate-500 dark:text-slate-400">
-                {say({ language, en: "seen through" })}
-              </span>
-              {look.lens !== null ? (
-                <LayerBadge layer={look.lens} small />
-              ) : (
-                <span className="font-mono text-slate-600 dark:text-slate-400">
-                  {say({ language, en: "∅ without a lens" })}
-                </span>
-              )}
-              <span className="text-slate-500 dark:text-slate-400">·</span>
-              <span className="text-slate-500 dark:text-slate-400">
-                {look.isLens
-                  ? say({
-                      language,
-                      en: "lone lens — current model of ①",
-                    })
-                  : look.viewpointDecidesPositions
-                    ? say({ language, en: "course positions" })
-                    : look.modelCarriesPositions
-                      ? say({
-                          language,
-                          en: "model positions — resolved (grid or pole, relative included)",
-                        })
-                      : say({
-                          language,
-                          en: "positions: circle layout",
-                        })}
-              </span>
-            </div>
-            <svg viewBox={look.frame ?? "0 0 270 220"} className="w-full rounded bg-white dark:bg-slate-800">
-              {look.lens !== null &&
-                look.edges.map((edge) => {
-                  const from =
-                    edge.from !== null
-                      ? (look.vertices.find((vertex) => vertex.name === edge.from)?.position ??
-                        null)
-                      : null;
-                  const to =
-                    edge.to !== null
-                      ? (look.vertices.find((vertex) => vertex.name === edge.to)?.position ?? null)
-                      : null;
-                  if (!from || !to) return null;
-                  return (
-                    <EdgeGlyph
-                      key={edge.name}
-                      name={edge.name}
-                      shape={edge.drawn ? edge.drawn.spec : null}
-                      weight={edge.weight}
-                      from={from}
-                      to={to}
-                      selected={
-                        selectedGlyph !== null &&
-                        selectedGlyph.kind === "edge" &&
-                        selectedGlyph.name === edge.name
-                      }
-                      onPick={() =>
-                        setSelectedGlyph(
-                          selectedGlyph &&
-                            selectedGlyph.kind === "edge" &&
-                            selectedGlyph.name === edge.name
-                            ? null
-                            : { kind: "edge", name: edge.name },
-                        )
-                      }
-                    />
-                  );
-                })}
-              {look.lens !== null &&
-                look.vertices.map((vertex) => {
-                  if (!vertex.position) return null;
-                  return (
-                    <NodeGlyph
-                      key={vertex.name}
-                      name={vertex.name}
-                      shape={vertex.drawn ? vertex.drawn.spec : null}
-                      position={vertex.position}
-                      selected={
-                        selectedGlyph !== null &&
-                        selectedGlyph.kind === "vertex" &&
-                        selectedGlyph.name === vertex.name
-                      }
-                      onPick={() =>
-                        setSelectedGlyph(
-                          selectedGlyph &&
-                            selectedGlyph.kind === "vertex" &&
-                            selectedGlyph.name === vertex.name
-                            ? null
-                            : { kind: "vertex", name: vertex.name },
-                        )
-                      }
-                    />
-                  );
-                })}
-            </svg>
-            {/* The bindings of the viewpoint: the layer that
-                  provides each field, the resolved value — a look
-                  stays a layer, its slots read like the others */}
-            {!look.isLens && (
-              <div className="mt-1.5 space-y-0.5 text-[10px] leading-4">
-                {["model", "display", "zoom"].map((slotKey) => {
-                  const binding = bindingOf({
-                    space: KERNEL.space,
-                    view: selectedView,
-                    key: slotKey,
-                  });
-                  return (
-                    <div key={slotKey} className="flex items-center gap-1">
-                      <span className="w-11 shrink-0 font-mono text-slate-600 dark:text-slate-400">{slotKey}</span>
-                      {binding.winner ? (
-                        <LayerBadge layer={binding.winner[0]} small />
-                      ) : (
-                        <span className="text-slate-600 dark:text-slate-400">∅</span>
-                      )}
-                      <span className="truncate text-slate-500 dark:text-slate-400">
-                        {binding.value instanceof AddressView
-                          ? "→ " + binding.value.layer
-                          : binding.value === null
-                            ? say({ language, en: "∅ undefined" })
-                            : String(binding.value)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-            {/* Honest applicability: nothing hidden — no lens, no
-                  graph, blind or partial lens, every case speaks */}
-            <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
-              {look.lens === null
-                ? say({
-                    language,
-                    en: "viewpoint without a lens — no drawing",
-                  })
-                : look.applicability.total === -1
-                  ? say({
-                      language,
-                      en: "the model is not a graph — no vertices entry",
-                    })
-                  : say({ language, en: "applicability: " }) +
-                    look.applicability.dressed +
-                    "/" +
-                    look.applicability.total +
-                    say({
-                      language,
-                      en: " vertices dressed",
-                    }) +
-                    (look.applicability.dressed === look.applicability.total
-                      ? say({ language, en: " — applicable lens" })
-                      : "") +
-                    (look.applicability.dressed === 0
-                      ? say({
-                          language,
-                          en: " — blind lens: domain error (check_view_lens)",
-                        })
-                      : "") +
-                    (look.applicability.dressed > 0 &&
-                    look.applicability.dressed < look.applicability.total
-                      ? say({
-                          language,
-                          en: " — partial: domain error",
-                        })
-                      : "")}
-            </div>
-            <p className="mt-1 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
-              {localized({ language, text: VIEW_NOTES[selectedView] ?? { en: ""} })}
-            </p>
-          </div>
-        </div>
-
-        {selectedGlyph &&
-          look.lens !== null &&
-          (() => {
-            const glyphPath =
-              selectedGlyph.kind === "vertex"
-                ? ["vertices", selectedGlyph.name]
-                : ["edges", selectedGlyph.name];
-            const matches = dressingEntries({
-              space: KERNEL.space,
-              lens: asLayerName(look.lens),
-              layer: asLayerName(look.model),
-              path: asLayerPath(glyphPath),
-            });
-            let best: {
-              path: string[];
-              spec: Glyph[];
-              hit: ReturnType<typeof dressingEntries>[number]["hit"];
-            } | null = null;
-            for (const match of matches) {
-              if (
-                best === null ||
-                coversAddresses({ space: KERNEL.space, covering: match.hit, covered: best.hit })
-              )
-                best = match;
-            }
-            return (
-              <div className="mt-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-900 p-3">
-                <div className="mb-1 flex items-center gap-2">
-                  <span className="rounded bg-slate-800 dark:bg-slate-600 px-1.5 py-0.5 text-[11px] font-bold text-white">
-                    {selectedGlyph.name}
-                  </span>
-                  <span className="text-xs text-slate-500 dark:text-slate-400">
-                    {look.model} :: {glyphPath.join("/")} —{" "}
-                    {say({ language, en: "dressing by" })}{" "}
-                    <span className="font-medium">{look.lens}</span>
-                  </span>
-                  <button type="button"
-                    className="ml-auto rounded px-2 text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800 hover:text-slate-700 dark:hover:text-slate-300 dark:text-slate-200"
-                    onClick={() => setSelectedGlyph(null)}
-                  >
-                    ×
-                  </button>
-                </div>
-                {matches.length === 0 && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    {say({
-                      language,
-                      en:
-                        "No entry of the lens dresses this node — it would be " +
-                        "drawn « naked » (dotted).",
-                    })}
-                  </p>
-                )}
-                <div className="space-y-1">
-                  {matches.map((match, index) => {
-                    const isBest = match === best;
-                    return (
-                      <div
-                        key={index}
-                        className={
-                          "flex flex-wrap items-center gap-1.5 rounded-md px-2 py-1 text-[11px] " +
-                          (isBest ? "bg-emerald-50 dark:bg-emerald-950 ring-1 ring-emerald-300 dark:ring-emerald-700" : "bg-white dark:bg-slate-800")
-                        }
-                      >
-                        <span className="font-semibold text-slate-800 dark:text-slate-100">
-                          {shapeLabel({ shape: match.spec, language })}
-                        </span>
-                        <span className="text-slate-600 dark:text-slate-400">
-                          {say({ language, en: "← entry" })}
-                        </span>
-                        <span className="font-mono text-slate-600 dark:text-slate-400">{match.path.join("/")}</span>
-                        <span className="text-slate-600 dark:text-slate-400">
-                          {say({ language, en: "dresses" })}
-                        </span>
-                        {match.hit.map((hitAddress, hitIndex) => (
-                          <span key={hitIndex} className="inline-flex items-center gap-0.5">
-                            {hitIndex > 0 && <span className="text-slate-600 dark:text-slate-400">,</span>}
-                            <LayerBadge layer={hitAddress[0]} small />
-                            <span className="font-mono text-slate-500 dark:text-slate-400">
-                              {hitAddress[1].length ? hitAddress[1].join("/") : "()"}
-                            </span>
-                          </span>
-                        ))}
-                        {isBest && (
-                          <span className="ml-auto rounded bg-emerald-600 dark:bg-emerald-700 px-1.5 py-0.5 text-[10px] font-bold text-white">
-                            {say({
-                              language,
-                              en: "winner — the most specific",
-                            })}
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-                {matches.length > 1 && (
-                  <p className="mt-1.5 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
-                    {language === "fr" ? (
-                      <>
-                        Deux entrées habillent ce nœud : celle de la famille et le cercle générique.
-                        L'entrée la plus spécifique gagne — son type{" "}
-                        <span className="font-mono">raffine</span> celui de l'autre, mesuré par
-                        fermeture : ce verdict ne dépend pas de l'ordre de la chaîne du nœud (think1
-                        porte son type le plus spécifique en fin de chaîne, producer en début).
-                      </>
-                    ) : (
-                      <>
-                        Two entries dress this node: the family one and the generic circle. The most
-                        specific entry wins — its type <span className="font-mono">refines</span>{" "}
-                        the other's, measured by closure: this verdict does not depend on the order
-                        of the node's chain (think1 carries its most specific type at the end of the
-                        chain, producer at the start).
-                      </>
-                    )}
-                  </p>
-                )}
-                {matches.length === 1 && (
-                  <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-                    {say({
-                      language,
-                      en: "A single entry dresses this node: no choice to make.",
-                    })}
-                  </p>
-                )}
-              </div>
-            );
-          })()}
-      </section>
+      <WorkshopViewpointPanel
+        language={language}
+        kernel={KERNEL}
+        look={look}
+        selectedView={selectedView}
+        onSelectView={setSelectedView}
+        selectedGlyph={selectedGlyph}
+        onSelectGlyph={setSelectedGlyph}
+      />
 
       {/* The panels are counted on one hand — ① the layers, ② the
           formalism, ③ the reading and its resolution, ④ the point
@@ -1486,4 +493,3 @@ export function WorkshopPage({
     </div>
   );
 }
-

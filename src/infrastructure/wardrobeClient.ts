@@ -85,14 +85,44 @@ export function writeAccessCode({
   }
 }
 
+/** Default bound on one API call: time-to-response. A hanging server
+ * aborts after this delay, the caller's catch shows its error state —
+ * no infinite spinner (issue #200). The timer is cleared as soon as
+ * the response headers arrive, so a long-lived stream (the editor's
+ * SSE session) stays open once connected. */
+export const API_TIMEOUT_MS = 10_000;
+
 /** One call to the proxy API, with the access code attached when
  * present. The code travels in the `x-access-code` header — the URL
- * and the page never carry it. */
-export async function apiFetch({ endpoint, options = {} }: { endpoint: string; options?: RequestInit }): Promise<Response> {
+ * and the page never carry it. The wait is bounded by `timeoutMs`
+ * (default API_TIMEOUT_MS, 0 disables): on expiry the fetch aborts
+ * and rejects with an AbortError, which callers surface as their
+ * error state. */
+export async function apiFetch({
+  endpoint,
+  options = {},
+  timeoutMs = API_TIMEOUT_MS,
+}: {
+  endpoint: string;
+  options?: RequestInit;
+  timeoutMs?: number;
+}): Promise<Response> {
   const headers: Record<string, string> = {
     ...((options.headers as Record<string, string>) ?? {}),
   };
   const accessCode = readAccessCode();
   if (accessCode) headers["x-access-code"] = accessCode;
-  return fetch(endpoint, { ...options, headers });
+  if (!timeoutMs) return fetch(endpoint, { ...options, headers });
+  const controller = new AbortController();
+  const callerSignal = options.signal;
+  if (callerSignal !== null && callerSignal !== undefined) {
+    if (callerSignal.aborted) controller.abort();
+    else callerSignal.addEventListener("abort", () => controller.abort(), { once: true });
+  }
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(endpoint, { ...options, headers, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
 }
