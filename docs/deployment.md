@@ -47,6 +47,28 @@ désactivé, comme sans `DATABASE_URL` :
 DATABASE_URL= docker compose up --no-deps --build atelier
 ```
 
+## Développement conteneurisé avec hot reload (issue #204)
+
+Le déploiement par défaut sert le build de production (`dist/`) : pas de
+hot reload. Pour développer **dans** docker compose avec HMR :
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+```
+
+L'override `docker-compose.dev.yml` :
+
+- construit la cible `dev` du Dockerfile (dépendances complètes, dont
+  vite, sans build) ;
+- monte le dépôt dans le conteneur (`.:/app`, `node_modules` exclu via un
+  volume anonyme) : **toute édition de `src/` sur l'hôte recharge la page** ;
+- lance côte à côte `node server.ts` (API sur 8791) et le serveur dev vite
+  (port 5173, `0.0.0.0`) — le proxy vite forward `/api` vers `127.0.0.1:8791`.
+
+L'atelier avec hot reload est sur **http://127.0.0.1:5173** ; l'API reste
+sur http://127.0.0.1:8791. `docker compose up` (sans l'override) et l'image
+de production sont inchangés.
+
 ## Exemple nginx (reverse proxy + HTTPS)
 
 ```nginx
