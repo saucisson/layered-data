@@ -111,7 +111,7 @@ export async function apiFetch({
     ...((options.headers as Record<string, string>) ?? {}),
   };
   const accessCode = readAccessCode();
-  if (accessCode) headers["x-access-code"] = accessCode;
+  if (accessCode && headers["x-access-code"] === undefined) headers["x-access-code"] = accessCode;
   if (!timeoutMs) return fetch(endpoint, { ...options, headers });
   const controller = new AbortController();
   const callerSignal = options.signal;
