@@ -30,6 +30,10 @@ const containerSource = readFileSync(
   join(rootDirectory, "src/WorkshopContainer.tsx"),
   "utf8",
 );
+const layersPanelSource = readFileSync(
+  join(rootDirectory, "src/presentation/workshop/WorkshopLayersPanel.tsx"),
+  "utf8",
+);
 const packageSource = readFileSync(join(rootDirectory, "package.json"), "utf8");
 
 // ---- the component contract -----------------------------------------
@@ -98,15 +102,19 @@ check(
   formSource.includes("export function UserAccountForm") && !formSource.includes("export default"),
 );
 
-// ---- the integration in the workshop container ----------------------
+// ---- the integration in the workshop layers panel -------------------
 
 check(
-  "WorkshopContainer imports UserAccountForm",
-  containerSource.includes('import { UserAccountForm } from "./presentation/userAccountForm.tsx"'),
+  "WorkshopContainer renders the workshop layers panel",
+  containerSource.includes("WorkshopLayersPanel"),
 );
 check(
-  "WorkshopContainer renders UserAccountForm next to AccessCodeForm",
-  containerSource.includes("<UserAccountForm language={language} />"),
+  "WorkshopLayersPanel imports UserAccountForm",
+  layersPanelSource.includes('import { UserAccountForm } from "../userAccountForm.tsx"'),
+);
+check(
+  "WorkshopLayersPanel renders UserAccountForm next to AccessCodeForm",
+  layersPanelSource.includes("<UserAccountForm language={language} />"),
 );
 
 // ---- the package wiring ---------------------------------------------
