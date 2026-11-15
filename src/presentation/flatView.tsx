@@ -185,7 +185,7 @@ export function FlatView({
           <span
             className={
               "font-mono font-semibold " +
-              (isSpecialKey(entry.key) ? "text-amber-600" : "text-slate-800 dark:text-slate-100")
+              (isSpecialKey(entry.key) ? "text-amber-600 dark:text-amber-400" : "text-slate-800 dark:text-slate-100")
             }
           >
             {entry.key}
