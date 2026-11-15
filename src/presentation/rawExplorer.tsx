@@ -27,7 +27,7 @@ function RawBranch({
   language: Language;
 }) {
   const special = (SPECIAL_KEYS as readonly string[]).includes(keyName);
-  const keyClassName = special ? "font-semibold text-amber-600" : "font-semibold text-slate-800 dark:text-slate-100";
+  const keyClassName = special ? "font-semibold text-amber-600 dark:text-amber-400" : "font-semibold text-slate-800 dark:text-slate-100";
   if (isDictionary(value)) {
     return (
       <div style={{ marginLeft: depth === 0 ? 0 : 12 }}>
