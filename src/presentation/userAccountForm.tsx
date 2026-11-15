@@ -103,7 +103,7 @@ export function UserAccountForm({ language }: { language: Language }) {
       // Verify the code first: a refused or shared code must not be
       // persisted as the active credential.
       const probeHeaders: Record<string, string> = { "x-access-code": accessCode.trim() };
-      const response = await fetch("api/whoami", { headers: probeHeaders });
+      const response = await apiFetch({ endpoint: "api/whoami", options: { headers: probeHeaders } });
       if (response.ok) {
         const body = (await response.json()) as {
           identity: string;
