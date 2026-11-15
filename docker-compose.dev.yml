@@ -1,0 +1,23 @@
+# Development override (issue #204) — hot reload for the web app:
+#
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#
+# The atelier service runs the vite dev server (port 5173, HMR) next to
+# the API (server.ts on 8791, which the vite proxy forwards /api to).
+# The repository is bind-mounted, so editing src/ on the host reloads
+# the page in the browser. node_modules stays in an anonymous volume so
+# the host install (if any) never leaks into the container.
+# The production image and the default `docker compose up` are unchanged.
+services:
+  atelier:
+    build:
+      context: .
+      target: dev
+    command: sh -c "node server.ts & npm run dev -- --host 0.0.0.0 --port 5173 --strictPort"
+    ports:
+      - "8791:8791"
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - atelier-data:/app/data
