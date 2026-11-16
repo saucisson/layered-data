@@ -1,8 +1,8 @@
 // Smoke E2E: the app boots, the workshop renders its four panels, and
-// the graphical editor tab opens with its canvas.
+// the editor page (its own top-level route since #216) renders the canvas.
 import { test, expect } from "@playwright/test";
 
-test("workshop boots with the four panels; the editor tab renders the canvas", async ({ page }) => {
+test("workshop boots with the four panels; the editor page renders the canvas", async ({ page }) => {
   await page.goto("/#workshop");
 
   // ① the layers, ② the formalism, ③ the reading, ④ the point of view
@@ -11,9 +11,8 @@ test("workshop boots with the four panels; the editor tab renders the canvas", a
   await expect(page.getByText("③ The flattened data")).toBeVisible();
   await expect(page.getByText("④ The point of view")).toBeVisible();
 
-  // the second tab of the one-page workshop: the graphical model editor
-  await page.getByRole("button", { name: "the graphical model editor" }).click();
-  await expect(page).toHaveURL(/#editor$/);
+  // the graphical model editor is its own top-level page (#216)
+  await page.goto("/#editor");
   await expect(page.getByRole("application", { name: /model canvas/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "pointer" })).toBeVisible();
 });
