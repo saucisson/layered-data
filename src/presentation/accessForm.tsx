@@ -1,7 +1,7 @@
 // The visible lock: one field, one verification, one state that
 // speaks — never a silent failure, even without a proxy.
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   apiFetch,
   hasValidAccessCodeConsent,
@@ -15,11 +15,28 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
   const [accessCode, setAccessCode] = useState(readAccessCode());
   const [remember, setRemember] = useState(hasValidAccessCodeConsent());
   const [stateMessage, setStateMessage] = useState<string | null>(null);
+  // Once a stored code is verified against the proxy, the dialog hides
+  // itself (issue #244): the code is kept by the browser, no need to
+  // ask again.
+  const [verified, setVerified] = useState(false);
+  useEffect(() => {
+    if (verified || readAccessCode().trim() === "") return;
+    let cancelled = false;
+    void apiFetch({ endpoint: "api/whoami" })
+      .then((response) => {
+        if (!cancelled && response.ok) setVerified(true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [verified]);
   async function verify() {
     writeAccessCode({ accessCode, remember });
     try {
       const response = await apiFetch({ endpoint: "api/whoami" });
       if (response.ok) {
+        setVerified(true);
         setStateMessage(
           say({
             language,
@@ -58,6 +75,7 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
       );
     }
   }
+  if (verified) return null;
   return (
     <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
       <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
@@ -66,12 +84,6 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
         </span>
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
           {say({ language, en: "site access code"})}
-        </span>
-        <span className="text-[11px] leading-4 text-slate-500 dark:text-slate-400">
-          {say({
-            language,
-            en: "the shared key of the server (API_TOKEN in its .env) — it protects the chatbot and the disk quarry; the workshop stays open to all. Not the AI key.",
-          })}
         </span>
       </div>
       <div className="flex flex-wrap items-center gap-1.5">
