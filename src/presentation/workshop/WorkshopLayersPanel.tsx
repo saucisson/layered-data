@@ -11,7 +11,6 @@ import type { LayeredDataKernel } from "../../application/corpus.ts";
 import { LAYER_COLOR, LAYER_ROLE, PRINCIPAL_PARENT, type RefinementDag } from "../workshopInventory.ts";
 import { localized, say } from "../i18n.ts";
 import { RefinesGraph } from "../refinesGraph.tsx";
-import { AccessCodeForm } from "../accessForm.tsx";
 import { UserAccountForm } from "../userAccountForm.tsx";
 import type { AcceptedAddition } from "../addFormalism.tsx";
 import type { AppliedEdition } from "../../application/edition.ts";
@@ -143,7 +142,8 @@ export function WorkshopLayersPanel({
         </h2>
         {composerOpen && (
           <div className="space-y-2">
-            <AccessCodeForm language={language} />
+            {/* The access code is asked from the key button of the
+                site header (issue #222), not here. */}
             <UserAccountForm language={language} />
             <Suspense fallback={<PanelToolFallback />}>
               <AddFormalismComposer
