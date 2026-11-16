@@ -4,7 +4,7 @@
 // from one click here, not on each page). Rendered once in App.tsx so
 // every page has the same chrome.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { SUPPORTED_LANGUAGES } from "../infrastructure/i18n.ts";
 import type { Language } from "../domain/messages.ts";
 import type { Page } from "./Router.tsx";
@@ -44,6 +44,23 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, dark, onTo
   // form; once verified the form hides itself and the button shows it.
   const [accessOpen, setAccessOpen] = useState(false);
   const [accessVerified, setAccessVerified] = useState(false);
+  const accessPopoverRef = useRef<HTMLSpanElement>(null);
+  // An open popover closes on outside click or Escape.
+  useEffect(() => {
+    if (!accessOpen) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!accessPopoverRef.current?.contains(event.target as Node)) setAccessOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setAccessOpen(false);
+    };
+    document.addEventListener("pointerdown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("pointerdown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [accessOpen]);
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
@@ -74,7 +91,7 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, dark, onTo
           })}
         </nav>
         <span className="ml-auto flex shrink-0 items-center gap-2 text-xs">
-          <span className="relative">
+          <span className="relative" ref={accessPopoverRef}>
             <button
               type="button"
               onClick={() => setAccessOpen(!accessOpen)}
