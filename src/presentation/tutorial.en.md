@@ -130,4 +130,4 @@ This whole tutorial employed only that gesture: write little, inherit the rest, 
 - Create a formalism (`#creation`): every entry goes through the staging.
 - Understand a formalism (`#formalism`): the source, the flattened closure, the lenses.
 
-The glossary unfolds every notion this page cites; the workshop says the rest.
+Every ⟪notion⟫ this page cites carries its one-line definition in a hover tooltip; the workshop says the rest.
