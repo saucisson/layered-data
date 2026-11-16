@@ -24,12 +24,28 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
     let cancelled = false;
     void apiFetch({ endpoint: "api/whoami" })
       .then((response) => {
-        if (!cancelled && response.ok) setVerified(true);
+        if (cancelled) return;
+        if (response.ok) {
+          setVerified(true);
+          onVerified?.();
+        }
       })
-      .catch(() => {});
+      .catch(() => {
+        // A silent re-verify that cannot reach the proxy keeps the form
+        // visible and says why — nothing is swallowed.
+        if (!cancelled) {
+          setStateMessage(
+            say({
+              language,
+              en: "the proxy did not answer — the code could not be re-verified",
+            }),
+          );
+        }
+      });
     return () => {
       cancelled = true;
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [verified]);
   async function verify() {
     writeAccessCode({ accessCode, remember });
