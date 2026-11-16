@@ -1,0 +1,58 @@
+# Production deployment to the OVH VPS (layered-data.linard.fr) —
+# issue #242. Triggered on every push to main (main is merged by the
+# human only) and manually via workflow_dispatch. The job connects as
+# the dedicated `deploy` user with the dedicated SSH key (secret
+# SSH_PRIVATE_KEY), pulls the repo in /srv/layered-data/repo and runs
+# the production compose stack (no dev override — no hot reload in
+# production). nginx on the VPS terminates HTTPS and proxies 8791.
+name: deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: deploy to VPS
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Setup SSH agent with the deploy key
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add the VPS host key
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ vars.VPS_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Pull and (re)build the production stack
+        run: |
+          ssh -o StrictHostKeyChecking=accept-new deploy@${{ vars.VPS_HOST }} bash -s <<'REMOTE'
+            set -euo pipefail
+            cd /srv/layered-data/repo
+            git fetch --quiet origin "${{ github.ref_name }}"
+            git checkout --quiet FETCH_HEAD
+            git reset --quiet --hard FETCH_HEAD
+            docker compose up --build -d
+            docker compose ps
+          REMOTE
+
+      - name: Health check through the public domain
+        run: |
+          for i in $(seq 1 12); do
+            code=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 https://layered-data.linard.fr/ || true)
+            if [ "$code" = "200" ]; then echo "layered-data.linard.fr OK (HTTP 200)"; exit 0; fi
+            sleep 5
+          done
+          echo "health check failed" >&2
+          exit 1
