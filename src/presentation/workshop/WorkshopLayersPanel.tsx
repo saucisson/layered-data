@@ -11,12 +11,10 @@ import type { LayeredDataKernel } from "../../application/corpus.ts";
 import { LAYER_COLOR, LAYER_ROLE, PRINCIPAL_PARENT, type RefinementDag } from "../workshopInventory.ts";
 import { localized, say } from "../i18n.ts";
 import { RefinesGraph } from "../refinesGraph.tsx";
-import { FormalismPanel } from "../formalismPanel.tsx";
 import { AccessCodeForm } from "../accessForm.tsx";
 import { UserAccountForm } from "../userAccountForm.tsx";
 import type { AcceptedAddition } from "../addFormalism.tsx";
 import type { AppliedEdition } from "../../application/edition.ts";
-import type { SourceLineTarget } from "../layerSourceView.tsx";
 import type { AcceptedAdditionState } from "./workshopKernel.ts";
 
 // The ＋ flow's tools are separate chunks: they load on first open,
@@ -43,7 +41,6 @@ export function WorkshopLayersPanel({
   language,
   kernel,
   dag,
-  sourceLineTargets,
   layer,
   search,
   graphView,
@@ -64,13 +61,10 @@ export function WorkshopLayersPanel({
   layerMatches,
   editableLayerSet,
   onEditorToggle,
-  onPickFormalism,
-  onLine,
 }: {
   language: Language;
   kernel: LayeredDataKernel;
   dag: RefinementDag;
-  sourceLineTargets: Map<number, SourceLineTarget>;
   layer: string;
   search: string;
   graphView: boolean;
@@ -91,8 +85,6 @@ export function WorkshopLayersPanel({
   layerMatches: (layerName: string) => boolean;
   editableLayerSet: Set<string>;
   onEditorToggle: (layerName: string) => void;
-  onPickFormalism: (layerName: string, path: string[], key?: string | null) => void;
-  onLine: (target: SourceLineTarget) => void;
 }) {
   return (
     <section className="space-y-3" role="region" aria-labelledby="panel-layers-heading">
@@ -304,18 +296,6 @@ export function WorkshopLayersPanel({
           </div>
         )}
       </div>
-
-      {/* ② the formalism — three tabs (language, raw,
-          flattened); every line of the language is clickable */}
-      <FormalismPanel
-        kernel={kernel}
-        layer={layer}
-        language={language}
-        addedLayerSources={addedLayerBlocks}
-        sourceLineTargets={sourceLineTargets}
-        onPick={onPickFormalism}
-        onLine={onLine}
-      />
     </section>
   );
 }
