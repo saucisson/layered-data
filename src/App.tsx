@@ -1,7 +1,7 @@
 // Layered Data — Main application with routing
-// Routes: #landing, #tutorial, #filiation, #workshop, #editor
-// (the workshop and the editor are ONE page, two tabs — the hash
-// picks the tab), #hierarchy, #creation, #formalism/<layer>
+// Routes: #landing, #tutorial, #filiation, #workshop, #editor,
+// #hierarchy, #creation, #formalism/<layer> — the workshop and the
+// graphical editor are two top-level pages (issue #216).
 
 import { lazy, Suspense, useEffect, useState } from "react";
 import { RouterProvider, useRouter } from "./components/Router";
@@ -49,8 +49,11 @@ const CreationPage = lazy(() =>
 const FormalismPage = lazy(() =>
   import("./pages/FormalismPage").then((module) => ({ default: module.FormalismPage })),
 );
-const WorkshopHomePage = lazy(() =>
-  import("./pages/WorkshopHomePage").then((module) => ({ default: module.WorkshopHomePage })),
+const WorkshopPage = lazy(() =>
+  import("./WorkshopContainer").then((module) => ({ default: module.WorkshopPage })),
+);
+const ModelEditorPage = lazy(() =>
+  import("./presentation/modelEditorPage").then((module) => ({ default: module.ModelEditorPage })),
 );
 const NotFoundPage = lazy(() =>
   import("./pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })),
@@ -98,13 +101,9 @@ function AppContent() {
           case "filiation":
             return <FiliationPage language={language} />;
           case "workshop":
+            return <WorkshopPage language={language} />;
           case "editor":
-            return (
-              <WorkshopHomePage
-                tab={page}
-                language={language}
-              />
-            );
+            return <ModelEditorPage language={language} />;
           case "hierarchy":
             return <HierarchyPage language={language} />;
           case "creation":
