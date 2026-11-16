@@ -28,10 +28,17 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
         );
         onVerified?.();
       } else if (response.status === 401) {
+        // Surface the proxy's own reason: an unknown code is not the
+        // site access code (the API_TOKEN of the server's .env) —
+        // the AI key (Mistral) is a different secret, asked elsewhere.
+        const body = (await response.json().catch(() => null)) as { erreur?: string } | null;
         setStateMessage(
           say({
             language,
-            en: "code refused — the proxy is protected",
+            en:
+              "code refused — " +
+              (body?.erreur ?? "the proxy is protected") +
+              ". The site access code is the API_TOKEN of the server's .env, not the AI key.",
           }),
         );
       } else {
@@ -63,7 +70,7 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
         <span className="text-[11px] leading-4 text-slate-500 dark:text-slate-400">
           {say({
             language,
-            en: "a shared key, laid in the proxy's .env — it protects the chatbot and the disk quarry; the workshop stays open to all",
+            en: "the shared key of the server (API_TOKEN in its .env) — it protects the chatbot and the disk quarry; the workshop stays open to all. Not the AI key.",
           })}
         </span>
       </div>
