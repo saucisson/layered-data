@@ -151,24 +151,6 @@ export function CreationPage({ language }: CreationPageProps) {
             </div>
           )}
         </section>
-
-        <section className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 text-[11px] leading-5 text-slate-500 dark:text-slate-400">
-          <h2 className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
-            {say({ language, en: "The gestures of the language"})}
-          </h2>
-          <p>
-            {say({
-              language,
-              en: '"layer <name>" opens a layer; "refines @<layer>" declares a parent, "then @<other>" chains them; blocks open by indentation (specification, the collections, tests); a member is written "<key> refines @<absolute-path>"; the acts are extend, override, abstract, bind, check, and a value "slot = <value>". The tutorial of the workshop explains the seven gestures, step by step.',
-            })}
-          </p>
-          <button type="button"
-            onClick={() => navigate("tutorial")}
-            className="mt-2 rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-[11px] text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
-          >
-            {say({ language, en: "the tutorial →"})}
-          </button>
-        </section>
       </div>
     </div>
   );
