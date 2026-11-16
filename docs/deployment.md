@@ -69,6 +69,31 @@ L'atelier avec hot reload est sur **http://127.0.0.1:5173** ; l'API reste
 sur http://127.0.0.1:8791. `docker compose up` (sans l'override) et l'image
 de production sont inchangés.
 
+## Déploiement automatique (VPS, issue #242)
+
+La production tourne sur un VPS OVH derrière **nginx + Let's Encrypt**
+(`layered-data.linard.fr`). Le workflow `.github/workflows/deploy.yml`
+se déclenche à chaque push sur `main` (et manuellement via
+`workflow_dispatch`) :
+
+1. connexion SSH en tant que `deploy@$VPS_HOST` avec la clé dédiée
+   (secret `SSH_PRIVATE_KEY`, clé publique dans
+   `/home/deploy/.ssh/authorized_keys` du VPS) ;
+2. `git fetch` + checkout de la branche déployée dans
+   `/srv/layered-data/repo` (les secrets de production vivent dans le
+   `.env` de ce dossier, jamais commité) ;
+3. `docker compose up --build -d` — compose de production uniquement
+   (pas d'override dev : pas de hot reload en production) ;
+4. health check : `https://layered-data.linard.fr/` doit répondre 200.
+
+Le port 8791 n'est publié que sur `127.0.0.1` ; nginx écoute 80/443 et
+proxy vers `127.0.0.1:8791` (SSE non bufferisé). Procédure manuelle :
+
+```bash
+ssh deploy@$VPS_HOST
+cd /srv/layered-data/repo && git pull && docker compose up --build -d
+```
+
 ## Exemple nginx (reverse proxy + HTTPS)
 
 ```nginx
