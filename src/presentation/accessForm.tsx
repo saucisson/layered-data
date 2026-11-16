@@ -8,6 +8,7 @@ import {
   readAccessCode,
   writeAccessCode,
 } from "../infrastructure/wardrobeClient.ts";
+import { notifyAccessCodeVerified } from "../infrastructure/accessCodeEvents.ts";
 import { say } from "./i18n.ts";
 import type { Language } from "../domain/messages.ts";
 
@@ -28,6 +29,7 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
         if (response.ok) {
           setVerified(true);
           onVerified?.();
+          notifyAccessCodeVerified();
         }
       })
       .catch(() => {
@@ -60,6 +62,7 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
           }),
         );
         onVerified?.();
+        notifyAccessCodeVerified();
       } else if (response.status === 401) {
         // Surface the proxy's own reason: an unknown code is not the
         // site access code (the API_TOKEN of the server's .env) —
