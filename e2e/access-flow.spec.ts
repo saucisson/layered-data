@@ -22,13 +22,11 @@ const E2E_ACCESS_TOKEN = process.env.E2E_API_TOKEN ?? "e2e-test-token";
 // Seed localStorage before the app scripts run, mirroring
 // writeAccessCode with an explicit consent (code + future expiry).
 async function seedStoredAccessCode(page: import("@playwright/test").Page, code: string) {
-  await page.addInitScript(
-    ([storedCode, consentExpiry]) => {
-      localStorage.setItem("code-acces-atelier", storedCode);
-      localStorage.setItem("code-acces-atelier-consent", consentExpiry);
-    },
-    [code, new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()],
-  );
+  const seed: [string, string] = [code, new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()];
+  await page.addInitScript(([storedCode, consentExpiry]: [string, string]) => {
+    localStorage.setItem("code-acces-atelier", storedCode);
+    localStorage.setItem("code-acces-atelier-consent", consentExpiry);
+  }, seed);
 }
 
 test("#244 a stored valid code hides the access-code form on load", async ({ page }) => {
