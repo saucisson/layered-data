@@ -1,10 +1,15 @@
 // The shared site header: brand, global navigation menu (plain text
-// links, current page highlighted), language picker and dark-mode
-// toggle. Rendered once in App.tsx so every page has the same chrome.
+// links, current page highlighted), language picker, dark-mode
+// toggle and the site access-code lock (issue #222: the code is asked
+// from one click here, not on each page). Rendered once in App.tsx so
+// every page has the same chrome.
 
+import { useState } from "react";
 import { SUPPORTED_LANGUAGES } from "../infrastructure/i18n.ts";
 import type { Language } from "../domain/messages.ts";
 import type { Page } from "./Router.tsx";
+import { AccessCodeForm } from "../presentation/accessForm.tsx";
+import { say } from "../presentation/i18n.ts";
 
 interface NavEntry {
   page: Page;
@@ -35,6 +40,10 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({ currentPage, language, onChooseLanguage, dark, onToggleDark }: SiteHeaderProps) {
+  // The access-code lock lives here (issue #222): one click opens the
+  // form; once verified the form hides itself and the button shows it.
+  const [accessOpen, setAccessOpen] = useState(false);
+  const [accessVerified, setAccessVerified] = useState(false);
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
@@ -65,6 +74,36 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, dark, onTo
           })}
         </nav>
         <span className="ml-auto flex shrink-0 items-center gap-2 text-xs">
+          <span className="relative">
+            <button
+              type="button"
+              onClick={() => setAccessOpen(!accessOpen)}
+              aria-expanded={accessOpen}
+              aria-label={say({ language, en: "site access code" })}
+              title={say({ language, en: "site access code" })}
+              className={
+                "rounded border px-2 py-1 font-semibold " +
+                (accessVerified
+                  ? "border-emerald-600 bg-emerald-600 text-white dark:bg-emerald-700"
+                  : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700")
+              }
+            >
+              {accessVerified ? "🔑" : "key"}
+            </button>
+            {accessOpen && (
+              <span className="absolute right-0 top-full z-50 mt-2 block w-80 shadow-lg">
+                <AccessCodeForm
+                  language={language}
+                  onVerified={() => setAccessVerified(true)}
+                />
+                {accessVerified && (
+                  <p className="px-3 pb-2 text-[10px] text-slate-500 dark:text-slate-400">
+                    {say({ language, en: "code verified — the quarry and the AI geologist are open" })}
+                  </p>
+                )}
+              </span>
+            )}
+          </span>
           {SUPPORTED_LANGUAGES.map((choice) => (
             <button
               type="button"

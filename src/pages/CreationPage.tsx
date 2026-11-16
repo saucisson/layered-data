@@ -16,7 +16,6 @@ import {
   writeSessionAddition,
 } from "../application/session.ts";
 import { loadKernelLayerSources } from "../infrastructure/corpusLoader.ts";
-import { AccessCodeForm } from "../presentation/accessForm.tsx";
 import { AddFormalismComposer, type AcceptedAddition } from "../presentation/addFormalism.tsx";
 import { LAYER_COLOR } from "../presentation/workshopInventory.ts";
 import { say } from "../presentation/i18n.ts";
@@ -90,12 +89,10 @@ export function CreationPage({ language }: CreationPageProps) {
 
         {/* The lock of the geologist: the proxy that answers the
             "ask the AI" call is protected — the access code is
-            entered here once, kept by the browser; without it the
-            call answers 401 and the simulated AI speaks instead,
+            entered once via the key button of the site header
+            (issue #222), kept by the browser; without it the call
+            answers 401 and the simulated AI speaks instead,
             honestly labeled. */}
-        <section className="mb-4">
-          <AccessCodeForm language={language} />
-        </section>
 
         <section className="mb-4">
           <AddFormalismComposer

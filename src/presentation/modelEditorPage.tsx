@@ -43,7 +43,7 @@ import {
   type EditorSyncHandle,
   type SessionSnapshot,
 } from "../infrastructure/editorSync.ts";
-import { AccessCodeForm } from "./accessForm.tsx";
+import { onAccessCodeVerified } from "../infrastructure/accessCodeEvents.ts";
 import {
   readMemberContainers,
   positionContainerOf,
@@ -168,11 +168,16 @@ export function ModelEditorPage({
   const [shared, setShared] = useState(false);
   const [presence, setPresence] = useState<{ id: string; focus: string | null }[]>([]);
   // true when the session stream was refused (401) or the server is
-  // absent — the access-code form is then shown instead of a silent
-  // local fallback (issue #198). accessVersion re-triggers the
-  // connection after a code is verified.
+  // absent — the page then points at the key button of the site
+  // header instead of a silent local fallback (issues #198, #222).
+  // accessVersion re-triggers the connection after a code is verified.
   const [needsAccess, setNeedsAccess] = useState(false);
   const [accessVersion, setAccessVersion] = useState(0);
+  useEffect(
+    () =>
+      onAccessCodeVerified(() => setAccessVersion((version) => version + 1)),
+    [],
+  );
   const syncRef = useRef<EditorSyncHandle | null>(null);
   const serverVersionRef = useRef(0);
   // ---- the editor's own choices ------------------------------------
@@ -1086,10 +1091,9 @@ export function ModelEditorPage({
       </h1>
       {needsAccess && !shared && (
         <div className="mb-4" role="status">
-          <p className="mb-2 text-sm text-slate-600 dark:text-slate-300">
-            {t("the shared session needs the site access code — enter it to collaborate; the editor also works locally")}
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            {t("the shared session needs the site access code — enter it via the key button of the site header to collaborate; the editor also works locally")}
           </p>
-          <AccessCodeForm language={language} onVerified={() => setAccessVersion((version) => version + 1)} />
         </div>
       )}
       <div className="mb-4 flex flex-wrap items-center gap-2">
