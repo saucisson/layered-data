@@ -13,6 +13,7 @@ const ROUTES: ReadonlyArray<{ hash: string; label: string }> = [
   { hash: "#hierarchy", label: "Hierarchy" },
   { hash: "#creation", label: "Creation" },
   { hash: "#workshop", label: "Workshop" },
+  { hash: "#editor", label: "Editor" },
 ];
 
 // Routes on which no menu entry is active (detail pages).
@@ -24,9 +25,9 @@ test.describe("global navigation menu", () => {
       await page.goto("/" + hash);
       const nav = page.locator(MENU);
       await expect(nav).toBeVisible();
-      // six plain-text entries, real hash links
+      // seven plain-text entries, real hash links
       const links = nav.locator("a");
-      await expect(links).toHaveCount(6);
+      await expect(links).toHaveCount(7);
       for (const { hash: entryHash, label: entryLabel } of ROUTES) {
         await expect(links.filter({ hasText: entryLabel })).toHaveAttribute("href", entryHash);
       }
@@ -35,9 +36,9 @@ test.describe("global navigation menu", () => {
     });
   }
 
-  test("#editor highlights the Workshop entry (one page, two tabs)", async ({ page }) => {
+  test("#editor highlights its own Editor entry (two top-level pages, #216)", async ({ page }) => {
     await page.goto("/#editor");
-    await expect(page.locator(`${MENU} a[aria-current="page"]`)).toHaveText("Workshop");
+    await expect(page.locator(`${MENU} a[aria-current="page"]`)).toHaveText("Editor");
   });
 
   for (const hash of NO_ACTIVE) {
