@@ -18,12 +18,11 @@ const NAV_ENTRIES: readonly NavEntry[] = [
   { page: "hierarchy", label: "Hierarchy" },
   { page: "creation", label: "Creation" },
   { page: "workshop", label: "Workshop" },
+  { page: "editor", label: "Editor" },
 ];
 
-/** The workshop and the editor are one page, two tabs: both highlight
- * the Workshop entry. */
+/** Each top-level page highlights exactly its own entry. */
 function isActive(current: Page, entry: Page): boolean {
-  if (entry === "workshop") return current === "workshop" || current === "editor";
   return current === entry;
 }
 
