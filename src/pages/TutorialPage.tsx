@@ -13,7 +13,7 @@
 import React, { useMemo } from "react";
 import { useRouter } from "../components/Router";
 import { say } from "../presentation/i18n.ts";
-import { NotionText, GLOSSARY, NotionTip } from "../presentation/notions.tsx";
+import { NotionText } from "../presentation/notions.tsx";
 import { parseTutorialMarkdown, type TutorialBlock } from "../presentation/tutorialMarkdown.ts";
 import { TutorialListing } from "../presentation/TutorialListing.tsx";
 import { highlightSourceLine, SPAN_CLASSES } from "../presentation/layerSourceView.tsx";
@@ -144,22 +144,8 @@ export function TutorialPage({ language }: TutorialPageProps) {
       <div className="mx-auto max-w-4xl space-y-4 p-4 sm:p-8">
         {blocks.map(renderBlock)}
 
-        <section className="mt-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 sm:p-6">
-          <h2 className="text-base font-bold text-slate-800 dark:text-slate-100">
-            {say({ language, en: "Glossary"})}
-          </h2>
-          <p className="mt-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
-            {say({
-              language,
-              en: "every notion this page cites — hover a term for its one-line definition.",
-            })}
-          </p>
-          <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">
-            {Object.keys(GLOSSARY).map((term) => (
-              <NotionTip key={term} term={term} language={language} />
-            ))}
-          </div>
-        </section>
+        {/* No glossary section (#229): the definitions stay available
+            as tooltips on the ⟪terms⟫ cited in the prose (#230). */}
 
         <div className="mt-12 flex justify-center gap-4">
           <button type="button"
