@@ -35,6 +35,7 @@ import {
 } from "./presentation/workshop/workshopKernel.ts";
 import { WorkshopHeader } from "./presentation/workshop/WorkshopHeader.tsx";
 import { WorkshopLayersPanel } from "./presentation/workshop/WorkshopLayersPanel.tsx";
+import { FormalismPanel } from "./presentation/formalismPanel.tsx";
 import { WorkshopFlatPanel, type AddressKeyInfo } from "./presentation/workshop/WorkshopFlatPanel.tsx";
 import {
   WorkshopMechanismPanel,
@@ -392,14 +393,13 @@ export function WorkshopPage({
         className={
           graphView
             ? "grid grid-cols-1 gap-3 p-2 sm:p-4"
-            : "grid grid-cols-1 gap-3 p-2 sm:p-4 lg:grid-cols-[240px_minmax(0,1fr)_430px]"
+            : "grid grid-cols-1 gap-3 p-2 sm:p-4 lg:grid-cols-[220px_minmax(0,1fr)_minmax(0,1fr)_380px]"
         }
       >
         <WorkshopLayersPanel
           language={language}
           kernel={KERNEL}
           dag={REFINEMENT_DAG}
-          sourceLineTargets={SOURCE_LINE_TARGETS}
           layer={layer}
           search={search}
           graphView={graphView}
@@ -420,7 +420,17 @@ export function WorkshopPage({
           layerMatches={layerMatches}
           editableLayerSet={editableLayerSet}
           onEditorToggle={(layerName) => setEditorLayer(editorLayer === layerName ? null : layerName)}
-          onPickFormalism={goto}
+        />
+
+        {/* ② the formalism — side by side with ③ the flattened
+            data (issue #239) */}
+        <FormalismPanel
+          kernel={KERNEL}
+          layer={layer}
+          language={language}
+          addedLayerSources={addedLayerBlocks}
+          sourceLineTargets={SOURCE_LINE_TARGETS}
+          onPick={goto}
           onLine={openSourceLine}
         />
 
