@@ -20,7 +20,10 @@ services:
   atelier:
     build: .
     ports:
-      - "8791:8791"
+      # Loopback only: in production nginx terminates HTTPS and proxies
+      # 127.0.0.1:8791 (issue #242); locally it is still reachable on
+      # http://127.0.0.1:8791.
+      - "127.0.0.1:8791:8791"
     environment:
       - HOST=0.0.0.0
       - PORT=8791
