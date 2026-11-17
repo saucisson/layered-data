@@ -63,12 +63,14 @@ function SourceText({
   source,
   maxHeightClass,
   parsedLayer,
+  revealable,
   onLine,
   language,
 }: {
   source: string;
   maxHeightClass: string;
   parsedLayer: { name: string; line: number } | null;
+  revealable: Set<string>;
   onLine: (target: SourceLineTarget) => void;
   language: Language;
 }) {
@@ -83,8 +85,13 @@ function SourceText({
         // Displayed line `index` (0-based) is the source line
         // parsedLayer.line + index: the block is extracted from its
         // "layer" line.
-        const lineTarget =
+        const rawTarget =
           parsedLayer !== null ? SOURCE_LINE_TARGETS.get(parsedLayer.line + index) : undefined;
+        const lineTarget =
+          rawTarget !== undefined &&
+          revealable.has(rawTarget.path.join("/") + "::" + (rawTarget.key ?? ""))
+            ? rawTarget
+            : undefined;
         return (
           <div
             key={index}
@@ -124,6 +131,25 @@ function SourceText({
       })}
     </div>
   );
+}
+
+/** The revealable addresses of a flattened text: "path::key" of every
+ * section — a DSL line is clickable only when its target exists here
+ * (issue #224: no dead clicks). */
+function collectFlattenedTargetKeys({
+  sections,
+}: {
+  sections: FlattenedSection[];
+}): Set<string> {
+  const keys = new Set<string>();
+  const walk = (list: FlattenedSection[]) => {
+    for (const section of list) {
+      keys.add(section.target.path.join("/") + "::" + (section.target.key ?? ""));
+      walk(section.sections);
+    }
+  };
+  walk(sections);
+  return keys;
 }
 
 /** One key of a section in the fold state: the path of indices from
@@ -166,6 +192,7 @@ function FlattenedText({
   );
   const [flashKey, setFlashKey] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Issue #224: a click on a DSL line reveals the equivalent entry
   // here — the ancestors unfold, the entry scrolls into view and
@@ -205,9 +232,15 @@ function FlattenedText({
       const element = containerRef.current?.querySelector(`[data-flat-key="${key}"]`);
       element?.scrollIntoView({ block: "center" });
       setFlashKey(key);
-      setTimeout(() => setFlashKey((current) => (current === key ? null : current)), 1600);
+      flashTimerRef.current = setTimeout(
+        () => setFlashKey((current) => (current === key ? null : current)),
+        1600,
+      );
     });
-    return () => cancelAnimationFrame(frame);
+    return () => {
+      cancelAnimationFrame(frame);
+      if (flashTimerRef.current !== null) clearTimeout(flashTimerRef.current);
+    };
   }, [reveal, text]);
   const lineNumbers = useMemo(() => {
     const numbers = new Map<string, number>();
@@ -425,6 +458,10 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
   );
   const parsedLayer =
     KERNEL.parsedLanguage.layers.find((entry) => entry.name === selectedLayer) ?? null;
+  const revealable = useMemo(
+    () => collectFlattenedTargetKeys({ sections: flattenedText.sections }),
+    [flattenedText],
+  );
 
   // The identity of the layer: its role sentence, its parents, its
   // closure towards the bases.
@@ -601,6 +638,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 source={sourceBlock}
                 maxHeightClass="max-h-[32rem]"
                 parsedLayer={parsedLayer}
+                revealable={revealable}
                 language={language}
                 onLine={(target) =>
                   setReveal({
