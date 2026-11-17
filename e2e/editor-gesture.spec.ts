@@ -12,7 +12,10 @@ test("a canvas gesture drafts a .ld block and the staging verdict appears", asyn
   // read-only, only runtime-added layers open in the editor
   await page.getByRole("button", { name: "+ new model" }).click();
   await page.getByPlaceholder("model name").fill("e2e-philosophers");
-  await page.locator("input.w-72").fill("@petrinet-scheme");
+  // the suggested parents are pre-checked — start from petrinet-scheme only
+  // start from a clean parent list, then check the wanted formalisms
+  for (const box of await page.getByRole("checkbox").all()) await box.uncheck();
+  await page.getByRole("checkbox", { name: "petrinet-scheme", exact: true }).check();
   await page.getByRole("button", { name: "staging — create the model" }).click();
 
   // the new model is auto-selected; the canvas is rendered
@@ -50,7 +53,10 @@ test("#219 dragging a vertex moves it — the drafted position lands in the sour
   await page.goto("/#editor");
   await page.getByRole("button", { name: "+ new model" }).click();
   await page.getByPlaceholder("model name").fill("e2e-drag");
-  await page.locator("input.w-72").fill("@pn-philosophers then @positions-grid");
+  // start from a clean parent list, then check the wanted formalisms
+  for (const box of await page.getByRole("checkbox").all()) await box.uncheck();
+  await page.getByRole("checkbox", { name: "pn-philosophers", exact: true }).check();
+  await page.getByRole("checkbox", { name: "positions-grid", exact: true }).check();
   await page.getByRole("button", { name: "staging — create the model" }).click();
   const canvas = page.getByRole("application", { name: /model canvas/ });
   await expect(canvas).toBeVisible({ timeout: 10_000 });
@@ -103,7 +109,10 @@ test("#221 the canvas takes the available width and height; palette and inspecto
   await page.goto("/#editor");
   await page.getByRole("button", { name: "+ new model" }).click();
   await page.getByPlaceholder("model name").fill("e2e-layout");
-  await page.locator("input.w-72").fill("@pn-philosophers then @positions-grid");
+  // start from a clean parent list, then check the wanted formalisms
+  for (const box of await page.getByRole("checkbox").all()) await box.uncheck();
+  await page.getByRole("checkbox", { name: "pn-philosophers", exact: true }).check();
+  await page.getByRole("checkbox", { name: "positions-grid", exact: true }).check();
   await page.getByRole("button", { name: "staging — create the model" }).click();
   const canvas = page.getByRole("application", { name: /model canvas/ });
   await expect(canvas).toBeVisible({ timeout: 10_000 });
@@ -129,4 +138,27 @@ test("#221 the canvas takes the available width and height; palette and inspecto
   expect(paletteBox!.x).toBeLessThan(canvasBox!.x);
   expect(canvasBox!.x + canvasBox!.width).toBeLessThan(inspectorBox!.x);
   expect(canvasBox!.width).toBeGreaterThan(paletteBox!.width * 2);
+});
+
+test("#218 the palette shows only the chosen formalism's elements, as shapes", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/#editor");
+  await page.getByRole("button", { name: "+ new model" }).click();
+  await page.getByPlaceholder("model name").fill("e2e-palette");
+  // start from a clean parent list, then check the wanted formalisms
+  for (const box of await page.getByRole("checkbox").all()) await box.uncheck();
+  await page.getByRole("checkbox", { name: "petrinet-scheme", exact: true }).check();
+  await page.getByRole("button", { name: "staging — create the model" }).click();
+  await page.getByRole("application", { name: /model canvas/ }).waitFor({ state: "visible", timeout: 10_000 });
+
+  const palette = page.locator("xpath=//div[contains(@class,'lg:w-44')]");
+  const names = await palette.locator("button").allTextContents();
+  // the petrinet vocabulary — no left/right leaked from bipartite-digraph
+  expect(names.some((name) => name.includes("places"))).toBe(true);
+  expect(names.some((name) => name.includes("transitions"))).toBe(true);
+  expect(names.some((name) => name.includes("arc"))).toBe(true);
+  expect(names.some((name) => name.includes("left"))).toBe(false);
+  expect(names.some((name) => name.includes("right"))).toBe(false);
+  // each element is drawn by its shape (an inline svg glyph), not only named
+  await expect(palette.locator("button svg").first()).toBeVisible();
 });
