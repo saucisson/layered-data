@@ -37,6 +37,7 @@ export function RefinementGraph({
   language: Language;
 }) {
   const markerId = "refinement-arrow-" + useId().replace(/[^a-zA-Z0-9]/g, "");
+  const usageMarkerId = "refinement-usage-" + useId().replace(/[^a-zA-Z0-9]/g, "");
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState(1200);
   useEffect(() => {
@@ -113,6 +114,41 @@ export function RefinementGraph({
     }
   }
 
+  // The USAGE edges (issue #235): dashed curves with a hollow
+  // arrowhead, slightly offset so they stay readable when a layer both
+  // refines and uses the same parent. They never drive the layout —
+  // only inheritance does.
+  const usageEdges: React.ReactNode[] = [];
+  for (const layerName of layerNames) {
+    for (const usedName of dag.usesOf(layerName)) {
+      const from = layout.position(layerName);
+      const to = layout.position(usedName);
+      const offset = 7;
+      const x1 = from.x + from.w / 2 + offset;
+      const y1 = from.y + NODE_HEIGHT;
+      const x2 = to.x + to.w / 2 + offset;
+      const y2 = to.y;
+      const midHeight = (y1 + y2) / 2;
+      usageEdges.push(
+        <path
+          key={"uses:" + layerName + "⇢" + usedName}
+          d={
+            "M " + x1 + " " + y1 +
+            " C " + x1 + " " + midHeight +
+            " " + x2 + " " + midHeight +
+            " " + x2 + " " + y2
+          }
+          fill="none"
+          className="stroke-slate-400 dark:stroke-slate-500"
+          strokeWidth={1}
+          strokeDasharray="4 3"
+          opacity={focus !== null && (layerName === focus || usedName === focus) ? 0.9 : 0.35}
+          markerEnd={"url(#" + usageMarkerId + ")"}
+        />,
+      );
+    }
+  }
+
   return (
     <div
       ref={containerRef}
@@ -136,6 +172,17 @@ export function RefinementGraph({
           >
             <path d="M0,0 L8,4 L0,8 Z" fill="#64748b" />
           </marker>
+          <marker
+            id={usageMarkerId}
+            markerWidth="8"
+            markerHeight="8"
+            refX="8"
+            refY="4"
+            orient="auto"
+            markerUnits="userSpaceOnUse"
+          >
+            <path d="M0,0 L8,4 L0,8 Z" fill="none" stroke="#64748b" strokeWidth="1.2" />
+          </marker>
         </defs>
         {layout.bands.map((band, bandIndex) => (
           <rect
@@ -149,6 +196,7 @@ export function RefinementGraph({
           />
         ))}
         {edges}
+        {usageEdges}
       </svg>
       {layerNames.map((layerName) => {
         const position = layout.position(layerName);

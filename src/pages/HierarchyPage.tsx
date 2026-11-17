@@ -90,7 +90,7 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
           {" — "}
           {say({
             language,
-            en: "the shaded bands are the generations (the rank is the longest path towards a base); one curve is one refinement; the search fades the non-matching layers.",
+            en: "the shaded bands are the generations (the rank is the longest path towards a base); a solid arrow is one refinement (inheritance), a dashed hollow arrow is one usage (a field citing another layer); the search fades the non-matching layers.",
           })}
         </p>
       </div>
