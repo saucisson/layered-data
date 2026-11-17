@@ -55,7 +55,7 @@ function Mark({ variant }: { variant: LogoId }) {
             fill="none"
             strokeWidth="2.6"
             strokeLinecap="round"
-            className={ink + " opacity-40"}
+            className={ink.replace("fill-", "stroke-") + " opacity-40"}
           />
         </svg>
       );
