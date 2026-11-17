@@ -41,6 +41,7 @@ import {
   computeGraphLayout,
   RefinementDag,
 } from "../src/presentation/workshopInventory.ts";
+import { computeRefinementGraphLayout } from "../src/presentation/refinementGraphLayout.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -418,6 +419,33 @@ check(
       JSON.stringify(layout.position(layerName)) ===
       JSON.stringify(secondLayout.position(layerName)),
   ) && layout.rows.length > 1,
+);
+
+// (d2) the SHARED wrapped layout (issue #217) — the one component the
+// workshop header and the hierarchy page both render — is
+// deterministic and wraps to the given width
+const wrapped = computeRefinementGraphLayout({
+  layerNames: [...KERNEL_LAYER_NAMES],
+  dag: corpusDag,
+  width: 900,
+});
+const wrappedAgain = computeRefinementGraphLayout({
+  layerNames: [...KERNEL_LAYER_NAMES],
+  dag: corpusDag,
+  width: 900,
+});
+check(
+  "(d2) the shared wrapped layout is deterministic and fits the width (no horizontal scroll)",
+  wrapped.W === 900 &&
+    KERNEL_LAYER_NAMES.every(
+      (layerName) =>
+        JSON.stringify(wrapped.position(layerName)) ===
+        JSON.stringify(wrappedAgain.position(layerName)),
+    ) &&
+    KERNEL_LAYER_NAMES.every((layerName) => {
+      const position = wrapped.position(layerName);
+      return position.x >= 0 && position.x + position.w <= 900;
+    }),
 );
 
 // =====================================================================

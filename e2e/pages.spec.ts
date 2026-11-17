@@ -51,3 +51,24 @@ test.describe("every page renders without errors", () => {
     });
   }
 });
+
+test("#217 the workshop header and the hierarchy page render the SAME shared refinement graph", async ({ page }) => {
+  // the hierarchy page: pill per layer + one svg curve per refinement
+  await page.goto("/#hierarchy");
+  await expect(page.getByRole("heading", { name: /hierarchy/i })).toBeVisible();
+  const hierarchyPill = page.getByRole("button", { name: /^petrinet-scheme/ });
+  await expect(hierarchyPill).toBeVisible({ timeout: 15_000 });
+  const hierarchyCurves = page.locator("svg path[marker-end]");
+  await expect(hierarchyCurves.first()).toBeVisible();
+  expect(await hierarchyCurves.count()).toBeGreaterThan(10);
+
+  // the workshop header: the same component — same pill, same curves
+  await page.goto("/#workshop");
+  await expect(page.getByRole("heading", { name: /workshop/i })).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: "graph", exact: true }).first().click();
+  const workshopPill = page.getByRole("button", { name: /^petrinet-scheme/ });
+  await expect(workshopPill).toBeVisible({ timeout: 15_000 });
+  const workshopCurves = page.locator("svg path[marker-end]");
+  await expect(workshopCurves.first()).toBeVisible();
+  expect(await workshopCurves.count()).toBeGreaterThan(10);
+});
