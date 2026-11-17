@@ -34,3 +34,13 @@ test("a canvas gesture drafts a .ld block and the staging verdict appears", asyn
   await expect(source).toContainText("layer e2e-philosophers refines @petrinet-scheme");
   await expect(source).toContainText("extend places");
 });
+
+test("#228 the lens picker is labeled and its edit button opens the lens DSL page", async ({ page }) => {
+  await page.goto("/#editor");
+  const lensPicker = page.getByLabel("lens");
+  await expect(lensPicker).toBeVisible();
+  const lensName = String(await lensPicker.inputValue());
+  await page.getByRole("button", { name: "edit the lens" }).click();
+  await expect(page).toHaveURL(new RegExp(`#formalism/${lensName}$`));
+  await expect(page.locator("h1, h2").first()).toContainText(/formalism/i);
+});
