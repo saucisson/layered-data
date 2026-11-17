@@ -12,9 +12,9 @@ const ROUTES: ReadonlyArray<{ hash: string; label: string }> = [
   { hash: "#filiation", label: "Filiation" },
   { hash: "#hierarchy", label: "Hierarchy" },
   { hash: "#creation", label: "Creation" },
-  { hash: "#workshop", label: "Formalisms" },
+  { hash: "#formalisms", label: "Formalisms" },
   { hash: "#lenses", label: "Lenses" },
-  { hash: "#editor", label: "Models" },
+  { hash: "#models", label: "Models" },
   { hash: "#install", label: "Install" },
 ];
 
@@ -38,8 +38,8 @@ test.describe("global navigation menu", () => {
     });
   }
 
-  test("#editor highlights its own Models entry (two top-level pages, #216)", async ({ page }) => {
-    await page.goto("/#editor");
+  test("#models highlights its own Models entry (two top-level pages, #216)", async ({ page }) => {
+    await page.goto("/#models");
     await expect(page.locator(`${MENU} a[aria-current="page"]`)).toHaveText("Models");
   });
 

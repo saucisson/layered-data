@@ -141,13 +141,13 @@ export function LandingPage({ language }: LandingPageProps) {
             {say({ language, en: "Filiation & comparison →"})}
           </button>
           <button type="button"
-            onClick={() => navigate("workshop")}
+            onClick={() => navigate("formalisms")}
             className="rounded-lg border-2 border-sky-600 px-6 py-3 text-sky-600 dark:text-sky-400 font-semibold hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors"
           >
             {say({ language, en: "Workshop →"})}
           </button>
           <button type="button"
-            onClick={() => navigate("editor")}
+            onClick={() => navigate("models")}
             className="rounded-lg border-2 border-emerald-600 px-6 py-3 text-emerald-600 dark:text-emerald-400 font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-colors"
           >
             {say({ language, en: "Model editor →"})}

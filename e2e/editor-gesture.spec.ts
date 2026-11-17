@@ -6,7 +6,7 @@
 import { test, expect } from "@playwright/test";
 
 test("a canvas gesture drafts a .ld block and the staging verdict appears", async ({ page }) => {
-  await page.goto("/#editor");
+  await page.goto("/#models");
 
   // create a living model refining @petrinet — the corpus stays
   // read-only, only runtime-added layers open in the editor
@@ -39,7 +39,7 @@ test("a canvas gesture drafts a .ld block and the staging verdict appears", asyn
 });
 
 test("#228 the lens picker is labeled and its edit button opens the lens DSL page", async ({ page }) => {
-  await page.goto("/#editor");
+  await page.goto("/#models");
   const lensPicker = page.getByLabel("lens");
   await expect(lensPicker).toBeVisible();
   const lensName = String(await lensPicker.inputValue());
@@ -50,7 +50,7 @@ test("#228 the lens picker is labeled and its edit button opens the lens DSL pag
 
 test("#219 dragging a vertex moves it — the drafted position lands in the source", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/#editor");
+  await page.goto("/#models");
   await page.getByRole("button", { name: "+ new model" }).click();
   await page.getByPlaceholder("model name").fill("e2e-drag");
   // start from a clean parent list, then check the wanted formalisms
@@ -106,7 +106,7 @@ test("#219 dragging a vertex moves it — the drafted position lands in the sour
 
 test("#221 the canvas takes the available width and height; palette and inspector stay narrow", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/#editor");
+  await page.goto("/#models");
   await page.getByRole("button", { name: "+ new model" }).click();
   await page.getByPlaceholder("model name").fill("e2e-layout");
   // start from a clean parent list, then check the wanted formalisms
@@ -142,7 +142,7 @@ test("#221 the canvas takes the available width and height; palette and inspecto
 
 test("#218 the palette shows only the chosen formalism's elements, as shapes", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/#editor");
+  await page.goto("/#models");
   await page.getByRole("button", { name: "+ new model" }).click();
   await page.getByPlaceholder("model name").fill("e2e-palette");
   // start from a clean parent list, then check the wanted formalisms
@@ -165,7 +165,7 @@ test("#218 the palette shows only the chosen formalism's elements, as shapes", a
 
 test("#220 an arc carries waypoints — double-click bends it, drag moves the handle, double-click removes it", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/#editor");
+  await page.goto("/#models");
 
   // import a complete model: one place, one transition, one arc
   const modelSource = [
