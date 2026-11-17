@@ -88,7 +88,11 @@ export function RefinementGraph({
       const to = layout.position(parentName);
       const onChain = ancestors.has(layerName) && ancestors.has(parentName);
       const betweenDescendants = descendants.has(layerName) && descendants.has(parentName);
-      const midHeight = (from.y + to.y + NODE_HEIGHT) / 2;
+      // the arrow lands on the edge of the parent facing the child: the
+      // parent is in a band above (rankdir BT), so its BOTTOM edge — the
+      // top edge would force the curve through the parent's own band.
+      const toY = to.y + NODE_HEIGHT <= from.y ? to.y + NODE_HEIGHT : to.y;
+      const midHeight = (from.y + toY + NODE_HEIGHT) / 2;
       edges.push(
         <path
           key={layerName + "⇢" + parentName}
@@ -108,7 +112,7 @@ export function RefinementGraph({
             " " +
             (to.x + to.w / 2) +
             " " +
-            to.y
+            toY
           }
           fill="none"
           className={onChain ? "stroke-slate-800 dark:stroke-slate-200" : "stroke-slate-300 dark:stroke-slate-600"}
@@ -133,7 +137,9 @@ export function RefinementGraph({
       const x1 = from.x + from.w / 2 + offset;
       const y1 = from.y + NODE_HEIGHT;
       const x2 = to.x + to.w / 2 + offset;
-      const y2 = to.y;
+      // the used layer may sit above OR below the user: the arrow lands
+      // on the edge facing its source (bottom edge above, top edge below).
+      const y2 = to.y + NODE_HEIGHT <= from.y ? to.y + NODE_HEIGHT : to.y;
       const midHeight = (y1 + y2) / 2;
       usageEdges.push(
         <path

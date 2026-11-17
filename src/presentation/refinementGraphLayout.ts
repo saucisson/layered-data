@@ -4,8 +4,9 @@
 // onto as many lines as the container width needs, so the graph always
 // fits the page (no horizontal scroll), and a final crossing descent
 // on the wrapped geometry removes the crossings the wrapping may have
-// re-introduced. Only the inheritance edges drive the layout; the
-// usage edges (issue #235) are drawn on top. Deterministic: dagre is
+// re-introduced; a curve that passes THROUGH a pill is the other
+// artifact, the descent sees both. Only the inheritance edges drive the
+// layout; the usage edges (issue #235) are drawn on top. Deterministic: dagre is
 // deterministic for a fixed insertion order, ties keep the inventory
 // order. Pure geometry — no React, so the checks can import it.
 
@@ -23,6 +24,10 @@ const CHARACTER_WIDTH = 6.4;
 const NODE_PADDING = 40;
 const HORIZONTAL_GAP = 12;
 const VERTICAL_GAP = 10;
+// the channel between two bands: the curves and their 8 px arrowheads
+// travel it between the last line of a band and the first of the next
+// (10 px left no room for the head, the arrows poked into the pills).
+const BAND_GAP = 24;
 const ROW = 34;
 export const NODE_HEIGHT = 26;
 const MARGIN = 8;
@@ -110,7 +115,7 @@ export function computeRefinementGraphLayout({
       }
       cursorY += ROW;
       bands.push({ y: bandTop - 4, h: cursorY - bandTop + 4 });
-      cursorY += VERTICAL_GAP;
+      cursorY += BAND_GAP;
     }
     return { positions, bands, H: cursorY + MARGIN };
   };
@@ -177,7 +182,10 @@ export function computeRefinementGraphLayout({
     const x1 = from.x + from.w / 2;
     const y1 = from.y + NODE_HEIGHT;
     const x2 = to.x + to.w / 2;
-    const y2 = to.y;
+    // the arrow lands on the EDGE of the parent facing the child: the
+    // parent sits in a band above (rankdir BT), so its bottom edge —
+    // the top edge would force the curve through the parent's own band.
+    const y2 = to.y + NODE_HEIGHT <= from.y ? to.y + NODE_HEIGHT : to.y;
     const midY = (y1 + y2) / 2;
     const points: [number, number][] = [];
     for (let index = 0; index <= CURVE_SAMPLES; index++) {
@@ -249,9 +257,35 @@ export function computeRefinementGraphLayout({
     return crossings;
   };
 
+  // A curve that passes THROUGH a pill (any pill but its two ends) is
+  // the other artifact the wrapping can reintroduce: the descent must
+  // see it, or it untangles crossings while the arrows keep crossing
+  // the pastilles. Deterministic: same sampling as the render.
+  const PILL_PENALTY = 10;
+  const countPillHits = (positions: Record<string, WrappedPosition>): number => {
+    let hits = 0;
+    for (const edge of edgeList) {
+      const curve = curveOf(positions, edge);
+      if (!curve) continue;
+      for (const layerName of layerNames) {
+        if (layerName === edge.child || layerName === edge.parent) continue;
+        const pill = positions[layerName];
+        if (!pill) continue;
+        const inside = curve.points.some(
+          ([x, y]) =>
+            x >= pill.x && x <= pill.x + pill.w && y >= pill.y && y <= pill.y + NODE_HEIGHT,
+        );
+        if (inside) hits++;
+      }
+    }
+    return hits;
+  };
+  const scoreOf = (positions: Record<string, WrappedPosition>): number =>
+    countCrossings(positions) + PILL_PENALTY * countPillHits(positions);
+
   let best = wrap(rows);
-  let bestCrossings = countCrossings(best.positions);
-  for (let sweep = 0; sweep < 4 && bestCrossings > 0; sweep++) {
+  let bestScore = scoreOf(best.positions);
+  for (let sweep = 0; sweep < 4 && bestScore > 0; sweep++) {
     let improved = false;
     for (const row of rows) {
       for (let index = 0; index + 1 < row.length; index++) {
@@ -261,10 +295,10 @@ export function computeRefinementGraphLayout({
         row[index] = right;
         row[index + 1] = left;
         const candidate = wrap(rows);
-        const crossings = countCrossings(candidate.positions);
-        if (crossings < bestCrossings) {
+        const score = scoreOf(candidate.positions);
+        if (score < bestScore) {
           best = candidate;
-          bestCrossings = crossings;
+          bestScore = score;
           improved = true;
         } else {
           row[index] = left;
