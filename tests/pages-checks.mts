@@ -178,6 +178,26 @@ check(
     ),
 );
 
+// ---- (a2) the notes render as comments, Python-style (issue #247) ----
+
+const flatPetrinetLines = writeFlattenedLayerSource({
+  space: kernel.space,
+  layer: asLayerName("petrinet-scheme"),
+}).split("\n");
+check(
+  "(a2) no raw __note: datum leaks into the flattened text",
+  flatPetrinetLines.every((line) => !line.includes("__note:")),
+);
+check(
+  "(a2) a source comment is attached to the element below, as a comment line at the same indent",
+  flatPetrinetLines.some(
+    (line, index) =>
+      line.trimStart().startsWith("place_marking =") &&
+      (flatPetrinetLines[index - 1]?.trimStart().startsWith("//") ?? false) &&
+      line.startsWith("  ") === flatPetrinetLines[index - 1]?.startsWith("  "),
+  ),
+);
+
 // =====================================================================
 // (b) the lens drawing of the formalism page — the exact discipline
 //     of panel ④ (the extraction the workshop now calls too)

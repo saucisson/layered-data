@@ -21,3 +21,14 @@ test("#224 a click on a DSL line reveals the equivalent in the flattened formali
   await expect(flashed).toBeVisible();
   await expect(flashed).toContainText("specification");
 });
+
+test("#247 the flattened formalism shows source comments attached to their element", async ({ page }) => {
+  await page.goto("/#formalism/petrinet-scheme");
+  const flatPanel = page.locator("section").filter({ hasText: "flattened formalism" });
+  await expect(flatPanel).toBeVisible({ timeout: 10_000 });
+  // unfold all so the comment is rendered
+  await flatPanel.getByRole("button", { name: "unfold all" }).click();
+  await expect(flatPanel.getByText(/\/\/ the marking of a place is a multiset/).first()).toBeVisible();
+  // no raw __note: datum
+  await expect(flatPanel.getByText(/__note:/)).toHaveCount(0);
+});
