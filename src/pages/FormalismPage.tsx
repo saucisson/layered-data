@@ -366,7 +366,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
               })}
             </span>
           </div>
-          <div className="flex flex-col gap-1 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
+          <div className="flex max-h-64 flex-col gap-1 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
             {matchedLayerNames.map((layerName) => (
               <button type="button"
                 key={layerName}
