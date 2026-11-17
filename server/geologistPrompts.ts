@@ -32,13 +32,13 @@ LA COLONNE STRATIGRAPHIQUE CI-DESSOUS EST L'ÉTAT RÉEL DE L'ATELIER — un nouv
 /** The leading comment block of a source: the layer's own
  * description, capped at a few lines — the column says what each
  * layer IS, not only its name. */
-function leadingComments({ source }: { source: string }): string[] {
+function leadingComments({ source, maxLines = 4 }: { source: string; maxLines?: number }): string[] {
   const comments: string[] = [];
   for (const line of source.split("\n")) {
     const trimmed = line.trim();
     if (trimmed.startsWith("//")) {
       comments.push(trimmed);
-      if (comments.length >= 4) break;
+      if (comments.length >= maxLines) break;
     } else if (trimmed !== "") {
       break;
     }
@@ -46,22 +46,38 @@ function leadingComments({ source }: { source: string }): string[] {
   return comments;
 }
 
+/** The `layer …` header of a source, or a bare fallback. */
+function layerHeader({ source, fallbackName }: { source: string; fallbackName: string }): string {
+  return source.split("\n").find((line) => line.startsWith("layer ")) ?? "layer " + fallbackName;
+}
+
 /** One entry per existing layer: the `layer …` header as written,
  * followed by its leading comments (the role of the layer). The
  * visitors' layers arrive as data, read through the store at each
- * call — the column stays true. */
-export function corpusBackbone({ visitorLayers }: { visitorLayers: VisitorLayer[] }): string {
+ * call — the column stays true. `maxCommentLines` caps the comment
+ * block per layer (the survey column keeps one line). */
+export function corpusBackbone({
+  visitorLayers,
+  maxCommentLines = 4,
+}: {
+  visitorLayers: VisitorLayer[];
+  maxCommentLines?: number;
+}): string {
   const lines: string[] = [];
   for (const name of KERNEL_LAYER_NAMES) {
     const source = readFileSync(kernelLayerPath({ name: name as LayerName }), "utf8");
-    const header = source.split("\n").find((line) => line.startsWith("layer "));
-    lines.push(header ?? "layer " + name);
-    for (const comment of leadingComments({ source })) lines.push("  " + comment);
+    lines.push(layerHeader({ source, fallbackName: name }));
+    for (const comment of leadingComments({ source, maxLines: maxCommentLines })) {
+      lines.push("  " + comment);
+    }
   }
   for (const visitorLayer of visitorLayers) {
-    const header = visitorLayer.source.split("\n").find((line) => line.startsWith("layer "));
-    lines.push(header ?? "layer " + visitorLayer.name + "  // couche d'un visiteur");
-    for (const comment of leadingComments({ source: visitorLayer.source })) lines.push("  " + comment);
+    lines.push(
+      layerHeader({ source: visitorLayer.source, fallbackName: visitorLayer.name + "  // couche d'un visiteur" }),
+    );
+    for (const comment of leadingComments({ source: visitorLayer.source, maxLines: maxCommentLines })) {
+      lines.push("  " + comment);
+    }
   }
   return lines.join("\n");
 }
@@ -75,8 +91,213 @@ export const EXPECTED_STRUCTURE = `LA STRUCTURE ATTENDUE — deux espèces de co
 - UN MODÈLE raffine un schéma et remplit ses collections (places, transitions, arcs…) : chaque membre cite son type par chemin absolu, chaque arc désigne ses extrémités par @.
 RÈGLES DE RACCORDEMENT : choisir dans la colonne le parent le plus spécifique qui convient (jamais un parent générique quand un parent précis existe — un Petri net raffine @petrinet-scheme, pas @graph) ; ne jamais redéfinir ce qui existe déjà (extend, pas une nouvelle déclaration) ; tous les chemins de membres sont absolus (@<couche>/<chemin>).`;
 
-/** The complete system prompt sent to the model. */
-export function buildSystemPrompt({ visitorLayers }: { visitorLayers: VisitorLayer[] }): string {
+// ------------------------------------------------------------
+// The survey pass (issue #279): a fast model chooses the ground —
+// which existing layers the new layer should refine or cite —
+// before the pen writes anything. The survey sees the column with
+// one comment line per layer, never the full sources.
+// ------------------------------------------------------------
+
+/** The surveyor's instructions — it does NOT write layers, it
+ * chooses the ground, and asks when the intention is ambiguous. */
+export const SURVEY_INSTRUCTIONS_EN = `You are the surveyor of the Layered Data workshop: you do NOT write layers, you choose the ground.
+Given the stratigraphic column and an intention, list ONLY the layers the new layer should REFINE or CITE, most specific first — and, when relevant, the closest existing layer whose STRUCTURE is worth imitating even from another family.
+Rules: prefer the most specific existing parent; never invent a name absent from the column.
+If the intention is too ambiguous to choose the ground, do NOT guess: answer with one or two lines, each starting with "QUESTION:", asking precisely what would disambiguate the grounding.
+Otherwise answer with layer names only, one per line, prefixed by @, nothing else.`;
+
+/** The survey prompt: the manifesto, the expected structure and the
+ * column with a single comment line per layer — rebuilt at each
+ * call so a visitor layer written seconds ago stays visible. */
+export function buildSurveyPrompt({ visitorLayers }: { visitorLayers: VisitorLayer[] }): string {
+  return (
+    SURVEY_INSTRUCTIONS_EN +
+    "\n\n" +
+    MANIFESTO +
+    "\n\n" +
+    EXPECTED_STRUCTURE +
+    "\n\nLA COLONNE STRATIGRAPHIQUE (une ligne par couche — " +
+    KERNEL_LAYER_NAMES.length +
+    " du socle en lecture seule, plus les couches des visiteurs) :\n" +
+    corpusBackbone({ visitorLayers, maxCommentLines: 1 })
+  );
+}
+
+/** The names alive right now: the kernel plus the visitors' layers. */
+export function livingLayerNames({ visitorLayers }: { visitorLayers: VisitorLayer[] }): string[] {
+  return [...KERNEL_LAYER_NAMES, ...visitorLayers.map((visitorLayer) => visitorLayer.name)];
+}
+
+/** The source of a living layer: the kernel read from disk, the
+ * visitors from the data read at the call — null when the name is
+ * not alive. */
+function livingSource({
+  name,
+  visitorLayers,
+}: {
+  name: string;
+  visitorLayers: VisitorLayer[];
+}): string | null {
+  if ((KERNEL_LAYER_NAMES as readonly string[]).includes(name)) {
+    return readFileSync(kernelLayerPath({ name: name as LayerName }), "utf8");
+  }
+  const visitorLayer = visitorLayers.find((candidate) => candidate.name === name);
+  return visitorLayer?.source ?? null;
+}
+
+/** The direct parents of a layer, parsed from its header
+ * (`layer x refines @a then @b`) — the deterministic reading of
+ * the refines chain, no model involved. */
+export function parentsOf({
+  name,
+  visitorLayers,
+}: {
+  name: string;
+  visitorLayers: VisitorLayer[];
+}): string[] {
+  const source = livingSource({ name, visitorLayers });
+  if (source === null) return [];
+  const header = layerHeader({ source, fallbackName: name });
+  const refines = /\brefines\b(.*)$/.exec(header)?.[1] ?? "";
+  const parents: string[] = [];
+  for (const match of refines.matchAll(/@([a-z0-9][a-z0-9-]{0,63})/g)) {
+    if (match[1] !== undefined && !parents.includes(match[1])) parents.push(match[1]);
+  }
+  return parents;
+}
+
+/** The transitive closure of the refines chain: every ancestor of
+ * the given names, in discovery order, seeds excluded. The server
+ * adds it deterministically — the survey never has to name an
+ * ancestor it forgot. */
+export function ancestorClosure({
+  names,
+  visitorLayers,
+}: {
+  names: readonly string[];
+  visitorLayers: VisitorLayer[];
+}): string[] {
+  const closure: string[] = [];
+  const queue = [...names];
+  const seen = new Set(names);
+  while (queue.length > 0) {
+    const current = queue.shift();
+    if (current === undefined) break;
+    for (const parent of parentsOf({ name: current, visitorLayers })) {
+      if (!seen.has(parent)) {
+        seen.add(parent);
+        closure.push(parent);
+        queue.push(parent);
+      }
+    }
+  }
+  return closure;
+}
+
+/** The parsed answer of the survey: either clarifying questions
+ * (lines starting with `QUESTION:`, case-insensitive) or a
+ * selection of living layer names — `@` prefix tolerated, noise
+ * ignored — closed over its ancestors. An unusable selection is
+ * an empty one, never an invented name. */
+export function parseSurveyResponse({
+  text,
+  livingNames,
+  visitorLayers,
+}: {
+  text: string;
+  livingNames: readonly string[];
+  visitorLayers: VisitorLayer[];
+}): { kind: "questions"; questions: string[] } | { kind: "selection"; layers: string[]; selected: string[]; closure: string[] } {
+  const questions = text
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => /^question:\s*/i.test(line))
+    .map((line) => line.replace(/^question:\s*/i, "").trim())
+    .filter((question) => question !== "");
+  if (questions.length > 0) return { kind: "questions", questions };
+
+  const alive = new Set(livingNames);
+  const selected: string[] = [];
+  for (const match of text.matchAll(/@([a-z0-9][a-z0-9-]{0,63})/g)) {
+    const name = match[1];
+    if (name !== undefined && alive.has(name) && !selected.includes(name)) selected.push(name);
+  }
+  const closure = ancestorClosure({ names: selected, visitorLayers });
+  return { kind: "selection", layers: [...selected, ...closure], selected, closure };
+}
+
+/** The complete system prompt sent to the model. With
+ * `selectedLayerNames` (the survey's ground), the prompt is cut:
+ * the selected layers' full sources replace the fixed examples,
+ * the column drops the selected layers (they are above, in full),
+ * annotates the ancestors with their comments and lists every
+ * other layer as a bare name. Without a selection, the prompt is
+ * the monolith of before — the fallback is never worse. */
+export function buildSystemPrompt({
+  visitorLayers,
+  selectedLayerNames,
+}: {
+  visitorLayers: VisitorLayer[];
+  selectedLayerNames?: readonly string[];
+}): string {
+  if (selectedLayerNames === undefined || selectedLayerNames.length === 0) {
+    return buildMonolithSystemPrompt({ visitorLayers });
+  }
+  const selected = [...selectedLayerNames];
+  const closure = ancestorClosure({ names: selected, visitorLayers });
+  const selectedSet = new Set(selected);
+  const closureSet = new Set(closure);
+
+  // The selected layers, in full — the ground of the proposal.
+  const selectedText =
+    "LES COUCHES RETENUES PAR LE RELEVÉ (sources complètes — le terrain de cette proposition) :\n" +
+    selected
+      .map((name) => (livingSource({ name, visitorLayers }) ?? "").trim())
+      .filter((source) => source !== "")
+      .join("\n\n");
+
+  // The column, cut: ancestors annotated with their comments, every
+  // other living layer as a bare name.
+  const columnLines: string[] = [];
+  for (const name of KERNEL_LAYER_NAMES) {
+    if (selectedSet.has(name)) continue;
+    const source = readFileSync(kernelLayerPath({ name: name as LayerName }), "utf8");
+    if (closureSet.has(name)) {
+      columnLines.push(layerHeader({ source, fallbackName: name }));
+      for (const comment of leadingComments({ source })) columnLines.push("  " + comment);
+    }
+  }
+  const bareKernel: string[] = [];
+  for (const name of KERNEL_LAYER_NAMES) {
+    if (!selectedSet.has(name) && !closureSet.has(name)) bareKernel.push("layer " + name);
+  }
+  const bareVisitors = visitorLayers
+    .map((visitorLayer) => visitorLayer.name)
+    .filter((name) => !selectedSet.has(name) && !closureSet.has(name))
+    .sort((a, b) => a.localeCompare(b))
+    .map((name) => "layer " + name);
+  if (bareKernel.length > 0 || bareVisitors.length > 0) {
+    columnLines.push("// … autres couches du socle (noms nus — pas le terrain de cette proposition) :");
+    columnLines.push(...bareKernel, ...bareVisitors);
+  }
+
+  return (
+    penInstructions("en") +
+    "\n\n" +
+    MANIFESTO +
+    "\n\nLA COLONNE STRATIGRAPHIQUE (couches retenues absentes — leurs sources sont ci-dessous ; ancêtres annotés ; le reste en noms nus) :\n" +
+    columnLines.join("\n") +
+    "\n\n" +
+    EXPECTED_STRUCTURE +
+    "\n\n" +
+    selectedText
+  );
+}
+
+/** The monolith system prompt: the full column, the two fixed
+ * examples, the visitors' full sources — the fallback when the
+ * survey could not choose a ground. */
+function buildMonolithSystemPrompt({ visitorLayers }: { visitorLayers: VisitorLayer[] }): string {
   let examples = "";
   if (KERNEL_LAYER_NAMES.includes("bipartite-digraph")) {
     examples +=
