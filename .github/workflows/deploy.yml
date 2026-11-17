@@ -1,6 +1,7 @@
 # Production deployment to the OVH VPS (layered-data.linard.fr) —
 # issue #242. Triggered on every push to main (main is merged by the
-# human only) and manually via workflow_dispatch. The job connects as
+# human only) and to daily (agent work, deployed as-is per the human's
+# request), plus manually via workflow_dispatch. The job connects as
 # the dedicated `deploy` user with the dedicated SSH key (secret
 # SSH_PRIVATE_KEY), pulls the repo in /srv/layered-data/repo and runs
 # the production compose stack (no dev override — no hot reload in
@@ -9,7 +10,7 @@ name: deploy
 
 on:
   push:
-    branches: [main]
+    branches: [main, daily]
   workflow_dispatch:
 
 concurrency:
