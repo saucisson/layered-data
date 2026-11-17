@@ -67,6 +67,25 @@ function Mark({ variant }: { variant: LogoId }) {
 }
 
 export function Logo({ variant }: { variant: LogoId }) {
+  if (variant === "artwork") {
+    // the provided PNG wordmark: dark artwork on light themes,
+    // light artwork on dark themes
+    return (
+      <>
+        <img
+          src="/logos/layered-data-logo-dark.png"
+          alt="Layered Data"
+          className="h-6 w-auto dark:hidden"
+        />
+        <img
+          src="/logos/layered-data-logo-light.png"
+          alt=""
+          aria-hidden="true"
+          className="hidden h-6 w-auto dark:block"
+        />
+      </>
+    );
+  }
   return (
     <span className="flex items-center gap-1.5">
       <Mark variant={variant} />
