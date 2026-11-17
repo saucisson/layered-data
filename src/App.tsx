@@ -1,7 +1,7 @@
 // Layered Data — Main application with routing
-// Routes: #landing, #tutorial, #filiation, #workshop, #editor,
-// #hierarchy, #creation, #formalism/<layer> — the workshop and the
-// graphical editor are two top-level pages (issue #216).
+// Routes: #landing, #tutorial, #filiation, #workshop, #lenses,
+// #editor, #hierarchy, #creation, #formalism/<layer> — the workshop
+// and the graphical editor are two top-level pages (issue #216).
 
 import { lazy, Suspense, useEffect, useState } from "react";
 import { RouterProvider, useRouter } from "./components/Router";
