@@ -3,7 +3,7 @@
 // page (its own top-level route since #216) renders the canvas.
 import { test, expect } from "@playwright/test";
 
-test("workshop boots with the four panels; the editor page renders the canvas", async ({ page }) => {
+test("workshop boots with its three panels; the editor page renders the canvas", async ({ page }) => {
   await page.goto("/#workshop");
 
   // ① the layers, ② the formalism, ③ the reading — ④ the point of view
@@ -39,5 +39,8 @@ test("#227 the lenses page renders the tree of lenses and the drawing", async ({
   await expect(page.getByRole("heading", { name: /Lenses/ })).toBeVisible({ timeout: 10_000 });
   await expect(page.getByText("The lenses & viewpoints")).toBeVisible();
   // the drawing of the chosen model through the chosen look renders
-  await expect(page.locator("svg").first()).toBeVisible();
+  // (scoped to the panel region — the header logo is an svg too)
+  await expect(
+    page.locator("section[aria-labelledby='panel-viewpoint-heading'] svg").first(),
+  ).toBeVisible();
 });
