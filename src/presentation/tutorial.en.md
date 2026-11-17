@@ -123,9 +123,23 @@ To read an ⟪address⟫ is to walk its closure, from the newest layer to the ol
 
 This whole tutorial employed only that gesture: write little, inherit the rest, read by core sample. The ⟪order conflict⟫ does not appear here: the tutorial's layers never contradict each other; the workshop shows it on the ⟪bedrock⟫.
 
+## Defining a lens
+
+A ⟪lens⟫ is an ordinary layer that refines a display scheme — `@graph-display` for graphs, or a more specific one — and overrides the `display` fields of each type: `shape`, `label`, `fill`, `stroke`, `arrow`, `ports`. That is the whole mechanism: the editor and the lenses page read the lens's `display` block per type, and fall back to a dashed generic circle for the types the lens does not know. To define one, write a `.ld` layer in `formalisms/kernel/` (or draft it on the Creation page, `#creation`): the editor's lens picker lists every lens layer, and its "edit the lens" button opens the lens's DSL on the formalism page.
+
+```ld
+layer my-display refines @graph-display
+  extend specification
+    extend vertex_type
+      extend display
+        override shape = "circle"
+        override fill = "#ffffff"
+```
+
 ## To go further
 
-- The workshop (`#workshop`): the kernel corpus and its real dinner, the four panels, the layers' ⟪quarry⟫.
+- The workshop (`#workshop`): the kernel corpus and its real dinner, the layers' ⟪quarry⟫.
+- The lenses (`#lenses`): the tree of lenses and viewpoints, a model seen through a look.
 - The complete hierarchy (`#hierarchy`): the bedrock's refinement graph.
 - Create a formalism (`#creation`): every entry goes through the staging.
 - Understand a formalism (`#formalism`): the source, the flattened closure, the lenses.
