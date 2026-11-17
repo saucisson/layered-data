@@ -122,7 +122,13 @@ in the same order by the CI (`.github/workflows/ci.yml`) and by
   the refusal travels back to the model with its verdicts — up to a
   spendable budget of attempts. A pure use case (the model call is
   injected), consumed by the server: `/api/generate` only ever answers
-  with a staged draft.
+  with a staged draft. Since ADR-0118 the loop runs in two passes: a
+  survey model (`server/geologistPrompts.ts` `buildSurveyPrompt`,
+  `server/mistralClient.ts` `selectLayers`) picks the ground on a
+  one-comment-line column, the pen writes on a prompt cut to the
+  selected layers (`buildSystemPrompt({ selectedLayerNames })`), and
+  the route streams the steps as SSE when the client asks for
+  `text/event-stream` (`tests/generate-sse-checks.mts`).
 - **The living editor** (`src/application/edition.ts`, verified by
   `tests/editor-checks.mts`): a runtime-added layer leaves the living
   context for its judgement, the staging re-validates corpus and

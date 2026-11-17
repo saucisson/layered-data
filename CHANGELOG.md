@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased — the two-pass geologist (issue #279, ADR-0118)
+
+- **Survey pass**: a fast model (`SURVEY_MODEL`, default
+  `mistral-small-latest`) chooses the ground (the layers to refine or
+  cite) over a one-comment-line stratigraphic column, answering
+  `QUESTION:` lines or validated `@names` closed over their `refines`
+  ancestors. The pen's system prompt is cut to the selected layers'
+  full sources (11.5k chars for dag+kahn vs 42.7k monolith); without a
+  selection the monolith prompt is used, byte-identical to before.
+- **SSE stream**: `POST /api/generate` with `Accept: text/event-stream`
+  streams `questions` / `selection` / `round` / `refusal` / `draft` /
+  `refused` / `error`; without the header the plain-text API is
+  unchanged. The client reads the stream with an inactivity timeout
+  (120 s) instead of a total 300 s cap.
+- Token ceilings (`SURVEY_MAX_TOKENS`=256, `PEN_MAX_TOKENS`=4096) and
+  prompt cache keys on both passes.
+
 ## Unreleased — slimming: treaty retired, one tongue, docs refreshed
 
 Four cleanup PRs, no behavior change for the kernel:

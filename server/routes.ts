@@ -32,7 +32,7 @@ import {
 import { lookupLayer } from "./userLayerStore.ts";
 import type { UserProfile } from "./userStore.ts";
 import { createQuarryStoresFromEnv, type QuarryStores } from "./stores.ts";
-import { PenInfraFailure, generateLayer } from "./mistralClient.ts";
+import { PenInfraFailure, generateLayer, selectLayers } from "./mistralClient.ts";
 import {
   editorSession,
   editorClients,
@@ -508,8 +508,12 @@ export function createQuarryServer({
           const body = JSON.parse((await readRequestBody({ request })) || "{}") as {
             prompt?: unknown;
             instruction?: unknown;
+            answers?: unknown;
           };
           const instruction = body?.prompt ?? body?.instruction;
+          const answers = Array.isArray(body?.answers)
+            ? body.answers.filter((answer): answer is string => typeof answer === "string")
+            : [];
           if (typeof instruction !== "string" || !instruction.trim()) {
             return sendJson({
               response,
@@ -530,6 +534,126 @@ export function createQuarryServer({
             if (read.found) visitorLayers.push({ name, source: read.source });
           }
           const previousAdditionSources = visitorLayers.map((visitorLayer) => visitorLayer.source);
+          // Two-pass geologist (issue #279): with Accept:
+          // text/event-stream the route streams its steps as SSE
+          // events; without it, the documented plain-text behavior
+          // is unchanged.
+          const wantsStream = (request.headers.accept ?? "").includes("text/event-stream");
+          if (wantsStream) {
+            response.writeHead(200, {
+              "Content-Type": "text/event-stream; charset=utf-8",
+              "Cache-Control": "no-cache",
+              Connection: "keep-alive",
+            });
+            response.write("retry: 3000\n\n");
+            const heartbeat = setInterval(() => {
+              response.write(": ping\n\n");
+            }, 25_000);
+            const closeStream = () => {
+              clearInterval(heartbeat);
+              response.end();
+            };
+            request.on("close", closeStream);
+            try {
+              // Pass A — the survey chooses the ground on a fast
+              // model. An empty selection or a survey failure falls
+              // back to the monolith prompt, never worse than before.
+              let selectedLayerNames: string[] | undefined;
+              try {
+                const survey = await selectLayers({ intention: instruction, answers, visitorLayers });
+                if (survey.kind === "questions") {
+                  sendEvent({ response, event: "questions", data: { questions: survey.questions } });
+                  closeStream();
+                  return;
+                }
+                const fallback = survey.layers.length === 0;
+                if (!fallback) selectedLayerNames = survey.selected;
+                sendEvent({
+                  response,
+                  event: "selection",
+                  data: { selected: survey.selected, closure: survey.closure, fallback },
+                });
+              } catch (error) {
+                if (!(error instanceof PenInfraFailure)) throw error;
+                sendEvent({
+                  response,
+                  event: "selection",
+                  data: { selected: [], closure: [], fallback: true },
+                });
+              }
+              const loopOutcome = await composeVerifiedLayerDraft({
+                instruction,
+                languageSource: KERNEL_LANGUAGE_SOURCE,
+                livingLayerNames: [...KERNEL_LAYER_NAMES, ...userNames],
+                readonlyLayerNames: [...KERNEL_LAYER_NAMES],
+                previousAdditionSources,
+                maxAttempts: MAX_PEN_ATTEMPTS,
+                strictConflicts: STRICT_CONFLICTS,
+                strictChecks: STRICT_CHECKS,
+                onRefusal: (refusal) => {
+                  sendEvent({
+                    response,
+                    event: "refusal",
+                    data: {
+                      attempt: refusal.attempt,
+                      step: refusal.step,
+                      verdicts: refusal.verdicts.map((verdict) => verdict.kind),
+                      feedback: refusal.feedback,
+                    },
+                  });
+                },
+                propose: async ({ attempt, instruction, feedback }) => {
+                  sendEvent({ response, event: "round", data: { attempt } });
+                  const generated = await generateLayer({
+                    instruction,
+                    feedback,
+                    visitorLayers,
+                    ...(selectedLayerNames === undefined
+                      ? {}
+                      : { selectedLayerNames }),
+                  });
+                  if (generated.statusCode !== 200) {
+                    throw new PenInfraFailure({
+                      statusCode: generated.statusCode,
+                      body: generated.body,
+                    });
+                  }
+                  return generated.body;
+                },
+              });
+              if (loopOutcome.ok && loopOutcome.draftSource !== null) {
+                sendEvent({
+                  response,
+                  event: "draft",
+                  data: { source: loopOutcome.draftSource },
+                });
+              } else {
+                const lastRefusal = loopOutcome.refusals[loopOutcome.refusals.length - 1];
+                sendEvent({
+                  response,
+                  event: "refused",
+                  data: {
+                    attempts: loopOutcome.attempts,
+                    feedback: lastRefusal?.feedback ?? "",
+                  },
+                });
+              }
+              closeStream();
+            } catch (error) {
+              if (error instanceof PenInfraFailure) {
+                sendEvent({
+                  response,
+                  event: "error",
+                  data: { statusCode: error.statusCode, body: error.body },
+                });
+                closeStream();
+                return;
+              }
+              closeStream();
+              throw error;
+            }
+            return;
+          }
           try {
             const loopOutcome = await composeVerifiedLayerDraft({
               instruction,
