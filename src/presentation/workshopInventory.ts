@@ -12,7 +12,7 @@
 // inventory — pastilles may slide horizontally, never change
 // bands).
 
-import { LayerReference } from "../domain/addresses.ts";
+import { AddressView, LayerReference } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
 import type { BilingualText } from "./i18n.ts";
 
@@ -283,10 +283,57 @@ export const LAYER_COLOR: Record<string, string> = {
  * — the generations align in horizontal bands. Extensible at
  * runtime: staged additions enter the living inventory, the corpus
  * ranks stay frozen. */
+/** Walk one layer's own tree and collect the layers its FIELDS cite
+ * (issue #235): any address value under a key other than `refines`,
+ * pointing at another inventoried layer. `refines` is inheritance —
+ * it is the solid arrow, never a usage edge. */
+export function collectUsageTargets({
+  layerTree,
+  layerName,
+  layerNames,
+}: {
+  layerTree: unknown;
+  layerName: string;
+  layerNames: readonly string[];
+}): string[] {
+  const known = new Set(layerNames);
+  const found = new Set<string>();
+  const walk = (node: unknown, key: string | null) => {
+    if (node instanceof AddressView) {
+      if (key !== "refines" && node.layer !== layerName && known.has(node.layer)) {
+        found.add(node.layer);
+      }
+      return;
+    }
+    if (node instanceof LayerReference) {
+      if (key !== "refines" && node.layer !== layerName && known.has(node.layer)) {
+        found.add(node.layer);
+      }
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const entry of node) walk(entry, key);
+      return;
+    }
+    if (node !== null && typeof node === "object") {
+      for (const [childKey, childValue] of Object.entries(node)) {
+        walk(childValue, childKey);
+      }
+    }
+  };
+  walk(layerTree, null);
+  return [...found].sort();
+}
+
 export class RefinementDag {
   private readonly targets: Record<string, string[]> = {};
   private readonly children: Record<string, string[]> = {};
   private readonly ranks: Record<string, number> = {};
+  /** The USAGE edges (issue #235): a layer uses another when one of
+   * its fields (any key but `refines`) cites the other layer's
+   * address — inheritance is the principal `refines`, usage is a
+   * field reference. */
+  private readonly uses: Record<string, string[]> = {};
 
   constructor({ space, layerNames }: { space: Space; layerNames: readonly string[] }) {
     // the graph is read in the kernel space, never copied blindly
@@ -295,6 +342,7 @@ export class RefinementDag {
       this.targets[layerName] = ((layerTree && layerTree["refines"]) ?? [])
         .filter((entry: any) => entry instanceof LayerReference)
         .map((entry: any) => entry.layer);
+      this.uses[layerName] = collectUsageTargets({ layerTree, layerName, layerNames });
     }
     for (const layerName of layerNames) this.children[layerName] = [];
     for (const layerName of layerNames) {
@@ -330,6 +378,12 @@ export class RefinementDag {
 
   targetsOf(layerName: string): string[] {
     return this.targets[layerName] ?? [];
+  }
+
+  /** The layers this layer USES in its fields (issue #235) — the
+   * dashed edges of the graph, distinct from the inheritance arrows. */
+  usesOf(layerName: string): string[] {
+    return this.uses[layerName] ?? [];
   }
 
   childrenOf(layerName: string): string[] {
@@ -369,8 +423,17 @@ export class RefinementDag {
   }
 
   /** Enter a staged addition into the living inventory. */
-  addLayer({ layerName, targets }: { layerName: string; targets: string[] }): void {
+  addLayer({
+    layerName,
+    targets,
+    uses = [],
+  }: {
+    layerName: string;
+    targets: string[];
+    uses?: string[];
+  }): void {
     this.targets[layerName] = targets;
+    this.uses[layerName] = uses;
     this.children[layerName] = [];
     for (const parent of targets) {
       if (this.children[parent] !== undefined) this.children[parent].push(layerName);
@@ -383,11 +446,20 @@ export class RefinementDag {
    * parents before joining the new ones, and the ranks are
    * recomputed (the graph is a projection of the space, never a
    * copy). */
-  retargetLayer({ layerName, targets }: { layerName: string; targets: string[] }): void {
+  retargetLayer({
+    layerName,
+    targets,
+    uses,
+  }: {
+    layerName: string;
+    targets: string[];
+    uses?: string[];
+  }): void {
     for (const parent of Object.keys(this.children)) {
       this.children[parent] = (this.children[parent] ?? []).filter((child) => child !== layerName);
     }
     this.targets[layerName] = targets;
+    if (uses !== undefined) this.uses[layerName] = uses;
     if (this.children[layerName] === undefined) this.children[layerName] = [];
     for (const parent of targets) {
       if (this.children[parent] !== undefined) this.children[parent].push(layerName);
