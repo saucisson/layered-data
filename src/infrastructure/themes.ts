@@ -33,12 +33,14 @@ export function themeDefinition({ id }: { id: ThemeId }): ThemeDefinition {
   return found;
 }
 
-/** The stored theme, or null when never chosen. */
+/** The stored theme, or null when never chosen. Falls back to the
+ *  legacy ld-dark-mode key so a pre-#233 explicit dark choice is
+ *  not lost. */
 export function readStoredTheme(): ThemeId | null {
   const stored = localStorage.getItem(THEME_STORAGE_KEY);
-  return stored !== null && THEMES.some((theme) => theme.id === stored)
-    ? (stored as ThemeId)
-    : null;
+  if (stored !== null && THEMES.some((theme) => theme.id === stored)) return stored as ThemeId;
+  if (localStorage.getItem("ld-dark-mode") === "true") return "dark";
+  return null;
 }
 
 /** The default theme: the system preference (dark when the OS is dark). */
