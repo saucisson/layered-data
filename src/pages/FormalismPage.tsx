@@ -338,13 +338,16 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-6xl p-4 sm:p-6">
+      <div className="mx-auto max-w-7xl p-4 sm:p-6">
         <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "The formalism — understand one layer" })}
         </h1>
+        <div className="grid items-start gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
         {/* The choice of the layer: the search fades, the click
-            navigates — the hash carries the address. */}
-        <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+            navigates — the hash carries the address. The list lives
+            in the left column (issue #226), sticky while the
+            formalism scrolls on the right. */}
+        <section className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 lg:sticky lg:top-20">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
               {say({ language, en: "One layer"})}
@@ -363,13 +366,13 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
               })}
             </span>
           </div>
-          <div className="flex max-h-24 flex-wrap gap-1.5 overflow-y-auto">
+          <div className="flex flex-col gap-1 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
             {matchedLayerNames.map((layerName) => (
               <button type="button"
                 key={layerName}
                 onClick={() => navigate("formalism", layerName)}
                 className={
-                  "flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] transition-colors " +
+                  "flex items-center gap-1.5 rounded border px-2 py-1 text-left font-mono text-[10px] transition-colors " +
                   (layerName === selectedLayer
                     ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-900 ring-1 ring-slate-900 dark:ring-slate-100"
                     : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-500 dark:hover:border-slate-400")
@@ -385,6 +388,8 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
             ))}
           </div>
         </section>
+
+        <div className="min-w-0 space-y-4">
 
         {/* The identity: role, parents, closure. */}
         <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
@@ -603,6 +608,8 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
             }}
           />
         </section>
+        </div>
+        </div>
       </div>
     </div>
   );
