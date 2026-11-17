@@ -198,6 +198,38 @@ check(
   ),
 );
 
+// The closure can move a documented element into a child (multidigraph
+// redefines `bindings` as a record holding `ordered`): the note must
+// follow its key down, never land on a flat-order neighbour.
+const flatMultidigraphLines = writeFlattenedLayerSource({
+  space: kernel.space,
+  layer: asLayerName("multidigraph"),
+}).split("\n");
+const commentBlockAbove = (lines: string[], index: number): string[] => {
+  const block: string[] = [];
+  for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+    const line = lines[cursor];
+    if (line === undefined || !line.trimStart().startsWith("//")) break;
+    block.unshift(line);
+  }
+  return block;
+};
+const orderedLineIndex = flatMultidigraphLines.findIndex((line) =>
+  line.trimStart().startsWith("ordered ="),
+);
+check(
+  "(a2) a note follows its key into a child node: the `ordered` comment sits directly above `ordered =`, not above `edge_type`",
+  orderedLineIndex > 0 &&
+    commentBlockAbove(flatMultidigraphLines, orderedLineIndex).some((line) =>
+      line.includes("ordered"),
+    ) &&
+    flatMultidigraphLines.every(
+      (line, index) =>
+        !line.trimStart().startsWith("edge_type =") ||
+        commentBlockAbove(flatMultidigraphLines, index).length === 0,
+    ),
+);
+
 // =====================================================================
 // (b) the lens drawing of the formalism page — the exact discipline
 //     of panel ④ (the extraction the workshop now calls too)
