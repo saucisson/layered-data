@@ -1,16 +1,16 @@
-// Panel ④ of the workshop: the point of view — the tree of lenses and
-// viewpoints on the left, the drawing of the current model through the
+// The lenses page panel (issue #227): the tree of lenses and
+// viewpoints on the left, the drawing of the chosen model through the
 // chosen look on the right, and the dressing detail of the selected
-// glyph. Pure presentation — the state lives in the composition root.
+// glyph. Pure presentation — the state lives in the page.
 
-import type { Language } from "../../domain/messages.ts";
-import { asLayerName, asLayerPath } from "../../domain/identifiers.ts";
-import { coversAddresses, dressingEntries, type Glyph } from "../../domain/views.ts";
-import type { LayeredDataKernel } from "../../application/corpus.ts";
-import { AddressView } from "../../domain/addresses.ts";
-import { localized, say } from "../i18n.ts";
-import { LayerBadge } from "../layerBadge.tsx";
-import { NodeGlyph, EdgeGlyph } from "../glyphs.tsx";
+import type { Language } from "../domain/messages.ts";
+import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
+import { coversAddresses, dressingEntries, type Glyph } from "../domain/views.ts";
+import type { LayeredDataKernel } from "../application/corpus.ts";
+import { AddressView } from "../domain/addresses.ts";
+import { localized, say } from "./i18n.ts";
+import { LayerBadge } from "./layerBadge.tsx";
+import { NodeGlyph, EdgeGlyph } from "./glyphs.tsx";
 import {
   LENS_LAYERS,
   VIEWPOINT_LAYERS,
@@ -18,11 +18,11 @@ import {
   bindingOf,
   groupTree,
   shapeLabel,
-} from "../viewTree.ts";
-import type { buildWorkshopLook } from "../lensDrawing.ts";
-import type { SelectedGlyph } from "./workshopKernel.ts";
+} from "./viewTree.ts";
+import type { buildWorkshopLook } from "./lensDrawing.ts";
+import type { SelectedGlyph } from "./workshop/workshopKernel.ts";
 
-export function WorkshopViewpointPanel({
+export function ViewpointPanel({
   language,
   kernel,
   look,
@@ -40,9 +40,9 @@ export function WorkshopViewpointPanel({
   onSelectGlyph: (glyph: SelectedGlyph | null) => void;
 }) {
   return (
-    <section className="mx-2 mt-3 sm:mx-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
+    <section className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
       <h2 id="panel-viewpoint-heading" className="text-sm font-bold text-slate-800 dark:text-slate-100">
-        {say({ language, en: "④ The point of view" })}
+        {say({ language, en: "The lenses & viewpoints" })}
         <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
           {say({
             language,
@@ -96,7 +96,7 @@ export function WorkshopViewpointPanel({
                       <span className="truncate text-slate-600 dark:text-slate-400">
                         {say({
                           language,
-                          en: "lens — model: the current one of ①",
+                          en: "lens — model: the chosen one",
                         })}
                       </span>
                     </button>
@@ -132,7 +132,7 @@ export function WorkshopViewpointPanel({
                           ? say({ language, en: "→ designated model" })
                           : say({
                               language,
-                              en: "→ model: the current one of ①",
+                              en: "→ model: the chosen one",
                             })}
                       </span>
                     </button>
@@ -162,7 +162,7 @@ export function WorkshopViewpointPanel({
               {look.isLens
                 ? say({
                     language,
-                    en: "lone lens — current model of ①",
+                    en: "lone lens — the chosen model",
                   })
                 : look.viewpointDecidesPositions
                   ? say({ language, en: "course positions" })

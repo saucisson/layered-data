@@ -13,6 +13,7 @@ const ROUTES: ReadonlyArray<{ hash: string; heading: RegExp }> = [
   { hash: "#hierarchy", heading: /hierarchy/i },
   { hash: "#creation", heading: /Create a formalism/ },
   { hash: "#workshop", heading: /workshop/i },
+  { hash: "#lenses", heading: /Lenses/ },
   { hash: "#editor", heading: /model editor/i },
   { hash: "#formalism/petrinet", heading: /formalism/i },
   { hash: "#nimportequoi", heading: /Page not found/ },
