@@ -59,8 +59,8 @@ test("the artwork logo variant renders the provided PNG wordmark and persists", 
   await expect
     .poll(() => page.evaluate("localStorage.getItem('ld-logo')"))
     .toBe("artwork");
-  // the header brand is now the PNG wordmark (dark artwork on light theme)
-  const artwork = page.locator('header img[src="/logos/layered-data-logo-dark.png"]');
+  // the header brand is now the PNG wordmark (light card on the light theme)
+  const artwork = page.locator('header img[src="/logos/layered-data-logo-light.png"]');
   await expect(artwork).toBeVisible();
   // the PNGs are actually served
   expect((await page.request.get("/logos/layered-data-logo-dark.png")).status()).toBe(200);
