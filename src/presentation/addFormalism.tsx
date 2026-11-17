@@ -34,6 +34,10 @@ export interface AcceptedAddition {
   refinementTargets: Record<string, string[]>;
 }
 
+/** The geologist call is allowed five minutes: the server-side
+ * verified loop can chain up to three model calls. */
+const GENERATE_TIMEOUT_MS = 300_000;
+
 export function AddFormalismComposer({
   kernel,
   livingLayerNames,
@@ -69,6 +73,11 @@ export function AddFormalismComposer({
     try {
       const response = await apiFetch({
         endpoint: "api/generate",
+        // the verified loop may call the model up to MAX_PEN_ATTEMPTS
+        // times server-side — the default 10s client timeout would
+        // abort a healthy large-model call and fall back to the
+        // simulated proposal
+        timeoutMs: GENERATE_TIMEOUT_MS,
         options: {
           method: "POST",
           headers: { "content-type": "application/json" },
