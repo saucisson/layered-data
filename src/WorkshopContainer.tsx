@@ -32,6 +32,7 @@ import {
   type HistoryEntry,
   type AcceptedAdditionState,
 } from "./presentation/workshop/workshopKernel.ts";
+import { collectUsageTargets } from "./presentation/workshopInventory.ts";
 import { WorkshopHeader } from "./presentation/workshop/WorkshopHeader.tsx";
 import { WorkshopLayersPanel } from "./presentation/workshop/WorkshopLayersPanel.tsx";
 import { FormalismPanel } from "./presentation/formalismPanel.tsx";
@@ -191,7 +192,15 @@ export function WorkshopPage({
     }
     setAddedLayerBlocks(nextBlocks);
     for (const [layerName, targets] of Object.entries(addition.refinementTargets)) {
-      REFINEMENT_DAG.addLayer({ layerName, targets });
+      REFINEMENT_DAG.addLayer({
+        layerName,
+        targets,
+        uses: collectUsageTargets({
+          layerTree: KERNEL.space.layers[layerName],
+          layerName,
+          layerNames: livingLayerNames,
+        }),
+      });
     }
   }
   function handleComposerAdded(addition: AcceptedAddition) {
@@ -221,6 +230,11 @@ export function WorkshopPage({
     REFINEMENT_DAG.retargetLayer({
       layerName: edition.layerName,
       targets: edition.refinementTargetsOf,
+      uses: collectUsageTargets({
+        layerTree: KERNEL.space.layers[edition.layerName],
+        layerName: edition.layerName,
+        layerNames: livingLayerNames,
+      }),
     });
     setSpaceVersion(spaceVersion + 1);
     setEditorLayer(null);

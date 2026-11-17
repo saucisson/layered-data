@@ -421,6 +421,32 @@ check(
   ) && layout.rows.length > 1,
 );
 
+// (d3) the two arrow kinds of the hierarchy (issue #235): inheritance
+// is the principal refines, usage is a field citing another layer
+check(
+  "(d3) petrinet-view USES petrinet-display in a field — a dashed edge, not an inheritance",
+  corpusDag.usesOf("petrinet-view").includes("petrinet-display") &&
+    !corpusDag.targetsOf("petrinet-view").includes("petrinet-display"),
+);
+check(
+  "(d3) kahn-course USES pn-philosophers-5 in a field; multidigraph's inheritance stays named-ends-hypergraph & pair-graph",
+  corpusDag.usesOf("kahn-course").includes("pn-philosophers-5") &&
+    corpusDag.targetsOf("multidigraph").includes("named-ends-hypergraph") &&
+    corpusDag.targetsOf("multidigraph").includes("pair-graph"),
+);
+check(
+  "(d3) a self-relative address (@edge_type/source) is NOT a usage edge — only inventoried layers count",
+  !corpusDag.usesOf("multidigraph").includes("edge_type"),
+);
+check(
+  "(d3) a layer's own refines never leaks into its usage edges",
+  KERNEL_LAYER_NAMES.every(
+    (layerName) =>
+      corpusDag.targetsOf(layerName).every((target) => !corpusDag.usesOf(layerName).includes(target)) ||
+      corpusDag.usesOf(layerName).every((used) => used !== layerName),
+  ) && KERNEL_LAYER_NAMES.every((layerName) => !corpusDag.usesOf(layerName).includes(layerName)),
+);
+
 // (d2) the SHARED wrapped layout (issue #217) — the one component the
 // workshop header and the hierarchy page both render — is
 // deterministic and wraps to the given width

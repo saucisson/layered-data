@@ -72,3 +72,17 @@ test("#217 the workshop header and the hierarchy page render the SAME shared ref
   await expect(workshopCurves.first()).toBeVisible();
   expect(await workshopCurves.count()).toBeGreaterThan(10);
 });
+
+test("#235 the hierarchy draws two arrow kinds — solid inheritance, dashed usage", async ({ page }) => {
+  await page.goto("/#hierarchy");
+  await expect(page.getByRole("heading", { name: /hierarchy/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: /^petrinet-scheme/ })).toBeVisible({ timeout: 15_000 });
+  // solid inheritance curves (filled arrowhead marker)
+  const solid = page.locator("svg path[marker-end]:not([stroke-dasharray])");
+  await expect(solid.first()).toBeVisible();
+  expect(await solid.count()).toBeGreaterThan(10);
+  // dashed usage curves (hollow arrowhead) — petrinet-view uses petrinet-display
+  const dashed = page.locator("svg path[stroke-dasharray]");
+  await expect(dashed.first()).toBeVisible();
+  expect(await dashed.count()).toBeGreaterThan(0);
+});
