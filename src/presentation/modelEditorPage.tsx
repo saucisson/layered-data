@@ -33,6 +33,8 @@ import {
   type LivingAddition,
 } from "../application/edition.ts";
 import { drawnShape, type Glyph } from "../domain/views.ts";
+import { flattenLayer } from "../application/flatten.ts";
+import { RefinementDag } from "./workshopInventory.ts";
 import { expectationsOf, formatExpectation, readMatchesExpectation } from "../domain/validation.ts";
 import { circlePosition, LENS_LAYERS } from "./viewTree.ts";
 import { EdgeGlyph } from "./glyphs.tsx";
@@ -192,9 +194,13 @@ export function ModelEditorPage({
   // ---- the model creation form -------------------------------------
   const [creationOpen, setCreationOpen] = useState(false);
   const [creationName, setCreationName] = useState("");
-  const [creationRefines, setCreationRefines] = useState(() =>
-    suggestModelRefines({ space: KERNEL.space, layerNames: KERNEL.layerNames }),
+  const [creationParents, setCreationParents] = useState<string[]>(() =>
+    suggestModelRefines({ space: KERNEL.space, layerNames: KERNEL.layerNames })
+      .split(" then ")
+      .map((entry) => entry.trim().replace(/^@/, ""))
+      .filter((entry) => entry.length > 0),
   );
+
   // ---- the canvas in motion ----------------------------------------
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [gesture, setGesture] = useState<Gesture | null>(null);
@@ -220,6 +226,16 @@ export function ModelEditorPage({
   const editableModels = useMemo(() => {
     return editableLayerNames({ livingLayerNames, readonlyLayerNames: KERNEL.layerNames });
   }, [livingLayerNames]);
+
+  // The candidate parents (issue #218): the living layers that carry
+  // member containers — the formalisms a new model can refine.
+  const candidateParents = useMemo(
+    () =>
+      livingLayerNames.filter(
+        (layerName) => readMemberContainers({ space: KERNEL.space, model: layerName }).length > 0,
+      ),
+    [livingLayerNames, spaceVersion],
+  );
 
   const containers = useMemo(() => {
     if (model === null) return [];
@@ -251,14 +267,47 @@ export function ModelEditorPage({
       };
     });
   }, [model, spaceVersion]);
+  /** The palette's containers (issue #218): the vocabulary the model
+   * itself declares — the first layer of the refinement chain (the
+   * model, then its parents in consultation order) that wins at least
+   * one container provides the palette. Inherited axis containers
+   * (left/right of bipartite-digraph under petrinet-scheme) stay out. */
+  const paletteContainers = useMemo(() => {
+    if (model === null) return containers;
+    const flattened = flattenLayer({ space: KERNEL.space, layer: asLayerName(model) });
+    const winnerOf = new Map(
+      flattened.root.entries.map((entry) => [entry.key, entry.winner] as const),
+    );
+    const dag = new RefinementDag({ space: KERNEL.space, layerNames: livingLayerNames });
+    const chain: string[] = [];
+    const queue = [model];
+    const seen = new Set<string>();
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (current === undefined || seen.has(current)) continue;
+      seen.add(current);
+      chain.push(current);
+      queue.push(...dag.targetsOf(current));
+    }
+    for (const layerName of chain) {
+      // the position container never counts as a vocabulary: a
+      // positions layer in the chain must not mask the scheme below it
+      const own = containers.filter(
+        (container) =>
+          container.name !== positionContainer?.name && winnerOf.get(container.name) === layerName,
+      );
+      if (own.length > 0) return own;
+    }
+    return containers;
+  }, [model, containers, livingLayerNames, spaceVersion, positionContainer]);
   const vertexContainers = useMemo(() => {
-    return containers.filter(
+    return paletteContainers.filter(
       (container) => container.kind === "sommet" && container.name !== positionContainer?.name,
     );
-  }, [containers, positionContainer]);
+  }, [paletteContainers, positionContainer]);
   const arcContainers = useMemo(() => {
-    return containers.filter((container) => container.kind === "arc");
-  }, [containers]);
+    return paletteContainers.filter((container) => container.kind === "arc");
+  }, [paletteContainers]);
 
   /** The model's own source block (header included), as every gesture
    * drafts on it. */
@@ -1075,7 +1124,8 @@ export function ModelEditorPage({
   // ---- the model creation ---------------------------------------------
 
   function handleCreateModel() {
-    const draftSource = "layer " + creationName.trim() + " refines " + creationRefines.trim();
+    const refinesText = creationParents.map((parent) => "@" + parent).join(" then ");
+    const draftSource = "layer " + creationName.trim() + " refines " + refinesText;
     const staging = stageLayerAddition({
       languageSource: KERNEL.languageSource,
       previousAdditionSources: additions.map((addition) => addition.source),
@@ -1197,7 +1247,8 @@ export function ModelEditorPage({
         </button>
         <button type="button"
           onClick={() => setCreationOpen(!creationOpen)}
-          className="rounded bg-sky-600 dark:bg-sky-700 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500 dark:hover:bg-sky-600"
+          title={t("create a new model — pick its parent formalisms in the list")}
+          className="rounded bg-sky-600 dark:bg-sky-700 px-3 py-1.5 text-xs font-bold text-white shadow ring-1 ring-sky-300 dark:ring-sky-600 hover:bg-sky-500 dark:hover:bg-sky-600"
         >
           {t("+ new model")}
         </button>
@@ -1266,12 +1317,33 @@ export function ModelEditorPage({
               className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs"
             />
             <span className="text-xs text-slate-600 dark:text-slate-400">refines</span>
-            <input
-              value={creationRefines}
-              onChange={(event) => setCreationRefines(event.target.value)}
-              spellCheck={false}
-              className="w-72 rounded border border-slate-300 dark:border-slate-600 px-2 py-1 font-mono text-xs"
-            />
+            <div className="flex max-h-32 flex-wrap gap-1 overflow-auto rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-1.5">
+              {candidateParents.map((parentName) => (
+                <label
+                  key={parentName}
+                  className={
+                    "flex cursor-pointer items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] " +
+                    (creationParents.includes(parentName)
+                      ? "border-sky-500 bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300"
+                      : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-400")
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    className="h-3 w-3"
+                    checked={creationParents.includes(parentName)}
+                    onChange={(event) =>
+                      setCreationParents((previous) =>
+                        event.target.checked
+                          ? [...previous, parentName]
+                          : previous.filter((entry) => entry !== parentName),
+                      )
+                    }
+                  />
+                  {parentName}
+                </label>
+              ))}
+            </div>
             <button type="button"
               onClick={handleCreateModel}
               disabled={creationName.trim().length === 0}
@@ -1311,13 +1383,21 @@ export function ModelEditorPage({
                 key={container.name}
                 onClick={() => setTool({ kind: "sommet", container: container.name })}
                 className={
-                  "rounded px-2 py-1 text-left text-[11px] " +
+                  "flex items-center gap-1.5 rounded px-2 py-1 text-left text-[11px] " +
                   (tool.kind === "sommet" && tool.container === container.name
                     ? "bg-sky-600 dark:bg-sky-700 text-white"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600")
                 }
                 title={container.name + " — " + container.annotationKeys.join(", ")}
               >
+                <PaletteGlyph
+                  spec={drawnShape({
+                    space: KERNEL.space,
+                    lens: asLayerName(lens),
+                    layer: asLayerName(container.memberType[0]),
+                    path: asLayerPath(container.memberType[1]),
+                  })?.spec ?? null}
+                />
                 {container.name}
               </button>
             ))}
@@ -1325,7 +1405,7 @@ export function ModelEditorPage({
               <button type="button"
                 onClick={() => setTool({ kind: "arc" })}
                 className={
-                  "rounded px-2 py-1 text-left text-[11px] " +
+                  "flex items-center gap-1.5 rounded px-2 py-1 text-left text-[11px] " +
                   (tool.kind === "arc"
                     ? "bg-sky-600 dark:bg-sky-700 text-white"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600")
@@ -1334,6 +1414,7 @@ export function ModelEditorPage({
                   "drag from a vertex to another — pre or post, the formalism's rules decide",
                 )}
               >
+                <PaletteGlyph spec={[{ shape: "line", arrow: "plain" }]} />
                 {t("arc")}
               </button>
             )}
@@ -1575,6 +1656,33 @@ export function ModelEditorPage({
         </div>
       </div>
     </div>
+  );
+}
+
+/** The palette's mini-glyph (issue #218): the lens's shape for the
+ * container's member type — a place is an ellipse, a transition a
+ * rectangle, an arc a line — the name stays beside it. */
+function PaletteGlyph({ spec }: { spec: ShapeSpec }) {
+  const glyph = spec !== null && spec.length > 0 ? spec[0] : undefined;
+  const stroke = (glyph !== undefined && "stroke" in glyph ? glyph.stroke : undefined) ?? "#64748b";
+  const fill = (glyph !== undefined && "fill" in glyph ? glyph.fill : undefined) ?? "#ffffff";
+  return (
+    <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true" className="shrink-0">
+      {glyph === undefined || glyph.shape === "circle" ? (
+        <circle cx="10" cy="7" r="5" fill={fill} stroke={stroke} strokeDasharray={glyph === undefined ? "2 2" : undefined} />
+      ) : glyph.shape === "ellipse" ? (
+        <ellipse cx="10" cy="7" rx="8" ry="5" fill={fill} stroke={stroke} />
+      ) : glyph.shape === "rectangle" || glyph.shape === "box" ? (
+        <rect x="2" y="2" width="16" height="10" fill={fill} stroke={stroke} />
+      ) : (
+        <line x1="2" y1="7" x2="18" y2="7" stroke={stroke} strokeWidth="1.5" markerEnd="url(#palette-arrow)" />
+      )}
+      <defs>
+        <marker id="palette-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M0,0 L6,3 L0,6 z" fill={stroke} />
+        </marker>
+      </defs>
+    </svg>
   );
 }
 
