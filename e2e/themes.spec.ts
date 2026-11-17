@@ -10,27 +10,26 @@ test("#233 the theme chosen in the header is applied and survives a reload", asy
 
   await picker.selectOption("nord");
   await expect
-    .poll(() => page.evaluate(() => document.documentElement.classList.contains("theme-nord")))
+    .poll(() => page.evaluate("document.documentElement.classList.contains('theme-nord')"))
     .toBe(true);
   await expect
-    .poll(() => page.evaluate(() => localStorage.getItem("ld-theme")))
+    .poll(() => page.evaluate("localStorage.getItem('ld-theme')"))
     .toBe("nord");
 
   // a reload keeps the theme
   await page.reload();
   await expect(picker).toHaveValue("nord", { timeout: 10_000 });
   await expect
-    .poll(() => page.evaluate(() => document.documentElement.classList.contains("theme-nord")))
+    .poll(() => page.evaluate("document.documentElement.classList.contains('theme-nord')"))
     .toBe(true);
 
   // back to light removes every theme class
   await picker.selectOption("light");
   await expect
     .poll(() =>
-      page.evaluate(() => {
-        const classes = document.documentElement.classList;
-        return !classes.contains("theme-nord") && !classes.contains("dark");
-      }),
+      page.evaluate(
+        "(() => { const c = document.documentElement.classList; return !c.contains('theme-nord') && !c.contains('dark'); })()",
+      ),
     )
     .toBe(true);
 });
