@@ -7,7 +7,7 @@
 // (#formalism/wb1): the address is the artifact, the URL is the
 // state.
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "../components/Router";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import { extractLayerBlock } from "../application/staging.ts";
@@ -16,6 +16,7 @@ import {
   writeFlattenedLayerSections,
   type FlattenedLayerText,
   type FlattenedSection,
+  type FlattenedTarget,
 } from "../application/flattenSource.ts";
 import {
   materializeSessionAdditions,
@@ -24,7 +25,12 @@ import {
 } from "../application/session.ts";
 import { loadKernelLayerSources } from "../infrastructure/corpusLoader.ts";
 import { asLayerName } from "../domain/identifiers.ts";
-import { highlightSourceLine, SPAN_CLASSES } from "../presentation/layerSourceView.tsx";
+import {
+  buildSourceLineTargets,
+  highlightSourceLine,
+  SPAN_CLASSES,
+  type SourceLineTarget,
+} from "../presentation/layerSourceView.tsx";
 import { buildWorkshopLook, type WorkshopLook } from "../presentation/lensDrawing.ts";
 import { LAYER_COLOR, LAYER_ROLE, RefinementDag } from "../presentation/workshopInventory.ts";
 import { LENS_LAYERS, VIEW_NOTES } from "../presentation/viewTree.ts";
@@ -43,12 +49,29 @@ interface FormalismPageProps {
 // the single source, never an embedded copy. The session
 // additions materialize into it at each mount, idempotently.
 const KERNEL = assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() });
+
+// The line-target table of the corpus (issue #224): each written line
+// designates the address it writes — clicking it reveals the
+// equivalent entry in the flattened view.
+const SOURCE_LINE_TARGETS = buildSourceLineTargets({ parsedLanguage: KERNEL.parsedLanguage });
 const DEFAULT_FORMALISM_LAYER = "multihypergraph";
 
 /** One DSL text, rendered with the workshop's own highlighter —
  * same colors as the language tab of the workshop: violet for the
  * acts, green for the @paths, amber for the strings. */
-function SourceText({ source, maxHeightClass }: { source: string; maxHeightClass: string }) {
+function SourceText({
+  source,
+  maxHeightClass,
+  parsedLayer,
+  onLine,
+  language,
+}: {
+  source: string;
+  maxHeightClass: string;
+  parsedLayer: { name: string; line: number } | null;
+  onLine: (target: SourceLineTarget) => void;
+  language: Language;
+}) {
   return (
     <div
       className={
@@ -56,20 +79,49 @@ function SourceText({ source, maxHeightClass }: { source: string; maxHeightClass
         maxHeightClass
       }
     >
-      {source.split("\n").map((line, index) => (
-        <div key={index} className="flex">
-          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500 dark:text-slate-400">
-            {index + 1}
-          </span>
-          <span className="whitespace-pre">
-            {highlightSourceLine(line).map((span, spanIndex) => (
-              <span key={spanIndex} className={SPAN_CLASSES[span.kind]}>
-                {span.text}
-              </span>
-            ))}
-          </span>
-        </div>
-      ))}
+      {source.split("\n").map((line, index) => {
+        // Displayed line `index` (0-based) is the source line
+        // parsedLayer.line + index: the block is extracted from its
+        // "layer" line.
+        const lineTarget =
+          parsedLayer !== null ? SOURCE_LINE_TARGETS.get(parsedLayer.line + index) : undefined;
+        return (
+          <div
+            key={index}
+            className={
+              "flex " +
+              (lineTarget !== undefined
+                ? "cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800 rounded"
+                : "")
+            }
+            onClick={lineTarget !== undefined ? () => onLine(lineTarget) : undefined}
+            title={
+              lineTarget !== undefined
+                ? say({
+                    language,
+                    en:
+                      "reveal what this line writes in the flattened formalism — address " +
+                      lineTarget.layer +
+                      "/" +
+                      (lineTarget.path.length ? lineTarget.path.join("/") : "()") +
+                      (lineTarget.key !== null ? " :: " + lineTarget.key : ""),
+                  })
+                : undefined
+            }
+          >
+            <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500 dark:text-slate-400">
+              {index + 1}
+            </span>
+            <span className="whitespace-pre">
+              {highlightSourceLine(line).map((span, spanIndex) => (
+                <span key={spanIndex} className={SPAN_CLASSES[span.kind]}>
+                  {span.text}
+                </span>
+              ))}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -100,10 +152,63 @@ function collectSectionKeys({
  * away, the artifact never floods the page and is never truncated
  * either. The line numbers are those of the complete text: what
  * folds hides lines, it never renumbers them. */
-function FlattenedText({ text, language }: { text: FlattenedLayerText; language: Language }) {
+function FlattenedText({
+  text,
+  language,
+  reveal,
+}: {
+  text: FlattenedLayerText;
+  language: Language;
+  reveal: { target: FlattenedTarget; nonce: number } | null;
+}) {
   const [folded, setFolded] = useState<Set<string>>(
     () => new Set(collectSectionKeys({ sections: text.sections, prefix: "" })),
   );
+  const [flashKey, setFlashKey] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+
+  // Issue #224: a click on a DSL line reveals the equivalent entry
+  // here — the ancestors unfold, the entry scrolls into view and
+  // flashes once.
+  useEffect(() => {
+    if (reveal === null) return;
+    const target = reveal.target;
+    const pathKey = target.path.join("/");
+    const walk = (
+      sections: FlattenedSection[],
+      prefix: string,
+      ancestors: string[],
+    ): { key: string; ancestors: string[] } | null => {
+      for (let index = 0; index < sections.length; index++) {
+        const section = sections[index];
+        if (section === undefined) continue;
+        const key = prefix + index;
+        if (section.target.path.join("/") === pathKey && section.target.key === target.key) {
+          return { key, ancestors };
+        }
+        if (section.sections.length > 0) {
+          const nested = walk(section.sections, key + ".", [...ancestors, key]);
+          if (nested !== null) return nested;
+        }
+      }
+      return null;
+    };
+    const found = walk(text.sections, "", []);
+    if (found === null) return;
+    const { key, ancestors } = found;
+    setFolded((previous) => {
+      const next = new Set(previous);
+      for (const ancestor of ancestors) next.delete(ancestor);
+      return next;
+    });
+    const frame = requestAnimationFrame(() => {
+      const element = containerRef.current?.querySelector(`[data-flat-key="${key}"]`);
+      element?.scrollIntoView({ block: "center" });
+      setFlashKey(key);
+      setTimeout(() => setFlashKey((current) => (current === key ? null : current)), 1600);
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [reveal, text]);
   const lineNumbers = useMemo(() => {
     const numbers = new Map<string, number>();
     let next = text.headerLines.length;
@@ -145,7 +250,13 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
     const hasSections = section.sections.length > 0;
     const isFolded = folded.has(key);
     const nodes: React.ReactNode[] = [
-      <div key={key} className="flex">
+      <div
+        key={key}
+        data-flat-key={key}
+        className={
+          "flex rounded " + (flashKey === key ? "bg-amber-100 dark:bg-amber-900/40" : "")
+        }
+      >
         <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500 dark:text-slate-400">
           {lineNumbers.get(key)}
         </span>
@@ -190,7 +301,10 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
     return nodes;
   };
   return (
-    <div className="overflow-auto rounded-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4 max-h-[32rem]">
+    <div
+      ref={containerRef}
+      className="overflow-auto rounded-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4 max-h-[32rem]"
+    >
       <div className="mb-1 flex flex-wrap gap-2">
         <button type="button"
           onClick={() => setFolded(new Set())}
@@ -284,6 +398,9 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
   const livingLayerNames = session.layerNames;
   const [search, setSearch] = useState("");
   const [lensChoice, setLensChoice] = useState<string | null>(null);
+  // Issue #224: the last DSL line clicked — its address is revealed
+  // (unfolded, scrolled to, flashed) in the flattened view.
+  const [reveal, setReveal] = useState<{ target: FlattenedTarget; nonce: number } | null>(null);
   const dag = useMemo(
     () => new RefinementDag({ space: KERNEL.space, layerNames: livingLayerNames }),
     [livingLayerNames],
@@ -306,6 +423,8 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
     () => writeFlattenedLayerSections({ space: KERNEL.space, layer: asLayerName(selectedLayer) }),
     [selectedLayer],
   );
+  const parsedLayer =
+    KERNEL.parsedLanguage.layers.find((entry) => entry.name === selectedLayer) ?? null;
 
   // The identity of the layer: its role sentence, its parents, its
   // closure towards the bases.
@@ -478,7 +597,18 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 })}
               </p>
             ) : (
-              <SourceText source={sourceBlock} maxHeightClass="max-h-[32rem]" />
+              <SourceText
+                source={sourceBlock}
+                maxHeightClass="max-h-[32rem]"
+                parsedLayer={parsedLayer}
+                language={language}
+                onLine={(target) =>
+                  setReveal({
+                    target: { layer: target.layer, path: target.path, key: target.key },
+                    nonce: Date.now(),
+                  })
+                }
+              />
             )}
           </div>
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
@@ -494,7 +624,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 en: "The whole closure, resolved in place — first-wins decides: every key carries its effective value and, as a comment, the layer that provides it (or declares the slot nobody provides — abstract). refines is absent: the hierarchy is what the flattening removes. Each indented part folds: one click hides it, one click opens it.",
               })}
             </p>
-            <FlattenedText text={flattenedText} language={language} />
+            <FlattenedText text={flattenedText} language={language} reveal={reveal} />
           </div>
         </section>
 
