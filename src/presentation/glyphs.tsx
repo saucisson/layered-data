@@ -105,26 +105,38 @@ export function NodeGlyph({
   );
 }
 
-/** One drawn edge between two vertices: a wide transparent line
+/** One drawn edge between two vertices: a wide transparent polyline
  * under the visible one (the click target), two-port squares, a
  * plain arrowhead, the weight as label — dashed when the lens knows
- * nothing of the edge type. */
+ * nothing of the edge type. The arc may carry waypoints (issue #220):
+ * the line then bends through them, and a selected arc shows them as
+ * draggable handles. */
 export function EdgeGlyph({
   name,
   shape,
   from,
   to,
+  waypoints = [],
   weight,
   selected,
   onPick,
+  onAddWaypoint,
+  onWaypointPointerDown,
+  onWaypointDoubleClick,
+  waypointDragIndex = null,
 }: {
   name: string;
   shape: Glyph[] | null;
   weight?: number | null;
   from: { x: number; y: number };
   to: { x: number; y: number };
+  waypoints?: { x: number; y: number }[];
   selected: boolean;
   onPick: () => void;
+  onAddWaypoint?: (event: React.MouseEvent<SVGGElement>) => void;
+  onWaypointPointerDown?: (index: number, event: React.PointerEvent<SVGCircleElement>) => void;
+  onWaypointDoubleClick?: (index: number) => void;
+  waypointDragIndex?: number | null;
 }) {
   const glyphs = (shape ?? []).filter((glyph) => glyph.shape === "line");
   const hasPorts = glyphs.some((glyph) => glyph.shape === "line" && glyph.ports === 2);
@@ -132,28 +144,59 @@ export function EdgeGlyph({
   const stroke = glyphs.length > 0 ? (glyphs[0]?.stroke ?? "#94a3b8") : "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
 
-  // trim the line ends so it does not run under the vertex glyphs
-  const dx = to.x - from.x;
-  const dy = to.y - from.y;
+  // the polyline the arc follows: from → waypoints → to, then the
+  // ends are trimmed so the line does not run under the vertex glyphs
+  const polyline = [from, ...waypoints, to];
+  const trimEnd = (points: { x: number; y: number }[], atStart: boolean) => {
+    const a = atStart ? points[0] : points[points.length - 1];
+    const b = atStart ? points[1] : points[points.length - 2];
+    if (a === undefined || b === undefined) return a;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const length = Math.sqrt(dx * dx + dy * dy) || 1;
+    const trim = 20 / length;
+    return atStart
+      ? { x: a.x + dx * trim, y: a.y + dy * trim }
+      : { x: a.x - dx * trim, y: a.y - dy * trim };
+  };
+  const drawn = polyline.map((point, index) =>
+    index === 0
+      ? trimEnd(polyline, true)
+      : index === polyline.length - 1
+        ? trimEnd(polyline, false)
+        : point,
+  );
+  const pathData = drawn
+    .map((point, index) => (index === 0 ? "M" : "L") + (point?.x ?? 0) + "," + (point?.y ?? 0))
+    .join(" ");
+  const labelAnchor = drawn[Math.floor(drawn.length / 2)] ?? from;
+
+  // the arrowhead follows the last segment's direction
+  const tailA = drawn[drawn.length - 2] ?? from;
+  const tailB = drawn[drawn.length - 1] ?? to;
+  const dx = tailB.x - tailA.x;
+  const dy = tailB.y - tailA.y;
   const length = Math.sqrt(dx * dx + dy * dy) || 1;
   const unitX = dx / length;
   const unitY = dy / length;
-  const trim = 20 / length;
-  const x1 = from.x + dx * trim;
-  const y1 = from.y + dy * trim;
-  const x2 = to.x - dx * trim;
-  const y2 = to.y - dy * trim;
+  const x2 = tailB.x;
+  const y2 = tailB.y;
+  const x1 = drawn[0]?.x ?? from.x;
+  const y1 = drawn[0]?.y ?? from.y;
 
   return (
-    <g onClick={onPick} style={{ cursor: "pointer" }}>
-      <line x1={x1} y1={y1} x2={x2} y2={y2} stroke="transparent" strokeWidth={12} />
-      <line
-        x1={x1}
-        y1={y1}
-        x2={x2}
-        y2={y2}
+    <g
+      onClick={onPick}
+      onDoubleClick={onAddWaypoint}
+      style={{ cursor: "pointer" }}
+      data-edge={name}
+    >
+      <path d={pathData} stroke="transparent" strokeWidth={12} fill="none" />
+      <path
+        d={pathData}
         stroke={stroke}
         strokeWidth={strokeWidth}
+        fill="none"
         strokeDasharray={glyphs.length > 0 ? undefined : "3 3"}
       />
       {hasPorts && (
@@ -171,10 +214,28 @@ export function EdgeGlyph({
           className="fill-slate-600 dark:fill-slate-400"
         />
       )}
-      <text x={(x1 + x2) / 2} y={(y1 + y2) / 2 - 3} textAnchor="middle" fontSize={8} fill="#94a3b8">
+      <text x={labelAnchor.x} y={labelAnchor.y - 3} textAnchor="middle" fontSize={8} fill="#94a3b8">
         {name}
         {weight !== null && weight !== undefined ? " · poids " + weight : ""}
       </text>
+      {selected &&
+        waypoints.map((point, index) => (
+          <circle
+            key={index}
+            cx={point?.x ?? 0}
+            cy={point?.y ?? 0}
+            r={waypointDragIndex === index ? 5 : 4}
+            className="fill-sky-500 stroke-white dark:stroke-slate-800"
+            strokeWidth={1}
+            style={{ cursor: "grab" }}
+            data-waypoint={name + "/" + index}
+            onPointerDown={(event) => onWaypointPointerDown?.(index, event)}
+            onDoubleClick={(event) => {
+              event.stopPropagation();
+              onWaypointDoubleClick?.(index);
+            }}
+          />
+        ))}
     </g>
   );
 }
