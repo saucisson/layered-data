@@ -1,5 +1,5 @@
 // Navigation E2E (issue #197): the shared top menu is present on every
-// route, its six entries are real links to the right hashes, the current
+// route, its entries are real links to the right hashes, the current
 // page carries aria-current="page", and clicking an entry navigates and
 // re-highlights.
 import { test, expect } from "@playwright/test";
@@ -13,6 +13,7 @@ const ROUTES: ReadonlyArray<{ hash: string; label: string }> = [
   { hash: "#hierarchy", label: "Hierarchy" },
   { hash: "#creation", label: "Creation" },
   { hash: "#workshop", label: "Workshop" },
+  { hash: "#lenses", label: "Lenses" },
   { hash: "#editor", label: "Editor" },
 ];
 
@@ -25,9 +26,9 @@ test.describe("global navigation menu", () => {
       await page.goto("/" + hash);
       const nav = page.locator(MENU);
       await expect(nav).toBeVisible();
-      // seven plain-text entries, real hash links
+      // eight plain-text entries, real hash links
       const links = nav.locator("a");
-      await expect(links).toHaveCount(7);
+      await expect(links).toHaveCount(8);
       for (const { hash: entryHash, label: entryLabel } of ROUTES) {
         await expect(links.filter({ hasText: entryLabel })).toHaveAttribute("href", entryHash);
       }
