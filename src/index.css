@@ -116,7 +116,8 @@ button:not(:disabled),
 
 .dark,
 .theme-nord,
-.theme-dracula {
+.theme-dracula,
+.theme-tokyonight {
   color-scheme: dark;
 }
 
@@ -236,4 +237,38 @@ button:not(:disabled),
 .theme-forest .border-slate-200,
 .theme-forest .border-slate-300 {
   border-color: #c9dcc4;
+}
+
+/* Tokyo Night — deep indigo (storm palette) */
+.theme-tokyonight body {
+  background-color: #1a1b26;
+}
+.theme-tokyonight .bg-white,
+.theme-tokyonight .bg-slate-800,
+.theme-tokyonight .bg-slate-50 {
+  background-color: #24283b;
+}
+.theme-tokyonight .bg-slate-900 {
+  background-color: #16161e;
+}
+.theme-tokyonight .bg-slate-100 {
+  background-color: #1a1b26;
+}
+.theme-tokyonight .text-slate-800,
+.theme-tokyonight .text-slate-900,
+.theme-tokyonight .text-slate-100,
+.theme-tokyonight .text-slate-200 {
+  color: #c0caf5;
+}
+.theme-tokyonight .text-slate-300,
+.theme-tokyonight .text-slate-400,
+.theme-tokyonight .text-slate-500,
+.theme-tokyonight .text-slate-600 {
+  color: #9aa5ce;
+}
+.theme-tokyonight .border-slate-200,
+.theme-tokyonight .border-slate-300,
+.theme-tokyonight .border-slate-600,
+.theme-tokyonight .border-slate-700 {
+  border-color: #414868;
 }

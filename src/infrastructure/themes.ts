@@ -4,7 +4,7 @@
 // The choice is persisted in localStorage (per browser; a per-user
 // storage would need a server preference, not built yet).
 
-export type ThemeId = "light" | "dark" | "nord" | "dracula" | "solarized" | "forest";
+export type ThemeId = "light" | "dark" | "nord" | "dracula" | "solarized" | "forest" | "tokyonight";
 
 export interface ThemeDefinition {
   id: ThemeId;
@@ -23,6 +23,7 @@ export const THEMES: readonly ThemeDefinition[] = [
   { id: "dracula", label: "Dracula", classes: ["dark", "theme-dracula"], dark: true },
   { id: "solarized", label: "Solarized", classes: ["theme-solarized"], dark: false },
   { id: "forest", label: "Forest", classes: ["theme-forest"], dark: false },
+  { id: "tokyonight", label: "Tokyo Night", classes: ["dark", "theme-tokyonight"], dark: true },
 ];
 
 export const THEME_STORAGE_KEY = "ld-theme";
