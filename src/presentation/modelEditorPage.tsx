@@ -12,7 +12,7 @@
 // a second tribunal (the message names the citing arcs, the
 // deletion goes through once they have left).
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { AddressView } from "../domain/addresses.ts";
 import { renderMessage, type Language } from "../domain/messages.ts";
@@ -1663,6 +1663,7 @@ export function ModelEditorPage({
  * container's member type — a place is an ellipse, a transition a
  * rectangle, an arc a line — the name stays beside it. */
 function PaletteGlyph({ spec }: { spec: ShapeSpec }) {
+  const arrowId = useId();
   const glyph = spec !== null && spec.length > 0 ? spec[0] : undefined;
   const stroke = (glyph !== undefined && "stroke" in glyph ? glyph.stroke : undefined) ?? "#64748b";
   const fill = (glyph !== undefined && "fill" in glyph ? glyph.fill : undefined) ?? "#ffffff";
@@ -1675,10 +1676,10 @@ function PaletteGlyph({ spec }: { spec: ShapeSpec }) {
       ) : glyph.shape === "rectangle" || glyph.shape === "box" ? (
         <rect x="2" y="2" width="16" height="10" fill={fill} stroke={stroke} />
       ) : (
-        <line x1="2" y1="7" x2="18" y2="7" stroke={stroke} strokeWidth="1.5" markerEnd="url(#palette-arrow)" />
+        <line x1="2" y1="7" x2="18" y2="7" stroke={stroke} strokeWidth="1.5" markerEnd={"url(#" + arrowId + ")"} />
       )}
       <defs>
-        <marker id="palette-arrow" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto">
+        <marker id={arrowId} viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto">
           <path d="M0,0 L6,3 L0,6 z" fill={stroke} />
         </marker>
       </defs>
