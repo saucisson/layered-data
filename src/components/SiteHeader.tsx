@@ -7,6 +7,8 @@
 import { useEffect, useRef, useState } from "react";
 import { SUPPORTED_LANGUAGES } from "../infrastructure/i18n.ts";
 import { THEMES, type ThemeId } from "../infrastructure/themes.ts";
+import { LOGOS, type LogoId } from "../infrastructure/logos.ts";
+import { Logo } from "./Logo.tsx";
 import type { Language } from "../domain/messages.ts";
 import type { Page } from "./Router.tsx";
 import { AccessCodeForm } from "../presentation/accessForm.tsx";
@@ -38,9 +40,11 @@ interface SiteHeaderProps {
   onChooseLanguage: (language: Language) => void;
   theme: ThemeId;
   onChooseTheme: (theme: ThemeId) => void;
+  logo: LogoId;
+  onChooseLogo: (logo: LogoId) => void;
 }
 
-export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onChooseTheme }: SiteHeaderProps) {
+export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onChooseTheme, logo, onChooseLogo }: SiteHeaderProps) {
   // The access-code lock lives here (issue #222): one click opens the
   // form; once verified the form hides itself and the button shows it.
   const [accessOpen, setAccessOpen] = useState(false);
@@ -69,7 +73,7 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
           href="#landing"
           className="text-lg font-extrabold tracking-tight text-slate-900 hover:text-emerald-700 dark:text-slate-50 dark:hover:text-emerald-400"
         >
-          Layered<span className="text-emerald-600 dark:text-emerald-400">Data</span>
+          <Logo variant={logo} />
         </a>
         <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-1 text-sm">
           {NAV_ENTRIES.map((entry) => {
@@ -138,6 +142,20 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
               {choice}
             </button>
           ))}
+          {/* The logo picker (issue #234): persisted in localStorage. */}
+          <select
+            value={logo}
+            onChange={(event) => onChooseLogo(event.target.value as LogoId)}
+            aria-label={say({ language, en: "logo" })}
+            title={say({ language, en: "logo" })}
+            className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          >
+            {LOGOS.map((choice) => (
+              <option key={choice.id} value={choice.id}>
+                {choice.label}
+              </option>
+            ))}
+          </select>
           {/* The theme picker (issue #233): the choice is persisted in
               localStorage and applied as classes on <html>. */}
           <select
