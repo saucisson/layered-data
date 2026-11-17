@@ -113,20 +113,42 @@ export function writeFlattenedLayerSections({
   layer: LayerName;
 }): FlattenedLayerText {
   const flattened = flattenLayer({ space, layer });
-  const buildSections = (node: FlatNode): FlattenedSection[] =>
-    node.entries.map((entry) => {
+  // The notes (issue #247): a `__note:<key>` entry is the comment
+  // written above `<key>` in the source — Python-style, it documents
+  // the element BELOW. The flat view renders it as comment lines
+  // attached to that element's line (same indentation), never as a
+  // raw `__note:… = […]` datum.
+  const noteLinesOf = (value: unknown): string[] => {
+    const parts = Array.isArray(value) ? value : [value];
+    return parts
+      .filter((part): part is string => typeof part === "string")
+      .map((part) => part.replace(/\s+$/, "").trimStart())
+      .filter((part) => part.length > 0);
+  };
+  const buildSections = (node: FlatNode): FlattenedSection[] => {
+    const sections: FlattenedSection[] = [];
+    let pendingNotes: string[] = [];
+    for (const entry of node.entries) {
+      if (entry.key.startsWith("__note:")) {
+        pendingNotes.push(...noteLinesOf(entry.value));
+        continue;
+      }
       const provenance = writeFlatProvenance({ status: entry.status, winner: entry.winner });
       const value = entry.status === "fournit" ? writeFlatValue({ value: entry.value }) : null;
-      const line =
+      let line =
         value === null
           ? "abstract " + entry.key + "  // " + provenance
           : entry.key + " = " + value + "  // " + provenance;
+      if (pendingNotes.length > 0) {
+        line = pendingNotes.join("\n") + "\n" + line;
+        pendingNotes = [];
+      }
       const child = entry.target !== null ? node.children[entry.key] : undefined;
       const target: FlattenedTarget =
         entry.target !== null
           ? { layer: node.addr[0], path: [...node.addr[1], entry.key], key: null }
           : { layer: node.addr[0], path: [...node.addr[1]], key: entry.key };
-      return {
+      sections.push({
         key: entry.key,
         value,
         node: entry.target !== null,
@@ -135,8 +157,23 @@ export function writeFlattenedLayerSections({
         target,
         line,
         sections: child ? buildSections(child) : [],
-      };
-    });
+      });
+    }
+    // orphan notes (no element below): kept as plain comment lines
+    for (const note of pendingNotes) {
+      sections.push({
+        key: "__note:orphan-" + sections.length,
+        value: null,
+        node: false,
+        status: "fournit",
+        winner: null,
+        target: { layer: node.addr[0], path: [...node.addr[1]], key: null },
+        line: note,
+        sections: [],
+      });
+    }
+    return sections;
+  };
   return {
     headerLines: [
       "// " + layer + " — the complete flattened formalism (a view, never a layer of the corpus)",
@@ -174,7 +211,9 @@ export function countFlattenedSectionLines({ section }: { section: FlattenedSect
 export function serializeFlattenedLayerText({ text }: { text: FlattenedLayerText }): string {
   const lines: string[] = [...text.headerLines];
   const walk = (section: FlattenedSection, depth: number) => {
-    lines.push("  ".repeat(depth) + section.line);
+    // every physical line carries the depth indent — attached comment
+    // lines respect the indentation of their element (issue #247)
+    for (const physical of section.line.split("\n")) lines.push("  ".repeat(depth) + physical);
     section.sections.forEach((child) => walk(child, depth + 1));
   };
   text.sections.forEach((section) => walk(section, 1));
