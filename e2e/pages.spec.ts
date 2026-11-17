@@ -86,3 +86,26 @@ test("#235 the hierarchy draws two arrow kinds — solid inheritance, dashed usa
   await expect(dashed.first()).toBeVisible();
   expect(await dashed.count()).toBeGreaterThan(0);
 });
+
+test("#231 the hierarchy groups the formalisms by families — chips fade the other families", async ({ page }) => {
+  await page.goto("/#hierarchy");
+  await expect(page.getByRole("heading", { name: /hierarchy/i })).toBeVisible();
+  await expect(page.getByRole("button", { name: "petrinet-scheme", exact: true })).toBeVisible({ timeout: 15_000 });
+  // one chip per family + the "all families" chip
+  const allChip = page.getByRole("button", { name: "all families", exact: true });
+  await expect(allChip).toBeVisible();
+  const familyChip = page.getByRole("button", { name: /^petrinet-scheme · \d+$/ });
+  await expect(familyChip).toBeVisible();
+
+  // click the family chip: the layers outside the family fade (opacity-10)
+  await familyChip.click();
+  const outsidePill = page.getByRole("button", { name: "multihypergraph", exact: true });
+  await expect(outsidePill).toHaveClass(/\bopacity-10\b/);
+  const insidePill = page.getByRole("button", { name: "pt-petrinet", exact: true });
+  await expect(insidePill).not.toHaveClass(/\bopacity-10\b/);
+
+  // back to all
+  await allChip.click();
+  await expect(outsidePill).not.toHaveClass(/\bopacity-10\b/);
+  await expect(page.getByRole("button", { name: "petrinet-scheme", exact: true })).not.toHaveClass(/\bopacity-10\b/);
+});

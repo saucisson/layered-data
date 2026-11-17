@@ -443,6 +443,32 @@ check(
   KERNEL_LAYER_NAMES.every((layerName) => !corpusDag.usesOf(layerName).includes(layerName)),
 );
 
+// (d4) the family grouping (issue #231): the family is the principal
+// parent (the first refines target) — the common ancestor shared with
+// the siblings; the layer itself when it is a root
+check(
+  "(d4) every layer has a family, and a root layer is its own family",
+  KERNEL_LAYER_NAMES.every(
+    (layerName) =>
+      corpusDag.familyOf(layerName) ===
+        (corpusDag.targetsOf(layerName)[0] ?? layerName),
+  ) && corpusDag.familyOf("record") === "record",
+);
+check(
+  "(d4) the families partition the corpus — every layer in exactly one family, counts add up",
+  (() => {
+    const families = corpusDag.familiesOf();
+    const total = families.reduce((sum, entry) => sum + entry.members.length, 0);
+    const all = families.flatMap((entry) => entry.members);
+    return total === KERNEL_LAYER_NAMES.length && new Set(all).size === KERNEL_LAYER_NAMES.length;
+  })(),
+);
+check(
+  "(d4) a layer whose principal parent is petrinet-scheme shares its family (pt-petrinet); a layer with another principal parent (petrinet-display → graph-display) does not",
+  corpusDag.familyOf("pt-petrinet") === "petrinet-scheme" &&
+    corpusDag.familyOf("petrinet-display") === "graph-display",
+);
+
 // (d2) the SHARED wrapped layout (issue #217) — the one component the
 // workshop header and the hierarchy page both render — is
 // deterministic and wraps to the given width
