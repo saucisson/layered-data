@@ -16,6 +16,7 @@ export type Page =
   | "formalism"
   | "editor"
   | "lenses"
+  | "install"
   | "notfound";
 
 /** The pages the router serves — the landing page is the home. */
@@ -29,6 +30,7 @@ const PAGES: readonly Page[] = [
   "formalism",
   "editor",
   "lenses",
+  "install",
 ];
 
 interface RouterContextType {

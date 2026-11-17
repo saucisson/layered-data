@@ -15,6 +15,7 @@ const ROUTES: ReadonlyArray<{ hash: string; label: string }> = [
   { hash: "#workshop", label: "Workshop" },
   { hash: "#lenses", label: "Lenses" },
   { hash: "#editor", label: "Editor" },
+  { hash: "#install", label: "Install" },
 ];
 
 // Routes on which no menu entry is active (detail pages).
@@ -26,9 +27,9 @@ test.describe("global navigation menu", () => {
       await page.goto("/" + hash);
       const nav = page.locator(MENU);
       await expect(nav).toBeVisible();
-      // eight plain-text entries, real hash links
+      // nine plain-text entries, real hash links
       const links = nav.locator("a");
-      await expect(links).toHaveCount(8);
+      await expect(links).toHaveCount(9);
       for (const { hash: entryHash, label: entryLabel } of ROUTES) {
         await expect(links.filter({ hasText: entryLabel })).toHaveAttribute("href", entryHash);
       }
