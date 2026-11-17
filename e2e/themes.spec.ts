@@ -49,3 +49,25 @@ test("#234 the logo variant chosen in the header is persisted across reloads", a
   await page.reload();
   await expect(picker).toHaveValue("diamond", { timeout: 10_000 });
 });
+
+test("the artwork logo variant renders the provided PNG wordmark and persists", async ({ page }) => {
+  await page.goto("/#landing");
+  const picker = page.getByRole("combobox", { name: "logo" });
+  await expect(picker).toBeVisible({ timeout: 10_000 });
+
+  await picker.selectOption("artwork");
+  await expect
+    .poll(() => page.evaluate("localStorage.getItem('ld-logo')"))
+    .toBe("artwork");
+  // the header brand is now the PNG wordmark (dark artwork on light theme)
+  const artwork = page.locator('header img[src="/logos/layered-data-logo-dark.png"]');
+  await expect(artwork).toBeVisible();
+  // the PNGs are actually served
+  expect((await page.request.get("/logos/layered-data-logo-dark.png")).status()).toBe(200);
+  expect((await page.request.get("/logos/layered-data-logo-light.png")).status()).toBe(200);
+  expect((await page.request.get("/logos/layered-data-logo.png")).status()).toBe(200);
+
+  await page.reload();
+  await expect(picker).toHaveValue("artwork", { timeout: 10_000 });
+  await expect(artwork).toBeVisible();
+});
