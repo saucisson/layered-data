@@ -68,17 +68,17 @@ function Mark({ variant }: { variant: LogoId }) {
 
 export function Logo({ variant }: { variant: LogoId }) {
   if (variant === "artwork") {
-    // the provided PNG wordmark: dark artwork on light themes,
-    // light artwork on dark themes
+    // the provided PNG wordmarks are opaque cards: the light card
+    // blends on light themes, the dark card on dark themes
     return (
       <>
         <img
-          src="/logos/layered-data-logo-dark.png"
+          src="/logos/layered-data-logo-light.png"
           alt="Layered Data"
           className="h-6 w-auto dark:hidden"
         />
         <img
-          src="/logos/layered-data-logo-light.png"
+          src="/logos/layered-data-logo-dark.png"
           alt=""
           aria-hidden="true"
           className="hidden h-6 w-auto dark:block"
