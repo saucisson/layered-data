@@ -8,25 +8,28 @@ import { RouterProvider, useRouter } from "./components/Router";
 import { SiteHeader } from "./components/SiteHeader";
 import { ToastProvider } from "./components/Toast";
 import { readWorkshopLanguage, writeWorkshopLanguage } from "./infrastructure/browserLanguage";
+import {
+  THEME_STORAGE_KEY,
+  applyTheme,
+  defaultTheme,
+  readStoredTheme,
+  type ThemeId,
+} from "./infrastructure/themes";
 import { setI18nLanguage } from "./infrastructure/i18n";
 import type { Language } from "./domain/messages";
 
-/** Dark mode: follows the system preference by default, can be
- *  toggled manually. The choice is persisted in localStorage and
- *  applied as a .dark class on <html>. */
-function useDarkMode() {
-  const [dark, setDark] = useState<boolean>(() => {
-    const stored = localStorage.getItem("ld-dark-mode");
-    if (stored !== null) return stored === "true";
-    return window.matchMedia("(prefers-color-scheme: dark)").matches;
-  });
+/** The theme (issue #233): follows the system preference by default,
+ *  can be changed from the header picker. The choice is persisted in
+ *  localStorage and applied as classes on <html>. */
+function useTheme() {
+  const [theme, setTheme] = useState<ThemeId>(() => readStoredTheme() ?? defaultTheme());
 
   useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-    localStorage.setItem("ld-dark-mode", String(dark));
-  }, [dark]);
+    applyTheme({ id: theme });
+    localStorage.setItem(THEME_STORAGE_KEY, theme);
+  }, [theme]);
 
-  return { dark, toggleDark: () => setDark((previous) => !previous) };
+  return { theme, chooseTheme: setTheme };
 }
 
 // Every page is lazy: the initial bundle carries only the router and
@@ -76,7 +79,7 @@ function PageFallback() {
 function AppContent() {
   const { page, parameter } = useRouter();
   const [language, setLanguage] = useState<Language>(() => readWorkshopLanguage());
-  const { dark, toggleDark } = useDarkMode();
+  const { theme, chooseTheme } = useTheme();
 
   const handleChooseLanguage = (next: Language) => {
     setLanguage(next);
@@ -90,8 +93,8 @@ function AppContent() {
         currentPage={page}
         language={language}
         onChooseLanguage={handleChooseLanguage}
-        dark={dark}
-        onToggleDark={toggleDark}
+        theme={theme}
+        onChooseTheme={chooseTheme}
       />
       <main id="main-content">
       {(() => {

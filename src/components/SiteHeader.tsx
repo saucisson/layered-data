@@ -6,6 +6,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SUPPORTED_LANGUAGES } from "../infrastructure/i18n.ts";
+import { THEMES, type ThemeId } from "../infrastructure/themes.ts";
 import type { Language } from "../domain/messages.ts";
 import type { Page } from "./Router.tsx";
 import { AccessCodeForm } from "../presentation/accessForm.tsx";
@@ -35,11 +36,11 @@ interface SiteHeaderProps {
   currentPage: Page;
   language: Language;
   onChooseLanguage: (language: Language) => void;
-  dark: boolean;
-  onToggleDark: () => void;
+  theme: ThemeId;
+  onChooseTheme: (theme: ThemeId) => void;
 }
 
-export function SiteHeader({ currentPage, language, onChooseLanguage, dark, onToggleDark }: SiteHeaderProps) {
+export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onChooseTheme }: SiteHeaderProps) {
   // The access-code lock lives here (issue #222): one click opens the
   // form; once verified the form hides itself and the button shows it.
   const [accessOpen, setAccessOpen] = useState(false);
@@ -137,15 +138,21 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, dark, onTo
               {choice}
             </button>
           ))}
-          <button
-            type="button"
-            onClick={onToggleDark}
-            aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
-            title={dark ? "Light mode" : "Dark mode"}
-            className="rounded border border-slate-300 bg-white px-2 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+          {/* The theme picker (issue #233): the choice is persisted in
+              localStorage and applied as classes on <html>. */}
+          <select
+            value={theme}
+            onChange={(event) => onChooseTheme(event.target.value as ThemeId)}
+            aria-label={say({ language, en: "theme" })}
+            title={say({ language, en: "theme" })}
+            className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
           >
-            {dark ? "☀ Light" : "☾ Dark"}
-          </button>
+            {THEMES.map((choice) => (
+              <option key={choice.id} value={choice.id}>
+                {choice.label}
+              </option>
+            ))}
+          </select>
         </span>
       </div>
     </header>
