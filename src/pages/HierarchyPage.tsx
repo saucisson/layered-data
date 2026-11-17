@@ -30,8 +30,8 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
   const dag = useMemo(() => new RefinementDag({ space: KERNEL.space, layerNames }), [layerNames]);
   const [search, setSearch] = useState("");
   const [hovered, setHovered] = useState<string | null>(null);
-  // the family grouping (issue #231): the root ancestor through the
-  // principal-parent chain — one chip per family, click to fade the rest
+  // the family grouping (issue #231): the principal parent (the first
+  // refines target) — one chip per family, click to fade the rest
   const [activeFamily, setActiveFamily] = useState<string | null>(null);
   const families = useMemo(() => dag.familiesOf(), [dag]);
 
