@@ -177,7 +177,11 @@ export async function generateLayer({
     model: MISTRAL_MODEL,
     maxTokens: PEN_MAX_TOKENS,
     cacheKey: "layered-data-pen-" + instruction,
-    system: buildSystemPrompt({ visitorLayers, selectedLayerNames }),
+    system: buildSystemPrompt(
+      selectedLayerNames === undefined
+        ? { visitorLayers }
+        : { visitorLayers, selectedLayerNames },
+    ),
     user: feedback === null ? instruction : instruction + "\n\n" + feedback,
   });
   if (!proposal.trim()) {
