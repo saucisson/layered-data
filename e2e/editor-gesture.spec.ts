@@ -58,13 +58,26 @@ test("#219 dragging a vertex moves it — the drafted position lands in the sour
   await canvas.click({ position: { x: 400, y: 300 } });
   await expect(page.getByText(/staging: 0 verdict/)).toBeVisible({ timeout: 10_000 });
 
+  // the drafted position is the exact world point under the click:
+  // the svg letterboxes its viewBox (meet), so the mapping goes
+  // through scale = min(rect/viewBox) + centered offsets (#221)
+  const canvasBox = await canvas.boundingBox();
+  const scale = Math.min(canvasBox!.width / 960, canvasBox!.height / 540);
+  const offsetX = (canvasBox!.width - 960 * scale) / 2;
+  const offsetY = (canvasBox!.height - 540 * scale) / 2;
+  const expectedX = Math.round((400 - offsetX) / scale);
+  const expectedY = Math.round((300 - offsetY) / scale);
+
   // the initial position, as drafted in the source
   await page.getByRole("button", { name: "source" }).click();
   const source = page.locator("text=/x = /").first();
   const before = await source.textContent();
   const xBefore = Number(/x = (\d+)/.exec(before ?? "")?.[1]);
   const yBefore = Number(/y = (\d+)/.exec(before ?? "")?.[1]);
-  expect(Number.isFinite(xBefore)).toBe(true);
+  // within a few world units — the click point carries sub-pixel
+  // rounding; the old letterboxing bug was off by ~100
+  expect(Math.abs(xBefore - expectedX)).toBeLessThanOrEqual(3);
+  expect(Math.abs(yBefore - expectedY)).toBeLessThanOrEqual(3);
   await page.getByRole("button", { name: "source" }).click();
 
   // drag the vertex by (+120, +80) screen px
