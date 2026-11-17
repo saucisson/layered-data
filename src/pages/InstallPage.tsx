@@ -57,7 +57,7 @@ npm run build && npm run serve:prod   # the built workshop, served by the quarry
           <p className="mt-2 text-sm leading-5 text-slate-600 dark:text-slate-400">
             {say({
               language,
-              en: "With Docker instead: cp .env.example .env (set API_TOKEN, POSTGRES_USERNAME, POSTGRES_PASSWORD), then docker compose up --build — workshop on 0.0.0.0:8791 plus PostgreSQL for the rate-limit counters. Without a database: DATABASE_URL= docker compose up --no-deps --build atelier.",
+              en: "With Docker instead: cp .env.example .env (set API_TOKEN, POSTGRES_USERNAME, POSTGRES_PASSWORD), then docker compose up --build — workshop on 127.0.0.1:8791 plus PostgreSQL for the rate-limit counters. Without a database: DATABASE_URL= docker compose up --no-deps --build atelier.",
             })}
           </p>
         </section>
