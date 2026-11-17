@@ -623,17 +623,52 @@ export function ModelEditorPage({
 
   // ---- the gestures ---------------------------------------------------
 
+  /** The viewBox transform of the svg's rendered rect: with the
+   * default preserveAspectRatio="xMidYMid meet" the drawing is
+   * letterboxed — scale = min(rect/viewBox), centered. Pointer
+   * events must go through this mapping, not a plain proportion
+   * (issue #221: the canvas now has its own height, the rect aspect
+   * differs from the viewBox aspect). */
+  function viewBoxTransform(): {
+    scale: number;
+    offsetX: number;
+    offsetY: number;
+    left: number;
+    top: number;
+  } {
+    const svg = svgRef.current;
+    if (svg === null) return { scale: 1, offsetX: 0, offsetY: 0, left: 0, top: 0 };
+    const rectangle = svg.getBoundingClientRect();
+    const scale = Math.min(rectangle.width / CANVAS_WIDTH, rectangle.height / CANVAS_HEIGHT);
+    return {
+      scale,
+      offsetX: (rectangle.width - CANVAS_WIDTH * scale) / 2,
+      offsetY: (rectangle.height - CANVAS_HEIGHT * scale) / 2,
+      left: rectangle.left,
+      top: rectangle.top,
+    };
+  }
+
+  /** The canvas point (viewBox coordinates, before the pan/zoom view)
+   * under one pointer position. */
+  function toCanvasPoint({ clientX, clientY }: { clientX: number; clientY: number }): {
+    x: number;
+    y: number;
+  } {
+    const transform = viewBoxTransform();
+    return {
+      x: (clientX - transform.left - transform.offsetX) / transform.scale,
+      y: (clientY - transform.top - transform.offsetY) / transform.scale,
+    };
+  }
+
   /** The world point under one pointer event. */
   function toWorld({ clientX, clientY }: { clientX: number; clientY: number }): {
     x: number;
     y: number;
   } {
-    const svg = svgRef.current;
-    if (svg === null) return { x: 0, y: 0 };
-    const rectangle = svg.getBoundingClientRect();
-    const baseX = (CANVAS_WIDTH * (clientX - rectangle.left)) / rectangle.width;
-    const baseY = (CANVAS_HEIGHT * (clientY - rectangle.top)) / rectangle.height;
-    return { x: (baseX - view.x) / view.scale, y: (baseY - view.y) / view.scale };
+    const base = toCanvasPoint({ clientX, clientY });
+    return { x: (base.x - view.x) / view.scale, y: (base.y - view.y) / view.scale };
   }
 
   function handleBackgroundPointerDown(event: React.PointerEvent<SVGRectElement>) {
@@ -965,8 +1000,9 @@ export function ModelEditorPage({
       event.preventDefault();
       const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
       const rectangle = svg.getBoundingClientRect();
-      const baseX = (CANVAS_WIDTH * (event.clientX - rectangle.left)) / rectangle.width;
-      const baseY = (CANVAS_HEIGHT * (event.clientY - rectangle.top)) / rectangle.height;
+      const scale = Math.min(rectangle.width / CANVAS_WIDTH, rectangle.height / CANVAS_HEIGHT);
+      const baseX = (event.clientX - rectangle.left - (rectangle.width - CANVAS_WIDTH * scale) / 2) / scale;
+      const baseY = (event.clientY - rectangle.top - (rectangle.height - CANVAS_HEIGHT * scale) / 2) / scale;
       setView((previous) => {
         const nextScale = Math.min(MAXIMUM_SCALE, Math.max(MINIMUM_SCALE, previous.scale * factor));
         return {
