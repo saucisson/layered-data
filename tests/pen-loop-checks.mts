@@ -25,6 +25,7 @@ import {
   type PenLoopOutcome,
   type PenRound,
 } from "../src/application/penLoop.ts";
+import { buildSystemPrompt, corpusBackbone } from "../server/geologistPrompts.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -355,6 +356,36 @@ const formattedFrench = formatPenFeedback(formatterRefusal, "fr");
 check(
   "the formatter falls back to English when asked for French — French content is absent (ADR-0113)",
   formattedFrench === formatted,
+);
+
+// ---- the grounding prompt (issue #245): the geologist must see the
+// column WITH its descriptions, the expected structure, and complete
+// examples of both species (formalism and model) ----------------------
+
+const systemPrompt = buildSystemPrompt({ visitorLayers: [] });
+check(
+  "(h) the column carries each layer's header AND its leading comments",
+  corpusBackbone({ visitorLayers: [] }).includes("layer petrinet-scheme refines") &&
+    corpusBackbone({ visitorLayers: [] }).includes("//"),
+);
+check(
+  "(h) the prompt spells out the expected structure (formalism vs model, most specific parent)",
+  systemPrompt.includes("LA STRUCTURE ATTENDUE") &&
+    systemPrompt.includes("@petrinet-scheme, pas @graph"),
+);
+check(
+  "(h) the prompt embeds a complete formalism example (bipartite-digraph)",
+  systemPrompt.includes("layer bipartite-digraph refines @multidigraph"),
+);
+check(
+  "(h) the prompt embeds a complete model example (pn-philosophers-1)",
+  systemPrompt.includes("layer pn-philosophers-1"),
+);
+check(
+  "(h) the visitor layers travel in the column and in the prompt",
+  buildSystemPrompt({
+    visitorLayers: [{ name: "visiteur-1", source: "layer visiteur-1 refines @graph\n" }],
+  }).includes("layer visiteur-1 refines @graph"),
 );
 
 // =====================================================================
