@@ -4,7 +4,7 @@
 import { test, expect } from "@playwright/test";
 
 test("workshop boots with its three panels; the editor page renders the canvas", async ({ page }) => {
-  await page.goto("/#workshop");
+  await page.goto("/#formalisms");
 
   // ① the layers, ② the formalism, ③ the reading — ④ the point of view
   // lives on its own #lenses page since #227
@@ -14,14 +14,14 @@ test("workshop boots with its three panels; the editor page renders the canvas",
   await expect(page.getByText("④ The point of view")).toHaveCount(0);
 
   // the graphical model editor is its own top-level page (#216)
-  await page.goto("/#editor");
+  await page.goto("/#models");
   await expect(page.getByRole("application", { name: /model canvas/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "pointer" })).toBeVisible();
 });
 
 test("#239 in the list view, ② the formalism and ③ the flattened data sit side by side", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/#workshop");
+  await page.goto("/#formalisms");
   await expect(page.getByText("② The formalism")).toBeVisible({ timeout: 10_000 });
   // the workshop opens in the graph view: switch to the list view
   await page.getByRole("button", { name: "list", exact: true }).click();

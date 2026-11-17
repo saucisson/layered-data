@@ -1,6 +1,6 @@
 // Layered Data — Main application with routing
-// Routes: #landing, #tutorial, #filiation, #workshop, #lenses,
-// #editor, #hierarchy, #creation, #formalism/<layer> — the workshop
+// Routes: #landing, #tutorial, #filiation, #formalisms, #lenses,
+// #models, #hierarchy, #creation, #formalism/<layer> — the formalisms
 // and the graphical editor are two top-level pages (issue #216).
 
 import { lazy, Suspense, useEffect, useState } from "react";
@@ -124,13 +124,13 @@ function AppContent() {
             return <TutorialPage language={language} />;
           case "filiation":
             return <FiliationPage language={language} />;
-          case "workshop":
+          case "formalisms":
             return <WorkshopPage language={language} />;
           case "lenses":
             return <LensesPage language={language} />;
           case "install":
             return <InstallPage language={language} />;
-          case "editor":
+          case "models":
             return <ModelEditorPage language={language} />;
           case "hierarchy":
             return <HierarchyPage language={language} />;

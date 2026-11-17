@@ -10,11 +10,11 @@ export type Page =
   | "landing"
   | "tutorial"
   | "filiation"
-  | "workshop"
+  | "formalisms"
   | "hierarchy"
   | "creation"
   | "formalism"
-  | "editor"
+  | "models"
   | "lenses"
   | "install"
   | "notfound";
@@ -24,11 +24,11 @@ const PAGES: readonly Page[] = [
   "landing",
   "tutorial",
   "filiation",
-  "workshop",
+  "formalisms",
   "hierarchy",
   "creation",
   "formalism",
-  "editor",
+  "models",
   "lenses",
   "install",
 ];
