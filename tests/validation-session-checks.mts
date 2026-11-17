@@ -183,7 +183,10 @@ const editions: Edition[] = [
         "expect places/philo1.think1/marking = 7",
         "expect places/philo1.think1/marking = 1",
       ),
-    expectVerdicts: 5,
+    // 5 implicit-overload verdicts (every tests-declaring layer once
+    // record gains a tests block — half-adder joined the kernel) + the
+    // record expect betrayed.
+    expectVerdicts: 6,
   },
   {
     label:
@@ -205,7 +208,8 @@ const editions: Edition[] = [
         "expect places/philo1.think1/marking = 1",
         "expect places/philo1.think1/marking = 7",
       ),
-    expectVerdicts: 7,
+    // the 6 above plus the users-draft expect betrayed.
+    expectVerdicts: 8,
     maxRebuiltWalks: 1,
     expectCheap: true,
   },
