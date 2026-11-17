@@ -30,6 +30,10 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
   const dag = useMemo(() => new RefinementDag({ space: KERNEL.space, layerNames }), [layerNames]);
   const [search, setSearch] = useState("");
   const [hovered, setHovered] = useState<string | null>(null);
+  // the family grouping (issue #231): the root ancestor through the
+  // principal-parent chain — one chip per family, click to fade the rest
+  const [activeFamily, setActiveFamily] = useState<string | null>(null);
+  const families = useMemo(() => dag.familiesOf(), [dag]);
 
   const refinementCount = layerNames.reduce(
     (total, layerName) => total + dag.targetsOf(layerName).length,
@@ -68,6 +72,40 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
           </span>
         </div>
 
+        <div className="mb-3 flex flex-wrap items-center gap-1.5">
+          <button
+            type="button"
+            onClick={() => setActiveFamily(null)}
+            className={
+              "rounded-full border px-2 py-0.5 font-mono text-[10px] " +
+              (activeFamily === null
+                ? "border-slate-900 bg-slate-900 text-white dark:border-slate-100 dark:bg-slate-100 dark:text-slate-900"
+                : "border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-slate-500")
+            }
+          >
+            {say({ language, en: "all families" })}
+          </button>
+          {families.map(({ family, members }) => (
+            <button
+              key={family}
+              type="button"
+              onClick={() => setActiveFamily(activeFamily === family ? null : family)}
+              title={say({
+                language,
+                en: "family of {{family}} — {{count}} layers sharing this principal parent",
+              }).replace("{{family}}", family).replace("{{count}}", String(members.length))}
+              className={
+                "rounded-full border px-2 py-0.5 font-mono text-[10px] " +
+                (activeFamily === family
+                  ? "border-sky-700 bg-sky-600 text-white dark:border-sky-400 dark:bg-sky-700"
+                  : "border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 hover:border-slate-500")
+              }
+            >
+              {family + " · " + members.length}
+            </button>
+          ))}
+        </div>
+
         <div className="overflow-hidden rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800">
           <RefinementGraph
             layerNames={layerNames}
@@ -77,6 +115,8 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
             onPick={(layerName) => navigate("formalism", layerName)}
             onHover={setHovered}
             language={language}
+            familyOf={(layerName) => dag.familyOf(layerName)}
+            activeFamily={activeFamily}
           />
         </div>
 

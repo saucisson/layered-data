@@ -334,6 +334,11 @@ export class RefinementDag {
    * address — inheritance is the principal `refines`, usage is a
    * field reference. */
   private readonly uses: Record<string, string[]> = {};
+  /** The FAMILY of each layer (issue #231): its principal parent (the
+   * first refines target) — the common ancestor the layer shares with
+   * its siblings; the layer itself when it is a root. A generic
+   * grouping that covers the whole corpus, no DSL domain needed. */
+  private readonly families: Record<string, string> = {};
 
   constructor({ space, layerNames }: { space: Space; layerNames: readonly string[] }) {
     // the graph is read in the kernel space, never copied blindly
@@ -353,6 +358,7 @@ export class RefinementDag {
       }
     }
     for (const layerName of layerNames) this.computeRank(layerName, new Set());
+    for (const layerName of layerNames) this.families[layerName] = this.computeFamily(layerName, new Set());
   }
 
   /** The memoized rank of a layer (computed for every inventoried
@@ -384,6 +390,34 @@ export class RefinementDag {
    * dashed edges of the graph, distinct from the inheritance arrows. */
   usesOf(layerName: string): string[] {
     return this.uses[layerName] ?? [];
+  }
+
+  /** The family of a layer (issue #231): its principal parent — the
+   * layer itself when it has no parent. */
+  familyOf(layerName: string): string {
+    return this.families[layerName] ?? layerName;
+  }
+
+  /** All the families of the inventory, with their member counts,
+   * in inventory order — the chips of the hierarchy page. */
+  familiesOf(): { family: string; members: string[] }[] {
+    const byFamily = new Map<string, string[]>();
+    for (const layerName of Object.keys(this.families)) {
+      const family = this.families[layerName] ?? layerName;
+      byFamily.set(family, [...(byFamily.get(family) ?? []), layerName]);
+    }
+    return [...byFamily.entries()].map(([family, members]) => ({ family, members }));
+  }
+
+  private computeFamily(layerName: string, seenLayers: Set<string>): string {
+    const known = this.families[layerName];
+    if (known !== undefined) return known;
+    if (seenLayers.has(layerName)) return layerName;
+    seenLayers.add(layerName);
+    const principal = (this.targets[layerName] ?? [])[0];
+    const family = principal ?? layerName;
+    this.families[layerName] = family;
+    return family;
   }
 
   childrenOf(layerName: string): string[] {
@@ -468,6 +502,8 @@ export class RefinementDag {
     // depth of anyone downstream, everything is recomputed
     for (const name of Object.keys(this.targets)) delete this.ranks[name];
     for (const name of Object.keys(this.targets)) this.computeRank(name, new Set());
+    for (const name of Object.keys(this.targets)) delete this.families[name];
+    for (const name of Object.keys(this.targets)) this.computeFamily(name, new Set());
   }
 }
 

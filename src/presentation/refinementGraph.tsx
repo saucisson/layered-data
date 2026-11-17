@@ -25,6 +25,8 @@ export function RefinementGraph({
   onPick,
   onHover,
   language,
+  familyOf,
+  activeFamily = null,
 }: {
   layerNames: readonly string[];
   dag: RefinementDag;
@@ -35,6 +37,10 @@ export function RefinementGraph({
   onPick: (layerName: string) => void;
   onHover?: (layerName: string | null) => void;
   language: Language;
+  /** the family grouping (issue #231): with activeFamily set, the
+   * layers outside the family fade like non-matching search hits */
+  familyOf?: (layerName: string) => string;
+  activeFamily?: string | null;
 }) {
   const markerId = "refinement-arrow-" + useId().replace(/[^a-zA-Z0-9]/g, "");
   const usageMarkerId = "refinement-usage-" + useId().replace(/[^a-zA-Z0-9]/g, "");
@@ -202,7 +208,9 @@ export function RefinementGraph({
         const position = layout.position(layerName);
         const inAncestors = ancestors.has(layerName);
         const inDescendants = descendants.has(layerName);
-        const matches = !needle || layerName.toLowerCase().includes(needle);
+        const matches =
+          (!needle || layerName.toLowerCase().includes(needle)) &&
+          (activeFamily === null || familyOf === undefined || familyOf(layerName) === activeFamily);
         return (
           <button
             type="button"
