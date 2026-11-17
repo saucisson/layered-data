@@ -26,6 +26,7 @@ import {
   type PenRound,
 } from "../src/application/penLoop.ts";
 import { buildSystemPrompt, corpusBackbone } from "../server/geologistPrompts.ts";
+import { extractProposalContent } from "../server/mistralClient.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -36,6 +37,30 @@ function check(label: string, condition: boolean): void {
   assertions++;
   if (!condition) failures.push(label);
 }
+
+// ---- the upstream content extraction (mistral-large answers with
+// content blocks: thinking first, then text) ----
+check(
+  "(0) a plain string content passes through unchanged",
+  extractProposalContent({ content: "layer x refines @graph" }) === "layer x refines @graph",
+);
+check(
+  "(0) a content-block list joins only the text blocks (thinking skipped)",
+  extractProposalContent({
+    content: [
+      { type: "thinking", thinking: [{ type: "text", text: "hmm" }] },
+      { type: "text", text: "layer a" },
+      { type: "text", text: "layer b" },
+    ],
+  }) === "layer alayer b",
+);
+check(
+  "(0) a missing or non-text content yields an empty proposal",
+  extractProposalContent({ content: undefined }) === "" &&
+    extractProposalContent({ content: null }) === "" &&
+    extractProposalContent({ content: 42 }) === "" &&
+    extractProposalContent({ content: [{ type: "thinking" }] }) === "",
+);
 
 // ---- the bedrock context, as the server builds it ---------------------
 
