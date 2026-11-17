@@ -1,7 +1,8 @@
 // The composition root of the workshop: one kernel assembled from
-// the corpus, one refinement graph over it, and the four panels —
+// the corpus, one refinement graph over it, and the three panels —
 // ① the layers, ② the formalism, ③ the reading and its
-// resolution, ④ the point of view. The first render is a pure
+// resolution (the point of view lives on #lenses, issue #227).
+// The first render is a pure
 // pass: every derivation is a memo, nothing is written back.
 // The panels live in ./presentation/workshop/ (issue #200); this
 // file keeps only the state, the handlers and the memos.
@@ -449,11 +450,9 @@ export function WorkshopPage({
         />
       </div>
 
-
       {/* The panels are counted on one hand — ① the layers, ② the
-          formalism, ③ the reading and its resolution, ④ the point
-          of view; the ＋ button of ① covers the flow, from the
-          request to the validation */}
+          formalism, ③ the reading and its resolution; the ＋ button
+          of ① covers the flow, from the request to the validation */}
 
       {/* The diagnostics and the validation live in the
           "Diagnostics & validation" fold of the formalism (②), the

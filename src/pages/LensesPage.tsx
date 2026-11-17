@@ -16,12 +16,15 @@ import type { SelectedGlyph } from "../presentation/workshop/workshopKernel.ts";
 
 const KERNEL = assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() });
 
+// The look chosen by default — the dinner course.
+const DEFAULT_VIEW = "pn-philosophers-5-course";
+
 export function LensesPage({ language }: { language: Language }) {
   const { parameter, navigate } = useRouter();
   const layer = KERNEL.layerNames.includes(asLayerName(parameter ?? ""))
     ? asLayerName(parameter ?? "")
     : asLayerName("graph");
-  const [selectedView, setSelectedView] = useState("pn-philosophers-5-course");
+  const [selectedView, setSelectedView] = useState(DEFAULT_VIEW);
   const [selectedGlyph, setSelectedGlyph] = useState<SelectedGlyph | null>(null);
 
   const look = useMemo(
