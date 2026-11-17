@@ -84,3 +84,36 @@ test("#219 dragging a vertex moves it — the drafted position lands in the sour
   expect(xAfter).toBeGreaterThan(xBefore);
   expect(yAfter).toBeGreaterThan(yBefore);
 });
+
+test("#221 the canvas takes the available width and height; palette and inspector stay narrow", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/#editor");
+  await page.getByRole("button", { name: "+ new model" }).click();
+  await page.getByPlaceholder("model name").fill("e2e-layout");
+  await page.locator("input.w-72").fill("@pn-philosophers then @positions-grid");
+  await page.getByRole("button", { name: "staging — create the model" }).click();
+  const canvas = page.getByRole("application", { name: /model canvas/ });
+  await expect(canvas).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "source" }).click();
+  await page.waitForTimeout(300);
+
+  const canvasBox = await canvas.boundingBox();
+  const paletteBox = await page
+    .getByText("palette", { exact: true })
+    .locator("xpath=ancestor::div[contains(@class,'rounded-lg')][1]")
+    .boundingBox();
+  const inspectorBox = await page
+    .getByText("inspector", { exact: true })
+    .locator("xpath=ancestor::div[contains(@class,'rounded-lg')][1]")
+    .boundingBox();
+  expect(canvasBox).not.toBeNull();
+  expect(paletteBox).not.toBeNull();
+  expect(inspectorBox).not.toBeNull();
+  // the canvas fills the available height (100vh - 13rem = 692px here)
+  expect(canvasBox!.height).toBeGreaterThan(600);
+  // palette left, canvas middle, inspector right — the canvas keeps
+  // the width between them
+  expect(paletteBox!.x).toBeLessThan(canvasBox!.x);
+  expect(canvasBox!.x + canvasBox!.width).toBeLessThan(inspectorBox!.x);
+  expect(canvasBox!.width).toBeGreaterThan(paletteBox!.width * 2);
+});
