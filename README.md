@@ -112,7 +112,7 @@ it and return JSON, unless stated otherwise.
 | `GET /api/layers`      | `{ layers: [{ name, builtIn }] }` — bedrock + visitors' layers    |
 | `GET /api/layers/:nom` | `{ name, builtIn, source }` — the `.ld` layer                     |
 | `PUT /api/layers/:nom` | writes a visitor layer (403 on the bedrock, 400 invalid name)     |
-| `POST /api/generate`   | body `{ prompt }`, **plain text** response: the layer in the language |
+| `POST /api/generate`   | body `{ prompt }`, **plain text** response: the layer in the language; with `Accept: text/event-stream`, an SSE stream of the two-pass steps (see below) |
 
 The bedrock (the 85 layers of the corpus) is read-only: `PUT` and `DELETE`
 answer 403 there — and since ADR-0103, the rule lives in the protocol
@@ -134,6 +134,21 @@ silenced.
 proposal is verified server-side by the workshop's own staging (syntax,
 unknown target, betrayed expectations…); a refusal goes back to the model
 with its verdicts, up to `PEN_MAX_ATTEMPTS` proposals (3 by default).
+
+**Two passes (ADR-0118)**: a fast survey model (`SURVEY_MODEL`, default
+`mistral-small-latest`) first chooses the ground — the living layers the
+new layer should refine or cite — over a one-comment-line column, and
+answers either `QUESTION:` lines (streamed back, answered by a new POST
+with `{ prompt, answers }`) or `@names`, validated and closed over their
+`refines` ancestors. The pen then writes on the main model with a system
+prompt cut to the selected layers' full sources (the monolith prompt is
+the fallback when the survey cannot choose). Token ceilings
+(`SURVEY_MAX_TOKENS`, `PEN_MAX_TOKENS`) and prompt cache keys bound each
+call. With `Accept: text/event-stream`, one POST streams the steps as SSE
+events — `questions`, `selection` (`{ selected, closure, fallback }`),
+`round`, `refusal`, `draft`, `refused`, `error` — so the client sees the
+ground in seconds instead of waiting out a mute 300 s timeout; without
+the header, the plain-text behavior above is unchanged.
 Since ADR-0102, the checks registry is itself a bedrock layer
 (`formalisms/kernel/check-registry.ld`): contracts are data, and the lint
 audits the seams ("contract-without-algorithm", "algorithm-without-contract",

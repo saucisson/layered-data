@@ -14,7 +14,7 @@ import {
   applyStagedAddition,
   type StagingOutcome,
 } from "../application/staging.ts";
-import { apiFetch } from "../infrastructure/wardrobeClient.ts";
+import { streamGenerate, GenerateHttpError } from "../infrastructure/wardrobeClient.ts";
 import { labelOf, say } from "./i18n.ts";
 
 /** What the composer shows of the last staging: the staging
@@ -34,9 +34,12 @@ export interface AcceptedAddition {
   refinementTargets: Record<string, string[]>;
 }
 
-/** The geologist call is allowed five minutes: the server-side
- * verified loop can chain up to three model calls. */
-const GENERATE_TIMEOUT_MS = 300_000;
+/** The geologist stream (issue #279): the wait is an INACTIVITY
+ * bound — reset at each SSE event — plus a total cap. A healthy
+ * large-model call is never aborted for being slow, only for going
+ * mute. */
+const GENERATE_INACTIVITY_TIMEOUT_MS = 120_000;
+const GENERATE_MAX_DURATION_MS = 600_000;
 
 export function AddFormalismComposer({
   kernel,
@@ -59,9 +62,18 @@ export function AddFormalismComposer({
   const [stagingProgress, setStagingProgress] = useState<{ done: number; total: number } | null>(
     null,
   );
+  // the two-pass stream (issue #279): the survey's ground, its
+  // clarifying questions, the rounds of the verified loop
+  const [surveyLine, setSurveyLine] = useState<string | null>(null);
+  const [surveyQuestions, setSurveyQuestions] = useState<string[] | null>(null);
+  const [answerText, setAnswerText] = useState("");
+  const [roundLine, setRoundLine] = useState<string | null>(null);
 
-  async function requestProposal() {
+  async function requestProposal({ answers = [] }: { answers?: string[] } = {}) {
     setBusy(true);
+    setSurveyLine(null);
+    setSurveyQuestions(null);
+    setRoundLine(null);
     // Dual mode: the local proxy first, the degraded stream of the
     // canvas otherwise — a failed network geologist does not exist, the
     // source of the proposal always speaks.
@@ -71,46 +83,78 @@ export function AddFormalismComposer({
     });
     let text = simulatedAssistantProposal({ intention, language });
     try {
-      const response = await apiFetch({
-        endpoint: "api/generate",
-        // the verified loop may call the model up to MAX_PEN_ATTEMPTS
-        // times server-side — the default 10s client timeout would
-        // abort a healthy large-model call and fall back to the
-        // simulated proposal
-        timeoutMs: GENERATE_TIMEOUT_MS,
-        options: {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ prompt: intention }),
+      await streamGenerate({
+        intention,
+        answers,
+        inactivityTimeoutMs: GENERATE_INACTIVITY_TIMEOUT_MS,
+        maxDurationMs: GENERATE_MAX_DURATION_MS,
+        onEvent: (event) => {
+          switch (event.event) {
+            case "selection":
+              setSurveyLine(
+                event.fallback
+                  ? say({ language, en: "survey: no ground chosen — full column (fallback)" })
+                  : say({ language, en: "ground chosen by the survey: " }) +
+                      event.selected.map((name) => "@" + name).join(", "),
+              );
+              break;
+            case "questions":
+              setSurveyQuestions(event.questions);
+              break;
+            case "round":
+              setRoundLine(
+                say({ language, en: "verified loop — proposal #" }) + event.attempt + "…",
+              );
+              break;
+            case "refusal":
+              setRoundLine(
+                say({ language, en: "proposal #" }) +
+                  event.attempt +
+                  say({ language, en: " refused (" }) +
+                  event.verdicts.join(", ") +
+                  ")",
+              );
+              break;
+            case "draft":
+              origin = say({
+                language,
+                en: "api.mistral.ai — via the local project's proxy",
+              });
+              text = event.source;
+              break;
+            case "refused":
+              origin =
+                say({ language, en: "the geologist gave up after " }) +
+                event.attempts +
+                say({ language, en: " proposals; simulated AI of the canvas"});
+              break;
+            case "error":
+              origin =
+                say({ language, en: "the proxy answered " }) +
+                event.statusCode +
+                " : " +
+                event.body.slice(0, 180) +
+                say({ language, en: " ; simulated AI of the canvas"});
+              break;
+          }
         },
       });
-      if (response.ok) {
-        const proposedText = (await response.text()).trim();
-        if (proposedText.length > 0) {
+    } catch (error) {
+      if (error instanceof GenerateHttpError) {
+        if (error.statusCode === 401) {
           origin = say({
             language,
-            en: "api.mistral.ai — via the local project's proxy",
+            en: "protected proxy — access code required; simulated AI of the canvas",
           });
-          text = proposedText;
+        } else {
+          origin =
+            say({ language, en: "the proxy answered " }) +
+            error.statusCode +
+            " : " +
+            error.body.slice(0, 180) +
+            say({ language, en: " ; simulated AI of the canvas"});
         }
-      } else if (response.status === 401) {
-        origin = say({
-          language,
-          en: "protected proxy — access code required; simulated AI of the canvas",
-        });
-      } else {
-        // An upstream refusal speaks — refused key, unknown model,
-        // exhausted quota: never a mute "bad gateway", the error
-        // surfaces in the origin line.
-        const detail = (await response.text()).trim();
-        origin =
-          say({ language, en: "the proxy answered "}) +
-          response.status +
-          " : " +
-          detail.slice(0, 180) +
-          say({ language, en: " ; simulated AI of the canvas"});
       }
-    } catch {
       // simulated AI: the proposal is best-effort
     }
     setProposalOrigin(origin);
@@ -202,6 +246,40 @@ export function AddFormalismComposer({
           {say({ language, en: "draft proposed by: "})}
           {proposalOrigin}
         </p>
+      )}
+      {surveyLine !== null && (
+        <p className="mb-1 text-[10px] text-slate-500 dark:text-slate-400">{surveyLine}</p>
+      )}
+      {roundLine !== null && (
+        <p className="mb-1 text-[10px] text-slate-500 dark:text-slate-400">{roundLine}</p>
+      )}
+      {surveyQuestions !== null && surveyQuestions.length > 0 && (
+        <div className="mb-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
+          {surveyQuestions.map((question, index) => (
+            <p key={index} className="text-[11px] leading-4 text-slate-700 dark:text-slate-200">
+              {say({ language, en: "question: " })}
+              {question}
+            </p>
+          ))}
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <input
+              value={answerText}
+              onChange={(event) => setAnswerText(event.target.value)}
+              placeholder={say({ language, en: "your answer…" })}
+              className="min-w-40 flex-1 rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                void requestProposal({ answers: answerText.trim() ? [answerText.trim()] : [] });
+              }}
+              disabled={busy}
+              className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-slate-500 disabled:opacity-50"
+            >
+              {say({ language, en: "answer" })}
+            </button>
+          </div>
+        </div>
       )}
       <textarea
         value={draftSource}
