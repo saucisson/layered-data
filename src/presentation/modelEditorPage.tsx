@@ -44,6 +44,7 @@ import {
   type SessionSnapshot,
 } from "../infrastructure/editorSync.ts";
 import { onAccessCodeVerified } from "../infrastructure/accessCodeEvents.ts";
+import { useRouter } from "../components/Router.tsx";
 import {
   readMemberContainers,
   positionContainerOf,
@@ -158,6 +159,7 @@ export function ModelEditorPage({
   const [KERNEL, setKERNEL] = useState(() =>
     assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() }),
   );
+  const { navigate } = useRouter();
 
   // ---- the living workshop -----------------------------------------
   const [additions, setAdditions] = useState<LivingAddition[]>([]);
@@ -1133,9 +1135,14 @@ export function ModelEditorPage({
             </option>
           ))}
         </select>
+        <label className="text-xs text-slate-500 dark:text-slate-400" htmlFor="editor-lens-picker">
+          {t("lens")}
+        </label>
         <select
+          id="editor-lens-picker"
           value={lens}
           onChange={(event) => setLens(event.target.value)}
+          title={t("a lens is a layer that refines a display scheme (e.g. @graph-display) and overrides the display fields of each type — shape, label, fill, stroke, arrow, ports. Define one in formalisms/kernel/*.ld or from the Creation page.")}
           className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs"
         >
           {LENS_LAYERS.map((lensName) => (
@@ -1144,6 +1151,14 @@ export function ModelEditorPage({
             </option>
           ))}
         </select>
+        <button
+          type="button"
+          onClick={() => navigate("formalism", lens)}
+          title={t("edit the lens — its DSL source on the formalism page")}
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900"
+        >
+          {t("edit the lens")}
+        </button>
         <button type="button"
           onClick={() => setCreationOpen(!creationOpen)}
           className="rounded bg-sky-600 dark:bg-sky-700 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500 dark:hover:bg-sky-600"
