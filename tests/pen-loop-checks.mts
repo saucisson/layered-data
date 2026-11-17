@@ -374,12 +374,12 @@ check(
     systemPrompt.includes("@petrinet-scheme, pas @graph"),
 );
 check(
-  "(h) the prompt embeds a complete formalism example (bipartite-digraph)",
-  systemPrompt.includes("layer bipartite-digraph refines @multidigraph"),
+  "(h) the prompt embeds the complete formalism example (bipartite-digraph) — body line, not just the column header",
+  systemPrompt.includes("override container = @bipartite-digraph/left"),
 );
 check(
-  "(h) the prompt embeds a complete model example (pn-philosophers-1)",
-  systemPrompt.includes("layer pn-philosophers-1"),
+  "(h) the prompt embeds the complete model example (pn-philosophers-1) — body line, not just the column header",
+  systemPrompt.includes("think1 refines @pn-philosophers/specification/think"),
 );
 check(
   "(h) the visitor layers travel in the column and in the prompt",
