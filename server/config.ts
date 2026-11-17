@@ -25,7 +25,7 @@ export const HOST = process.env.HOST ?? "127.0.0.1";
 export const API_TOKEN = process.env.API_TOKEN ?? "changez-moi";
 export const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY ?? "";
 export const MISTRAL_URL = process.env.MISTRAL_URL ?? "https://api.mistral.ai/v1/chat/completions";
-export const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? "codestral-latest";
+export const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? "mistral-large-latest";
 // The verified geologist loop: the number of proposals the staging may
 // judge before the route gives up and answers 422.
 export const MAX_PEN_ATTEMPTS = Math.max(1, Number(process.env.PEN_MAX_ATTEMPTS ?? 3));
