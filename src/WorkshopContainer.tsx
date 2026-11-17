@@ -22,7 +22,6 @@ import {
   rewriteLivingAddition,
   type AppliedEdition,
 } from "./application/edition.ts";
-import { buildWorkshopLook } from "./presentation/lensDrawing.ts";
 import { useToast } from "./components/Toast.tsx";
 
 import {
@@ -30,7 +29,6 @@ import {
   REFINEMENT_DAG,
   SOURCE_LINE_TARGETS,
   type HistoryEntry,
-  type SelectedGlyph,
   type AcceptedAdditionState,
 } from "./presentation/workshop/workshopKernel.ts";
 import { WorkshopHeader } from "./presentation/workshop/WorkshopHeader.tsx";
@@ -42,7 +40,6 @@ import {
   type ClosureData,
   type SelectedKeyDetail,
 } from "./presentation/workshop/WorkshopMechanismPanel.tsx";
-import { WorkshopViewpointPanel } from "./presentation/workshop/WorkshopViewpointPanel.tsx";
 import type { AcceptedAddition } from "./presentation/addFormalism.tsx";
 
 // ---- the kernel, the graph, the line-target table -------------
@@ -70,13 +67,6 @@ export function WorkshopPage({
   // The closure calculation folds — opened automatically by the
   // click on a key, closed with one gesture.
   const [showClosureCalculation, setShowClosureCalculation] = useState(false);
-  // The selected glyph names a shape of the current drawing —
-  // kind + name are enough.
-  const [selectedGlyph, setSelectedGlyph] = useState<SelectedGlyph | null>(null);
-  // The look chosen in the tree of ④ — a lens dresses the current
-  // model of ①, a viewpoint imposes its own; default: the dinner
-  // course.
-  const [selectedView, setSelectedView] = useState("pn-philosophers-5-course");
   // The ＋ button of ① — the additions accepted by the staging, as
   // state; the composer opens/closes with one click.
   const [additions, setAdditions] = useState<AcceptedAdditionState[]>([]);
@@ -319,16 +309,6 @@ export function WorkshopPage({
   // stored twice.
   const cascade = [...history, { layer, path, key: selectedKey }];
 
-  // ---- the current look (panel ④) ---------------------------------
-  // Pure derivation — the tree chooses, the drawing follows. A
-  // lone lens applies to the current model of ①; a viewpoint
-  // imposes its own model; without decided positions, the circle
-  // layout takes over.
-  const look = useMemo(
-    () => buildWorkshopLook({ space: KERNEL.space, selectedView, currentLayer: layer }),
-    [selectedView, layer],
-  );
-
   // The living layers — the loaded corpus plus those added at
   // runtime; the structures of ① extend on addition, the ranks of
   // the corpus stay frozen.
@@ -469,15 +449,6 @@ export function WorkshopPage({
         />
       </div>
 
-      <WorkshopViewpointPanel
-        language={language}
-        kernel={KERNEL}
-        look={look}
-        selectedView={selectedView}
-        onSelectView={setSelectedView}
-        selectedGlyph={selectedGlyph}
-        onSelectGlyph={setSelectedGlyph}
-      />
 
       {/* The panels are counted on one hand — ① the layers, ② the
           formalism, ③ the reading and its resolution, ④ the point
