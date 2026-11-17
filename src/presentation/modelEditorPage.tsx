@@ -63,7 +63,11 @@ import {
   suggestModelRefines,
   memberReferenceText,
   typeReferenceText,
+  parseArcWaypoints,
+  draftArcWaypoints,
+  waypointInsertionAt,
   type MemberContainer,
+  type ArcWaypoint,
 } from "../application/modelEditing.ts";
 
 const CANVAS_WIDTH = 960;
@@ -107,6 +111,7 @@ interface ArcView {
   to: { x: number; y: number } | null;
   spec: ShapeSpec;
   weight: number | null;
+  waypoints: ArcWaypoint[];
 }
 
 /** The gesture in flight: a pan of the canvas, a drag of one vertex,
@@ -138,6 +143,17 @@ type Gesture =
       fromY: number;
       x: number;
       y: number;
+    }
+  | {
+      kind: "waypoint";
+      container: string;
+      name: string;
+      index: number;
+      startX: number;
+      startY: number;
+      x: number;
+      y: number;
+      moved: boolean;
     };
 
 /** The verdict banner of the last gesture: the tribunal's refusal,
@@ -204,6 +220,14 @@ export function ModelEditorPage({
   // ---- the canvas in motion ----------------------------------------
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [gesture, setGesture] = useState<Gesture | null>(null);
+  // the last bare tap on a waypoint handle — a second tap within 400ms
+  // on the same handle removes the waypoint (issue #220)
+  const lastWaypointTapRef = useRef<{
+    container: string;
+    name: string;
+    index: number;
+    time: number;
+  } | null>(null);
   const [showSource, setShowSource] = useState(false);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
@@ -420,6 +444,13 @@ export function ModelEditorPage({
           ),
           spec: shape?.spec ?? null,
           weight: typeof label === "number" ? label : null,
+          waypoints: parseArcWaypoints({
+            value: KERNEL.space.read({
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, arcName]),
+              key: "waypoints",
+            }),
+          }),
         });
       }
     }
@@ -762,6 +793,66 @@ export function ModelEditorPage({
     });
   }
 
+  /** Grab one waypoint handle of a selected arc: the gesture drags
+   * it, the drop drafts the new `waypoints` field (issue #220). */
+  function handleWaypointPointerDown(
+    event: React.PointerEvent<SVGCircleElement>,
+    arc: ArcView,
+    index: number,
+  ) {
+    event.stopPropagation();
+    svgRef.current?.setPointerCapture(event.pointerId);
+    const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
+    setGesture({
+      kind: "waypoint",
+      container: arc.container,
+      name: arc.name,
+      index,
+      startX: world.x,
+      startY: world.y,
+      x: world.x,
+      y: world.y,
+      moved: false,
+    });
+  }
+
+  /** A double-click on the arc bends it: the waypoint inserts at the
+   * projection of the click on the nearest segment. */
+  function handleEdgeDoubleClick(event: React.MouseEvent<SVGGElement>, arc: ArcView) {
+    if (arc.from === null || arc.to === null || model === null) return;
+    const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
+    const insertion = waypointInsertionAt({
+      from: arc.from,
+      to: arc.to,
+      waypoints: arc.waypoints,
+      point: world,
+    });
+    const waypoints = [...arc.waypoints];
+    waypoints.splice(insertion.index, 0, insertion.point);
+    proposeEdition({
+      draftedSource: draftArcWaypoints({
+        block: modelSource,
+        container: arc.container,
+        name: arc.name,
+        waypoints,
+      }),
+    });
+  }
+
+  /** A double-click on a waypoint handle removes it. */
+  function handleWaypointDoubleClick(arc: ArcView, index: number) {
+    if (model === null) return;
+    const waypoints = arc.waypoints.filter((_, cursor) => cursor !== index);
+    proposeEdition({
+      draftedSource: draftArcWaypoints({
+        block: modelSource,
+        container: arc.container,
+        name: arc.name,
+        waypoints,
+      }),
+    });
+  }
+
   function handlePointerMove(event: React.PointerEvent<SVGSVGElement>) {
     if (gesture === null) return;
     if (gesture.kind === "pan") {
@@ -778,7 +869,7 @@ export function ModelEditorPage({
       return;
     }
     const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
-    if (gesture.kind === "drag") {
+    if (gesture.kind === "drag" || gesture.kind === "waypoint") {
       const moved =
         gesture.moved ||
         Math.abs(world.x - gesture.startX) > DRAG_THRESHOLD ||
@@ -825,6 +916,69 @@ export function ModelEditorPage({
             typeReference: typeReferenceText({ address: positionContainer.memberType }),
           }),
         });
+      }
+      setGesture(null);
+      return;
+    }
+    if (gesture.kind === "waypoint") {
+      const arc = drawing.arcs.find(
+        (candidate) => candidate.container === gesture.container && candidate.name === gesture.name,
+      );
+      const moved =
+        arc !== undefined &&
+        (Math.abs(gesture.x - gesture.startX) > DRAG_THRESHOLD ||
+          Math.abs(gesture.y - gesture.startY) > DRAG_THRESHOLD);
+      // a bare tap on a handle twice in a row removes the waypoint —
+      // the pointer capture of the drag retargets the derived
+      // dblclick to the svg, so the double-tap is detected here
+      if (!moved && arc !== undefined) {
+        const now = Date.now();
+        const last = lastWaypointTapRef.current;
+        if (
+          last !== null &&
+          last.container === arc.container &&
+          last.name === arc.name &&
+          last.index === gesture.index &&
+          now - last.time < 400
+        ) {
+          lastWaypointTapRef.current = null;
+          if (model !== null) {
+            proposeEdition({
+              draftedSource: draftArcWaypoints({
+                block: modelSource,
+                container: arc.container,
+                name: arc.name,
+                waypoints: arc.waypoints.filter((_, cursor) => cursor !== gesture.index),
+              }),
+            });
+          }
+          setGesture(null);
+          return;
+        }
+        lastWaypointTapRef.current = {
+          container: arc.container,
+          name: arc.name,
+          index: gesture.index,
+          time: now,
+        };
+      }
+      if (moved && arc !== undefined && model !== null) {
+        const original = arc.waypoints[gesture.index];
+        if (original !== undefined) {
+          const waypoints = [...arc.waypoints];
+          waypoints[gesture.index] = {
+            x: Math.round(original.x + gesture.x - gesture.startX),
+            y: Math.round(original.y + gesture.y - gesture.startY),
+          };
+          proposeEdition({
+            draftedSource: draftArcWaypoints({
+              block: modelSource,
+              container: arc.container,
+              name: arc.name,
+              waypoints,
+            }),
+          });
+        }
       }
       setGesture(null);
       return;
@@ -1452,6 +1606,24 @@ export function ModelEditorPage({
             <g transform={"translate(" + view.x + "," + view.y + ") scale(" + view.scale + ")"}>
               {drawing.arcs.map((arc) => {
                 if (arc.from === null || arc.to === null) return null;
+                const dragOfWaypoint =
+                  gesture !== null &&
+                  gesture.kind === "waypoint" &&
+                  gesture.container === arc.container &&
+                  gesture.name === arc.name
+                    ? gesture
+                    : null;
+                const displayWaypoints =
+                  dragOfWaypoint !== null
+                    ? arc.waypoints.map((point, index) =>
+                        index === dragOfWaypoint.index
+                          ? {
+                              x: point.x + dragOfWaypoint.x - dragOfWaypoint.startX,
+                              y: point.y + dragOfWaypoint.y - dragOfWaypoint.startY,
+                            }
+                          : point,
+                      )
+                    : arc.waypoints;
                 return (
                   <EdgeGlyph
                     key={arc.container + "/" + arc.name}
@@ -1460,15 +1632,27 @@ export function ModelEditorPage({
                     weight={arc.weight}
                     from={arc.from}
                     to={arc.to}
+                    waypoints={displayWaypoints}
                     selected={
                       selected !== null &&
                       selected.container === arc.container &&
                       selected.name === arc.name
                     }
+                    waypointDragIndex={
+                      gesture !== null &&
+                      gesture.kind === "waypoint" &&
+                      gesture.container === arc.container &&
+                      gesture.name === arc.name
+                        ? gesture.index
+                        : null
+                    }
                     onPick={() => {
                       setSelected({ container: arc.container, name: arc.name });
                       setFieldDrafts({});
                     }}
+                    onAddWaypoint={(event) => handleEdgeDoubleClick(event, arc)}
+                    onWaypointPointerDown={(index, event) => handleWaypointPointerDown(event, arc, index)}
+                    onWaypointDoubleClick={(index) => handleWaypointDoubleClick(arc, index)}
                   />
                 );
               })}

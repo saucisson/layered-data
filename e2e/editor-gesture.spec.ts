@@ -162,3 +162,68 @@ test("#218 the palette shows only the chosen formalism's elements, as shapes", a
   // each element is drawn by its shape (an inline svg glyph), not only named
   await expect(palette.locator("button svg").first()).toBeVisible();
 });
+
+test("#220 an arc carries waypoints — double-click bends it, drag moves the handle, double-click removes it", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/#editor");
+
+  // import a complete model: one place, one transition, one arc
+  const modelSource = [
+    "layer e2e-waypoints refines @petrinet-scheme",
+    "  extend places",
+    "    p1 refines @petrinet-scheme/specification/place_type",
+    "  extend transitions",
+    "    t1 refines @petrinet-scheme/specification/transition_type",
+    "  extend pre_arcs",
+    "    a1 refines @petrinet-scheme/specification/pre_arc_type",
+    "      source = @e2e-waypoints/places/p1",
+    "      target = @e2e-waypoints/transitions/t1",
+    "",
+  ].join("\n");
+  await page.locator('input[type="file"]').setInputFiles({
+    name: "e2e-waypoints.ld",
+    mimeType: "text/plain",
+    buffer: Buffer.from(modelSource),
+  });
+  const canvas = page.getByRole("application", { name: /model canvas/ });
+  await expect(canvas).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/staging accepted it|0 verdict/)).toBeVisible({ timeout: 10_000 });
+
+  // the arc is drawn between the two vertices
+  const edge = page.locator("g[data-edge]").first();
+  await expect(edge).toBeVisible();
+
+  // a double-click on the arc bends it: a waypoint lands in the source
+  const edgeBox = await edge.boundingBox();
+  await page.mouse.dblclick(edgeBox!.x + edgeBox!.width / 2, edgeBox!.y + edgeBox!.height / 2);
+  await expect(page.getByText(/staging: 0 verdict/)).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "source" }).click();
+  const source = page.locator("pre").first();
+  await expect(source).toContainText(/waypoints = "\d+,\d+"/);
+  const before = await source.textContent();
+  const waypointBefore = /waypoints = "(\d+),(\d+)"/.exec(before ?? "")?.slice(1);
+  await page.getByRole("button", { name: "source" }).click();
+
+  // the selected arc shows its waypoint as a draggable handle
+  await edge.click();
+  const handle = page.locator("circle[data-waypoint]").first();
+  await expect(handle).toBeVisible();
+  const handleBox = await handle.boundingBox();
+  await page.mouse.move(handleBox!.x + handleBox!.width / 2, handleBox!.y + handleBox!.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(handleBox!.x + handleBox!.width / 2 + 60, handleBox!.y + handleBox!.height / 2 + 40, { steps: 10 });
+  await page.mouse.up();
+  await expect(page.getByText(/staging: 0 verdict/)).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "source" }).click();
+  const after = await source.textContent();
+  const waypointAfter = /waypoints = "(\d+),(\d+)"/.exec(after ?? "")?.slice(1);
+  expect(waypointAfter).not.toBeNull();
+  expect(waypointAfter).not.toEqual(waypointBefore);
+  await page.getByRole("button", { name: "source" }).click();
+
+  // a double-click on the handle removes the waypoint
+  await page.locator("circle[data-waypoint]").first().dblclick();
+  await expect(page.getByText(/staging: 0 verdict/)).toBeVisible({ timeout: 10_000 });
+  await page.getByRole("button", { name: "source" }).click();
+  await expect(page.locator("pre").first()).toContainText('waypoints = ""');
+});

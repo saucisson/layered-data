@@ -62,6 +62,10 @@ import {
   suggestModelRefines,
   memberReferenceText,
   typeReferenceText,
+  formatArcWaypoints,
+  parseArcWaypoints,
+  draftArcWaypoints,
+  waypointInsertionAt,
   type MemberContainer,
 } from "../src/application/modelEditing.ts";
 
@@ -988,6 +992,77 @@ check(
     arcContainer: labeledArc,
     arcName: labeledArcName,
   }) === "weight",
+);
+
+// =====================================================================
+// (q) the arcs' waypoints (issue #220): format, parse, insertion,
+//     and the drafted field judged by the staging
+// =====================================================================
+
+check(
+  "(q) the waypoints format is the written string form, rounded",
+  formatArcWaypoints({ waypoints: [{ x: 50.4, y: 0 }, { x: 80, y: 12.6 }] }) === "50,0;80,13",
+);
+check(
+  "(q) the written form parses back to the same points",
+  JSON.stringify(parseArcWaypoints({ value: "50,0;80,13" })) ===
+    JSON.stringify([{ x: 50, y: 0 }, { x: 80, y: 13 }]),
+);
+check(
+  "(q) a structured list of pairs parses too; garbage reads as no waypoints",
+  JSON.stringify(parseArcWaypoints({ value: [[1, 2], { x: 3, y: 4 }] })) ===
+    JSON.stringify([{ x: 1, y: 2 }, { x: 3, y: 4 }]) &&
+    parseArcWaypoints({ value: "not points" }).length === 0 &&
+    parseArcWaypoints({ value: null }).length === 0,
+);
+check(
+  "(q) a click mid-segment inserts at index 0, projected on the segment",
+  (() => {
+    const insertion = waypointInsertionAt({
+      from: { x: 0, y: 0 },
+      to: { x: 100, y: 0 },
+      waypoints: [],
+      point: { x: 50, y: 30 },
+    });
+    return insertion.index === 0 && insertion.point.x === 50 && insertion.point.y === 0;
+  })(),
+);
+check(
+  "(q) with one waypoint, a click past it inserts after it (index 1)",
+  (() => {
+    const insertion = waypointInsertionAt({
+      from: { x: 0, y: 0 },
+      to: { x: 100, y: 0 },
+      waypoints: [{ x: 50, y: 0 }],
+      point: { x: 80, y: 10 },
+    });
+    return insertion.index === 1 && insertion.point.x === 80 && insertion.point.y === 0;
+  })(),
+);
+
+const withWaypoints = draftArcWaypoints({
+  block: sourceOf({ layerName: MODEL }),
+  container: arcContainer.name,
+  name: arcName,
+  waypoints: [{ x: 50, y: 0 }, { x: 80, y: 13 }],
+});
+check(
+  "(q) the drafted waypoints field is written on the arc member",
+  withWaypoints.includes('waypoints = "50,0;80,13"'),
+);
+const waypointsDrawn = gesture({ layerName: MODEL, draftedSource: withWaypoints });
+check("(q) the waypoints edition is accepted by the staging", waypointsDrawn.ok === true);
+check(
+  "(q) the accepted waypoints read back through the space, parsed",
+  JSON.stringify(
+    parseArcWaypoints({
+      value: kernel.space.read({
+        layer: asLayerName(MODEL),
+        path: asLayerPath([arcContainer.name, arcName]),
+        key: "waypoints",
+      }),
+    }),
+  ) === JSON.stringify([{ x: 50, y: 0 }, { x: 80, y: 13 }]),
 );
 
 // =====================================================================
