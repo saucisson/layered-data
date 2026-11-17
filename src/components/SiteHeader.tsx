@@ -25,8 +25,8 @@ const NAV_ENTRIES: readonly NavEntry[] = [
   { page: "filiation", label: "Filiation" },
   { page: "hierarchy", label: "Hierarchy" },
   { page: "creation", label: "Creation" },
-  { page: "workshop", label: "Workshop" },
-  { page: "editor", label: "Editor" },
+  { page: "workshop", label: "Formalisms" },
+  { page: "editor", label: "Models" },
   { page: "lenses", label: "Lenses" },
   { page: "install", label: "Install" },
 ];
