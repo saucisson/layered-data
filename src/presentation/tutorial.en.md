@@ -138,7 +138,7 @@ layer my-display refines @graph-display
 
 ## To go further
 
-- The workshop (`#workshop`): the kernel corpus and its real dinner, the layers' ⟪quarry⟫.
+- The workshop (`#formalisms`): the kernel corpus and its real dinner, the layers' ⟪quarry⟫.
 - The lenses (`#lenses`): the tree of lenses and viewpoints, a model seen through a look.
 - The complete hierarchy (`#hierarchy`): the bedrock's refinement graph.
 - Create a formalism (`#creation`): every entry goes through the staging.

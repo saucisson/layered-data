@@ -10,7 +10,7 @@ async function openAccessCodePopover(page: import("@playwright/test").Page) {
 }
 
 test("#222 the access-code form opens from the key button of the site header", async ({ page }) => {
-  await page.goto("/#editor");
+  await page.goto("/#models");
   // the page renders its title (no infinite loading)
   await expect(page.locator("h1").first()).toContainText(/model editor/i, { timeout: 10_000 });
   // the form is not on the page itself anymore…

@@ -595,7 +595,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
             {say({ language, en: "Tutorial →"})}
           </button>
           <button type="button"
-            onClick={() => navigate("workshop")}
+            onClick={() => navigate("formalisms")}
             className="rounded-lg bg-sky-600 dark:bg-sky-700 px-6 py-3 text-white font-semibold hover:bg-sky-500 dark:hover:bg-sky-600 transition-colors"
           >
             {say({ language, en: "Workshop →"})}

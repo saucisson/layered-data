@@ -12,9 +12,9 @@ const ROUTES: ReadonlyArray<{ hash: string; heading: RegExp }> = [
   { hash: "#filiation", heading: /Filiation/ },
   { hash: "#hierarchy", heading: /hierarchy/i },
   { hash: "#creation", heading: /Create a formalism/ },
-  { hash: "#workshop", heading: /workshop/i },
+  { hash: "#formalisms", heading: /workshop/i },
   { hash: "#lenses", heading: /Lenses/ },
-  { hash: "#editor", heading: /model editor/i },
+  { hash: "#models", heading: /model editor/i },
   { hash: "#install", heading: /install/i },
   { hash: "#formalism/petrinet", heading: /formalism/i },
   { hash: "#nimportequoi", heading: /Page not found/ },
@@ -64,7 +64,7 @@ test("#217 the workshop header and the hierarchy page render the SAME shared ref
   expect(await hierarchyCurves.count()).toBeGreaterThan(10);
 
   // the workshop header: the same component — same pill, same curves
-  await page.goto("/#workshop");
+  await page.goto("/#formalisms");
   await expect(page.getByRole("heading", { name: /workshop/i })).toBeVisible({ timeout: 15_000 });
   await page.getByRole("button", { name: "graph", exact: true }).first().click();
   const workshopPill = page.getByRole("button", { name: /^petrinet-scheme/ });
