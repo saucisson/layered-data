@@ -1,11 +1,22 @@
-// The wrapped layout of the SHARED refinement graph (issue #217): each
-// generation wraps onto as many lines as the container width needs,
-// then barycenter sweeps + a crossing descent order the generations so
-// the curves cross as little as possible. Deterministic: ties keep the
-// inventory order. Pure geometry — no React, so the checks can import
-// it directly.
+// The layout of the SHARED refinement graph (issue #217, reworked in
+// #236): dagre (the Sugiyama layered layout) computes the ranks and
+// the crossing-minimized order inside each rank; then each rank wraps
+// onto as many lines as the container width needs, so the graph always
+// fits the page (no horizontal scroll), and a final crossing descent
+// on the wrapped geometry removes the crossings the wrapping may have
+// re-introduced. Only the inheritance edges drive the layout; the
+// usage edges (issue #235) are drawn on top. Deterministic: dagre is
+// deterministic for a fixed insertion order, ties keep the inventory
+// order. Pure geometry — no React, so the checks can import it.
 
-import { computeGraphLayout, RefinementDag } from "./workshopInventory.ts";
+import { graphlib } from "dagre";
+import * as dagre from "dagre";
+import type { RefinementDag } from "./workshopInventory.ts";
+
+// dagre is CommonJS: under Node's ESM loader only some named exports
+// are detected, so the layout function is reached through the default
+// export (module.exports) when present — same object in the browser.
+const dagreLayout = ((dagre as { default?: typeof dagre }).default ?? dagre).layout;
 
 // Layout metrics for the wrapped graph (font-mono text-[10px] pills).
 const CHARACTER_WIDTH = 6.4;
@@ -15,6 +26,10 @@ const VERTICAL_GAP = 10;
 const ROW = 34;
 export const NODE_HEIGHT = 26;
 const MARGIN = 8;
+// dagre metrics: gap between two nodes of the same rank, gap between
+// two ranks (the curves need room for their arrowheads).
+const NODESEP = HORIZONTAL_GAP;
+const RANKSEP = 34;
 
 interface WrappedPosition {
   x: number;
@@ -29,11 +44,12 @@ export interface RefinementGraphLayout {
   bands: { y: number; h: number }[];
 }
 
-/** Wrap each generation onto as many lines as needed to fit `width`,
- * then re-order the generations in the wrapped geometry (barycenter
- * sweeps: parents pull their children, children pull their parents) so
- * the curves cross as little as possible. Deterministic: ties keep the
- * inventory order. */
+/** dagre ranks and orders the inheritance DAG (rankdir BT: children at
+ * the bottom, parents at the top, like the rendered curves), then
+ * each rank wraps onto as many lines as `width` needs, and a crossing
+ * descent on the wrapped geometry removes the crossings the wrapping
+ * re-introduced. Deterministic: dagre is deterministic for a fixed
+ * insertion order, ties keep the inventory order. */
 export function computeRefinementGraphLayout({
   layerNames,
   dag,
@@ -43,15 +59,44 @@ export function computeRefinementGraphLayout({
   dag: RefinementDag;
   width: number;
 }): RefinementGraphLayout {
-  const base = computeGraphLayout({ layerNames, dag });
   const widthOf = (layerName: string) =>
     Math.ceil(layerName.length * CHARACTER_WIDTH) + NODE_PADDING;
 
-  const wrap = (rows: readonly string[][]) => {
+  const graph = new graphlib.Graph();
+  graph.setGraph({ rankdir: "BT", nodesep: NODESEP, ranksep: RANKSEP });
+  graph.setDefaultEdgeLabel(() => ({}));
+  for (const layerName of layerNames) {
+    graph.setNode(layerName, { width: widthOf(layerName), height: NODE_HEIGHT });
+  }
+  for (const layerName of layerNames) {
+    for (const parentName of dag.targetsOf(layerName)) {
+      graph.setEdge(layerName, parentName);
+    }
+  }
+  dagreLayout(graph);
+
+  // Group the nodes by rank (with rankdir BT, one rank = one y), top
+  // rank first; inside a rank keep dagre's left-to-right order.
+  const byRank = new Map<number, string[]>();
+  for (const layerName of layerNames) {
+    const rank = Math.round(graph.node(layerName).y);
+    const row = byRank.get(rank) ?? [];
+    row.push(layerName);
+    byRank.set(rank, row);
+  }
+  const rows = [...byRank.entries()]
+    .sort((first, second) => first[0] - second[0])
+    .map(([, row]) =>
+      [...row].sort((first, second) => graph.node(first).x - graph.node(second).x),
+    );
+
+  // Wrap each rank onto as many lines as the width needs, one band
+  // per rank spanning all its lines.
+  const wrap = (rankRows: readonly string[][]) => {
     const positions: Record<string, WrappedPosition> = {};
     const bands: { y: number; h: number }[] = [];
     let cursorY = MARGIN;
-    for (const row of rows) {
+    for (const row of rankRows) {
       const bandTop = cursorY;
       let cursorX = MARGIN;
       for (const layerName of row) {
@@ -70,8 +115,9 @@ export function computeRefinementGraphLayout({
     return { positions, bands, H: cursorY + MARGIN };
   };
 
-  const rows = base.rows.map((row) => [...row]);
-  const maxRank = rows.length - 1;
+  // ---- barycenter sweeps on the wrapped geometry (parents pull
+  // their children close, children pull their parents), seeded by
+  // dagre's order ----
   const centerXOf = (
     positions: Record<string, WrappedPosition>,
     layerName: string,
@@ -99,8 +145,8 @@ export function computeRefinementGraphLayout({
     );
     rows[rank] = scored.map((scoredNode) => scoredNode.layerName);
   };
-
-  for (let sweep = 0; sweep < 3; sweep++) {
+  const maxRank = rows.length - 1;
+  for (let sweep = 0; sweep < 2; sweep++) {
     let wrapped = wrap(rows);
     for (let rank = 1; rank <= maxRank; rank++) {
       sortByBarycenter(rank, (layerName) => dag.targetsOf(layerName), wrapped.positions);
@@ -112,8 +158,9 @@ export function computeRefinementGraphLayout({
     }
   }
 
-  // ---- crossing descent: try every adjacent swap inside a generation,
-  // keep the ones that lower the real number of curve crossings ----
+  // ---- crossing descent on the wrapped geometry: try every adjacent
+  // swap inside a rank, keep the ones that lower the real number of
+  // curve crossings ----
   const edgeList: { child: string; parent: string }[] = [];
   for (const layerName of layerNames)
     for (const parentName of dag.targetsOf(layerName))
@@ -204,10 +251,9 @@ export function computeRefinementGraphLayout({
 
   let best = wrap(rows);
   let bestCrossings = countCrossings(best.positions);
-  for (let sweep = 0; sweep < 6 && bestCrossings > 0; sweep++) {
+  for (let sweep = 0; sweep < 4 && bestCrossings > 0; sweep++) {
     let improved = false;
-    for (let rank = 0; rank <= maxRank; rank++) {
-      const row = rows[rank] ?? [];
+    for (const row of rows) {
       for (let index = 0; index + 1 < row.length; index++) {
         const left = row[index];
         const right = row[index + 1];
@@ -236,4 +282,3 @@ export function computeRefinementGraphLayout({
     bands,
   };
 }
-
