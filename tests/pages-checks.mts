@@ -439,12 +439,8 @@ check(
   !corpusDag.usesOf("multidigraph").includes("edge_type"),
 );
 check(
-  "(d3) a layer's own refines never leaks into its usage edges",
-  KERNEL_LAYER_NAMES.every(
-    (layerName) =>
-      corpusDag.targetsOf(layerName).every((target) => !corpusDag.usesOf(layerName).includes(target)) ||
-      corpusDag.usesOf(layerName).every((used) => used !== layerName),
-  ) && KERNEL_LAYER_NAMES.every((layerName) => !corpusDag.usesOf(layerName).includes(layerName)),
+  "(d3) a layer never uses itself — the usage edges are cross-layer only",
+  KERNEL_LAYER_NAMES.every((layerName) => !corpusDag.usesOf(layerName).includes(layerName)),
 );
 
 // (d2) the SHARED wrapped layout (issue #217) — the one component the
