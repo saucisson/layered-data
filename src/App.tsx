@@ -55,6 +55,9 @@ const TutorialPage = lazy(() =>
 const FiliationPage = lazy(() =>
   import("./pages/FiliationPage").then((module) => ({ default: module.FiliationPage })),
 );
+const LensesPage = lazy(() =>
+  import("./pages/LensesPage").then((module) => ({ default: module.LensesPage })),
+);
 const HierarchyPage = lazy(() =>
   import("./pages/HierarchyPage").then((module) => ({ default: module.HierarchyPage })),
 );
@@ -120,6 +123,8 @@ function AppContent() {
             return <FiliationPage language={language} />;
           case "workshop":
             return <WorkshopPage language={language} />;
+          case "lenses":
+            return <LensesPage language={language} />;
           case "editor":
             return <ModelEditorPage language={language} />;
           case "hierarchy":
