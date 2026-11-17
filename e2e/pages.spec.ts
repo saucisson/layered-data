@@ -15,6 +15,7 @@ const ROUTES: ReadonlyArray<{ hash: string; heading: RegExp }> = [
   { hash: "#workshop", heading: /workshop/i },
   { hash: "#lenses", heading: /Lenses/ },
   { hash: "#editor", heading: /model editor/i },
+  { hash: "#install", heading: /install/i },
   { hash: "#formalism/petrinet", heading: /formalism/i },
   { hash: "#nimportequoi", heading: /Page not found/ },
 ];
@@ -108,4 +109,23 @@ test("#231 the hierarchy groups the formalisms by families — chips fade the ot
   await allChip.click();
   await expect(outsidePill).not.toHaveClass(/\bopacity-10\b/);
   await expect(page.getByRole("button", { name: "petrinet-scheme", exact: true })).not.toHaveClass(/\bopacity-10\b/);
+});
+
+test("#246 the install page explains the local install and serves the VS Code extension .vsix", async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto("/#install");
+  await expect(page.locator("h1")).toContainText(/install/i);
+  // local install instructions mention the clone and the npm commands
+  await expect(page.getByRole("heading", { name: /local install/i })).toBeVisible();
+  await expect(page.locator("pre").filter({ hasText: "git clone" }).first()).toBeVisible();
+  // the extension section with the downloadable prebuilt package
+  await expect(page.getByRole("heading", { name: /vs code extension/i })).toBeVisible();
+  const download = page.locator('a[href="/layered-data-0.3.0.vsix"][download]');
+  await expect(download).toBeVisible();
+  // the .vsix is actually served (200, non-empty zip)
+  const response = await page.request.get("/layered-data-0.3.0.vsix");
+  expect(response.status()).toBe(200);
+  const body = await response.body();
+  expect(body.length).toBeGreaterThan(1000);
+  expect(errors).toEqual([]);
 });

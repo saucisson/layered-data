@@ -28,6 +28,7 @@ const NAV_ENTRIES: readonly NavEntry[] = [
   { page: "workshop", label: "Workshop" },
   { page: "editor", label: "Editor" },
   { page: "lenses", label: "Lenses" },
+  { page: "install", label: "Install" },
 ];
 
 /** Each top-level page highlights exactly its own entry. */
