@@ -21,6 +21,26 @@ export class PenInfraFailure {
   }
 }
 
+
+/** The upstream `content` is a plain string for most models, but
+ * reasoning models (mistral-large-latest) answer with a list of
+ * content blocks — thinking blocks first, then the text. Only the
+ * text blocks carry the proposal. */
+export function extractProposalContent({ content }: { content: unknown }): string {
+  if (typeof content === "string") return content;
+  if (!Array.isArray(content)) return "";
+  return content
+    .filter(
+      (part): part is { type: "text"; text: string } =>
+        typeof part === "object" &&
+        part !== null &&
+        (part as { type?: unknown }).type === "text" &&
+        typeof (part as { text?: unknown }).text === "string",
+    )
+    .map((part) => part.text)
+    .join("");
+}
+
 /** One call to the upstream model. The feedback of a previous
  * refusal travels with the instruction — the correction happens in
  * the model's own writing, the verdict vocabulary speaks to it. */
@@ -73,9 +93,9 @@ export async function generateLayer({
     });
   }
   const data = (await upstreamResponse.json()) as {
-    choices?: { message?: { content?: string } }[];
+    choices?: { message?: { content?: unknown } }[];
   };
-  const proposal = data?.choices?.[0]?.message?.content ?? "";
+  const proposal = extractProposalContent({ content: data?.choices?.[0]?.message?.content });
   if (!proposal.trim()) {
     throw new PenInfraFailure({ statusCode: 502, body: "le géologue n'a rien écrit" });
   }
