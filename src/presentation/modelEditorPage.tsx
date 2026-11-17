@@ -1247,9 +1247,9 @@ export function ModelEditorPage({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {/* the palette: read from the formalism, never hardcoded */}
-        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 lg:col-span-2">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 lg:w-44 lg:shrink-0">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
             {t("palette")}
           </div>
@@ -1305,8 +1305,8 @@ export function ModelEditorPage({
         </div>
 
         {/* the canvas: a reading of the model's truth */}
-        <div className={showSource ? "lg:col-span-5" : "lg:col-span-7"}>
-          <div className="overflow-x-auto">
+        <div className="min-w-0 flex-1">
+          <div>
           <svg
             ref={svgRef}
             viewBox={"0 0 " + CANVAS_WIDTH + " " + CANVAS_HEIGHT}
@@ -1314,7 +1314,7 @@ export function ModelEditorPage({
             aria-label={t(
               "model canvas — drag vertices to move them, pull an arc from a vertex to another",
             )}
-            className="w-full touch-none select-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+            className="h-[calc(100vh-13rem)] min-h-[24rem] w-full touch-none select-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={() => setGesture(null)}
@@ -1411,21 +1411,22 @@ export function ModelEditorPage({
           )}
         </div>
 
-        {/* the source panel: the block the canvas reads — shown beside
-            the canvas on demand, the only truth made visible */}
+        {/* the right column: the source (on demand) and the
+            inspector, compact — the canvas keeps the width and the
+            height (issue #221) */}
+        <div className="flex flex-col gap-4 lg:w-72 lg:shrink-0">
         {showSource && model !== null && (
-          <div className="lg:col-span-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
               {t("source — the only truth")}
             </div>
-            <pre className="max-h-[540px] overflow-auto whitespace-pre-wrap font-mono text-[10px] leading-4 text-slate-600 dark:text-slate-400">
+            <pre className="max-h-64 overflow-auto whitespace-pre-wrap font-mono text-[10px] leading-4 text-slate-600 dark:text-slate-400">
               {modelSource}
             </pre>
           </div>
         )}
 
-        {/* the inspector: the selected member and its declared keys */}
-        <div className="lg:col-span-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
             {t("inspector")}
           </div>
@@ -1534,6 +1535,7 @@ export function ModelEditorPage({
               ))}
             </div>
           )}
+        </div>
         </div>
       </div>
     </div>
