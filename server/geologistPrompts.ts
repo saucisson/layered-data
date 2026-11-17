@@ -29,29 +29,64 @@ Tout est couche : les formalisms (les schémas) et les modèles (les données) v
 
 LA COLONNE STRATIGRAPHIQUE CI-DESSOUS EST L'ÉTAT RÉEL DE L'ATELIER — un nouveau formalisme s'y raccroche : raffiner une couche existante (chemins absolus vers ses membres), jamais redéfinir ce qui existe.`;
 
-/** One line per existing layer: the `layer …` header as written.
- * The visitors' layers arrive as data, read through the store at
- * each call — the column stays true. */
+/** The leading comment block of a source: the layer's own
+ * description, capped at a few lines — the column says what each
+ * layer IS, not only its name. */
+function leadingComments({ source }: { source: string }): string[] {
+  const comments: string[] = [];
+  for (const line of source.split("\n")) {
+    const trimmed = line.trim();
+    if (trimmed.startsWith("//")) {
+      comments.push(trimmed);
+      if (comments.length >= 4) break;
+    } else if (trimmed !== "") {
+      break;
+    }
+  }
+  return comments;
+}
+
+/** One entry per existing layer: the `layer …` header as written,
+ * followed by its leading comments (the role of the layer). The
+ * visitors' layers arrive as data, read through the store at each
+ * call — the column stays true. */
 export function corpusBackbone({ visitorLayers }: { visitorLayers: VisitorLayer[] }): string {
   const lines: string[] = [];
   for (const name of KERNEL_LAYER_NAMES) {
     const source = readFileSync(kernelLayerPath({ name: name as LayerName }), "utf8");
     const header = source.split("\n").find((line) => line.startsWith("layer "));
     lines.push(header ?? "layer " + name);
+    for (const comment of leadingComments({ source })) lines.push("  " + comment);
   }
   for (const visitorLayer of visitorLayers) {
     const header = visitorLayer.source.split("\n").find((line) => line.startsWith("layer "));
     lines.push(header ?? "layer " + visitorLayer.name + "  // couche d'un visiteur");
+    for (const comment of leadingComments({ source: visitorLayer.source })) lines.push("  " + comment);
   }
   return lines.join("\n");
 }
 
+/** The expected structure, spelled out: a formalism (a scheme)
+ * refines an existing scheme and declares its types in
+ * `specification`; a model refines a scheme and fills its
+ * collections. The parent is chosen in the column, never invented. */
+export const EXPECTED_STRUCTURE = `LA STRUCTURE ATTENDUE — deux espèces de couches, ne pas les confondre :
+- UN FORMALISME (schéma) raffine un schéma existant de la colonne (ex. @petrinet-scheme, @graph, @bipartite-digraph) et déclare ses types dans "specification" : "<type>_type refines @<chemin absolu>", avec extend / override / abstract. Il ne contient PAS de données concrètes.
+- UN MODÈLE raffine un schéma et remplit ses collections (places, transitions, arcs…) : chaque membre cite son type par chemin absolu, chaque arc désigne ses extrémités par @.
+RÈGLES DE RACCORDEMENT : choisir dans la colonne le parent le plus spécifique qui convient (jamais un parent générique quand un parent précis existe — un Petri net raffine @petrinet-scheme, pas @graph) ; ne jamais redéfinir ce qui existe déjà (extend, pas une nouvelle déclaration) ; tous les chemins de membres sont absolus (@<couche>/<chemin>).`;
+
 /** The complete system prompt sent to the model. */
 export function buildSystemPrompt({ visitorLayers }: { visitorLayers: VisitorLayer[] }): string {
-  let example = "";
+  let examples = "";
+  if (KERNEL_LAYER_NAMES.includes("bipartite-digraph")) {
+    examples +=
+      "UN EXEMPLE COMPLET DE FORMALISME — bipartite-digraph, un schéma : il raffine deux axes existants, déclare ses types (left_type, right_type, arcAB_type…) par chemins absolus, impose ses conteneurs — aucune donnée concrète :\n" +
+      readFileSync(kernelLayerPath({ name: "bipartite-digraph" as LayerName }), "utf8").trim() +
+      "\n";
+  }
   if (KERNEL_LAYER_NAMES.includes("pn-philosophers-1")) {
-    example =
-      "UN EXEMPLE COMPLET DU CORPUS — pn-philosophers-1, le modèle d'un philosophe seul (il remplit les collections du schéma pn-philosophers, ses membres raffinent les types par chemin absolu, les arcs désignent leurs extrémités par @) :\n" +
+    examples +=
+      "\n\nUN EXEMPLE COMPLET DE MODÈLE — pn-philosophers-1, le modèle d'un philosophe seul (il remplit les collections du schéma pn-philosophers, ses membres raffinent les types par chemin absolu, les arcs désignent leurs extrémités par @) :\n" +
       readFileSync(kernelLayerPath({ name: "pn-philosophers-1" as LayerName }), "utf8").trim();
   }
   const visitorLayersText =
@@ -71,7 +106,9 @@ export function buildSystemPrompt({ visitorLayers }: { visitorLayers: VisitorLay
     " du socle en lecture seule, plus les couches des visiteurs) :\n" +
     corpusBackbone({ visitorLayers }) +
     "\n\n" +
-    example +
+    EXPECTED_STRUCTURE +
+    "\n\n" +
+    examples +
     visitorLayersText
   );
 }
