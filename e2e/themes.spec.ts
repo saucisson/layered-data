@@ -33,3 +33,19 @@ test("#233 the theme chosen in the header is applied and survives a reload", asy
     )
     .toBe(true);
 });
+
+test("#234 the logo variant chosen in the header is persisted across reloads", async ({ page }) => {
+  await page.goto("/#landing");
+  const picker = page.getByRole("combobox", { name: "logo" });
+  await expect(picker).toBeVisible({ timeout: 10_000 });
+
+  await picker.selectOption("diamond");
+  await expect
+    .poll(() => page.evaluate("localStorage.getItem('ld-logo')"))
+    .toBe("diamond");
+  // the header brand now carries the diamond mark
+  await expect(page.locator("header svg path").first()).toBeVisible();
+
+  await page.reload();
+  await expect(picker).toHaveValue("diamond", { timeout: 10_000 });
+});
