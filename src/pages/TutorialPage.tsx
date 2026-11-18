@@ -152,7 +152,7 @@ export function TutorialPage({ language }: TutorialPageProps) {
             onClick={() => navigate("landing")}
             className="rounded-lg border-2 border-slate-300 dark:border-slate-600 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-colors"
           >
-            {say({ language, en: "← Landing"})}
+            {say({ language, en: "← Home"})}
           </button>
           <button type="button"
             onClick={() => navigate("filiation")}

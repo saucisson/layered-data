@@ -119,7 +119,7 @@ export function LandingPage({ language }: LandingPageProps) {
               })}
             </p>
             <button type="button"
-              onClick={() => navigate("formalism")}
+              onClick={() => navigate("formalism", "multihypergraph")}
               className="mt-4 rounded-lg border-2 border-sky-600 px-4 py-2 text-sm text-sky-600 dark:text-sky-400 font-semibold hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors"
             >
               {say({ language, en: "Study and understand →"})}
