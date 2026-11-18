@@ -8,7 +8,7 @@
 // last section displays what the workshop adds and what it does not.
 // The companion document is docs/archive/filiation.md, in the repository.
 
-import { useRouter } from "../components/Router";
+import { hashOf } from "../components/Router";
 import { KERNEL_LAYER_NAMES } from "../application/corpus.ts";
 import { say } from "../presentation/i18n.ts";
 import { NotionText } from "../presentation/notions.tsx";
@@ -339,7 +339,6 @@ const PRINTED_REFERENCES: string[] = [
 ];
 
 export function FiliationPage({ language }: FiliationPageProps) {
-  const { navigate } = useRouter();
 
   const cell = (text: BilingualText) => say({ language, en: text.en});
 
@@ -583,24 +582,21 @@ export function FiliationPage({ language }: FiliationPageProps) {
         </section>
 
         <div className="flex justify-center gap-4 pt-4">
-          <button type="button"
-            onClick={() => navigate("landing")}
+          <a href={hashOf("landing")}
             className="rounded-lg border-2 border-slate-300 dark:border-slate-600 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-colors"
           >
             {say({ language, en: "← Home"})}
-          </button>
-          <button type="button"
-            onClick={() => navigate("tutorial")}
+          </a>
+          <a href={hashOf("tutorial")}
             className="rounded-lg border-2 border-sky-600 px-6 py-3 text-sky-600 dark:text-sky-400 font-semibold hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors"
           >
             {say({ language, en: "Tutorial →"})}
-          </button>
-          <button type="button"
-            onClick={() => navigate("formalisms")}
+          </a>
+          <a href={hashOf("formalisms")}
             className="rounded-lg bg-sky-600 dark:bg-sky-700 px-6 py-3 text-white font-semibold hover:bg-sky-500 dark:hover:bg-sky-600 transition-colors"
           >
             {say({ language, en: "Workshop →"})}
-          </button>
+          </a>
         </div>
 
         <footer className="border-t border-slate-200 dark:border-slate-700 pt-6 text-center text-xs text-slate-600 dark:text-slate-400">

@@ -11,7 +11,7 @@
 // by hand.
 
 import React, { useMemo } from "react";
-import { useRouter } from "../components/Router";
+import { hashOf } from "../components/Router";
 import { say } from "../presentation/i18n.ts";
 import { NotionText } from "../presentation/notions.tsx";
 import { parseTutorialMarkdown, type TutorialBlock } from "../presentation/tutorialMarkdown.ts";
@@ -80,7 +80,6 @@ interface TutorialPageProps {
 }
 
 export function TutorialPage({ language }: TutorialPageProps) {
-  const { navigate } = useRouter();
   const source = RAW_TUTORIAL_EN;
   const blocks = useMemo(() => parseTutorialMarkdown({ source }), [source]);
 
@@ -148,24 +147,21 @@ export function TutorialPage({ language }: TutorialPageProps) {
             as tooltips on the ⟪terms⟫ cited in the prose (#230). */}
 
         <div className="mt-12 flex justify-center gap-4">
-          <button type="button"
-            onClick={() => navigate("landing")}
+          <a href={hashOf("landing")}
             className="rounded-lg border-2 border-slate-300 dark:border-slate-600 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-colors"
           >
             {say({ language, en: "← Home"})}
-          </button>
-          <button type="button"
-            onClick={() => navigate("filiation")}
+          </a>
+          <a href={hashOf("filiation")}
             className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-colors"
           >
             {say({ language, en: "Filiation & comparison →"})}
-          </button>
-          <button type="button"
-            onClick={() => navigate("formalisms")}
+          </a>
+          <a href={hashOf("formalisms")}
             className="rounded-lg bg-sky-600 dark:bg-sky-700 px-6 py-3 text-white font-semibold hover:bg-sky-500 dark:hover:bg-sky-600 transition-colors"
           >
             {say({ language, en: "Workshop →"})}
-          </button>
+          </a>
         </div>
       </div>
     </div>

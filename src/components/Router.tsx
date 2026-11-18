@@ -45,6 +45,12 @@ interface RouterProviderProps {
   children: React.ReactNode;
 }
 
+/** The hash a page navigation points to — plain anchors use it, so
+ *  page changes are real links (middle-click, copy link, hover URL). */
+export function hashOf(page: Page, parameter?: string): string {
+  return parameter !== undefined && parameter !== "" ? "#" + page + "/" + parameter : "#" + page;
+}
+
 export function RouterProvider({ children }: RouterProviderProps) {
   const [page, setPage] = useState<Page>("landing");
   const [parameter, setParameter] = useState("");
@@ -68,8 +74,7 @@ export function RouterProvider({ children }: RouterProviderProps) {
   }, []);
 
   const navigate = (newPage: Page, newParameter?: string) => {
-    window.location.hash =
-      newParameter !== undefined && newParameter !== "" ? newPage + "/" + newParameter : newPage;
+    window.location.hash = hashOf(newPage, newParameter).slice(1);
   };
 
   return (
