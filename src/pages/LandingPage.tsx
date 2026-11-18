@@ -68,6 +68,12 @@ export function LandingPage({ language }: LandingPageProps) {
                 en: "See the same model through different formalisms: the data does not move, the lens changes — the philosophers' dinner draws as a generic graph or as a Petri net.",
               })}
             </p>
+            <button type="button"
+              onClick={() => navigate("lenses")}
+              className="mt-4 rounded-lg border-2 border-slate-400 px-4 py-2 text-sm text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-colors"
+            >
+              {say({ language, en: "See the lenses →"})}
+            </button>
           </div>
         </section>
 
@@ -151,6 +157,12 @@ export function LandingPage({ language }: LandingPageProps) {
             className="rounded-lg border-2 border-emerald-600 px-6 py-3 text-emerald-600 dark:text-emerald-400 font-semibold hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-colors"
           >
             {say({ language, en: "Model editor →"})}
+          </button>
+          <button type="button"
+            onClick={() => navigate("install")}
+            className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-colors"
+          >
+            {say({ language, en: "Run it locally →"})}
           </button>
         </section>
 
