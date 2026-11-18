@@ -1,22 +1,57 @@
 // The shared refinement-graph view (issue #217): ONE component renders
 // the refinement DAG for the workshop header and the hierarchy page —
 // the wrapped layout (each generation wraps onto as many lines as the
-// container width needs), the SVG curves, the pill nodes. The two
-// pages differ only in their callbacks: the workshop picks a layer,
-// the hierarchy page opens the formalism page on it.
+// container width needs), the SVG routes through its empty channels,
+// the pill nodes. The two pages differ only in their callbacks: the
+// workshop picks a layer, the hierarchy page opens the formalism page.
 
 import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { LAYER_COLOR, LAYER_ROLE, RefinementDag } from "./workshopInventory.ts";
-import { computeRefinementGraphLayout, NODE_HEIGHT } from "./refinementGraphLayout.ts";
+import { computeRefinementGraphLayout, CORNER_RADIUS, NODE_HEIGHT } from "./refinementGraphLayout.ts";
+import type { RoutePoint } from "./refinementGraphLayout.ts";
 import { localized } from "./i18n.ts";
 import { hashOf } from "../components/Router.tsx";
 import type { Language } from "../domain/messages.ts";
 
-/** The shared refinement graph: bands, one curve per refinement, one
+/** The SVG path of a routed edge: straight legs, the corners between
+ * them rounded with a quadratic curve — the marker rides the final
+ * leg and lands on the edge of the target pill. Null draws nothing
+ * (an end missing from the inventory has nothing to point at). */
+function routePath(route: RoutePoint[] | null): string | null {
+  if (route === null || route.length < 2) return null;
+  const start = route[0];
+  if (!start) return null;
+  let d = "M " + start.x + " " + start.y;
+  for (let index = 1; index < route.length - 1; index++) {
+    const previous = route[index - 1];
+    const corner = route[index];
+    const next = route[index + 1];
+    if (!previous || !corner || !next) continue;
+    const inLength = Math.hypot(corner.x - previous.x, corner.y - previous.y);
+    const outLength = Math.hypot(next.x - corner.x, next.y - corner.y);
+    if (inLength === 0 || outLength === 0) continue;
+    const radius = Math.min(CORNER_RADIUS, inLength / 2, outLength / 2);
+    const beforeX = corner.x - ((corner.x - previous.x) / inLength) * radius;
+    const beforeY = corner.y - ((corner.y - previous.y) / inLength) * radius;
+    const afterX = corner.x + ((next.x - corner.x) / outLength) * radius;
+    const afterY = corner.y + ((next.y - corner.y) / outLength) * radius;
+    d +=
+      " L " + beforeX + " " + beforeY +
+      " Q " + corner.x + " " + corner.y + " " + afterX + " " + afterY;
+  }
+  const end = route[route.length - 1];
+  if (!end) return d;
+  d += " L " + end.x + " " + end.y;
+  return d;
+}
+
+/** The shared refinement graph: bands, one route per refinement, one
  * pill per layer. The component measures its own container and wraps
- * the generations to its width (no horizontal scroll). `focus` drives
- * the highlight (the hovered layer, or the current layer in the
- * workshop); `search` fades the non-matching layers. */
+ * the generations to its width (no horizontal scroll); the routes
+ * travel the empty channels of the wrapped geometry, no arrow ever
+ * crosses a pastille. `focus` drives the highlight (the hovered layer,
+ * or the current layer in the workshop); `search` fades the
+ * non-matching layers. */
 export function RefinementGraph({
   layerNames,
   dag,
@@ -83,41 +118,19 @@ export function RefinementGraph({
   );
   const needle = search.trim().toLowerCase();
 
-  // One curve per refinement: on the focus chain it goes dark and
+  // One route per refinement: on the focus chain it goes dark and
   // thick, between two descendants half-tone, otherwise light.
   const edges: React.ReactNode[] = [];
   for (const layerName of layerNames) {
     for (const parentName of dag.targetsOf(layerName)) {
-      const from = layout.position(layerName);
-      const to = layout.position(parentName);
+      const d = routePath(layout.route(layerName, parentName));
+      if (d === null) continue;
       const onChain = ancestors.has(layerName) && ancestors.has(parentName);
       const betweenDescendants = descendants.has(layerName) && descendants.has(parentName);
-      // the arrow lands on the edge of the parent facing the child: the
-      // parent is in a band above (rankdir BT), so its BOTTOM edge — the
-      // top edge would force the curve through the parent's own band.
-      const toY = to.y + NODE_HEIGHT <= from.y ? to.y + NODE_HEIGHT : to.y;
-      const midHeight = (from.y + toY + NODE_HEIGHT) / 2;
       edges.push(
         <path
           key={layerName + "⇢" + parentName}
-          d={
-            "M " +
-            (from.x + from.w / 2) +
-            " " +
-            (from.y + NODE_HEIGHT) +
-            " C " +
-            (from.x + from.w / 2) +
-            " " +
-            midHeight +
-            " " +
-            (to.x + to.w / 2) +
-            " " +
-            midHeight +
-            " " +
-            (to.x + to.w / 2) +
-            " " +
-            toY
-          }
+          d={d}
           fill="none"
           className={onChain ? "stroke-slate-800 dark:stroke-slate-200" : "stroke-slate-300 dark:stroke-slate-600"}
           strokeWidth={onChain ? 2 : 1}
@@ -128,32 +141,20 @@ export function RefinementGraph({
     }
   }
 
-  // The USAGE edges (issue #235): dashed curves with a hollow
-  // arrowhead, slightly offset so they stay readable when a layer both
-  // refines and uses the same parent. They never drive the layout —
-  // only inheritance does.
+  // The USAGE edges (issue #235): dashed routes with a hollow
+  // arrowhead, offset sideways through the router itself so they stay
+  // readable beside the refinements. They never drive the layout —
+  // only inheritance does; they climb, descend, or U exactly like the
+  // refinements, whichever side of the user the used layer sits on.
   const usageEdges: React.ReactNode[] = [];
   for (const layerName of layerNames) {
     for (const usedName of dag.usesOf(layerName)) {
-      const from = layout.position(layerName);
-      const to = layout.position(usedName);
-      const offset = 7;
-      const x1 = from.x + from.w / 2 + offset;
-      const y1 = from.y + NODE_HEIGHT;
-      const x2 = to.x + to.w / 2 + offset;
-      // the used layer may sit above OR below the user: the arrow lands
-      // on the edge facing its source (bottom edge above, top edge below).
-      const y2 = to.y + NODE_HEIGHT <= from.y ? to.y + NODE_HEIGHT : to.y;
-      const midHeight = (y1 + y2) / 2;
+      const d = routePath(layout.route(layerName, usedName, 7));
+      if (d === null) continue;
       usageEdges.push(
         <path
           key={"uses:" + layerName + "⇢" + usedName}
-          d={
-            "M " + x1 + " " + y1 +
-            " C " + x1 + " " + midHeight +
-            " " + x2 + " " + midHeight +
-            " " + x2 + " " + y2
-          }
+          d={d}
           fill="none"
           className="stroke-slate-400 dark:stroke-slate-500"
           strokeWidth={1}
