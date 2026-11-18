@@ -1,6 +1,7 @@
 // Landing page for Layered Data
 
 import { hashOf } from "../components/Router";
+import { PROSE_WIDTH } from "../components/PageShell";
 import { say } from "../presentation/i18n.ts";
 import { KERNEL_LAYER_NAMES } from "../application/corpus.ts";
 import type { Language } from "../domain/messages.ts";
@@ -13,7 +14,7 @@ export function LandingPage({ language }: LandingPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-4xl p-4 sm:p-8">
+      <div className={"mx-auto " + PROSE_WIDTH + " p-4 sm:p-8"}>
         <section className="text-center">
           <h1 className="mb-4 text-3xl font-bold text-slate-800 dark:text-slate-100">
             {say({
