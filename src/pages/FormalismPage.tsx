@@ -376,14 +376,16 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
   return (
     <svg viewBox={look.frame ?? "0 0 270 220"} className="w-full rounded bg-white dark:bg-slate-800">
       {look.edges.map((edge) => {
-        const from =
+        const fromVertex =
           edge.from !== null
-            ? (look.vertices.find((vertex) => vertex.name === edge.from)?.position ?? null)
+            ? (look.vertices.find((vertex) => vertex.name === edge.from) ?? null)
             : null;
-        const to =
+        const toVertex =
           edge.to !== null
-            ? (look.vertices.find((vertex) => vertex.name === edge.to)?.position ?? null)
+            ? (look.vertices.find((vertex) => vertex.name === edge.to) ?? null)
             : null;
+        const from = fromVertex?.position ?? null;
+        const to = toVertex?.position ?? null;
         if (!from || !to) return null;
         return (
           <EdgeGlyph
@@ -393,6 +395,10 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
             weight={edge.weight}
             from={from}
             to={to}
+            fromShape={fromVertex?.drawn ? fromVertex.drawn.spec : null}
+            fromSize={fromVertex?.size}
+            toShape={toVertex?.drawn ? toVertex.drawn.spec : null}
+            toSize={toVertex?.size}
             selected={selectedGlyph === edge.name}
             onPick={() => setSelectedGlyph(selectedGlyph === edge.name ? null : edge.name)}
           />
@@ -406,6 +412,7 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
             name={vertex.name}
             shape={vertex.drawn ? vertex.drawn.spec : null}
             position={vertex.position}
+            size={vertex.size}
             selected={selectedGlyph === vertex.name}
             onPick={() => setSelectedGlyph(selectedGlyph === vertex.name ? null : vertex.name)}
           />

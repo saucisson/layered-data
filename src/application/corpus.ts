@@ -109,6 +109,8 @@ export const KERNEL_LAYER_NAMES: LayerName[] = [
   "moore-traffic-light",
   // ---- display lenses ----
   "automaton-display",
+  // ---- per-node size data (issue #285) ----
+  "node-sizes",
 ].map(asLayerName);
 
 /** The whole kernel, assembled and validated: what the workshop and

@@ -32,13 +32,13 @@ import {
   type EditionOutcome,
   type LivingAddition,
 } from "../application/edition.ts";
-import { drawnShape, type Glyph } from "../domain/views.ts";
+import { DEFAULT_NODE_SIZE, drawnShape, type Glyph, type NodeSize } from "../domain/views.ts";
 import { flattenLayer } from "../application/flatten.ts";
 import { RefinementDag } from "./workshopInventory.ts";
 import { expectationsOf, formatExpectation, readMatchesExpectation } from "../domain/validation.ts";
-import { circlePosition, lensLayers } from "./viewTree.ts";
+import { circlePosition, lensLayers, sizeOf } from "./viewTree.ts";
 import { EdgeGlyph } from "./glyphs.tsx";
-import { glyphBounds, labelPosition, vertexGlyphElement } from "./glyphShape.tsx";
+import { glyphBounds, labelPosition, scaledGlyph, vertexGlyphElement } from "./glyphShape.tsx";
 import { editionRefusalLabel, labelOf } from "./i18n.ts";
 import { t } from "../infrastructure/i18n.ts";
 import {
@@ -51,11 +51,14 @@ import { useRouter } from "../components/Router.tsx";
 import {
   readMemberContainers,
   positionContainerOf,
+  sizeContainerOf,
+  draftMemberSize,
   readMemberNames,
   nextMemberName,
   readMemberPosition,
   readMemberCitations,
   draftMemberInsertion,
+  draftMemberRemoval,
   draftMemberRemovalCascade,
   draftMemberFieldEdition,
   draftMemberPosition,
@@ -94,11 +97,14 @@ interface SelectedMember {
 }
 
 /** One drawn vertex: its container, its name, its resolved position,
- * the lens's shape for its type (null: the dashed fallback). */
+ * its size datum (issue #285 — the gabarit's defaults when the model
+ * poses none), the lens's shape for its type (null: the dashed
+ * fallback). */
 interface VertexView {
   container: string;
   name: string;
   position: { x: number; y: number };
+  size: NodeSize;
   spec: ShapeSpec;
 }
 
@@ -110,6 +116,8 @@ interface ArcView {
   name: string;
   from: { x: number; y: number } | null;
   to: { x: number; y: number } | null;
+  fromVertex: VertexView | null;
+  toVertex: VertexView | null;
   spec: ShapeSpec;
   weight: number | null;
   waypoints: ArcWaypoint[];
@@ -150,6 +158,16 @@ type Gesture =
       container: string;
       name: string;
       index: number;
+      startX: number;
+      startY: number;
+      x: number;
+      y: number;
+      moved: boolean;
+    }
+  | {
+      kind: "resize" | "rotate";
+      container: string;
+      name: string;
       startX: number;
       startY: number;
       x: number;
@@ -269,6 +287,10 @@ export function ModelEditorPage({
 
   const positionContainer = useMemo(() => positionContainerOf({ containers }), [containers]);
 
+  /** The size container (issue #285): the model's `sizes` block when
+   * the formalism poses one — the resize/rotate gestures draft there. */
+  const sizeContainer = useMemo(() => sizeContainerOf({ containers }), [containers]);
+
   /** The model's declared expectations (`expect` lines), re-read live:
    * each shows its current value and whether it still holds. */
   const expectations = useMemo(() => {
@@ -354,6 +376,7 @@ export function ModelEditorPage({
       container: string;
       name: string;
       position: { x: number; y: number } | null;
+      size: NodeSize;
       spec: ShapeSpec;
     }[] = [];
     for (const container of vertexContainers) {
@@ -369,13 +392,18 @@ export function ModelEditorPage({
                 visited: new Set<string>(),
               })
             : null;
+        const size =
+          sizeContainer !== null
+            ? (sizeOf({ space: KERNEL.space, source: model, container: sizeContainer.name, name }) ??
+              DEFAULT_NODE_SIZE)
+            : DEFAULT_NODE_SIZE;
         const shape = drawnShape({
           space: KERNEL.space,
           lens: asLayerName(lens),
           layer: asLayerName(model),
           path: asLayerPath([container.name, name]),
         });
-        pending.push({ container: container.name, name, position, spec: shape?.spec ?? null });
+        pending.push({ container: container.name, name, position, size, spec: shape?.spec ?? null });
       }
     }
     const vertices: VertexView[] = pending.map((vertex, index) => ({
@@ -386,14 +414,20 @@ export function ModelEditorPage({
           x: CANVAS_WIDTH / 2,
           y: CANVAS_HEIGHT / 2,
         },
+      size: vertex.size,
       spec: vertex.spec,
     }));
-    const positionOfMember = (reference: unknown): { x: number; y: number } | null => {
+    const vertexOfMember = (reference: unknown): VertexView | null => {
       if (!(reference instanceof AddressView) || reference.path.length !== 2) return null;
-      const vertex = vertices.find(
-        (candidate) =>
-          candidate.container === reference.path[0] && candidate.name === reference.path[1],
+      return (
+        vertices.find(
+          (candidate) =>
+            candidate.container === reference.path[0] && candidate.name === reference.path[1],
+        ) ?? null
       );
+    };
+    const positionOfMember = (reference: unknown): { x: number; y: number } | null => {
+      const vertex = vertexOfMember(reference);
       return vertex ? vertex.position : null;
     };
     const arcs: ArcView[] = [];
@@ -443,6 +477,20 @@ export function ModelEditorPage({
               key: "target",
             }),
           ),
+          fromVertex: vertexOfMember(
+            KERNEL.space.read({
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, arcName]),
+              key: "source",
+            }),
+          ),
+          toVertex: vertexOfMember(
+            KERNEL.space.read({
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, arcName]),
+              key: "target",
+            }),
+          ),
           spec: shape?.spec ?? null,
           weight: typeof label === "number" ? label : null,
           waypoints: parseArcWaypoints({
@@ -456,7 +504,7 @@ export function ModelEditorPage({
       }
     }
     return { vertices, arcs };
-  }, [model, lens, spaceVersion, vertexContainers, arcContainers, positionContainer]);
+  }, [model, lens, spaceVersion, vertexContainers, arcContainers, positionContainer, sizeContainer]);
 
   // ---- the shared session (ADR-0110) ----------------------------------
 
@@ -854,6 +902,64 @@ export function ModelEditorPage({
     });
   }
 
+  /** Grab the resize or rotate handle of the selected vertex (issue
+   * #285): the gesture drags it, the drop drafts the `sizes` datum. */
+  function handleSizePointerDown(
+    event: React.PointerEvent<SVGGElement>,
+    vertex: VertexView,
+    kind: "resize" | "rotate",
+  ) {
+    event.stopPropagation();
+    svgRef.current?.setPointerCapture(event.pointerId);
+    const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
+    setGesture({
+      kind,
+      container: vertex.container,
+      name: vertex.name,
+      startX: world.x,
+      startY: world.y,
+      x: world.x,
+      y: world.y,
+      moved: false,
+    });
+  }
+
+  /** A double-click on a size handle removes the datum: the node
+   * falls back to the gabarit's defaults. */
+  function handleSizeHandleDoubleClick(vertex: VertexView, kind: "resize" | "rotate") {
+    if (model === null || sizeContainer === null) return;
+    void kind;
+    proposeEdition({
+      draftedSource: draftMemberRemoval({
+        block: modelSource,
+        container: sizeContainer.name,
+        name: vertex.name,
+      }),
+    });
+  }
+
+  /** The live size of a vertex during a resize/rotate gesture. */
+  function gestureSizeOf(vertex: VertexView): NodeSize {
+    if (
+      gesture === null ||
+      (gesture.kind !== "resize" && gesture.kind !== "rotate") ||
+      gesture.container !== vertex.container ||
+      gesture.name !== vertex.name
+    ) {
+      return vertex.size;
+    }
+    const center = vertex.position;
+    const startDistance = Math.hypot(gesture.startX - center.x, gesture.startY - center.y);
+    const distance = Math.hypot(gesture.x - center.x, gesture.y - center.y);
+    if (gesture.kind === "resize") {
+      const scale = startDistance > 0 ? distance / startDistance : 1;
+      return { ...vertex.size, scale: Math.min(4, Math.max(0.25, scale)) };
+    }
+    const startAngle = (Math.atan2(gesture.startY - center.y, gesture.startX - center.x) * 180) / Math.PI;
+    const angle = (Math.atan2(gesture.y - center.y, gesture.x - center.x) * 180) / Math.PI;
+    return { ...vertex.size, angle: vertex.size.angle + angle - startAngle };
+  }
+
   function handlePointerMove(event: React.PointerEvent<SVGSVGElement>) {
     if (gesture === null) return;
     if (gesture.kind === "pan") {
@@ -870,7 +976,12 @@ export function ModelEditorPage({
       return;
     }
     const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
-    if (gesture.kind === "drag" || gesture.kind === "waypoint") {
+    if (
+      gesture.kind === "drag" ||
+      gesture.kind === "waypoint" ||
+      gesture.kind === "resize" ||
+      gesture.kind === "rotate"
+    ) {
       const moved =
         gesture.moved ||
         Math.abs(world.x - gesture.startX) > DRAG_THRESHOLD ||
@@ -984,8 +1095,36 @@ export function ModelEditorPage({
       setGesture(null);
       return;
     }
+    if (gesture.kind === "resize" || gesture.kind === "rotate") {
+      const vertex = drawing.vertices.find(
+        (candidate) => candidate.container === gesture.container && candidate.name === gesture.name,
+      );
+      const moved =
+        vertex !== undefined &&
+        (Math.abs(gesture.x - gesture.startX) > DRAG_THRESHOLD ||
+          Math.abs(gesture.y - gesture.startY) > DRAG_THRESHOLD);
+      if (moved && vertex !== undefined && model !== null && sizeContainer !== null) {
+        const size = gestureSizeOf(vertex);
+        proposeEdition({
+          draftedSource: draftMemberSize({
+            block: modelSource,
+            sizeContainer: sizeContainer.name,
+            name: gesture.name,
+            scale: Math.round(size.scale * 100) / 100,
+            angle: Math.round(size.angle),
+            typeReference: typeReferenceText({ address: sizeContainer.memberType }),
+          }),
+        });
+      }
+      setGesture(null);
+      return;
+    }
     // the elastic arc: drop on a vertex — the formalism's rules say
     // which container the arc belongs to, or the banner refuses
+    if (gesture.kind !== "elastic") {
+      setGesture(null);
+      return;
+    }
     const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
     const hit = drawing.vertices.find((vertex) => {
       if (vertex.container === gesture.fromContainer && vertex.name === gesture.fromName)
@@ -1584,7 +1723,7 @@ export function ModelEditorPage({
             viewBox={"0 0 " + CANVAS_WIDTH + " " + CANVAS_HEIGHT}
             role="application"
             aria-label={t(
-              "model canvas — drag vertices to move them, pull an arc from a vertex to another",
+              "model canvas — drag vertices to move them, pull an arc from a vertex to another, drag the square handle of a selected vertex to resize it, the round handle to rotate it (double-click a handle to remove the datum)",
             )}
             className="h-[calc(100vh-13rem)] min-h-[24rem] w-full touch-none select-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
             onPointerMove={handlePointerMove}
@@ -1633,6 +1772,10 @@ export function ModelEditorPage({
                     weight={arc.weight}
                     from={arc.from}
                     to={arc.to}
+                    fromShape={arc.fromVertex?.spec ?? null}
+                    fromSize={arc.fromVertex?.size}
+                    toShape={arc.toVertex?.spec ?? null}
+                    toSize={arc.toVertex?.size}
                     waypoints={displayWaypoints}
                     selected={
                       selected !== null &&
@@ -1684,12 +1827,16 @@ export function ModelEditorPage({
                     name={vertex.name}
                     shape={vertex.spec}
                     position={{ x: vertex.position.x + offsetX, y: vertex.position.y + offsetY }}
+                    size={gestureSizeOf(vertex)}
                     selected={
                       selected !== null &&
                       selected.container === vertex.container &&
                       selected.name === vertex.name
                     }
                     onPointerDown={(event) => handleVertexPointerDown(event, vertex)}
+                    onResizePointerDown={(event) => handleSizePointerDown(event, vertex, "resize")}
+                    onRotatePointerDown={(event) => handleSizePointerDown(event, vertex, "rotate")}
+                    onSizeHandleDoubleClick={(kind) => handleSizeHandleDoubleClick(vertex, kind)}
                   />
                 );
               })}
@@ -1893,25 +2040,45 @@ function EditorVertexGlyph({
   name,
   shape,
   position,
+  size,
   selected,
   onPointerDown,
+  onResizePointerDown,
+  onRotatePointerDown,
+  onSizeHandleDoubleClick,
 }: {
   name: string;
   shape: ShapeSpec;
   position: { x: number; y: number };
+  size?: NodeSize | undefined;
   selected: boolean;
   onPointerDown: (event: React.PointerEvent<SVGGElement>) => void;
+  onResizePointerDown?: (event: React.PointerEvent<SVGGElement>) => void;
+  onRotatePointerDown?: (event: React.PointerEvent<SVGGElement>) => void;
+  onSizeHandleDoubleClick?: (kind: "resize" | "rotate") => void;
 }) {
   const { x, y } = position;
   const glyphs = shape ?? [];
   const shapeKind = glyphs.length > 0 ? (glyphs[0]?.shape ?? null) : null;
   const stroke = "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
-  const label = glyphs.length > 0 ? labelPosition({ glyph: glyphs[0] as Glyph, x, y }) : null;
+  const nodeAngle = size?.angle ?? 0;
+  const label =
+    glyphs.length > 0
+      ? labelPosition({ glyph: scaledGlyph(glyphs[0] as Glyph, size?.scale ?? 1), x, y, angle: nodeAngle })
+      : null;
+  // the handles sit on the EFFECTIVE bounds of the (scaled, rotated)
+  // primary glyph — the same bounds the arcs attach to (issue #285)
+  const bounds =
+    glyphs.length > 0
+      ? glyphBounds(scaledGlyph(glyphs[0] as Glyph, size?.scale ?? 1), nodeAngle)
+      : { x0: -16, y0: -16, x1: 16, y1: 16 };
+  const resizeHandle = { x: x + bounds.x1 + 8, y };
+  const rotateHandle = { x, y: y + bounds.y0 - 12 };
   return (
     <g onPointerDown={onPointerDown} style={{ cursor: "grab" }}>
       {glyphs.map((glyph, index) => (
-        <g key={index}>{vertexGlyphElement({ glyph, x, y, strokeWidth })}</g>
+        <g key={index}>{vertexGlyphElement({ glyph, x, y, strokeWidth, size })}</g>
       ))}
       {glyphs.length === 0 && (
         <circle
@@ -1928,12 +2095,45 @@ function EditorVertexGlyph({
         <circle
           cx={x}
           cy={y}
-          r={21}
+          r={Math.max(bounds.x1, bounds.y1) + 5}
           fill="none"
           stroke="#0ea5e9"
           strokeWidth={1}
           strokeDasharray="2 2"
         />
+      )}
+      {selected && (
+        <>
+          <rect
+            x={resizeHandle.x - 4}
+            y={resizeHandle.y - 4}
+            width={8}
+            height={8}
+            className="fill-sky-500 stroke-white dark:stroke-slate-800"
+            strokeWidth={1}
+            style={{ cursor: "ew-resize" }}
+            data-handle={"resize:" + name}
+            onPointerDown={onResizePointerDown}
+            onDoubleClick={(event) => {
+              event.stopPropagation();
+              onSizeHandleDoubleClick?.("resize");
+            }}
+          />
+          <circle
+            cx={rotateHandle.x}
+            cy={rotateHandle.y}
+            r={4}
+            className="fill-sky-500 stroke-white dark:stroke-slate-800"
+            strokeWidth={1}
+            style={{ cursor: "crosshair" }}
+            data-handle={"rotate:" + name}
+            onPointerDown={onRotatePointerDown}
+            onDoubleClick={(event) => {
+              event.stopPropagation();
+              onSizeHandleDoubleClick?.("rotate");
+            }}
+          />
+        </>
       )}
       <text
         x={label?.x ?? x}

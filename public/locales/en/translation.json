@@ -17,7 +17,7 @@
   "inspector": "inspector",
   "lens": "lens",
   "local — no shared session": "local — no shared session",
-  "model canvas — drag vertices to move them, pull an arc from a vertex to another": "model canvas — drag vertices to move them, pull an arc from a vertex to another",
+  "model canvas — drag vertices to move them, pull an arc from a vertex to another, drag the square handle of a selected vertex to resize it, the round handle to rotate it (double-click a handle to remove the datum)": "model canvas — drag vertices to move them, pull an arc from a vertex to another, drag the square handle of a selected vertex to resize it, the round handle to rotate it (double-click a handle to remove the datum)",
   "model name": "model name",
   "no model": "no model",
   "no model — create or pick one, the palette follows its formalism": "no model — create or pick one, the palette follows its formalism",
