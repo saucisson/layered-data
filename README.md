@@ -28,8 +28,9 @@ The code follows an onion architecture, documented in
 - `src/presentation/` — the React components: pure in rendering, no
   business logic.
 - `src/App.tsx` — the composition root: the kernel is assembled there,
-  the states live there, the panels (① layers, ② formalism, ③ reading,
-  ④ point of view) are wired there.
+  the states live there, the panels (① layers, ② formalism, ③ flattened
+  data, ④ mechanism, ⑤ resolution cascade) are wired there; the point of
+  view lives on the #lenses page.
 - `formalisms/kernel/` — the 90 layers of the bedrock, one `.ld` file
   per layer.
 - `formalisms/users/` — the personal quarry (empty at first).
@@ -63,7 +64,7 @@ npm run check:structure       # JSX/tsx balance (safety net, no compiler)
 
 ```bash
 cp .env.example .env           # then edit API_TOKEN, POSTGRES_USERNAME, POSTGRES_PASSWORD
-docker compose up --build      # workshop on 0.0.0.0:8791 + PostgreSQL (rate limiting active)
+docker compose up --build      # workshop on 127.0.0.1:8791 (loopback only, issue #242) + PostgreSQL (rate limiting active)
 ```
 
 The `docker-compose.yml` deploys two services: `postgres` (named volume
@@ -90,8 +91,8 @@ code --extensionDevelopmentPath=vscode
 # package the .vsix (vsce via npx, from the extension folder):
 cd vscode && npx @vscode/vsce package
 
-# install (a prebuilt .vsix is provided in vscode/):
-code --install-extension vscode/layered-data-0.2.0.vsix
+# install (a prebuilt .vsix ships in public/, served by the Install page):
+code --install-extension public/layered-data-0.3.0.vsix
 ```
 
 After any grammar change, regenerate the `.vsix` before installing. The
