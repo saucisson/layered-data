@@ -125,7 +125,7 @@ This whole tutorial employed only that gesture: write little, inherit the rest, 
 
 ## Defining a lens
 
-A ⟪lens⟫ is an ordinary layer that refines a display scheme — `@graph-display` for graphs, or a more specific one — and overrides the `display` fields of each type: `shape`, `label`, `fill`, `stroke`, `arrow`, `ports`. That is the whole mechanism: the editor and the lenses page read the lens's `display` block per type, and fall back to a dashed generic circle for the types the lens does not know. To define one, write a `.ld` layer in `formalisms/kernel/` (or draft it on the Creation page, `#creation`): the editor's lens picker lists every lens layer, and its "edit the lens" button opens the lens's DSL on the formalism page.
+A ⟪lens⟫ is an ordinary layer that refines a display scheme — `@graph-display` for graphs, or a more specific one — and overrides the `display` fields of each type: `shape`, `label`, `fill`, `stroke`, `arrow`, `ports`. That is the whole mechanism: the editor and the lenses page read the lens's `display` block per type, and fall back to a dashed generic circle for the types the lens does not know. To define one, write a `.ld` layer in `formalisms/kernel/` (or draft it on the Creation page, `#creation`): the editor's lens picker lists every lens of the space — the inventory is derived from the data (a layer whose `refines` closure contains a display scheme), not from a hardcoded list, so a lens you just staged appears there without any code change — and its "edit the lens" button opens the lens's DSL on the formalism page.
 
 ```ld
 layer my-display refines @graph-display

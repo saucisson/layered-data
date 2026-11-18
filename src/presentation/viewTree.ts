@@ -5,7 +5,7 @@
 // follows the choice — no more frozen cards, a living viewpoint.
 
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
-import { LayerReference, PathReference } from "../domain/addresses.ts";
+import { isDictionary, LayerReference, PathReference, type RawTree } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
 import type { Glyph } from "../domain/views.ts";
 import type { Language } from "../domain/messages.ts";
@@ -13,43 +13,117 @@ import { resolvePositionAt } from "../application/positions.ts";
 import { say } from "./i18n.ts";
 import type { BilingualText } from "./i18n.ts";
 
-// ---- the inventory of looks (UI data of the corpus) ----
+// ---- the inventory of looks, derived from the space (issue #283) ----
+// No hardcoded list: a lens is a layer whose refines closure contains
+// a display scheme, a viewpoint one whose closure contains
+// @view-scheme — a lens staged by the user appears without touching
+// the code. The order is the assembly order (stable).
 
-/** The lens layers of the workshop. */
-export const LENS_LAYERS = ["graph-display", "petrinet-display", "kahn-display"];
+/** The transitive `refines` closure of a layer, itself included. */
+export function refinesClosure({ space, layer }: { space: Space; layer: string }): string[] {
+  const seen = new Set<string>();
+  const queue = [layer];
+  while (queue.length > 0) {
+    const current = queue.pop() as string;
+    if (seen.has(current)) continue;
+    seen.add(current);
+    let refinements: unknown;
+    try {
+      refinements = space.read({
+        layer: asLayerName(current),
+        path: asLayerPath([]),
+        key: "refines",
+      });
+    } catch {
+      continue;
+    }
+    if (!Array.isArray(refinements)) continue;
+    for (const entry of refinements) {
+      if (entry instanceof LayerReference) queue.push(entry.layer);
+      else if (entry instanceof PathReference && entry.path.length === 0) queue.push(entry.anchor);
+    }
+  }
+  return [...seen];
+}
 
-/** The viewpoint layers of the workshop. */
-export const VIEWPOINT_LAYERS = [
-  "petrinet-view",
-  "pn-philosophers-5-course",
-  "kahn-course",
-  "wb-course",
-];
+/** Does the layer's OWN source pose at least one `display` TEMPLATE
+ * (on the root or on a type below it)? A viewpoint's `display = @…`
+ * slot is an address, not a template — it does not make the layer a
+ * display scheme. */
+export function posesDisplay({ space, layer }: { space: Space; layer: string }): boolean {
+  const root = space.raw({ layer: asLayerName(layer), path: asLayerPath([]) });
+  if (!isDictionary(root)) return false;
+  const stack: RawTree[] = [root];
+  while (stack.length > 0) {
+    const node = stack.pop() as RawTree;
+    const display = node["display"];
+    if (
+      display !== undefined &&
+      display !== null &&
+      !(display instanceof LayerReference) &&
+      !(display instanceof PathReference)
+    ) {
+      return true;
+    }
+    for (const value of Object.values(node)) {
+      if (isDictionary(value)) stack.push(value);
+    }
+  }
+  return false;
+}
 
-/** The description of each look — bilingual UI data. */
-export const VIEW_NOTES: Record<string, BilingualText> = {
-  "graph-display": {
-    en: "The generic lens: a circle per vertex, a line per arc — it dresses every graph descendant, no place/transition distinction.",
-  },
-  "petrinet-display": {
-    en: "The Petri lens: ellipses for the places, rectangles for the transitions, 2-port arcs — the generic circle stays for the unknown types.",
-  },
-  "kahn-display": {
-    en: "The Kahn lens: boxes for processes and channels — on the dinner, it knows no Petri types: everything falls back to the generic circle, without an error (a lens displays only what it knows).",
-  },
-  "petrinet-view": {
-    en: "The abstract Petri viewpoint: the lens is decided (petrinet-display), the model stays a slot — the current model of ① applies.",
-  },
-  "pn-philosophers-5-course": {
-    en: "The dinner through the Petri lens, course positions: 15 ellipses, 10 rectangles, 2-port arcs.",
-  },
-  "kahn-course": {
-    en: "The same dinner through the Kahn lens — a legal degradation: everything falls back to the generic circle. No position decided: circle layout.",
-  },
-  "wb-course": {
-    en: "The weighted diamond — wb1 through the generic lens: 3 circles, 2 lines. The weights are data read through the diamond — e1 carries 3 (first-wins), e2 inherits 1 from the weighted-hypergraph default. Two axes, one model, no copy.",
-  },
-};
+/** The display schemes: layers posing a `display` block whose
+ * ancestors pose none — the roots of the lens families. */
+export function displaySchemeLayers({ space }: { space: Space }): string[] {
+  const names = Object.keys(space.layers);
+  const posing = new Set(names.filter((name) => posesDisplay({ space, layer: name })));
+  return names.filter(
+    (name) =>
+      posing.has(name) &&
+      refinesClosure({ space, layer: name }).every(
+        (ancestor) => ancestor === name || !posing.has(ancestor),
+      ),
+  );
+}
+
+/** The lens layers of the workshop: every layer whose refines closure
+ * contains a display scheme (the schemes included). */
+export function lensLayers({ space }: { space: Space }): string[] {
+  const schemes = new Set(displaySchemeLayers({ space }));
+  return Object.keys(space.layers).filter((name) =>
+    refinesClosure({ space, layer: name }).some((ancestor) => schemes.has(ancestor)),
+  );
+}
+
+/** Is this layer a lens (its closure contains a display scheme)? */
+export function isLensLayer({ space, layer }: { space: Space; layer: string }): boolean {
+  const schemes = new Set(displaySchemeLayers({ space }));
+  return refinesClosure({ space, layer }).some((ancestor) => schemes.has(ancestor));
+}
+
+/** The viewpoint layers of the workshop: every layer whose refines
+ * closure contains @view-scheme. */
+export function viewpointLayers({ space }: { space: Space }): string[] {
+  return Object.keys(space.layers).filter((name) =>
+    refinesClosure({ space, layer: name }).includes("view-scheme"),
+  );
+}
+
+/** The note of a look: its layer's head comment, read as data (the
+ * compiler carries it under the `note` key) — one line, English. */
+export function viewNote({ space, layer }: { space: Space; layer: string }): BilingualText {
+  const root = space.raw({ layer: asLayerName(layer), path: asLayerPath([]) });
+  const note = isDictionary(root) ? root["note"] : null;
+  const text = Array.isArray(note)
+    ? note
+        .join("")
+        .split("\n")
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0)
+        .join(" ")
+    : "";
+  return { en: text };
+}
 
 // ---- the group tree ----
 
