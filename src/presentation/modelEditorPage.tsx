@@ -701,7 +701,7 @@ export function ModelEditorPage({
     setBanner({
       tone: "written",
       text: t(
-        "staging: 0 verdict — the layer is rewritten, the write is declared, the canvas re-reads the space",
+        "staging: 0 failed checks — the layer is rewritten, the write is declared, the canvas re-reads the space",
       ),
     });
     return true;

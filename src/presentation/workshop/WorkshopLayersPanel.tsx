@@ -264,7 +264,7 @@ export function WorkshopLayersPanel({
                           language,
                           en:
                             "edit the living layer — staging rejudges it " +
-                            "(0 verdict demanded), the write is declared, " +
+                            "(zero failed checks demanded), the write is declared, " +
                             "the workshop re-reads the space",
                         })}
                         aria-label={
