@@ -9,6 +9,7 @@
 
 import { useMemo, useState } from "react";
 import { hashOf } from "../components/Router";
+import { NotionText } from "../presentation/notions.tsx";
 import { PROSE_WIDTH } from "../components/PageShell";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import {
@@ -68,10 +69,13 @@ export function CreationPage({ language }: CreationPageProps) {
             {say({ language, en: "The protocol"})}
           </h2>
           <p>
-            {say({
-              language,
-              en: "You say the intention; the geologist (the workshop's AI, grounded in the real state of the corpus and verified by the staging loop) proposes a draft in the language; you correct it freely; the staging judges corpus + supplement and demands zero failed checks; the accepted layer enters the living session. Without a server or a key, the deterministic simulated AI of the workshop answers instead — degraded, honestly labeled, never a silent failure.",
-            })}
+            <NotionText
+              language={language}
+              text={say({
+                language,
+                en: "You say the intention; the ⟪geologist⟫ (the workshop's AI, grounded in the real state of the corpus and verified by the ⟪staging⟫ loop) proposes a draft in the language; you correct it freely; the ⟪staging⟫ judges corpus + supplement and demands zero failed checks; the accepted layer enters the living session. Without a server or a key, the deterministic simulated AI of the workshop answers instead — degraded, honestly labeled, never a silent failure.",
+              })}
+            />
           </p>
           <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
             {say({
