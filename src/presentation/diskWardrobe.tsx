@@ -161,7 +161,7 @@ export function DiskWardrobe({
         setMessage(
           say({
             language,
-            en: "« " + name + " » laid on the disk — visible to the other visitors",
+            en: "“ " + name + " ” laid on the disk — visible to the other visitors",
           }),
         );
         void refresh();
@@ -176,7 +176,7 @@ export function DiskWardrobe({
         setMessage(
           say({
             language,
-            en: "« " + name + " » belongs to the bedrock — read-only",
+            en: "“ " + name + " ” belongs to the bedrock — read-only",
           }),
         );
       } else {

@@ -123,7 +123,7 @@ export function LayerContractTests({
           <p className="pt-1 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
             {say({
               language,
-              en: "the contract lives in the layer (special key « tests ») — it travels with it, file, disk, staging; the validation replays it at every assembly, a betrayed read is a verdict",
+              en: "the contract lives in the layer (special key “ tests ”) — it travels with it, file, disk, staging; the validation replays it at every assembly, a betrayed read is a verdict",
             })}
           </p>
         </div>

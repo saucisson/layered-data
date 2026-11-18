@@ -686,7 +686,7 @@ export function* streamValidation({
                 kind: "formule-illisible",
                 fact: fact("unreadable-formula", {
                   tag: name,
-                  detail: "gabarit : « " + judgment.message + " »",
+                  detail: "gabarit : “ " + judgment.message + " ”",
                 }),
               });
               continue;

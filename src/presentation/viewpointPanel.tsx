@@ -372,7 +372,7 @@ export function ViewpointPanel({
                     language,
                     en:
                       "No entry of the lens dresses this node — it would be " +
-                      "drawn « naked » (dotted).",
+                      "drawn “naked” (dotted).",
                   })}
                 </p>
               )}

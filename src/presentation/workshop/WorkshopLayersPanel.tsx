@@ -204,7 +204,7 @@ export function WorkshopLayersPanel({
               <div className="py-2 text-xs text-slate-600 dark:text-slate-400">
                 {say({
                   language,
-                  en: "No layer matches « " + search + " ».",
+                  en: "No layer matches “ " + search + " ”.",
                 })}
               </div>
             )}

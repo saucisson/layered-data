@@ -227,7 +227,7 @@ export function AddFormalismComposer({
           onChange={(event) => setIntention(event.target.value)}
           placeholder={say({
             language,
-            en: "intention — « a net whose arcs carry a charge »",
+            en: "intention — “ a net whose arcs carry a charge ”",
           })}
           className="min-w-40 flex-1 rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
         />
