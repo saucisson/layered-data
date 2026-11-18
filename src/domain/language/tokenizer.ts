@@ -30,7 +30,10 @@ export type LanguageTokenKind =
   | "!="
   | "{"
   | "}"
-  | "note";
+  | "note"
+  /** `[[ … ]]` — a display-function body (ADR-0119): the raw code
+   * between the double brackets, one line, never inside quotes. */
+  | "code";
 
 export interface LanguageToken {
   kind: LanguageTokenKind;
@@ -166,6 +169,23 @@ export function tokenizeLanguage(
       if (character === "-" && body[cursor + 1] === ">") {
         tokens.push({ kind: "->", text: "->", line: lineNumber });
         cursor += 2;
+        continue;
+      }
+      // The display-function body (ADR-0119): [[ … ]] on ONE line —
+      // the blocks live on indentation, a multi-line body would break
+      // the layout; the code travels raw, never between quotes.
+      if (character === "[" && body[cursor + 1] === "[") {
+        const close = body.indexOf("]]", cursor + 2);
+        if (close === -1) {
+          throw new Error(
+            parseText({
+              language,
+              en: "l." + lineNumber + " : unterminated [[ — the body closes with ]] on the same line",
+            }),
+          );
+        }
+        tokens.push({ kind: "code", text: body.slice(cursor + 2, close), line: lineNumber });
+        cursor = close + 2;
         continue;
       }
       // The comparison operators of the strate-2 guards: >=, <=, !=

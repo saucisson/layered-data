@@ -137,6 +137,18 @@ layer my-display refines @graph-display
         override fill = "#ffffff"
 ```
 
+## Display functions — code in exactly one place
+
+Some drawings are computations, not parameters: a multiplicity (one dot per token), one input per incoming arc. For those, the `display` blocks of lenses are the **only** place where the language accepts code (ADR-0119): a function literal between `[[ … ]]`, never between quotes. `rx = fn (place) [[ 8 + 2 * place.marking ]]` computes the radius from the node's own data; `draw = fn (place, net) [[ … ]]` replaces the whole glyph with a group of shapes built as data. The functions receive **pure data** — the flattened element and the flattened model — and their output is validated before it reaches a pixel: a field parameter against its schema, a returned SVG tree against a closed whitelist of tags and attributes. The server parses the code at staging (an unreadable body is refused with `expression-illisible`) but never executes it; only the browser renderers run it, per drawn node, and a function that throws falls back to the default. There is no syntax for writing code anywhere else — the parser offers no other slot.
+
+```ld
+layer token-lens refines @petrinet-display then @petrinet-scheme
+  extend specification
+    extend place_type
+      extend display
+        draw = fn (place, net) [[ Array.from({ length: place.marking }, (_, i) => ({ tag: "circle", attrs: { cx: -6 + i * 6, cy: 0, r: 2, fill: "#455555" }, children: [] })) ]]
+```
+
 ## Resize and rotate
 
 A lens fixes the *default* look of each type; each node can then depart from it with **data**, exactly like the positions. A model (or a viewpoint) that refines `@node-sizes` carries a `sizes` block whose keys name the vertices — each entry poses a `scale` factor and/or an `angle` in degrees. The cascade is the positions' one: the viewpoint decides, else the model carries, else the gabarit's defaults apply — a node without a datum keeps the template's sizes. In the editor, a selected vertex shows two handles: drag the square one to resize, the round one to rotate; the gesture writes the `sizes` entry in the model's source (visible, and it survives a reload), and a double-click on a handle removes the datum. The arcs attach to the effective bounds of the scaled, rotated glyph.

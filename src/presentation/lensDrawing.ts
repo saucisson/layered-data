@@ -9,8 +9,15 @@
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { AddressView } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
-import { DEFAULT_NODE_SIZE, drawnShape, dressingApplicability, type NodeSize } from "../domain/views.ts";
+import {
+  DEFAULT_NODE_SIZE,
+  drawnShape,
+  dressingApplicability,
+  flattenAddress,
+  type NodeSize,
+} from "../domain/views.ts";
 import { bindingOf, circlePosition, isLensLayer, positionOf, sizeOf } from "./viewTree.ts";
+import type { DisplayFnContext } from "../domain/displayFunctions.ts";
 
 /** One drawn vertex: its resolved position, its size datum (the
  * cascade: the viewpoint decides, else the model carries, else the
@@ -22,6 +29,7 @@ export interface LookVertex {
   position: { x: number; y: number } | null;
   size: NodeSize;
   drawn: ReturnType<typeof drawnShape>;
+  fnContext: DisplayFnContext;
 }
 
 /** One drawn edge: the shape, the weight read through the view
@@ -32,6 +40,7 @@ export interface LookEdge {
   weight: number | null;
   from: string | null;
   to: string | null;
+  fnContext: DisplayFnContext;
 }
 
 /** What the drawing needs: the model, the lens (or ∅), where the
@@ -115,6 +124,13 @@ export function buildWorkshopLook({
     (viewpointDecidesSizes ? sizeOf({ space, source: selectedView, container: "sizes", name }) : null) ??
     (modelCarriesSizes ? sizeOf({ space, source: model, container: "sizes", name }) : null) ??
     DEFAULT_NODE_SIZE;
+  // The pure-data context of the display functions (ADR-0119): the
+  // model flattened once, each element flattened at its own address.
+  const modelFlat = flattenAddress({ space, layer: asLayerName(model), path: asLayerPath([]) });
+  const fnContextOf = (path: string[]): DisplayFnContext => ({
+    element: flattenAddress({ space, layer: asLayerName(model), path: asLayerPath(path) }),
+    model: modelFlat,
+  });
   const vertices: LookVertex[] =
     lens !== null
       ? space
@@ -129,6 +145,7 @@ export function buildWorkshopLook({
               layer: asLayerName(model),
               path: asLayerPath(["vertices", name]),
             }),
+            fnContext: fnContextOf(["vertices", name]),
           }))
       : [];
   // The frame follows the positions: a layout wider than the box
@@ -185,6 +202,7 @@ export function buildWorkshopLook({
               source instanceof AddressView ? (source.path[source.path.length - 1] ?? null) : null,
             to:
               target instanceof AddressView ? (target.path[target.path.length - 1] ?? null) : null,
+            fnContext: fnContextOf(["edges", name]),
           };
         })
       : [];

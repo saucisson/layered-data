@@ -5,7 +5,7 @@
 
 import type { Language } from "../domain/messages.ts";
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
-import { coversAddresses, dressingEntries, type Glyph } from "../domain/views.ts";
+import { coversAddresses, dressingEntries, type RawGlyph } from "../domain/views.ts";
 import type { LayeredDataKernel } from "../application/corpus.ts";
 import { AddressView } from "../domain/addresses.ts";
 import { localized, say } from "./i18n.ts";
@@ -196,6 +196,7 @@ export function ViewpointPanel({
                     key={edge.name}
                     name={edge.name}
                     shape={edge.drawn ? edge.drawn.spec : null}
+                    fnContext={edge.fnContext}
                     weight={edge.weight}
                     from={from}
                     to={to}
@@ -228,6 +229,8 @@ export function ViewpointPanel({
                     key={vertex.name}
                     name={vertex.name}
                     shape={vertex.drawn ? vertex.drawn.spec : null}
+                    draw={vertex.drawn ? vertex.drawn.draw : null}
+                    fnContext={vertex.fnContext}
                     position={vertex.position}
                     size={vertex.size}
                     selected={
@@ -338,7 +341,7 @@ export function ViewpointPanel({
           });
           let best: {
             path: string[];
-            spec: Glyph[];
+            spec: RawGlyph[];
             hit: ReturnType<typeof dressingEntries>[number]["hit"];
           } | null = null;
           for (const match of matches) {
