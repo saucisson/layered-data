@@ -26,6 +26,7 @@ import {
   AddressView,
   LayerReference,
   PathReference,
+  type RawTree,
   type RawValue,
   isDictionary,
 } from "./addresses.ts";
@@ -39,7 +40,7 @@ import {
   vacantChecksOf,
 } from "./checks.ts";
 import { quantifiedVariablesOf, templateTermsOf, tryParseFormula } from "./formulas.ts";
-import { walkLayerObserved, type WalkedAddress } from "./views.ts";
+import { glyphShapeVerdict, walkLayerObserved, type WalkedAddress } from "./views.ts";
 import { type CompiledLanguage, type Declaration } from "./language/compiler.ts";
 import { type ParsedLanguage } from "./language/parser.ts";
 import { fact, type MessageFact } from "./messages.ts";
@@ -472,6 +473,78 @@ export function* streamValidation({
       }
     }
     yield emit("ombres", layer, layerIndex + 1, layerNames.length);
+  }
+
+  // ---- (d2) the display blocks: the glyph vocabulary is closed —
+  // an unknown shape or an out-of-grammar path d is a verdict, never
+  // a silent skip (issue #287). A viewpoint's display = @… slot is an
+  // address, not a template: it is not judged here.
+  for (const [layerIndex, layer] of layerNames.entries()) {
+    const root = space.raw({ layer, path: [] });
+    const stack: [RawTree, string[]][] = isDictionary(root) ? [[root, []]] : [];
+    while (stack.length > 0) {
+      const [node, nodePath] = stack.pop() as [RawTree, string[]];
+      const display = node["display"];
+      if (
+        display !== undefined &&
+        display !== null &&
+        !(display instanceof LayerReference) &&
+        !(display instanceof PathReference) &&
+        !(display instanceof AddressView)
+      ) {
+        // judge the MERGED template at this path (a partial override
+        // inherits the parent's fields — same merge as
+        // readDisplayTemplate), never the raw block in isolation
+        const where = layer + "::" + (nodePath.join("/") || ".");
+        let merged: Record<string, unknown> | null = null;
+        let blockGlyphs: unknown[] | null = null;
+        for (const [sourceLayer, sourcePath] of [...space.closure({ layer, path: nodePath as LayerPath })].reverse()) {
+          const sourceNode = space.raw({ layer: sourceLayer, path: sourcePath });
+          if (!isDictionary(sourceNode) || !("display" in sourceNode)) continue;
+          const sourceDisplay = sourceNode["display"];
+          if (sourceDisplay === null) continue;
+          if (isDictionary(sourceDisplay) && isDictionary(sourceDisplay["glyphs"])) {
+            blockGlyphs = Object.values(sourceDisplay["glyphs"]);
+            break;
+          }
+          if (isDictionary(sourceDisplay)) merged = { ...(merged ?? {}), ...sourceDisplay };
+          else if (Array.isArray(sourceDisplay)) {
+            blockGlyphs = sourceDisplay;
+            break;
+          }
+        }
+        const rawGlyphs: unknown[] =
+          blockGlyphs ?? (merged !== null ? [merged] : []);
+        let anyValid = false;
+        for (const rawGlyph of rawGlyphs) {
+          const shapeVerdict = glyphShapeVerdict(rawGlyph);
+          if (shapeVerdict === null) {
+            anyValid = true;
+            continue;
+          }
+          verdicts.push({
+            kind: shapeVerdict,
+            fact: fact(shapeVerdict === "forme-inconnue" ? "unknown-shape" : "invalid-path", {
+              where,
+              shape:
+                isDictionary(rawGlyph) && typeof rawGlyph["shape"] === "string"
+                  ? rawGlyph["shape"]
+                  : "",
+            }),
+          });
+        }
+        if (!anyValid && rawGlyphs.length > 0) {
+          verdicts.push({
+            kind: "forme-inconnue",
+            fact: fact("unknown-shape", { where, shape: "" }),
+          });
+        }
+      }
+      for (const [key, value] of Object.entries(node)) {
+        if (isDictionary(value)) stack.push([value, [...nodePath, key]]);
+      }
+    }
+    yield emit("affichage", layer, layerIndex + 1, layerNames.length);
   }
 
   // ---- (e) the expected-reads contract replays — every layer of
