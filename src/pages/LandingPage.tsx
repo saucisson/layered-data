@@ -16,12 +16,12 @@ export function LandingPage({ language }: LandingPageProps) {
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
       <div className="mx-auto max-w-4xl p-4 sm:p-8">
         <section className="text-center">
-          <h2 className="mb-4 text-3xl font-bold text-slate-800 dark:text-slate-100">
+          <h1 className="mb-4 text-3xl font-bold text-slate-800 dark:text-slate-100">
             {say({
               language,
               en: "Layered Data",
             })}
-          </h2>
+          </h1>
           <p className="mx-auto max-w-2xl text-lg text-slate-600 dark:text-slate-400">
             {say({
               language,
