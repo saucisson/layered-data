@@ -38,6 +38,7 @@ import { RefinementDag } from "./workshopInventory.ts";
 import { expectationsOf, formatExpectation, readMatchesExpectation } from "../domain/validation.ts";
 import { circlePosition, lensLayers } from "./viewTree.ts";
 import { EdgeGlyph } from "./glyphs.tsx";
+import { glyphBounds, labelPosition, vertexGlyphElement } from "./glyphShape.tsx";
 import { editionRefusalLabel, labelOf } from "./i18n.ts";
 import { t } from "../infrastructure/i18n.ts";
 import {
@@ -1382,7 +1383,7 @@ export function ModelEditorPage({
           id="editor-lens-picker"
           value={lens}
           onChange={(event) => setLens(event.target.value)}
-          title={t("a lens is a layer that refines a display scheme (e.g. @graph-display) and overrides the display fields of each type — shape, label, fill, stroke, arrow, ports. Define one in formalisms/kernel/*.ld or from the Creation page.")}
+          title={t("a lens is a layer that refines a display scheme (e.g. @graph-display) and overrides the display fields of each type — shape (circle, ellipse, rectangle, box, path, line), label, fill, stroke, arrow, ports, plus r/rx/ry/w/h, dash, dx/dy, angle, label-side, curve. Define one in formalisms/kernel/*.ld or from the Creation page.")}
           className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs"
         >
           {lensLayers({ space: KERNEL.space }).map((lensName) => (
@@ -1851,14 +1852,27 @@ function PaletteGlyph({ spec }: { spec: ShapeSpec }) {
   const glyph = spec !== null && spec.length > 0 ? spec[0] : undefined;
   const stroke = (glyph !== undefined && "stroke" in glyph ? glyph.stroke : undefined) ?? "#64748b";
   const fill = (glyph !== undefined && "fill" in glyph ? glyph.fill : undefined) ?? "#ffffff";
+  // a vertex glyph renders as a miniature normalised to its bounds
+  // (the `path` genre included); the line keeps its own strip
+  if (glyph !== undefined && glyph.shape !== "line") {
+    const bounds = glyphBounds(glyph);
+    const width = Math.max(bounds.x1 - bounds.x0, 1);
+    const height = Math.max(bounds.y1 - bounds.y0, 1);
+    const scale = Math.min(18 / width, 12 / height, 1);
+    const viewX = bounds.x0 - (18 / scale - width) / 2;
+    const viewY = bounds.y0 - (12 / scale - height) / 2;
+    return (
+      <svg width="20" height="14" viewBox={viewX + " " + viewY + " " + 18 / scale + " " + 12 / scale} aria-hidden="true" className="shrink-0">
+        <g transform={"translate(" + (-viewX - (18 / scale) / 2) + " " + (-viewY - (12 / scale) / 2) + ") scale(" + scale + ")"}>
+          {vertexGlyphElement({ glyph, x: 0, y: 0, strokeWidth: 1.5 / scale })}
+        </g>
+      </svg>
+    );
+  }
   return (
     <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true" className="shrink-0">
-      {glyph === undefined || glyph.shape === "circle" ? (
-        <circle cx="10" cy="7" r="5" fill={fill} stroke={stroke} strokeDasharray={glyph === undefined ? "2 2" : undefined} />
-      ) : glyph.shape === "ellipse" ? (
-        <ellipse cx="10" cy="7" rx="8" ry="5" fill={fill} stroke={stroke} />
-      ) : glyph.shape === "rectangle" || glyph.shape === "box" ? (
-        <rect x="2" y="2" width="16" height="10" fill={fill} stroke={stroke} />
+      {glyph === undefined ? (
+        <circle cx="10" cy="7" r="5" fill={fill} stroke={stroke} strokeDasharray="2 2" />
       ) : (
         <line x1="2" y1="7" x2="18" y2="7" stroke={stroke} strokeWidth="1.5" markerEnd={"url(#" + arrowId + ")"} />
       )}
@@ -1893,66 +1907,12 @@ function EditorVertexGlyph({
   const shapeKind = glyphs.length > 0 ? (glyphs[0]?.shape ?? null) : null;
   const stroke = "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
+  const label = glyphs.length > 0 ? labelPosition({ glyph: glyphs[0] as Glyph, x, y }) : null;
   return (
     <g onPointerDown={onPointerDown} style={{ cursor: "grab" }}>
-      {glyphs.map((glyph, index) => {
-        const glyphStroke = glyph.stroke ?? stroke;
-        const glyphFill = glyph.shape !== "line" && glyph.fill ? glyph.fill : "none";
-        if (glyph.shape === "circle")
-          return (
-            <circle
-              key={index}
-              cx={x}
-              cy={y}
-              r={16}
-              fill={glyphFill}
-              stroke={glyphStroke}
-              strokeWidth={strokeWidth}
-            />
-          );
-        if (glyph.shape === "ellipse")
-          return (
-            <ellipse
-              key={index}
-              cx={x}
-              cy={y}
-              rx={24}
-              ry={14}
-              fill={glyphFill}
-              stroke={glyphStroke}
-              strokeWidth={strokeWidth}
-            />
-          );
-        if (glyph.shape === "rectangle")
-          return (
-            <rect
-              key={index}
-              x={x - 22}
-              y={y - 12}
-              width={44}
-              height={24}
-              rx={2}
-              fill={glyphFill}
-              stroke={glyphStroke}
-              strokeWidth={strokeWidth}
-            />
-          );
-        if (glyph.shape === "box")
-          return (
-            <rect
-              key={index}
-              x={x - 26}
-              y={y - 12}
-              width={52}
-              height={24}
-              rx={3}
-              fill="#ffffff"
-              className="stroke-slate-600 dark:stroke-slate-400"
-              strokeWidth={strokeWidth}
-            />
-          );
-        return null;
-      })}
+      {glyphs.map((glyph, index) => (
+        <g key={index}>{vertexGlyphElement({ glyph, x, y, strokeWidth })}</g>
+      ))}
       {glyphs.length === 0 && (
         <circle
           cx={x}
@@ -1976,9 +1936,9 @@ function EditorVertexGlyph({
         />
       )}
       <text
-        x={x}
-        y={y + 3}
-        textAnchor="middle"
+        x={label?.x ?? x}
+        y={label?.y ?? y + 3}
+        textAnchor={label?.textAnchor ?? "middle"}
         fontSize={9}
         className={shapeKind === "rectangle" ? "fill-slate-50 dark:fill-slate-100" : shapeKind === null ? "fill-slate-700 dark:fill-slate-300" : "fill-slate-700"}
       >

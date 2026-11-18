@@ -5,63 +5,8 @@
 // reads.
 
 import type { Glyph } from "../domain/views.ts";
-
-/** One vertex glyph of the closed vocabulary, at a position. */
-function vertexGlyphElement({
-  glyph,
-  x,
-  y,
-  strokeWidth,
-}: {
-  glyph: Glyph;
-  x: number;
-  y: number;
-  strokeWidth: number;
-}): React.ReactNode {
-  const stroke = glyph.stroke ?? "#94a3b8";
-  const fill = glyph.shape !== "line" && glyph.fill ? glyph.fill : "none";
-  if (glyph.shape === "circle")
-    return <circle cx={x} cy={y} r={16} fill={fill} stroke={stroke} strokeWidth={strokeWidth} />;
-  if (glyph.shape === "ellipse")
-    return (
-      <ellipse
-        cx={x}
-        cy={y}
-        rx={24}
-        ry={14}
-        fill={fill}
-        stroke={stroke}
-        strokeWidth={strokeWidth}
-      />
-    );
-  if (glyph.shape === "rectangle")
-    return (
-      <rect
-        x={x - 22}
-        y={y - 12}
-        width={44}
-        height={24}
-        rx={2}
-        fill={fill}
-        stroke={stroke}
-        strokeWidth={strokeWidth}
-      />
-    );
-  if (glyph.shape === "box")
-    return (
-      <rect
-        x={x - 26}
-        y={y - 12}
-        width={52}
-        height={24}
-        rx={3}
-        fill="#ffffff"
-        className="stroke-slate-600 dark:stroke-slate-400"
-        strokeWidth={strokeWidth}
-      />
-    );
-  return null;
-}
+import { labelPosition, vertexGlyphElement } from "./glyphShape.tsx";
+import { arcPathData } from "./glyphGeometry.ts";
 
 /** One drawn vertex: the glyphs decided by the lens for its type,
  * overlaid in the order posed, the name inside, dashed when the lens
@@ -84,6 +29,7 @@ export function NodeGlyph({
   const shapeKind = glyphs.length > 0 ? (glyphs[0]?.shape ?? null) : null;
   const stroke = "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
+  const label = glyphs.length > 0 ? labelPosition({ glyph: glyphs[0] as Glyph, x, y }) : null;
   return (
     <g onClick={onPick} style={{ cursor: "pointer" }}>
       {glyphs.map((glyph, index) => (
@@ -93,9 +39,9 @@ export function NodeGlyph({
         <circle cx={x} cy={y} r={16} fill="none" stroke={stroke} strokeDasharray="3 3" />
       )}
       <text
-        x={x}
-        y={y + 3}
-        textAnchor="middle"
+        x={label?.x ?? x}
+        y={label?.y ?? y + 3}
+        textAnchor={label?.textAnchor ?? "middle"}
         fontSize={9}
         className={shapeKind === "rectangle" ? "fill-slate-50 dark:fill-slate-100" : shapeKind === null ? "fill-slate-700 dark:fill-slate-300" : "fill-slate-700"}
       >
@@ -141,6 +87,8 @@ export function EdgeGlyph({
   const glyphs = (shape ?? []).filter((glyph) => glyph.shape === "line");
   const hasPorts = glyphs.some((glyph) => glyph.shape === "line" && glyph.ports === 2);
   const hasArrow = glyphs.some((glyph) => glyph.shape === "line" && glyph.arrow === "plain");
+  const curve = glyphs.find((glyph) => glyph.shape === "line" && glyph.curve !== undefined)?.curve ?? "polyline";
+  const edgeDash = glyphs.some((glyph) => glyph.shape === "line" && glyph.dash === true);
   const stroke = glyphs.length > 0 ? (glyphs[0]?.stroke ?? "#94a3b8") : "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
 
@@ -166,9 +114,10 @@ export function EdgeGlyph({
         ? trimEnd(polyline, false)
         : point,
   );
-  const pathData = drawn
-    .map((point, index) => (index === 0 ? "M" : "L") + (point?.x ?? 0) + "," + (point?.y ?? 0))
-    .join(" ");
+  const pathData = arcPathData({
+    points: drawn.map((point) => point ?? from),
+    curve,
+  });
   const labelAnchor = drawn[Math.floor(drawn.length / 2)] ?? from;
 
   // the arrowhead follows the last segment's direction
@@ -197,7 +146,7 @@ export function EdgeGlyph({
         stroke={stroke}
         strokeWidth={strokeWidth}
         fill="none"
-        strokeDasharray={glyphs.length > 0 ? undefined : "3 3"}
+        strokeDasharray={glyphs.length > 0 ? (edgeDash ? "3 3" : undefined) : "3 3"}
       />
       {hasPorts && (
         <>
