@@ -19,7 +19,7 @@ const ROUTES: ReadonlyArray<{ hash: string; label: string }> = [
 ];
 
 // Routes on which no menu entry is active (detail pages).
-const NO_ACTIVE: ReadonlyArray<string> = ["#formalism/petrinet", "#nimportequoi"];
+const NO_ACTIVE: ReadonlyArray<string> = ["#nimportequoi"];
 
 test.describe("global navigation menu", () => {
   for (const { hash, label } of ROUTES) {
@@ -49,6 +49,11 @@ test.describe("global navigation menu", () => {
       await expect(page.locator(`${MENU} a[aria-current="page"]`)).toHaveCount(0);
     });
   }
+
+  test("#formalism/<layer> highlights the parent Formalisms entry (#310)", async ({ page }) => {
+    await page.goto("/#formalism/petrinet");
+    await expect(page.locator(`${MENU} a[aria-current="page"]`)).toHaveText("Formalisms");
+  });
 
   test("clicking each menu entry navigates to its page and re-highlights", async ({ page }) => {
     await page.goto("/#landing");

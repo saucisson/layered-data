@@ -34,7 +34,10 @@ const NAV_ENTRIES: readonly NavEntry[] = [
 
 /** Each top-level page highlights exactly its own entry. */
 function isActive(current: Page, entry: Page): boolean {
-  return current === entry;
+  if (current === entry) return true;
+  // a detail page highlights its parent section (#310)
+  if (current === "formalism") return entry === "formalisms";
+  return false;
 }
 
 interface SiteHeaderProps {
