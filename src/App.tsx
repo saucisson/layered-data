@@ -105,6 +105,10 @@ function AppContent() {
     writeWorkshopLanguage({ language: next });
     setI18nLanguage({ language: next });
   };
+  // the document language follows the active one (#305)
+  useEffect(() => {
+    document.documentElement.lang = language;
+  }, [language]);
 
   return (
     <Suspense fallback={<PageFallback />}>

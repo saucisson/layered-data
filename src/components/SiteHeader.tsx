@@ -151,22 +151,32 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
               </span>
             )}
           </span>
-          {SUPPORTED_LANGUAGES.map((choice) => (
-            <button
-              type="button"
-              key={choice}
-              onClick={() => onChooseLanguage(choice)}
-              aria-pressed={language === choice}
-              className={
-                "rounded border px-1.5 py-0.5 font-bold uppercase " +
-                (language === choice
-                  ? "border-emerald-600 bg-emerald-600 dark:bg-emerald-700 text-white"
-                  : "border-slate-300 bg-white text-slate-500 hover:border-slate-500 dark:hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300")
-              }
-            >
-              {choice}
-            </button>
-          ))}
+          {SUPPORTED_LANGUAGES.length > 1 ? (
+            SUPPORTED_LANGUAGES.map((choice) => (
+              <button
+                type="button"
+                key={choice}
+                onClick={() => onChooseLanguage(choice)}
+                aria-pressed={language === choice}
+                className={
+                  "rounded border px-1.5 py-0.5 font-bold uppercase " +
+                  (language === choice
+                    ? "border-emerald-600 bg-emerald-600 dark:bg-emerald-700 text-white"
+                    : "border-slate-300 bg-white text-slate-500 hover:border-slate-500 dark:hover:border-slate-400 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300")
+                }
+              >
+                {choice}
+              </button>
+            ))
+          ) : (
+            // one language only: no picker, but a French browser is told
+            // the French catalog is on its way (#305)
+            language !== SUPPORTED_LANGUAGES[0] && (
+              <span className="text-[10px] text-slate-500 dark:text-slate-400">
+                {say({ language, en: "French coming back" })}
+              </span>
+            )
+          )}
           {/* The logo picker (issue #234): persisted in localStorage. */}
           <select
             value={logo}
