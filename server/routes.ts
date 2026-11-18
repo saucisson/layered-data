@@ -6,8 +6,8 @@
 // for every client.
 // ============================================================
 import { createServer } from "node:http";
-import { readFileSync, existsSync } from "node:fs";
-import { join, extname } from "node:path";
+import { readFileSync } from "node:fs";
+import { basename, extname } from "node:path";
 import { randomUUID } from "node:crypto";
 
 import { composeVerifiedLayerDraft } from "../src/application/penLoop.ts";
@@ -55,6 +55,11 @@ import {
   resolveIdentity,
   sourceOfRequestBody,
 } from "./httpUtils.ts";
+import {
+  MIME_TYPES,
+  cacheControlOf,
+  resolveStaticFile,
+} from "./staticFiles.ts";
 import {
   createPostgresRateLimitStore,
   createRateLimiter,
@@ -874,28 +879,45 @@ export function createQuarryServer({
       }
 
       // ---- the static build, when it exists ----
-      if (request.method === "GET") {
-        if (!existsSync(DIST_DIRECTORY)) {
+      // GET and HEAD share the resolution and the headers; HEAD ends
+      // without a body (#292). The SPA fallback only covers
+      // extensionless navigation paths — a missing asset is a real
+      // 404 (#293).
+      if (request.method === "GET" || request.method === "HEAD") {
+        const resolution = resolveStaticFile({
+          distDirectory: DIST_DIRECTORY,
+          pathname: url.pathname,
+        });
+        if (resolution.kind === "no-dist") {
           return sendJson({
             response,
             statusCode: 404,
             body: { erreur: "dist/ absent — npm run build pour construire l'atelier" },
           });
         }
-        const requestedPath = url.pathname === "/" ? "index.html" : url.pathname;
-        let filePath = join(DIST_DIRECTORY, requestedPath);
-        if (!existsSync(filePath)) filePath = join(DIST_DIRECTORY, "index.html");
-        const mimeTypes: Record<string, string> = {
-          ".html": "text/html; charset=utf-8",
-          ".js": "text/javascript",
-          ".css": "text/css",
-          ".svg": "image/svg+xml",
-          ".json": "application/json",
+        if (resolution.kind === "not-found") {
+          return sendJson({
+            response,
+            statusCode: 404,
+            body: { erreur: "fichier introuvable : " + url.pathname },
+          });
+        }
+        const body = readFileSync(resolution.filePath);
+        const extension = extname(resolution.filePath).toLowerCase();
+        const headers: Record<string, string | number> = {
+          "Content-Type": MIME_TYPES[extension] ?? "application/octet-stream",
+          "Content-Length": body.length,
+          "Cache-Control": cacheControlOf({
+            distDirectory: DIST_DIRECTORY,
+            filePath: resolution.filePath,
+          }),
         };
-        const body = readFileSync(filePath);
-        response.writeHead(200, {
-          "Content-Type": mimeTypes[extname(filePath)] ?? "application/octet-stream",
-        });
+        if (extension === ".vsix") {
+          headers["Content-Disposition"] =
+            'attachment; filename="' + basename(resolution.filePath) + '"';
+        }
+        response.writeHead(200, headers);
+        if (request.method === "HEAD") return response.end();
         return response.end(body);
       }
 
