@@ -254,16 +254,21 @@ check(
     isValidPathData("M1e3,0 L.5,2 Z") &&
     !isValidPathData("M0,0 L10,10 <script>"),
 );
+const ellipseGlyph = asGlyph({ shape: "ellipse", rx: 30, ry: 10 });
+const lineGlyph = asGlyph({ shape: "line", dash: true, curve: "bezier", arrow: "vee" });
+const badR = asGlyph({ shape: "circle", r: "big", "label-side": "diagonal" });
+const badSide = asGlyph({ shape: "circle", r: 5, "label-side": "diagonal" });
+const badCurve = asGlyph({ shape: "line", curve: "spiral" });
 check(
   "asGlyph narrows every genre's fields and ignores invalid ones",
-  asGlyph({ shape: "ellipse", rx: 30, ry: 10 })?.rx === 30 &&
-    (asGlyph({ shape: "box", w: 60, h: 20 }) as { h?: number })?.h === 20 &&
-    asGlyph({ shape: "line", dash: true, curve: "bezier", arrow: "vee" })?.curve === "bezier" &&
-    asGlyph({ shape: "circle", r: "big", "label-side": "diagonal" })?.r === undefined &&
-    (asGlyph({ shape: "circle", r: 5, "label-side": "diagonal" }) as { "label-side"?: string })?.[
-      "label-side"
-    ] === undefined &&
-    asGlyph({ shape: "line", curve: "spiral" })?.curve === undefined &&
+  ellipseGlyph?.shape === "ellipse" &&
+    (ellipseGlyph as { rx?: number }).rx === 30 &&
+    (asGlyph({ shape: "box", w: 60, h: 20 }) as { h?: number } | null)?.h === 20 &&
+    lineGlyph?.shape === "line" &&
+    (lineGlyph as { curve?: string }).curve === "bezier" &&
+    (badR as { r?: number } | null)?.r === undefined &&
+    (badSide as { "label-side"?: string } | null)?.["label-side"] === undefined &&
+    (badCurve as { curve?: string } | null)?.curve === undefined &&
     asGlyph({ shape: "triangle" }) === null &&
     asGlyph(42) === null,
 );
