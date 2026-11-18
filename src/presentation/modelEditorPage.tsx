@@ -48,6 +48,7 @@ import {
 } from "../infrastructure/editorSync.ts";
 import { onAccessCodeVerified } from "../infrastructure/accessCodeEvents.ts";
 import { hashOf } from "../components/Router.tsx";
+import { WIDE_WIDTH } from "../components/PageShell.tsx";
 import {
   readMemberContainers,
   positionContainerOf,
@@ -1465,7 +1466,7 @@ export function ModelEditorPage({
     selected !== null ? containerNamed({ name: selected.container }) : null;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6" aria-live="off">
+    <div className={"mx-auto " + WIDE_WIDTH + " px-4 py-6"} aria-live="off">
       {/* Editor state changes are announced via the banner below */}
       <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
         {t("the graphical model editor")}

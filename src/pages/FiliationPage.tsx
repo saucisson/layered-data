@@ -9,6 +9,7 @@
 // The companion document is docs/archive/filiation.md, in the repository.
 
 import { hashOf } from "../components/Router";
+import { PROSE_WIDTH } from "../components/PageShell";
 import { KERNEL_LAYER_NAMES } from "../application/corpus.ts";
 import { say } from "../presentation/i18n.ts";
 import { NotionText } from "../presentation/notions.tsx";
@@ -344,7 +345,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-4xl space-y-12 p-4 sm:p-8">
+      <div className={"mx-auto " + PROSE_WIDTH + " space-y-12 p-4 sm:p-8"}>
         <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "Filiation — history and comparison" })}
         </h1>

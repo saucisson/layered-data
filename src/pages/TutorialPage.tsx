@@ -12,6 +12,7 @@
 
 import React, { useMemo } from "react";
 import { hashOf } from "../components/Router";
+import { PROSE_WIDTH } from "../components/PageShell";
 import { say } from "../presentation/i18n.ts";
 import { NotionText } from "../presentation/notions.tsx";
 import { parseTutorialMarkdown, type TutorialBlock } from "../presentation/tutorialMarkdown.ts";
@@ -140,7 +141,7 @@ export function TutorialPage({ language }: TutorialPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-4xl space-y-4 p-4 sm:p-8">
+      <div className={"mx-auto " + PROSE_WIDTH + " space-y-4 p-4 sm:p-8"}>
         {blocks.map(renderBlock)}
 
         {/* No glossary section (#229): the definitions stay available
