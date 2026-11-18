@@ -73,6 +73,7 @@ test("the artwork logo variant renders the provided PNG wordmark and persists", 
   expect((await page.request.get("/logos/layered-data-logo.png")).status()).toBe(200);
 
   await page.reload();
+  await page.getByRole("button", { name: "preferences" }).click();
   await expect(picker).toHaveValue("artwork", { timeout: 10_000 });
   await expect(artwork).toBeVisible();
 });
@@ -100,6 +101,7 @@ test("the Tokyo Night theme applies its indigo palette and survives a reload", a
     .toBe("rgb(26, 27, 38)");
 
   await page.reload();
+  await page.getByRole("button", { name: "preferences" }).click();
   await expect(picker).toHaveValue("tokyonight", { timeout: 10_000 });
   await expect
     .poll(() => page.evaluate("document.documentElement.classList.contains('theme-tokyonight')"))
