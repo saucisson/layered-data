@@ -85,7 +85,7 @@ export function WorkshopHeader({
               <button type="button"
                 key={scenario.id}
                 onClick={() => onActivateScenario(index)}
-                title={localized({ language, text: scenario.text }).slice(0, 120) + "…"}
+                title={localized({ language, text: scenario.text })}
                 className={
                   "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
                   (scenarioIndex === index

@@ -1,8 +1,18 @@
 // Toast notification system — transient feedback messages that appear
 // bottom-right and auto-dismiss. Accessible: role=status + aria-live
-// so screen readers announce them (WCAG 4.1.3).
+// so screen readers announce them (WCAG 4.1.3). Errors stay longer,
+// every toast can be dismissed by hand, and the timer pauses while
+// the pointer or the focus is on the toast.
 
-import { createContext, useCallback, useContext, useState, type ReactNode } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 
 type ToastTone = "info" | "success" | "error";
 
@@ -24,15 +34,86 @@ const TONE_CLASS: Record<ToastTone, string> = {
   error: "border-red-300 bg-red-50 text-red-800 dark:border-red-700 dark:bg-red-900 dark:text-red-200",
 };
 
+// errors deserve to be read: they stay 10 s, the other tones 4 s
+const DURATION_MS: Record<ToastTone, number> = { info: 4000, success: 4000, error: 10000 };
+
+function ToastItem({ toast, onDismiss }: { toast: Toast; onDismiss: (id: number) => void }) {
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const deadlineRef = useRef(0);
+  const remainingRef = useRef(0);
+  const [, setPaused] = useState(false);
+
+  const clearTimer = useCallback(() => {
+    if (timerRef.current !== null) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }, []);
+
+  const schedule = useCallback(
+    (milliseconds: number) => {
+      clearTimer();
+      deadlineRef.current = Date.now() + milliseconds;
+      timerRef.current = setTimeout(() => onDismiss(toast.id), milliseconds);
+    },
+    [clearTimer, onDismiss, toast.id],
+  );
+
+  useEffect(() => {
+    schedule(DURATION_MS[toast.tone]);
+    return clearTimer;
+  }, [schedule, clearTimer, toast.tone]);
+
+  const pause = useCallback(() => {
+    if (timerRef.current !== null) {
+      clearTimer();
+      remainingRef.current = Math.max(0, deadlineRef.current - Date.now());
+      setPaused(true);
+    }
+  }, [clearTimer]);
+
+  const resume = useCallback(() => {
+    setPaused((wasPaused) => {
+      if (wasPaused) schedule(remainingRef.current);
+      return false;
+    });
+  }, [schedule]);
+
+  return (
+    <div
+      className={
+        "pointer-events-auto rounded-md border px-3 py-2 text-xs shadow-lg " + TONE_CLASS[toast.tone]
+      }
+      onMouseEnter={pause}
+      onMouseLeave={resume}
+      onFocus={pause}
+      onBlur={resume}
+    >
+      <div className="flex items-start gap-2">
+        <span className="min-w-0 flex-1">{toast.text}</span>
+        <button
+          type="button"
+          onClick={() => onDismiss(toast.id)}
+          aria-label="dismiss notification"
+          className="shrink-0 rounded px-1 leading-none opacity-60 hover:opacity-100 focus:opacity-100 focus:outline-none"
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const dismiss = useCallback((id: number) => {
+    setToasts((previous) => previous.filter((toast) => toast.id !== id));
+  }, []);
 
   const notify = useCallback((text: string, tone: ToastTone = "info") => {
     const id = Date.now() + Math.random();
     setToasts((previous) => [...previous, { id, text, tone }]);
-    setTimeout(() => {
-      setToasts((previous) => previous.filter((toast) => toast.id !== id));
-    }, 4000);
   }, []);
 
   return (
@@ -45,14 +126,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         aria-atomic="false"
       >
         {toasts.map((toast) => (
-          <div
-            key={toast.id}
-            className={
-              "pointer-events-auto rounded-md border px-3 py-2 text-xs shadow-lg " + TONE_CLASS[toast.tone]
-            }
-          >
-            {toast.text}
-          </div>
+          <ToastItem key={toast.id} toast={toast} onDismiss={dismiss} />
         ))}
       </div>
     </ToastContext.Provider>
