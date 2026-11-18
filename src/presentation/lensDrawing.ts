@@ -9,15 +9,18 @@
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { AddressView } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
-import { drawnShape, dressingApplicability } from "../domain/views.ts";
-import { bindingOf, circlePosition, isLensLayer, positionOf } from "./viewTree.ts";
+import { DEFAULT_NODE_SIZE, drawnShape, dressingApplicability, type NodeSize } from "../domain/views.ts";
+import { bindingOf, circlePosition, isLensLayer, positionOf, sizeOf } from "./viewTree.ts";
 
-/** One drawn vertex: its resolved position and the shape the lens
- * decides for its type (null: the lens knows nothing of it, the
- * glyph stays dashed). */
+/** One drawn vertex: its resolved position, its size datum (the
+ * cascade: the viewpoint decides, else the model carries, else the
+ * gabarit's defaults — issue #285), and the shape the lens decides
+ * for its type (null: the lens knows nothing of it, the glyph stays
+ * dashed). */
 export interface LookVertex {
   name: string;
   position: { x: number; y: number } | null;
+  size: NodeSize;
   drawn: ReturnType<typeof drawnShape>;
 }
 
@@ -95,6 +98,23 @@ export function buildWorkshopLook({
     (viewpointDecidesPositions ? positionOf({ space, source: selectedView, name }) : null) ??
     (modelCarriesPositions ? positionOf({ space, source: model, name }) : null) ??
     circlePosition({ index, total: all.length });
+  // The size cascade mirrors the position one (issue #285): the
+  // viewpoint decides, else the model carries, else the default.
+  const viewpointDecidesSizes =
+    !isLens &&
+    space.read({
+      layer: asLayerName(selectedView),
+      path: asLayerPath([]),
+      key: "sizes",
+    }) instanceof AddressView;
+  const modelCarriesSizes =
+    lens !== null &&
+    space.read({ layer: asLayerName(model), path: asLayerPath([]), key: "sizes" }) instanceof
+      AddressView;
+  const sizeOfName = (name: string): NodeSize =>
+    (viewpointDecidesSizes ? sizeOf({ space, source: selectedView, container: "sizes", name }) : null) ??
+    (modelCarriesSizes ? sizeOf({ space, source: model, container: "sizes", name }) : null) ??
+    DEFAULT_NODE_SIZE;
   const vertices: LookVertex[] =
     lens !== null
       ? space
@@ -102,6 +122,7 @@ export function buildWorkshopLook({
           .map((name, index, all) => ({
             name,
             position: positionOfName(name, index, all),
+            size: sizeOfName(name),
             drawn: drawnShape({
               space,
               lens: asLayerName(lens),

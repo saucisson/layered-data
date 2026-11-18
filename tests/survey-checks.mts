@@ -42,8 +42,8 @@ check(
   column4.length > 30_000,
 );
 check(
-  "(1) the one-line column is under ~13 700 chars (measured 13 606 on the 89-layer kernel)",
-  column1.length <= 13_700,
+  "(1) the one-line column is under ~13 800 chars (measured 13 709 on the 90-layer kernel)",
+  column1.length <= 13_800,
 );
 check("(1) the one-line column is strictly smaller than the full column", column1.length < column4.length);
 
@@ -53,8 +53,8 @@ const surveyPrompt = buildSurveyPrompt({ visitorLayers: [] });
 check("(2) the survey prompt carries the surveyor's instructions", surveyPrompt.includes(SURVEY_INSTRUCTIONS_EN));
 check("(2) the survey prompt carries the one-line column", surveyPrompt.includes(column1));
 check(
-  "(2) the survey prompt stays under ~16 600 chars (measured 16 447 on the 89-layer kernel)",
-  surveyPrompt.length <= 16_600,
+  "(2) the survey prompt stays under ~16 700 chars (measured 16 550 on the 90-layer kernel)",
+  surveyPrompt.length <= 16_700,
 );
 check(
   "(2) the survey prompt does NOT carry the full column",

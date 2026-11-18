@@ -4,23 +4,26 @@
 // arrowhead — dashed when undressed). Pure rendering, no kernel
 // reads.
 
-import type { Glyph } from "../domain/views.ts";
+import type { Glyph, NodeSize } from "../domain/views.ts";
 import { labelPosition, vertexGlyphElement } from "./glyphShape.tsx";
-import { arcPathData } from "./glyphGeometry.ts";
+import { arcPathData, glyphBounds, scaledGlyph } from "./glyphGeometry.ts";
 
 /** One drawn vertex: the glyphs decided by the lens for its type,
  * overlaid in the order posed, the name inside, dashed when the lens
- * knows nothing of it. */
+ * knows nothing of it. The node's size datum (issue #285) scales the
+ * glyphs and rotates them around the node's centre. */
 export function NodeGlyph({
   name,
   shape,
   position,
+  size,
   selected,
   onPick,
 }: {
   name: string;
   shape: Glyph[] | null;
   position: { x: number; y: number };
+  size?: NodeSize | undefined;
   selected: boolean;
   onPick: () => void;
 }) {
@@ -29,11 +32,15 @@ export function NodeGlyph({
   const shapeKind = glyphs.length > 0 ? (glyphs[0]?.shape ?? null) : null;
   const stroke = "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
-  const label = glyphs.length > 0 ? labelPosition({ glyph: glyphs[0] as Glyph, x, y }) : null;
+  const nodeAngle = size?.angle ?? 0;
+  const label =
+    glyphs.length > 0
+      ? labelPosition({ glyph: scaledGlyph(glyphs[0] as Glyph, size?.scale ?? 1), x, y, angle: nodeAngle })
+      : null;
   return (
     <g onClick={onPick} style={{ cursor: "pointer" }}>
       {glyphs.map((glyph, index) => (
-        <g key={index}>{vertexGlyphElement({ glyph, x, y, strokeWidth })}</g>
+        <g key={index}>{vertexGlyphElement({ glyph, x, y, strokeWidth, size })}</g>
       ))}
       {glyphs.length === 0 && (
         <circle cx={x} cy={y} r={16} fill="none" stroke={stroke} strokeDasharray="3 3" />
@@ -64,6 +71,10 @@ export function EdgeGlyph({
   to,
   waypoints = [],
   weight,
+  fromShape = null,
+  fromSize,
+  toShape = null,
+  toSize,
   selected,
   onPick,
   onAddWaypoint,
@@ -77,6 +88,10 @@ export function EdgeGlyph({
   from: { x: number; y: number };
   to: { x: number; y: number };
   waypoints?: { x: number; y: number }[];
+  fromShape?: Glyph[] | null;
+  fromSize?: NodeSize | undefined;
+  toShape?: Glyph[] | null;
+  toSize?: NodeSize | undefined;
   selected: boolean;
   onPick: () => void;
   onAddWaypoint?: (event: React.MouseEvent<SVGGElement>) => void;
@@ -93,8 +108,30 @@ export function EdgeGlyph({
   const strokeWidth = selected ? 2.5 : 1.5;
 
   // the polyline the arc follows: from → waypoints → to, then the
-  // ends are trimmed so the line does not run under the vertex glyphs
+  // ends are trimmed so the line does not run under the vertex
+  // glyphs — the trim is the distance from the node's centre to the
+  // EFFECTIVE bounds (scaled, rotated — issue #285), not a constant
   const polyline = [from, ...waypoints, to];
+  const trimDistance = (
+    endpointShape: Glyph[] | null,
+    endpointSize: NodeSize | undefined,
+    dx: number,
+    dy: number,
+  ): number => {
+    const glyphs = endpointShape ?? [];
+    if (glyphs.length === 0) return 20;
+    const scale = endpointSize?.scale ?? 1;
+    const angle = endpointSize?.angle ?? 0;
+    let distance = 0;
+    for (const glyph of glyphs) {
+      if (glyph.shape === "line") continue;
+      const bounds = glyphBounds(scaledGlyph(glyph, scale), angle);
+      const alongX = dx !== 0 ? Math.max(bounds.x1, -bounds.x0) / Math.abs(dx) : Infinity;
+      const alongY = dy !== 0 ? Math.max(bounds.y1, -bounds.y0) / Math.abs(dy) : Infinity;
+      distance = Math.max(distance, Math.min(alongX, alongY));
+    }
+    return distance > 0 ? distance : 20;
+  };
   const trimEnd = (points: { x: number; y: number }[], atStart: boolean) => {
     const a = atStart ? points[0] : points[points.length - 1];
     const b = atStart ? points[1] : points[points.length - 2];
@@ -102,7 +139,10 @@ export function EdgeGlyph({
     const dx = b.x - a.x;
     const dy = b.y - a.y;
     const length = Math.sqrt(dx * dx + dy * dy) || 1;
-    const trim = 20 / length;
+    const trim =
+      (atStart
+        ? trimDistance(fromShape, fromSize, dx, dy)
+        : trimDistance(toShape, toSize, -dx, -dy)) / length;
     return atStart
       ? { x: a.x + dx * trim, y: a.y + dy * trim }
       : { x: a.x - dx * trim, y: a.y - dy * trim };

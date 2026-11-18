@@ -136,6 +136,21 @@ layer my-display refines @graph-display
         override fill = "#ffffff"
 ```
 
+## Resize and rotate
+
+A lens fixes the *default* look of each type; each node can then depart from it with **data**, exactly like the positions. A model (or a viewpoint) that refines `@node-sizes` carries a `sizes` block whose keys name the vertices — each entry poses a `scale` factor and/or an `angle` in degrees. The cascade is the positions' one: the viewpoint decides, else the model carries, else the gabarit's defaults apply — a node without a datum keeps the template's sizes. In the editor, a selected vertex shows two handles: drag the square one to resize, the round one to rotate; the gesture writes the `sizes` entry in the model's source (visible, and it survives a reload), and a double-click on a handle removes the datum. The arcs attach to the effective bounds of the scaled, rotated glyph.
+
+```ld
+layer my-buchi refines @moore-traffic-light then @buchi-automaton then @node-sizes
+  extend states
+    extend green
+      accepting = true
+  extend sizes
+    green refines @node-sizes/specification/size_type
+      scale = 2
+      angle = 45
+```
+
 ## To go further
 
 - The workshop (`#formalisms`): the kernel corpus and its real dinner, the layers' ⟪quarry⟫.

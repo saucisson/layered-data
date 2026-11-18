@@ -175,6 +175,24 @@ export function positionContainerOf({
   );
 }
 
+/** The size container (issue #285): the vertex container whose
+ * record poses `scale` and `angle` — node-sizes passes, the test is
+ * the data, never a layer name. */
+export function sizeContainerOf({
+  containers,
+}: {
+  containers: readonly MemberContainer[];
+}): MemberContainer | null {
+  return (
+    containers.find(
+      (container) =>
+        container.kind === "sommet" &&
+        container.annotationKeys.includes("scale") &&
+        container.annotationKeys.includes("angle"),
+    ) ?? null
+  );
+}
+
 /** A suggested `refines` clause for a new model, read from the
  * corpus itself — never a hardcoded formalism name: the first layer
  * that declares member containers, plus the first layer that declares
@@ -558,6 +576,45 @@ export function draftMemberPosition({
     name,
     typeReference,
     fields: { x, y },
+  });
+}
+
+/** Draft the size datum of a named member (issue #285): the `scale`
+ * and/or `angle` fields of its entry in the size container — an
+ * existing entry is edited in place, a missing one is inserted with
+ * the container's declared member type. */
+export function draftMemberSize({
+  block,
+  sizeContainer,
+  name,
+  scale,
+  angle,
+  typeReference,
+}: {
+  block: string;
+  sizeContainer: string;
+  name: string;
+  scale: number;
+  angle: number;
+  typeReference: string;
+}): string {
+  const blockLines = block.replace(/\n+$/, "").split("\n");
+  const section = sectionRangeOf({ blockLines, container: sizeContainer });
+  const existingMember = section !== null ? memberRangeOf({ blockLines, section, name }) : null;
+  if (existingMember !== null && section !== null) {
+    return draftMemberFieldEdition({
+      block,
+      container: sizeContainer,
+      name,
+      fields: { scale, angle },
+    });
+  }
+  return draftMemberInsertion({
+    block,
+    container: sizeContainer,
+    name,
+    typeReference,
+    fields: { scale, angle },
   });
 }
 
