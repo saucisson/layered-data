@@ -41,6 +41,7 @@ import {
 } from "./checks.ts";
 import { quantifiedVariablesOf, templateTermsOf, tryParseFormula } from "./formulas.ts";
 import { glyphShapeVerdict, walkLayerObserved, type WalkedAddress } from "./views.ts";
+import { asDisplayFn, isParsableDisplayExpression } from "./displayFunctions.ts";
 import { type CompiledLanguage, type Declaration } from "./language/compiler.ts";
 import { type ParsedLanguage } from "./language/parser.ts";
 import { fact, type MessageFact } from "./messages.ts";
@@ -524,18 +525,33 @@ export function* streamValidation({
           const shapeVerdict = glyphShapeVerdict(rawGlyph);
           if (shapeVerdict === null) {
             anyValid = true;
-            continue;
+          } else {
+            verdicts.push({
+              kind: shapeVerdict,
+              fact: fact(shapeVerdict === "forme-inconnue" ? "unknown-shape" : "invalid-path", {
+                where,
+                shape:
+                  isDictionary(rawGlyph) && typeof rawGlyph["shape"] === "string"
+                    ? rawGlyph["shape"]
+                    : "",
+              }),
+            });
           }
-          verdicts.push({
-            kind: shapeVerdict,
-            fact: fact(shapeVerdict === "forme-inconnue" ? "unknown-shape" : "invalid-path", {
-              where,
-              shape:
-                isDictionary(rawGlyph) && typeof rawGlyph["shape"] === "string"
-                  ? rawGlyph["shape"]
-                  : "",
-            }),
-          });
+          // The display functions (ADR-0119): the server PARSES the
+          // code but never executes it — an unparsable body is the
+          // verdict expression-illisible, at staging.
+          const fnFields: unknown[] = isDictionary(rawGlyph) ? Object.values(rawGlyph) : [];
+          if (merged !== null && blockGlyphs === null) fnFields.push(merged["draw"]);
+          for (const fieldValue of fnFields) {
+            const fn = asDisplayFn(fieldValue);
+            if (fn === null) continue;
+            if (!isParsableDisplayExpression(fn.code)) {
+              verdicts.push({
+                kind: "expression-illisible",
+                fact: fact("unreadable-expression", { where, field: "__fn" }),
+              });
+            }
+          }
         }
         if (!anyValid && rawGlyphs.length > 0) {
           verdicts.push({

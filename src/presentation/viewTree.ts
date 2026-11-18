@@ -7,7 +7,7 @@
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { isDictionary, LayerReference, PathReference, type RawTree } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
-import { DEFAULT_NODE_SIZE, type Glyph, type NodeSize } from "../domain/views.ts";
+import { DEFAULT_NODE_SIZE, type RawGlyph, type NodeSize } from "../domain/views.ts";
 import type { Language } from "../domain/messages.ts";
 import { resolvePositionAt } from "../application/positions.ts";
 import { say } from "./i18n.ts";
@@ -292,19 +292,19 @@ export function bindingOf({ space, view, key }: { space: Space; view: string; ke
 }
 
 /** One glyph as text, in the workshop language. */
-function glyphLabel({ glyph, language }: { glyph: Glyph; language: Language }): string {
+function glyphLabel({ glyph, language }: { glyph: RawGlyph; language: Language }): string {
   if (glyph.shape === "circle") return say({ language, en: "circle"});
   if (glyph.shape === "ellipse") return say({ language, en: "ellipse"});
   if (glyph.shape === "rectangle") return say({ language, en: "rectangle"});
   if (glyph.shape === "box") {
     return say({
       language,
-      en: "box (" + (glyph.label ?? "") + ")",
+      en: "box (" + (typeof glyph.label === "string" ? glyph.label : "") + ")",
     });
   }
   if (glyph.shape === "path") return say({ language, en: "path"});
   if (glyph.shape === "line") {
-    return glyph.ports === 2
+    return glyph.ports !== null && typeof glyph.ports === "number" && glyph.ports === 2
       ? say({ language, en: "2-port arc"})
       : say({ language, en: "line"});
   }
@@ -318,7 +318,7 @@ export function shapeLabel({
   shape,
   language,
 }: {
-  shape: Glyph[] | null;
+  shape: RawGlyph[] | null;
   language: Language;
 }): string {
   if (!shape || shape.length === 0) return say({ language, en: "no shape"});

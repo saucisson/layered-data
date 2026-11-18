@@ -26,6 +26,7 @@ import { asLayerName, asLayerPath } from "../src/domain/identifiers.ts";
 import { isLensLayer, lensLayers } from "../src/presentation/viewTree.ts";
 import { buildWorkshopLook } from "../src/presentation/lensDrawing.ts";
 import { arcPathData, glyphBounds, labelPosition } from "../src/presentation/glyphGeometry.ts";
+import { resolveGlyph } from "../src/presentation/displayFunctions.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -144,19 +145,19 @@ check(
 
 // ---- the declared label placement ------------------------------------
 
-const circle = asGlyph({ shape: "circle", r: 20 })!;
+const circle = resolveGlyph(asGlyph({ shape: "circle", r: 20 })!, undefined);
 check(
   "label-side inside keeps the historical placement",
   labelPosition({ glyph: circle, x: 100, y: 50 }).y === 53,
 );
-const north = asGlyph({ shape: "circle", r: 20, "label-side": "north" })!;
+const north = resolveGlyph(asGlyph({ shape: "circle", r: 20, "label-side": "north" })!, undefined);
 check(
   "label-side north places the label on the bounds",
   labelPosition({ glyph: north, x: 100, y: 50 }).y === 50 - 20 - 3,
 );
 check(
   "glyphBounds follows the dimensions",
-  glyphBounds(circle).x1 === 20 && glyphBounds(asGlyph({ shape: "rectangle", w: 60, h: 30 })!).x1 === 30,
+  glyphBounds(circle).x1 === 20 && glyphBounds(resolveGlyph(asGlyph({ shape: "rectangle", w: 60, h: 30 })!, undefined)).x1 === 30,
 );
 
 // ---- the bezier arc ---------------------------------------------------
@@ -274,22 +275,22 @@ check(
 );
 check(
   "labelPosition covers the four sides and the label-dx/dy offset",
-  labelPosition({ glyph: asGlyph({ shape: "circle", r: 20, "label-side": "south" })!, x: 0, y: 0 }).y === 29 &&
-    labelPosition({ glyph: asGlyph({ shape: "circle", r: 20, "label-side": "east" })!, x: 0, y: 0 })
+  labelPosition({ glyph: resolveGlyph(asGlyph({ shape: "circle", r: 20, "label-side": "south" })!, undefined), x: 0, y: 0 }).y === 29 &&
+    labelPosition({ glyph: resolveGlyph(asGlyph({ shape: "circle", r: 20, "label-side": "east" })!, undefined), x: 0, y: 0 })
       .textAnchor === "start" &&
-    labelPosition({ glyph: asGlyph({ shape: "circle", r: 20, "label-side": "west" })!, x: 0, y: 0 })
+    labelPosition({ glyph: resolveGlyph(asGlyph({ shape: "circle", r: 20, "label-side": "west" })!, undefined), x: 0, y: 0 })
       .textAnchor === "end" &&
-    labelPosition({ glyph: asGlyph({ shape: "circle", "label-dx": 4, "label-dy": -2 })!, x: 10, y: 10 })
+    labelPosition({ glyph: resolveGlyph(asGlyph({ shape: "circle", "label-dx": 4, "label-dy": -2 })!, undefined), x: 10, y: 10 })
       .x === 14 &&
-    labelPosition({ glyph: asGlyph({ shape: "circle", "label-dx": 4, "label-dy": -2 })!, x: 10, y: 10 })
+    labelPosition({ glyph: resolveGlyph(asGlyph({ shape: "circle", "label-dx": 4, "label-dy": -2 })!, undefined), x: 10, y: 10 })
       .y === 11,
 );
 check(
   "glyphBounds covers ellipse, path and the line fallback",
-  glyphBounds(asGlyph({ shape: "ellipse", rx: 30, ry: 10 })!).x1 === 30 &&
-    glyphBounds(asGlyph({ shape: "path", d: "M-5,-5 L10,20 Z" })!).x1 === 10 &&
-    glyphBounds(asGlyph({ shape: "path", d: "M0,0 Z" })!).x1 === 0 &&
-    glyphBounds(asGlyph({ shape: "line" })!).x1 === 16,
+  glyphBounds(resolveGlyph(asGlyph({ shape: "ellipse", rx: 30, ry: 10 })!, undefined)).x1 === 30 &&
+    glyphBounds(resolveGlyph(asGlyph({ shape: "path", d: "M-5,-5 L10,20 Z" })!, undefined)).x1 === 10 &&
+    glyphBounds(resolveGlyph(asGlyph({ shape: "path", d: "M0,0 Z" })!, undefined)).x1 === 0 &&
+    glyphBounds(resolveGlyph(asGlyph({ shape: "line" })!, undefined)).x1 === 16,
 );
 check(
   "a bezier arc with fewer than 3 points falls back to the polyline",

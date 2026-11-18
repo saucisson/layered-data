@@ -380,6 +380,7 @@ export const VOCABULARY: Record<string, { en: string; fr?: string | undefined }>
   "niveau-non-soutenu": { en: "unsupported-level"},
   "condition-manquante": { en: "missing-condition"},
   "formule-illisible": { en: "unreadable-formula"},
+  "expression-illisible": { en: "unreadable-expression"},
   "gabarit-hors-de-portée": { en: "template-out-of-scope"},
   "formule-épuisée": { en: "exhausted-formula"},
   "socle-occupé": { en: "bedrock-occupied"},

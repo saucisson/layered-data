@@ -32,13 +32,22 @@ import {
   type EditionOutcome,
   type LivingAddition,
 } from "../application/edition.ts";
-import { DEFAULT_NODE_SIZE, drawnShape, type Glyph, type NodeSize } from "../domain/views.ts";
+import {
+  DEFAULT_NODE_SIZE,
+  drawnShape,
+  flattenAddress,
+  type Glyph,
+  type NodeSize,
+  type RawGlyph,
+} from "../domain/views.ts";
+import type { DisplayFn, DisplayFnContext } from "../domain/displayFunctions.ts";
+import { resolveDrawFn, resolveGlyphList } from "./displayFunctions.ts";
 import { flattenLayer } from "../application/flatten.ts";
 import { RefinementDag } from "./workshopInventory.ts";
 import { expectationsOf, formatExpectation, readMatchesExpectation } from "../domain/validation.ts";
 import { circlePosition, lensLayers, sizeOf } from "./viewTree.ts";
 import { EdgeGlyph } from "./glyphs.tsx";
-import { glyphBounds, labelPosition, scaledGlyph, vertexGlyphElement } from "./glyphShape.tsx";
+import { glyphBounds, labelPosition, scaledGlyph, svgDataElement, vertexGlyphElement } from "./glyphShape.tsx";
 import { editionRefusalLabel, labelOf } from "./i18n.ts";
 import { t } from "../infrastructure/i18n.ts";
 import {
@@ -83,7 +92,7 @@ const MINIMUM_SCALE = 0.3;
 
 /** The shape template of a lens entry, as the glyphs read it (null:
  * the lens knows nothing of the type, the dashed fallback). */
-type ShapeSpec = Glyph[] | null;
+type ShapeSpec = RawGlyph[] | null;
 
 /** The tool in the hand: the plain pointer, one vertex container, or
  * the SINGLE arc tool — pre or post is never the user's question,
@@ -107,6 +116,8 @@ interface VertexView {
   position: { x: number; y: number };
   size: NodeSize;
   spec: ShapeSpec;
+  draw: DisplayFn | null;
+  fnContext: DisplayFnContext;
 }
 
 /** One drawn arc: its container, its name, its two ends (null: a
@@ -120,6 +131,8 @@ interface ArcView {
   fromVertex: VertexView | null;
   toVertex: VertexView | null;
   spec: ShapeSpec;
+  draw: DisplayFn | null;
+  fnContext: DisplayFnContext;
   weight: number | null;
   waypoints: ArcWaypoint[];
 }
@@ -378,7 +391,16 @@ export function ModelEditorPage({
       position: { x: number; y: number } | null;
       size: NodeSize;
       spec: ShapeSpec;
+      draw: DisplayFn | null;
+      fnContext: DisplayFnContext;
     }[] = [];
+    // the pure-data context of the display functions (ADR-0119):
+    // the model flattened once, each element at its own address
+    const modelFlat = flattenAddress({
+      space: KERNEL.space,
+      layer: asLayerName(model),
+      path: asLayerPath([]),
+    });
     for (const container of vertexContainers) {
       const names = readMemberNames({ space: KERNEL.space, model, container: container.name });
       for (const name of names) {
@@ -403,7 +425,22 @@ export function ModelEditorPage({
           layer: asLayerName(model),
           path: asLayerPath([container.name, name]),
         });
-        pending.push({ container: container.name, name, position, size, spec: shape?.spec ?? null });
+        pending.push({
+          container: container.name,
+          name,
+          position,
+          size,
+          spec: shape?.spec ?? null,
+          draw: shape?.draw ?? null,
+          fnContext: {
+            element: flattenAddress({
+              space: KERNEL.space,
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, name]),
+            }),
+            model: modelFlat,
+          },
+        });
       }
     }
     const vertices: VertexView[] = pending.map((vertex, index) => ({
@@ -416,6 +453,8 @@ export function ModelEditorPage({
         },
       size: vertex.size,
       spec: vertex.spec,
+      draw: vertex.draw,
+      fnContext: vertex.fnContext,
     }));
     const vertexOfMember = (reference: unknown): VertexView | null => {
       if (!(reference instanceof AddressView) || reference.path.length !== 2) return null;
@@ -492,6 +531,15 @@ export function ModelEditorPage({
             }),
           ),
           spec: shape?.spec ?? null,
+          draw: shape?.draw ?? null,
+          fnContext: {
+            element: flattenAddress({
+              space: KERNEL.space,
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, arcName]),
+            }),
+            model: modelFlat,
+          },
           weight: typeof label === "number" ? label : null,
           waypoints: parseArcWaypoints({
             value: KERNEL.space.read({
@@ -1522,7 +1570,7 @@ export function ModelEditorPage({
           id="editor-lens-picker"
           value={lens}
           onChange={(event) => setLens(event.target.value)}
-          title={t("a lens is a layer that refines a display scheme (e.g. @graph-display) and overrides the display fields of each type — shape (circle, ellipse, rectangle, box, path, line), label, fill, stroke, arrow, ports, plus r/rx/ry/w/h, dash, dx/dy, angle, label-side, curve. Define one in formalisms/kernel/*.ld or from the Creation page.")}
+          title={t("a lens is a layer that refines a display scheme (e.g. @graph-display) and overrides the display fields of each type — shape (circle, ellipse, rectangle, box, path, line), label, fill, stroke, arrow, ports, plus r/rx/ry/w/h, dash, dx/dy, angle, label-side, curve. Inside a display block only, a field may be a function: r = fn (place) [[ 8 + 2 * place.marking ]], or the whole glyph draw = fn (place, net) [[ … ]] returning shapes as data (ADR-0119). Define one in formalisms/kernel/*.ld or from the Creation page.")}
           className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs"
         >
           {lensLayers({ space: KERNEL.space }).map((lensName) => (
@@ -1768,6 +1816,7 @@ export function ModelEditorPage({
                     key={arc.container + "/" + arc.name}
                     name={arc.name}
                     shape={arc.spec}
+                    fnContext={arc.fnContext}
                     weight={arc.weight}
                     from={arc.from}
                     to={arc.to}
@@ -1825,6 +1874,8 @@ export function ModelEditorPage({
                     key={vertex.container + "/" + vertex.name}
                     name={vertex.name}
                     shape={vertex.spec}
+                    draw={vertex.draw}
+                    fnContext={vertex.fnContext}
                     position={{ x: vertex.position.x + offsetX, y: vertex.position.y + offsetY }}
                     size={gestureSizeOf(vertex)}
                     selected={
@@ -1995,7 +2046,10 @@ export function ModelEditorPage({
  * rectangle, an arc a line — the name stays beside it. */
 function PaletteGlyph({ spec }: { spec: ShapeSpec }) {
   const arrowId = useId();
-  const glyph = spec !== null && spec.length > 0 ? spec[0] : undefined;
+  // the miniature has no node context: display functions (ADR-0119)
+  // resolve to their defaults here
+  const resolved = resolveGlyphList(spec ?? [], undefined);
+  const glyph = resolved.length > 0 ? resolved[0] : undefined;
   const stroke = (glyph !== undefined && "stroke" in glyph ? glyph.stroke : undefined) ?? "#64748b";
   const fill = (glyph !== undefined && "fill" in glyph ? glyph.fill : undefined) ?? "#ffffff";
   // a vertex glyph renders as a miniature normalised to its bounds
@@ -2038,6 +2092,8 @@ function PaletteGlyph({ spec }: { spec: ShapeSpec }) {
 function EditorVertexGlyph({
   name,
   shape,
+  draw,
+  fnContext,
   position,
   size,
   selected,
@@ -2048,6 +2104,8 @@ function EditorVertexGlyph({
 }: {
   name: string;
   shape: ShapeSpec;
+  draw?: DisplayFn | null;
+  fnContext?: DisplayFnContext | undefined;
   position: { x: number; y: number };
   size?: NodeSize | undefined;
   selected: boolean;
@@ -2057,7 +2115,10 @@ function EditorVertexGlyph({
   onSizeHandleDoubleClick?: (kind: "resize" | "rotate") => void;
 }) {
   const { x, y } = position;
-  const glyphs = shape ?? [];
+  // display functions (ADR-0119) resolve here, per node, against the
+  // pure-data context — a fault falls back to the gabarit's defaults
+  const glyphs = resolveGlyphList(shape ?? [], fnContext);
+  const drawTree = resolveDrawFn(draw ?? null, fnContext);
   const shapeKind = glyphs.length > 0 ? (glyphs[0]?.shape ?? null) : null;
   const stroke = "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
@@ -2079,7 +2140,10 @@ function EditorVertexGlyph({
       {glyphs.map((glyph, index) => (
         <g key={index}>{vertexGlyphElement({ glyph, x, y, strokeWidth, size })}</g>
       ))}
-      {glyphs.length === 0 && (
+      {drawTree !== null && (
+        <g transform={"translate(" + x + " " + y + ")"}>{svgDataElement(drawTree, 0)}</g>
+      )}
+      {glyphs.length === 0 && drawTree === null && (
         <circle
           cx={x}
           cy={y}
