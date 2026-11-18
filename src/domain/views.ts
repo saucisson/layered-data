@@ -165,13 +165,13 @@ export function asGlyph(value: unknown): Glyph | null {
   const labelDy = asNumber(value["label-dy"]);
   if (labelDy !== undefined) common["label-dy"] = labelDy;
   if (shape === "circle") {
-    const glyph: Glyph = { ...common, shape };
+    const glyph: Extract<Glyph, { shape: "circle" }> = { ...common, shape };
     const r = asNumber(value["r"]);
     if (r !== undefined) glyph.r = r;
     return glyph;
   }
   if (shape === "ellipse") {
-    const glyph: Glyph = { ...common, shape };
+    const glyph: Extract<Glyph, { shape: "ellipse" }> = { ...common, shape };
     const rx = asNumber(value["rx"]);
     if (rx !== undefined) glyph.rx = rx;
     const ry = asNumber(value["ry"]);
@@ -179,7 +179,7 @@ export function asGlyph(value: unknown): Glyph | null {
     return glyph;
   }
   if (shape === "rectangle" || shape === "box") {
-    const glyph: Glyph = { ...common, shape };
+    const glyph: Extract<Glyph, { shape: "rectangle" | "box" }> = { ...common, shape };
     const w = asNumber(value["w"]);
     if (w !== undefined) glyph.w = w;
     const h = asNumber(value["h"]);
@@ -322,14 +322,27 @@ export function readDisplayTemplate({
   lens: LayerName;
   path: LayerPath;
 }): Glyph[] | null {
+  // A multi-glyph `glyphs` block is read whole at its nearest defining
+  // source (block-level override). A single-glyph template is merged
+  // FIELD BY FIELD along the closure (oldest first, the child wins):
+  // a partial override (`override fill = …` alone) inherits the
+  // parent's shape instead of producing an empty glyph (issue #287).
+  let merged: Record<string, unknown> | null = null;
   for (const [sourceLayer, sourcePath] of space.closure({ layer: lens, path })) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
-    if (isDictionary(node) && "display" in node) {
-      const display = node["display"];
-      if (display !== null) return asGlyphList(display);
+    if (!isDictionary(node) || !("display" in node)) continue;
+    const display = node["display"];
+    if (display === null) continue;
+    if (isDictionary(display) && isDictionary(display["glyphs"])) {
+      return asGlyphList(display);
+    }
+    if (isDictionary(display)) {
+      merged = { ...(merged ?? {}), ...display };
+    } else if (Array.isArray(display)) {
+      return asGlyphList(display);
     }
   }
-  return null;
+  return merged === null ? null : asGlyphList(merged);
 }
 
 // Raw display guard at the first defining source (the `__when:display`
