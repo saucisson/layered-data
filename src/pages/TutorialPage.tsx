@@ -3,7 +3,7 @@
 // at build time and parsed by the measured dialect: headings,
 // paragraphs, lists, code fences — and the `ldflat:<layer>` fence,
 // which this page resolves at run time against the tutorial corpus
-// (formalisms/tutorial, ten layers, simpler than the kernel) into
+// (formalisms/tutorial, nine layers, simpler than the kernel) into
 // the interactive flattened listing: every line carries its
 // parentage and opens the workshop's cascade card. The old
 // eleven-step component tutorial is retired: the code is the

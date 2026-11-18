@@ -140,7 +140,7 @@ export function assembleLayeredDataKernel({
   return assembleCorpusKernel({ layerSources, layerNames: KERNEL_LAYER_NAMES });
 }
 
-// The tutorial corpus: a dedicated, simpler hierarchy — ten layers,
+// The tutorial corpus: a dedicated, simpler hierarchy — nine layers,
 // beside the kernel corpus. The two chains the tutorial walks
 // (graph → petrinet → philosophers → philosophers-5, and graph →
 // automaton → state-space → philosophers-5-state-space) live in

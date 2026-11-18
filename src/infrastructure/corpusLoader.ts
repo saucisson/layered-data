@@ -45,7 +45,7 @@ export function loadKernelLayerSources(): Record<string, string> {
 }
 
 /** Read the raw sources of the tutorial corpus — the same contract
- * as the kernel loader, on the dedicated folder: ten simpler
+ * as the kernel loader, on the dedicated folder: nine simpler
  * layers the tutorial page flattens, never mixed into the bedrock
  * corpus. */
 export function loadTutorialLayerSources(): Record<string, string> {

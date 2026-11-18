@@ -55,6 +55,41 @@ const layerSources = Object.fromEntries(
 );
 const kernel = assembleLayeredDataKernel({ layerSources });
 
+// ---- the corpus folder is exactly the corpus (#321) -------------------
+// One .ld file per layer, both directions: a file outside
+// KERNEL_LAYER_NAMES is a silent orphan, a registered layer without
+// its file fails above. Drafts live in formalisms/sandbox/.
+
+import { readdirSync } from "node:fs";
+
+const folderLayerNames = readdirSync(corpusDirectory)
+  .filter((fileName) => fileName.endsWith(".ld"))
+  .map((fileName) => fileName.slice(0, -".ld".length))
+  .sort();
+const corpusLayerNames = KERNEL_LAYER_NAMES.map(String).sort();
+check(
+  "every .ld file of formalisms/kernel is a corpus layer and vice versa (#321)",
+  folderLayerNames.length === corpusLayerNames.length &&
+    folderLayerNames.every((name, index) => name === corpusLayerNames[index]),
+);
+
+// ---- the cited layer counts are the measured ones (#320, #322) ---------
+// The static texts (README, tutorial) cannot interpolate: a harness
+// pins every "N layers" claim to a real corpus count.
+
+import { TUTORIAL_LAYER_NAMES } from "../src/application/corpus.ts";
+
+const measuredCounts = new Set([KERNEL_LAYER_NAMES.length, TUTORIAL_LAYER_NAMES.length]);
+const citedCounts = new Set<number>();
+for (const textPath of ["README.md", "src/presentation/tutorial.en.md"]) {
+  const text = readFileSync(join(import.meta.dirname, "..", textPath), "utf8");
+  for (const match of text.matchAll(/(\d+)\s+layers?/g)) citedCounts.add(Number(match[1]));
+}
+check(
+  "every \"N layers\" cited in README.md and tutorial.en.md is a measured corpus count (#320, #322)",
+  citedCounts.size > 0 && [...citedCounts].every((count) => measuredCounts.has(count)),
+);
+
 function stage({
   draftSource,
   previousAdditionSources = [],

@@ -39,11 +39,11 @@ const column4 = corpusBackbone({ visitorLayers: [] });
 const column1 = corpusBackbone({ visitorLayers: [], maxCommentLines: 1 });
 check(
   "(1) the default column keeps up to 4 comment lines per layer",
-  column4.length > 30_000,
+  column4.length > 25_000,
 );
 check(
-  "(1) the one-line column is under ~13 800 chars (measured 13 709 on the 90-layer kernel)",
-  column1.length <= 13_800,
+  "(1) the one-line column is under ~11 000 chars (measured 10 634 on the 90-layer kernel)",
+  column1.length <= 11_000,
 );
 check("(1) the one-line column is strictly smaller than the full column", column1.length < column4.length);
 
@@ -53,8 +53,8 @@ const surveyPrompt = buildSurveyPrompt({ visitorLayers: [] });
 check("(2) the survey prompt carries the surveyor's instructions", surveyPrompt.includes(SURVEY_INSTRUCTIONS_EN));
 check("(2) the survey prompt carries the one-line column", surveyPrompt.includes(column1));
 check(
-  "(2) the survey prompt stays under ~16 700 chars (measured 16 550 on the 90-layer kernel)",
-  surveyPrompt.length <= 16_700,
+  "(2) the survey prompt stays under ~14 000 chars (measured 13 474 on the 90-layer kernel)",
+  surveyPrompt.length <= 14_000,
 );
 check(
   "(2) the survey prompt does NOT carry the full column",
@@ -147,8 +147,8 @@ check(
 
 const monolith = buildSystemPrompt({ visitorLayers: [] });
 check(
-  "(5) without a selection the prompt is the monolith (measured 42 700 chars)",
-  monolith.length > 40_000 && buildSystemPrompt({ visitorLayers: [], selectedLayerNames: [] }) === monolith,
+  "(5) without a selection the prompt is the monolith (measured 36 626 chars)",
+  monolith.length > 35_000 && buildSystemPrompt({ visitorLayers: [], selectedLayerNames: [] }) === monolith,
 );
 
 const dagSource = readFileSync(join(import.meta.dirname, "..", "formalisms", "kernel", "dag.ld"), "utf8");
@@ -171,7 +171,7 @@ check(
     filtered.includes("\nlayer record\n"),
 );
 check(
-  "(5) the filtered prompt is much smaller than the monolith (measured 11 511 for dag+kahn)",
+  "(5) the filtered prompt is much smaller than the monolith (measured 8 327 for dag+kahn)",
   filtered.length < monolith.length / 2,
 );
 check(
