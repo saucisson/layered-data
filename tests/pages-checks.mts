@@ -496,6 +496,46 @@ check(
     }),
 );
 
+// (d2b) every inheritance edge has a route, and no routed leg ever
+// enters a pill other than its two ends — the arrows travel the empty
+// channels of the wrapped geometry
+const sampleRoute = (route: { x: number; y: number }[]): { x: number; y: number }[] => {
+  const points: { x: number; y: number }[] = [];
+  for (let index = 0; index + 1 < route.length; index++) {
+    const from = route[index];
+    const to = route[index + 1];
+    if (!from || !to) continue;
+    const steps = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 6));
+    for (let step = 0; step < steps; step++) {
+      points.push({ x: from.x + (step / steps) * (to.x - from.x), y: from.y + (step / steps) * (to.y - from.y) });
+    }
+  }
+  const end = route[route.length - 1];
+  if (end) points.push(end);
+  return points;
+};
+check(
+  "(d2b) every refinement edge is routed, and no route crosses a foreign pill",
+  KERNEL_LAYER_NAMES.every((layerName) =>
+    corpusDag.targetsOf(layerName).every((parentName) => {
+      const route = wrapped.route(layerName, parentName);
+      if (route === null || route.length < 2) return false;
+      return sampleRoute(route).every((point) =>
+        KERNEL_LAYER_NAMES.every((other) => {
+          if (other === layerName || other === parentName) return true;
+          const pill = wrapped.position(other);
+          return !(
+            point.x >= pill.x &&
+            point.x <= pill.x + pill.w &&
+            point.y >= pill.y &&
+            point.y <= pill.y + 26
+          );
+        }),
+      );
+    }),
+  ),
+);
+
 // =====================================================================
 // (e) the tutorial corpus — the dedicated ten-layer hierarchy the
 //     markdown tutorial flattens, measured like any corpus
