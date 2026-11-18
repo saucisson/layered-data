@@ -63,39 +63,140 @@ export function walkLayerObserved({
   return output;
 }
 
+/** Where the label sits relative to the glyph's bounds — `inside`
+ * is the vertices' default (the historical behaviour), the sides are
+ * the edges' idiom (outside, on the named side of the bounds). */
+export type LabelSide = "inside" | "north" | "south" | "east" | "west";
+
+export const LABEL_SIDES: readonly LabelSide[] = ["inside", "north", "south", "east", "west"];
+
+/** The fields every vertex glyph may carry (issue #284): dimensions
+ * (defaults = the historical sizes), a dashed stroke, an offset, a
+ * rotation around the node's centre, and a declared label placement. */
+export interface GlyphCommon {
+  fill?: string;
+  stroke?: string;
+  label?: string;
+  dash?: boolean;
+  dx?: number;
+  dy?: number;
+  angle?: number;
+  "label-side"?: LabelSide;
+  "label-dx"?: number;
+  "label-dy"?: number;
+}
+
 /** One glyph of the closed drawing vocabulary, discriminated by
  * `shape` — the corpus's display templates carry exactly these
  * fields (see formalisms/kernel/*-display.ld). Vertex glyphs are
- * circle/ellipse/rectangle/box; the edge glyph is line. */
+ * circle/ellipse/rectangle/box/path; the edge glyph is line. */
 export type Glyph =
-  | { shape: "circle"; fill?: string; stroke?: string; label?: string }
-  | { shape: "ellipse"; fill?: string; stroke?: string; label?: string }
-  | { shape: "rectangle"; fill?: string; stroke?: string; label?: string }
-  | { shape: "box"; fill?: string; stroke?: string; label?: string }
-  | { shape: "line"; arrow?: string; ports?: number; stroke?: string };
+  | (GlyphCommon & { shape: "circle"; r?: number })
+  | (GlyphCommon & { shape: "ellipse"; rx?: number; ry?: number })
+  | (GlyphCommon & { shape: "rectangle"; w?: number; h?: number })
+  | (GlyphCommon & { shape: "box"; w?: number; h?: number })
+  | (GlyphCommon & { shape: "path"; d: string })
+  | {
+      shape: "line";
+      arrow?: string;
+      ports?: number;
+      stroke?: string;
+      dash?: boolean;
+      curve?: "polyline" | "bezier";
+    };
+
+export const GLYPH_SHAPES: readonly string[] = [
+  "circle",
+  "ellipse",
+  "rectangle",
+  "box",
+  "path",
+  "line",
+];
+
+/** Strict grammar of a `path` glyph's `d` (issue #284): the commands
+ * M L H V C S Q T A Z (either case), numbers, and separators (space,
+ * comma) — nothing else, ever (no text, no references). */
+export function isValidPathData(value: unknown): boolean {
+  if (typeof value !== "string" || value.trim() === "") return false;
+  const residue = value
+    .replace(/[MLHVCSQTAZmlhvcsqtaz]/g, " ")
+    .replace(/-?\d*\.?\d+(?:[eE][-+]?\d+)?/g, " ")
+    .replace(/[\s,]+/g, " ");
+  return residue.trim() === "";
+}
+
+/** The staging verdict a raw glyph carries, if any (issue #287): an
+ * unknown shape, or a `path` whose `d` is outside the grammar. */
+export function glyphShapeVerdict(value: unknown): "forme-inconnue" | "tracé-invalide" | null {
+  if (!isDictionary(value)) return "forme-inconnue";
+  const shape = value["shape"];
+  if (typeof shape !== "string" || !GLYPH_SHAPES.includes(shape)) return "forme-inconnue";
+  if (shape === "path" && !isValidPathData(value["d"])) return "tracé-invalide";
+  return null;
+}
+
+const asNumber = (value: unknown): number | undefined =>
+  typeof value === "number" && Number.isFinite(value) ? value : undefined;
 
 /** Narrow a raw display template to a glyph — unknown shapes and
  * non-dictionary values are not glyphs (the entry is then skipped,
- * never a crash). */
+ * never a crash; the staging verdict names the fault). */
 export function asGlyph(value: unknown): Glyph | null {
   if (!isDictionary(value)) return null;
   const shape = value["shape"];
-  if (shape === "circle" || shape === "ellipse" || shape === "rectangle" || shape === "box") {
-    const glyph: { shape: typeof shape; fill?: string; stroke?: string; label?: string } = {
-      shape,
-    };
-    if (typeof value["fill"] === "string") glyph.fill = value["fill"];
-    if (typeof value["stroke"] === "string") glyph.stroke = value["stroke"];
-    if (typeof value["label"] === "string") glyph.label = value["label"];
+  const common: GlyphCommon = {};
+  if (typeof value["fill"] === "string") common.fill = value["fill"];
+  if (typeof value["stroke"] === "string") common.stroke = value["stroke"];
+  if (typeof value["label"] === "string") common.label = value["label"];
+  if (typeof value["dash"] === "boolean") common.dash = value["dash"];
+  const dx = asNumber(value["dx"]);
+  if (dx !== undefined) common.dx = dx;
+  const dy = asNumber(value["dy"]);
+  if (dy !== undefined) common.dy = dy;
+  const angle = asNumber(value["angle"]);
+  if (angle !== undefined) common.angle = angle;
+  const labelSide = value["label-side"];
+  if (typeof labelSide === "string" && (LABEL_SIDES as readonly string[]).includes(labelSide)) {
+    common["label-side"] = labelSide as LabelSide;
+  }
+  const labelDx = asNumber(value["label-dx"]);
+  if (labelDx !== undefined) common["label-dx"] = labelDx;
+  const labelDy = asNumber(value["label-dy"]);
+  if (labelDy !== undefined) common["label-dy"] = labelDy;
+  if (shape === "circle") {
+    const glyph: Glyph = { ...common, shape };
+    const r = asNumber(value["r"]);
+    if (r !== undefined) glyph.r = r;
     return glyph;
   }
+  if (shape === "ellipse") {
+    const glyph: Glyph = { ...common, shape };
+    const rx = asNumber(value["rx"]);
+    if (rx !== undefined) glyph.rx = rx;
+    const ry = asNumber(value["ry"]);
+    if (ry !== undefined) glyph.ry = ry;
+    return glyph;
+  }
+  if (shape === "rectangle" || shape === "box") {
+    const glyph: Glyph = { ...common, shape };
+    const w = asNumber(value["w"]);
+    if (w !== undefined) glyph.w = w;
+    const h = asNumber(value["h"]);
+    if (h !== undefined) glyph.h = h;
+    return glyph;
+  }
+  if (shape === "path") {
+    if (typeof value["d"] !== "string") return null;
+    return { ...common, shape, d: value["d"] };
+  }
   if (shape === "line") {
-    const glyph: { shape: "line"; arrow?: string; ports?: number; stroke?: string } = {
-      shape: "line",
-    };
+    const glyph: Extract<Glyph, { shape: "line" }> = { shape: "line" };
     if (typeof value["arrow"] === "string") glyph.arrow = value["arrow"];
     if (typeof value["ports"] === "number") glyph.ports = value["ports"];
     if (typeof value["stroke"] === "string") glyph.stroke = value["stroke"];
+    if (typeof value["dash"] === "boolean") glyph.dash = value["dash"];
+    if (value["curve"] === "polyline" || value["curve"] === "bezier") glyph.curve = value["curve"];
     return glyph;
   }
   return null;

@@ -118,7 +118,7 @@ export function viewNote({ space, layer }: { space: Space; layer: string }): Bil
     ? note
         .join("")
         .split("\n")
-        .map((line) => line.trim())
+        .map((line) => line.trim().replace(/^\/\/+\s?/, ""))
         .filter((line) => line.length > 0)
         .join(" ")
     : "";
