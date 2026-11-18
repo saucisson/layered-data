@@ -9,6 +9,7 @@
 // The companion document is docs/archive/filiation.md, in the repository.
 
 import { useRouter } from "../components/Router";
+import { KERNEL_LAYER_NAMES } from "../application/corpus.ts";
 import { say } from "../presentation/i18n.ts";
 import { NotionText } from "../presentation/notions.tsx";
 import type { BilingualText } from "../presentation/i18n.ts";
@@ -98,7 +99,7 @@ const FILIATION_ERAS: FiliationEra[] = [
     years: "2024–2026",
     title: { en: "This workshop"},
     text: {
-      en: "The idea made executable: 85 layers shipped as .ld files read by one kernel, a specification verified by property, contracts replayed at every assembly, a staged assisted-writing protocol — and every number cited on this site measured by a standalone harness.",
+      en: "The idea made executable: " + KERNEL_LAYER_NAMES.length + " layers shipped as .ld files read by one kernel, a specification verified by property, contracts replayed at every assembly, a staged assisted-writing protocol — and every number cited on this site measured by a standalone harness.",
     },
   },
 ];
@@ -230,7 +231,7 @@ const WORKSHOP_ADDS: BilingualText[] = [
     en: "An assisted-writing protocol. The geologist proposes, staging judges: the proposal is a staged layer, never a truth, and the refusal is spoken.",
   },
   {
-    en: "Everything is data. The 85 layers of the base are .ld files read by the same kernel as the visitors' layers — the metamodel does not write itself here: it loads.",
+    en: "Everything is data. The " + KERNEL_LAYER_NAMES.length + " layers of the base are .ld files read by the same kernel as the visitors' layers — the metamodel does not write itself here: it loads.",
   },
 ];
 

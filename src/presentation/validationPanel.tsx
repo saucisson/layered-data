@@ -6,6 +6,7 @@
 // vocabulary — they are shown as-is.
 
 import type { ValidationOutcome } from "../domain/validation.ts";
+import { KERNEL_LAYER_NAMES } from "../application/corpus.ts";
 import { renderMessage } from "../domain/messages.ts";
 import { VirtualList } from "./virtualList.tsx";
 import { labelOf, say } from "./i18n.ts";
@@ -37,7 +38,7 @@ export function ValidationPanel({
       <p className="mb-3 mt-1 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
         {say({
           language,
-          en: "JSON is no longer the writing tool: the 85 layers are written in the design language, where inheritance (refines), transparency (extend), overloading (override), bindings (bind) and tags (check) are explicit acts. The assembly validation confronts every declared act with the reality of the closures BEFORE any execution: implicit overload, ghost declaration, unknown tag, binding laid at the wrong level. The first-wins shadows become declared acts; only an undeclared shadow is an error. The silences logged below remain the safety net.",
+          en: "JSON is no longer the writing tool: the " + KERNEL_LAYER_NAMES.length + " layers are written in the design language, where inheritance (refines), transparency (extend), overloading (override), bindings (bind) and tags (check) are explicit acts. The assembly validation confronts every declared act with the reality of the closures BEFORE any execution: implicit overload, ghost declaration, unknown tag, binding laid at the wrong level. The first-wins shadows become declared acts; only an undeclared shadow is an error. The silences logged below remain the safety net.",
         })}
       </p>
       {stats.erreursSyntaxe > 0 && (
