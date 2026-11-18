@@ -50,7 +50,7 @@ export function resolveStaticFile({
 }): StaticResolution {
   if (!existsSync(distDirectory)) return { kind: "no-dist" };
   const root = resolve(distDirectory);
-  const requestedPath = pathname === "/" ? "index.html" : pathname;
+  const requestedPath = pathname === "/" ? "/index.html" : pathname;
   const candidate = resolve(root, "." + requestedPath);
   if (candidate !== root && !candidate.startsWith(root + sep)) {
     return { kind: "not-found" };
