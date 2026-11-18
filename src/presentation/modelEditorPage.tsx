@@ -1141,7 +1141,7 @@ export function ModelEditorPage({
         setBanner({
           tone: "refused",
           text: t(
-            "the formalism declares no arc from « {{fromContainer}} » to « {{toContainer}} » — the direction is the formalism's to decide",
+            "the formalism declares no arc from “ {{fromContainer}} ” to “ {{toContainer}} ” — the direction is the formalism's to decide",
             { fromContainer: gesture.fromContainer, toContainer: hit.container },
           ),
         });

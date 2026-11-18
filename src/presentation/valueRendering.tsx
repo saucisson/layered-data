@@ -180,7 +180,7 @@ export function TraceEventRow({ event, language }: { event: any; language: Langu
               {searchStep.reroot
                 ? say({
                     language,
-                    en: " — root anchor: rerooting « " + searchStep.reroot + " »",
+                    en: " — root anchor: rerooting “ " + searchStep.reroot + " ”",
                   })
                 : ""}
             </div>

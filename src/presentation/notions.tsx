@@ -134,7 +134,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   implicits: {
     term: { en: "implicits"},
     definition: {
-      en: "the rules of the schema (ex. « each collection has a type ») copied onto the instances at desugaring time; a mute task still inherits its type.",
+      en: "the rules of the schema (ex. “ each collection has a type ”) copied onto the instances at desugaring time; a mute task still inherits its type.",
     },
   },
   lentille: {

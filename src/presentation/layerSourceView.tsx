@@ -188,7 +188,7 @@ export function LayerSourceView({
       <p className="mb-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
         {say({
           language,
-          en: "The grammar as it writes itself. « refines @a then @b »: the parents in their consultation order — the first wins, the closure follows the list; « abstract key » declares an unbound slot; « bind slot -&gt; name » binds a check slot to the concrete key name — on the left the checks' stable API, on the right the layer's vocabulary. What shines in violet is an act, in green an @path, in amber a string.",
+          en: "The grammar as it writes itself. “ refines @a then @b ”: the parents in their consultation order — the first wins, the closure follows the list; “ abstract key ” declares an unbound slot; “ bind slot -&gt; name ” binds a check slot to the concrete key name — on the left the checks' stable API, on the right the layer's vocabulary. What shines in violet is an act, in green an @path, in amber a string.",
         })}
       </p>
       <div className="max-h-80 overflow-auto rounded-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4">

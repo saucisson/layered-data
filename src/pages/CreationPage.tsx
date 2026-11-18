@@ -80,7 +80,7 @@ export function CreationPage({ language }: CreationPageProps) {
             })}
             {EXAMPLE_INTENTIONS.map((example, index) => (
               <span key={index} className="font-mono text-slate-500 dark:text-slate-400">
-                {"« " + say({ language, en: example.en}) + " »"}
+                {"“ " + say({ language, en: example.en}) + " ”"}
                 {index < EXAMPLE_INTENTIONS.length - 1 ? " · " : ""}
               </span>
             ))}
