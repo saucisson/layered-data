@@ -5,6 +5,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "../components/Router.tsx";
+import { NotionText } from "../presentation/notions.tsx";
 import { WIDE_WIDTH } from "../components/PageShell.tsx";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import { loadKernelLayerSources } from "../infrastructure/corpusLoader.ts";
@@ -56,10 +57,13 @@ export function LensesPage({ language }: { language: Language }) {
             ))}
           </select>
           <span className="text-[10px] text-slate-500 dark:text-slate-400">
-            {say({
-              language,
-              en: "the model comes from the hash — #lenses/<layer>",
-            })}
+            <NotionText
+              language={language}
+              text={say({
+                language,
+                en: "the model is read from the ⟪address⟫ — #lenses/<layer>",
+              })}
+            />
           </span>
         </div>
         <ViewpointPanel

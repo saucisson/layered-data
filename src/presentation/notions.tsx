@@ -269,6 +269,18 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
       en: "the big version number of a formalism; a major bump is a breaking change, judged per dependent.",
     },
   },
+  etape: {
+    term: { en: "staging"},
+    definition: {
+      en: "the judging gate every proposed layer passes through: the whole corpus plus the candidate is revalidated, and any failed check refuses the layer — nothing enters the space silently.",
+    },
+  },
+  verdict: {
+    term: { en: "verdict"},
+    definition: {
+      en: "the refusal spoken by the staging when a check fails — named, never silent.",
+    },
+  },
   "re-pin": {
     term: { en: "re-pin"},
     definition: {
