@@ -12,7 +12,7 @@ const ROUTES: ReadonlyArray<{ hash: string; label: string }> = [
   { hash: "#filiation", label: "Filiation" },
   { hash: "#hierarchy", label: "Hierarchy" },
   { hash: "#creation", label: "Creation" },
-  { hash: "#formalisms", label: "Formalisms" },
+  { hash: "#formalisms", label: "Workshop" },
   { hash: "#lenses", label: "Lenses" },
   { hash: "#models", label: "Models" },
   { hash: "#install", label: "Install" },
@@ -52,7 +52,7 @@ test.describe("global navigation menu", () => {
 
   test("#formalism/<layer> highlights the parent Formalisms entry (#310)", async ({ page }) => {
     await page.goto("/#formalism/petrinet");
-    await expect(page.locator(`${MENU} a[aria-current="page"]`)).toHaveText("Formalisms");
+    await expect(page.locator(`${MENU} a[aria-current="page"]`)).toHaveText("Workshop");
   });
 
   test("clicking each menu entry navigates to its page and re-highlights", async ({ page }) => {
