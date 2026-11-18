@@ -12,12 +12,12 @@ import { localized, say } from "./i18n.ts";
 import { LayerBadge } from "./layerBadge.tsx";
 import { NodeGlyph, EdgeGlyph } from "./glyphs.tsx";
 import {
-  LENS_LAYERS,
-  VIEWPOINT_LAYERS,
-  VIEW_NOTES,
   bindingOf,
   groupTree,
+  lensLayers,
   shapeLabel,
+  viewNote,
+  viewpointLayers,
 } from "./viewTree.ts";
 import type { buildWorkshopLook } from "./lensDrawing.ts";
 import type { SelectedGlyph } from "./workshop/workshopKernel.ts";
@@ -77,7 +77,7 @@ export function ViewpointPanel({
               {say({ language, en: "Lenses" })}
             </div>
             <div className="space-y-1">
-              {groupTree({ space: kernel.space, members: LENS_LAYERS }).map(
+              {groupTree({ space: kernel.space, members: lensLayers({ space: kernel.space }) }).map(
                 ({ layer: viewLayer, depth }) => (
                   <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
                     <button type="button"
@@ -110,7 +110,7 @@ export function ViewpointPanel({
               {say({ language, en: "Viewpoints" })}
             </div>
             <div className="space-y-1">
-              {groupTree({ space: kernel.space, members: VIEWPOINT_LAYERS }).map(
+              {groupTree({ space: kernel.space, members: viewpointLayers({ space: kernel.space }) }).map(
                 ({ layer: viewLayer, depth }) => (
                   <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
                     <button type="button"
@@ -312,7 +312,7 @@ export function ViewpointPanel({
                     : "")}
           </div>
           <p className="mt-1 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
-            {localized({ language, text: VIEW_NOTES[selectedView] ?? { en: ""} })}
+            {localized({ language, text: viewNote({ space: kernel.space, layer: selectedView }) })}
           </p>
         </div>
       </div>

@@ -33,11 +33,10 @@ import {
 } from "../presentation/layerSourceView.tsx";
 import { buildWorkshopLook, type WorkshopLook } from "../presentation/lensDrawing.ts";
 import { LAYER_COLOR, LAYER_ROLE, RefinementDag } from "../presentation/workshopInventory.ts";
-import { LENS_LAYERS, VIEW_NOTES } from "../presentation/viewTree.ts";
+import { lensLayers, viewNote } from "../presentation/viewTree.ts";
 import { NodeGlyph, EdgeGlyph } from "../presentation/glyphs.tsx";
 import { StratigraphyView } from "../presentation/stratigraphyView.tsx";
 import { localized, say } from "../presentation/i18n.ts";
-import type { BilingualText } from "../presentation/i18n.ts";
 import type { Language } from "../domain/messages.ts";
 
 interface FormalismPageProps {
@@ -476,7 +475,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
   // something.
   const looks = useMemo(
     () =>
-      LENS_LAYERS.map((lens) => ({
+      lensLayers({ space: KERNEL.space }).map((lens) => ({
         lens,
         look: buildWorkshopLook({
           space: KERNEL.space,
@@ -714,8 +713,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                   {localized({
                     language,
                     text:
-                      VIEW_NOTES[selectedLookEntry.lens] ??
-                      ({ en: selectedLookEntry.lens} as BilingualText),
+                      viewNote({ space: KERNEL.space, layer: selectedLookEntry.lens }),
                   })}
                 </p>
                 <p className="text-slate-500 dark:text-slate-400">
