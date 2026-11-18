@@ -115,10 +115,9 @@ server {
         proxy_buffering off;
         proxy_cache off;
 
-        # En-têtes de sécurité
-        add_header X-Content-Type-Options nosniff always;
-        add_header X-Frame-Options DENY always;
-        add_header Referrer-Policy no-referrer always;
+        # En-têtes de sécurité : posés par l'application elle-même
+        # (server/httpUtils.ts, sur chaque réponse) — pas ici, sinon
+        # ils apparaissent en double (issue #296).
     }
 }
 ```

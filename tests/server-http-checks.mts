@@ -7,7 +7,7 @@
 //
 //     node tests/server-http-checks.mts   (exit 1 on any failure)
 
-import { mkdtempSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import type { Server } from "node:http";
@@ -100,22 +100,16 @@ try {
     "@alice/petri is a valid formalism id",
     "formalismId" in qualified && qualified.user === "alice" && qualified.formalism === "petri",
   );
-  check(
-    "a bare name is not a formalism id",
-    !("formalismId" in asFormalismId({ candidate: "petri" })),
-  );
-  check(
-    "three segments are not a formalism id",
-    !("formalismId" in asFormalismId({ candidate: "@a/b/c" })),
-  );
-  check(
-    "uppercase is refused",
-    !("formalismId" in asFormalismId({ candidate: "@Alice/petri" })),
-  );
+  check("a bare name is not a formalism id", !("formalismId" in asFormalismId({ candidate: "petri" })));
+  check("three segments are not a formalism id", !("formalismId" in asFormalismId({ candidate: "@a/b/c" })));
+  check("uppercase is refused", !("formalismId" in asFormalismId({ candidate: "@Alice/petri" })));
 
   // ---- semver parsing and bare-name resolution rules (issue #148, ADR-0116) ----
   const { parseSemVer, compareSemVer } = await import("../server/formalismVersionStore.ts");
-  check("parseSemVer reads 2.1.0", JSON.stringify(parseSemVer({ semver: "2.1.0" })) === '{"major":2,"minor":1,"patch":0}');
+  check(
+    "parseSemVer reads 2.1.0",
+    JSON.stringify(parseSemVer({ semver: "2.1.0" })) === '{"major":2,"minor":1,"patch":0}',
+  );
   check("parseSemVer refuses garbage", parseSemVer({ semver: "v2" }) === null);
   check(
     "compareSemVer orders by major then minor then patch",
@@ -138,8 +132,7 @@ try {
   };
   check(
     "layers lists the kernel as builtIn",
-    response.status === 200 &&
-      layersBody.layers.some((l) => l.builtIn && l.name === "record"),
+    response.status === 200 && layersBody.layers.some((l) => l.builtIn && l.name === "record"),
   );
 
   response = await fetch(base + "/api/layers/record", { headers: auth });
@@ -150,9 +143,7 @@ try {
   };
   check(
     "GET a kernel layer returns its source",
-    response.status === 200 &&
-      recordBody.builtIn &&
-      recordBody.source.includes("layer record"),
+    response.status === 200 && recordBody.builtIn && recordBody.source.includes("layer record"),
   );
 
   response = await fetch(base + "/api/layers/http-test-demo", {
@@ -189,10 +180,7 @@ try {
   });
   check(
     "GET the written layer reads it back",
-    response.status === 200 &&
-      ((await response.json()) as { source: string }).source.includes(
-        "http-test-demo",
-      ),
+    response.status === 200 && ((await response.json()) as { source: string }).source.includes("http-test-demo"),
   );
   response = await fetch(base + "/api/layers/http-test-demo", {
     method: "PUT",
@@ -219,33 +207,21 @@ try {
   });
   check(
     "the session stream is SSE",
-    sseResponse.status === 200 &&
-      (sseResponse.headers.get("content-type") ?? "").includes(
-        "text/event-stream",
-      ),
+    sseResponse.status === 200 && (sseResponse.headers.get("content-type") ?? "").includes("text/event-stream"),
   );
   const reader = sseResponse.body!.getReader();
   const decoder = new TextDecoder();
   let sseText = "";
   const deadline = Date.now() + 5000;
-  while (
-    Date.now() < deadline &&
-    !(sseText.includes("event: hello") && sseText.includes("event: state"))
-  ) {
+  while (Date.now() < deadline && !(sseText.includes("event: hello") && sseText.includes("event: state"))) {
     const { value, done } = await reader.read();
     if (done) break;
     sseText += decoder.decode(value, { stream: true });
   }
   await reader.cancel();
-  check(
-    "the stream opens with hello then state",
-    sseText.includes("event: hello") && sseText.includes("event: state"),
-  );
+  check("the stream opens with hello then state", sseText.includes("event: hello") && sseText.includes("event: state"));
   const helloMatch = /event: hello\ndata: (\{[^}]*\})/.exec(sseText);
-  const clientId =
-    helloMatch === null
-      ? ""
-      : (JSON.parse(helloMatch[1] ?? "") as { clientId: string }).clientId;
+  const clientId = helloMatch === null ? "" : (JSON.parse(helloMatch[1] ?? "") as { clientId: string }).clientId;
   check("hello carries a clientId", clientId.length > 0);
 
   // presence while the stream is still open (closing it drops the client)
@@ -271,9 +247,7 @@ try {
   };
   check(
     "an accepted gesture is 200 with the new version",
-    response.status === 200 &&
-      gestureBody.ok === true &&
-      typeof gestureBody.version === "number",
+    response.status === 200 && gestureBody.ok === true && typeof gestureBody.version === "number",
   );
 
   response = await fetch(base + "/api/editor/gesture", {
@@ -296,8 +270,7 @@ try {
   });
   check(
     "a refused gesture is 422 with verdicts",
-    response.status === 422 &&
-      ((await response.json()) as { reason: string }).reason === "refused",
+    response.status === 422 && ((await response.json()) as { reason: string }).reason === "refused",
   );
 
   // ---- the geologist without a key refuses locally ----
@@ -308,24 +281,87 @@ try {
   });
   check(
     "generate without MISTRAL_API_KEY is 500 and speaks",
-    response.status === 500 &&
-      (await response.text()).includes("MISTRAL_API_KEY"),
+    response.status === 500 && (await response.text()).includes("MISTRAL_API_KEY"),
   );
 
   // ---- unknown route ----
   response = await fetch(base + "/api/nope", { headers: auth });
   check("an unknown api route is 404", response.status === 404);
+
+  // ---- static hosting (#292–#295) ----
+  // The server job never builds, so dist/ is absent in CI: plant a
+  // fixture build, exercise it over real HTTP, remove it. On a dev
+  // machine with a real dist/ the section is skipped (never clobber).
+  const distDirectory = join(import.meta.dirname, "..", "dist");
+  const distExisted = existsSync(distDirectory);
+  if (!distExisted) {
+    mkdirSync(join(distDirectory, "assets"), { recursive: true });
+    mkdirSync(join(distDirectory, "logos"), { recursive: true });
+    writeFileSync(join(distDirectory, "index.html"), "<!doctype html><title>t</title>");
+    writeFileSync(join(distDirectory, "assets", "app-abc123.js"), "console.log(1);");
+    writeFileSync(join(distDirectory, "logos", "logo.png"), Buffer.from([0x89, 0x50, 0x4e, 0x47]));
+    writeFileSync(join(distDirectory, "robots.txt"), "User-agent: *\n");
+    writeFileSync(join(distDirectory, "layered-data.vsix"), "PK");
+  }
+  try {
+    if (!distExisted) {
+      response = await fetch(base + "/");
+      check(
+        "GET / is 200 text/html with no-cache",
+        response.status === 200 &&
+          (response.headers.get("content-type") ?? "").includes("text/html") &&
+          response.headers.get("cache-control") === "no-cache",
+      );
+      const headRoot = await fetch(base + "/", { method: "HEAD" });
+      check(
+        "HEAD / is 200 with the same headers and no body (#292)",
+        headRoot.status === 200 &&
+          (headRoot.headers.get("content-type") ?? "").includes("text/html") &&
+          Number(headRoot.headers.get("content-length")) > 0 &&
+          (await headRoot.text()) === "",
+      );
+      response = await fetch(base + "/assets/app-abc123.js");
+      check(
+        "a hashed asset is immutable for a year (#295)",
+        response.status === 200 &&
+          (response.headers.get("content-type") ?? "").includes("text/javascript") &&
+          response.headers.get("cache-control") === "public, max-age=31536000, immutable",
+      );
+      const headAsset = await fetch(base + "/assets/app-abc123.js", { method: "HEAD" });
+      check("HEAD on an asset is 200 without a body", headAsset.status === 200 && (await headAsset.text()) === "");
+      response = await fetch(base + "/logos/logo.png");
+      check("a PNG is image/png, not octet-stream (#294)", response.headers.get("content-type") === "image/png");
+      response = await fetch(base + "/layered-data.vsix");
+      check(
+        "the .vsix is octet-stream with an attachment disposition (#294)",
+        response.headers.get("content-type") === "application/octet-stream" &&
+          (response.headers.get("content-disposition") ?? "").includes("attachment"),
+      );
+      response = await fetch(base + "/robots.txt");
+      check(
+        "robots.txt is served as its real file, not the SPA fallback",
+        response.status === 200 && (await response.text()).includes("User-agent"),
+      );
+      response = await fetch(base + "/assets/missing-xyz.js");
+      check("a missing asset is a real 404, not 200 HTML (#293)", response.status === 404);
+      response = await fetch(base + "/missing.txt");
+      check("a missing file with an extension is 404 too", response.status === 404);
+      response = await fetch(base + "/workshop");
+      check(
+        "an extensionless navigation path falls back to index.html (#293)",
+        response.status === 200 && (response.headers.get("content-type") ?? "").includes("text/html"),
+      );
+      response = await fetch(base + "/%2e%2e/package.json");
+      check("an encoded traversal stays a 404", response.status === 404);
+    }
+  } finally {
+    if (!distExisted) rmSync(distDirectory, { recursive: true, force: true });
+  }
 } finally {
   server.close();
   rmSync(sandbox, { recursive: true, force: true });
 }
 
-console.log(
-  "server http checks: " +
-    assertions +
-    " assertions, " +
-    failures.length +
-    " failure(s)",
-);
+console.log("server http checks: " + assertions + " assertions, " + failures.length + " failure(s)");
 for (const failure of failures) console.log("FAIL " + failure);
 if (failures.length > 0) process.exit(1);
