@@ -7,7 +7,7 @@ import { test, expect } from "@playwright/test";
 const MENU = 'header nav[aria-label="Main navigation"]';
 
 const ROUTES: ReadonlyArray<{ hash: string; label: string }> = [
-  { hash: "#landing", label: "Landing" },
+  { hash: "#landing", label: "Home" },
   { hash: "#tutorial", label: "Tutorial" },
   { hash: "#filiation", label: "Filiation" },
   { hash: "#hierarchy", label: "Hierarchy" },

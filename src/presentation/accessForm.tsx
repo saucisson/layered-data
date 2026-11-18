@@ -64,17 +64,13 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
         onVerified?.();
         notifyAccessCodeVerified();
       } else if (response.status === 401) {
-        // Surface the proxy's own reason: an unknown code is not the
-        // site access code (the API_TOKEN of the server's .env) —
-        // the AI key (Mistral) is a different secret, asked elsewhere.
-        const body = (await response.json().catch(() => null)) as { erreur?: string } | null;
+        // Refused, said client-side in one language: the site access
+        // code is the one the server administrator gave you — never
+        // the AI key, and no server internals are shown (#326).
         setStateMessage(
           say({
             language,
-            en:
-              "code refused — " +
-              (body?.erreur ?? "the proxy is protected") +
-              ". The site access code is the API_TOKEN of the server's .env, not the AI key.",
+            en: "code refused — the site access code is the one the server administrator gave you, not the AI key.",
           }),
         );
       } else {
@@ -105,23 +101,27 @@ export function AccessCodeForm({ language, onVerified }: { language: Language; o
           {say({ language, en: "site access code"})}
         </span>
       </div>
-      <div className="flex flex-wrap items-center gap-1.5">
+      <form
+        className="flex flex-wrap items-center gap-1.5"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void verify();
+        }}
+      >
         <input
           type="password"
           value={accessCode}
           onChange={(event) => setAccessCode(event.target.value)}
           placeholder={say({ language, en: "access code"})}
+          autoComplete="off"
           className="min-w-40 flex-1 rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
         />
-        <button type="button"
-          onClick={() => {
-            void verify();
-          }}
+        <button type="submit"
           className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-slate-500"
         >
           {say({ language, en: "verify"})}
         </button>
-      </div>
+      </form>
       <label className="mt-1.5 flex items-center gap-1.5 text-[11px] text-slate-500 dark:text-slate-400">
         <input
           type="checkbox"

@@ -447,6 +447,8 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
   const selectedLayer = livingLayerNames.includes(asLayerName(layer))
     ? layer
     : DEFAULT_FORMALISM_LAYER;
+  // An unknown layer in the address is said, not silently defaulted (#304)
+  const unknownLayerRequested = layer !== "" && !livingLayerNames.includes(asLayerName(layer));
   const inCorpus = KERNEL.layerNames.includes(asLayerName(selectedLayer));
   const needle = search.trim().toLowerCase();
   const matchedLayerNames = livingLayerNames.filter(
@@ -552,6 +554,16 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
         </section>
 
         <div className="min-w-0 space-y-4">
+
+        {unknownLayerRequested && (
+          <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
+            {say({
+              language,
+              en:
+                'unknown layer "' + layer + '" — showing the default (' + DEFAULT_FORMALISM_LAYER + ") instead",
+            })}
+          </p>
+        )}
 
         {/* The identity: role, parents, closure. */}
         <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">

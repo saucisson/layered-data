@@ -1,7 +1,8 @@
 // The composition root of the workshop: one kernel assembled from
 // the corpus, one refinement graph over it, and the three panels —
-// ① the layers, ② the formalism, ③ the reading and its
-// resolution (the point of view lives on #lenses, issue #227).
+// ① the layers, ② the formalism, ③ the flattened data,
+// ④ the mechanism, ⑤ the cascade (the point of view lives on
+// #lenses, issue #227).
 // The first render is a pure
 // pass: every derivation is a memo, nothing is written back.
 // The panels live in ./presentation/workshop/ (issue #200); this
@@ -418,7 +419,8 @@ export function WorkshopPage({
         />
 
         {/* ② the formalism — side by side with ③ the flattened
-            data (issue #239) */}
+            data (issue #239); ④ the mechanism and ⑤ the cascade
+            sit below */}
         <FormalismPanel
           kernel={KERNEL}
           layer={layer}
@@ -465,8 +467,9 @@ export function WorkshopPage({
       </div>
 
       {/* The panels are counted on one hand — ① the layers, ② the
-          formalism, ③ the reading and its resolution; the ＋ button
-          of ① covers the flow, from the request to the validation */}
+          formalism, ③ the flattened data, ④ the mechanism, ⑤ the
+          resolution cascade; the ＋ button of ① covers the flow,
+          from the request to the validation */}
 
       {/* The diagnostics and the validation live in the
           "Diagnostics & validation" fold of the formalism (②), the
