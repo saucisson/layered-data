@@ -2,11 +2,12 @@
 
 This tutorial goes from the concrete to the formal, and the code carries the proof. Every listing below is **computed by the application at display time**: the ⟪closure⟫ of one layer of the tutorial corpus, resolved in place, line by line. Every line carries its parentage (the badge of the layer that provides the value, or declares the slot); click it: the card tells where the value comes from, or the chain of ⟪refines⟫ types. The `.ld` files speak the geologist's language: one line per gesture, the layout structures, no JSON.
 
-The tutorial corpus is **dedicated**: ten layers, simpler than the workshop's ⟪bedrock⟫ (85 layers), and its stratigraphic column reads at a glance:
+The tutorial corpus is **dedicated**: nine layers, simpler than the workshop's ⟪bedrock⟫ (90 layers), and its stratigraphic column reads at a glance:
 
 ```text
-graph ─ petrinet (metamodel) ─ philosophers (template) ─ philosophers-5 (model)
-  └── automaton ─ state-space (metamodels) ─ philosophers-5-state-space (model)
+record ─ graph ─ petrinet (metamodel) ─ philosophers (template) ─ philosophers-5 (model)
+            └── automaton ─ state-space (metamodels) ─ philosophers-5-state-space (model)
+collection — a second root, beside record
 ```
 
 ## The data to represent
@@ -27,7 +28,7 @@ Layered data answers with a single move: one kind of datum (the layer), one act 
 
 ## The minimal bedrock
 
-Three layers declare no parent: they descend from nothing.
+Two layers declare no parent: they descend from nothing. (The `checks` note below is prose about the language, not a layer of the corpus.)
 
 ### record — the slab
 

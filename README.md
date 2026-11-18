@@ -30,7 +30,7 @@ The code follows an onion architecture, documented in
 - `src/App.tsx` — the composition root: the kernel is assembled there,
   the states live there, the panels (① layers, ② formalism, ③ reading,
   ④ point of view) are wired there.
-- `formalisms/kernel/` — the 85 layers of the bedrock, one `.ld` file
+- `formalisms/kernel/` — the 90 layers of the bedrock, one `.ld` file
   per layer.
 - `formalisms/users/` — the personal quarry (empty at first).
 - `server.ts` — the quarry: layers API + AI geologist + static serving.
@@ -114,7 +114,7 @@ it and return JSON, unless stated otherwise.
 | `PUT /api/layers/:nom` | writes a visitor layer (403 on the bedrock, 400 invalid name)     |
 | `POST /api/generate`   | body `{ prompt }`, **plain text** response: the layer in the language; with `Accept: text/event-stream`, an SSE stream of the two-pass steps (see below) |
 
-The bedrock (the 85 layers of the corpus) is read-only: `PUT` and `DELETE`
+The bedrock (the 90 layers of the corpus) is read-only: `PUT` and `DELETE`
 answer 403 there — and since ADR-0103, the rule lives in the protocol
 itself, not only at the quarry's door: staging and edition carry the
 bedrock's signature and refuse to touch it themselves ("bedrock-occupied",
@@ -179,7 +179,7 @@ All fronts run under bare Node (native type stripping) — the CI
    conformance measurements, not formal proofs: closures (dedup, own
    node first, the measured diamond), reads (first-wins, statuses),
    keys, anchors, immutability (call-order independence, permutation
-   invariance of the 85-layer assembly), the cycle guard, late binding,
+   invariance of the 90-layer assembly), the cycle guard, late binding,
    desugaring (topological order, idempotence), the exact invalidation
    protocol — and, since ADR-0106, the two-regime algebra theorems.
 2. **The staging checks** (`npm run test:staging`,
