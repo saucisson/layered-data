@@ -5,6 +5,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "../components/Router.tsx";
+import { WIDE_WIDTH } from "../components/PageShell.tsx";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import { loadKernelLayerSources } from "../infrastructure/corpusLoader.ts";
 import { asLayerName } from "../domain/identifiers.ts";
@@ -34,7 +35,7 @@ export function LensesPage({ language }: { language: Language }) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-7xl p-4 sm:p-6">
+      <div className={"mx-auto " + WIDE_WIDTH + " p-4 sm:p-6"}>
         <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "Lenses — see a model through a look" })}
         </h1>

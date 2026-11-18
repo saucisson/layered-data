@@ -3,6 +3,7 @@
 // install the VS Code extension for the .ld syntax — the prebuilt
 // .vsix is served from public/, one click downloads it.
 
+import { PROSE_WIDTH } from "../components/PageShell";
 import { say } from "../presentation/i18n.ts";
 import type { Language } from "../domain/messages.ts";
 
@@ -23,7 +24,7 @@ function CodeBlock({ children }: { children: string }) {
 export function InstallPage({ language }: InstallPageProps) {
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-3xl p-4 sm:p-6">
+      <div className={"mx-auto " + PROSE_WIDTH + " p-4 sm:p-6"}>
         <h1 className="mb-3 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "Install — run Layered Data locally" })}
         </h1>

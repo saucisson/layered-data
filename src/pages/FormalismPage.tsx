@@ -9,6 +9,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { hashOf } from "../components/Router";
+import { WIDE_WIDTH } from "../components/PageShell";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import { extractLayerBlock } from "../application/staging.ts";
 import {
@@ -501,7 +502,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-7xl p-4 sm:p-6">
+      <div className={"mx-auto " + WIDE_WIDTH + " p-4 sm:p-6"}>
         <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "The formalism — understand one layer" })}
         </h1>
