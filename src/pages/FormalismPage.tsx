@@ -8,7 +8,7 @@
 // state.
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "../components/Router";
+import { hashOf } from "../components/Router";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import { extractLayerBlock } from "../application/staging.ts";
 import {
@@ -428,7 +428,6 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
 }
 
 export function FormalismPage({ layer, language }: FormalismPageProps) {
-  const { navigate } = useRouter();
   // The session version moves at each accepted addition and at each
   // re-pin (issue #154): the materialization replays, the page stays
   // in step.
@@ -532,9 +531,9 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
           </div>
           <div className="flex max-h-64 flex-col gap-1 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
             {matchedLayerNames.map((layerName) => (
-              <button type="button"
+              <a type="button"
                 key={layerName}
-                onClick={() => navigate("formalism", layerName)}
+                 href={hashOf("formalism", layerName)}
                 className={
                   "flex items-center gap-1.5 rounded border px-2 py-1 text-left font-mono text-[10px] transition-colors " +
                   (layerName === selectedLayer
@@ -548,7 +547,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                   }
                 />
                 {layerName}
-              </button>
+              </a>
             ))}
           </div>
         </section>
@@ -587,9 +586,9 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 <span className="font-mono text-slate-600 dark:text-slate-400">∅</span>
               ) : (
                 parentNames.map((parentName) => (
-                  <button type="button"
+                  <a type="button"
                     key={parentName}
-                    onClick={() => navigate("formalism", parentName)}
+                     href={hashOf("formalism", parentName)}
                     className="underline decoration-slate-300 dark:decoration-slate-600 hover:text-slate-900 dark:hover:text-slate-100"
                   >
                     <span
@@ -599,7 +598,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                       }
                     />
                     {parentName}
-                  </button>
+                  </a>
                 ))
               )}
             </div>
@@ -611,9 +610,9 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 })}
               </span>
               {closureNames.map((closureName) => (
-                <button type="button"
+                <a type="button"
                   key={closureName}
-                  onClick={() => navigate("formalism", closureName)}
+                   href={hashOf("formalism", closureName)}
                   className="underline decoration-slate-300 dark:decoration-slate-600 hover:text-slate-900 dark:hover:text-slate-100"
                 >
                   <span
@@ -623,7 +622,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                     }
                   />
                   {closureName}
-                </button>
+                </a>
               ))}
             </div>
           </div>

@@ -47,7 +47,7 @@ import {
   type SessionSnapshot,
 } from "../infrastructure/editorSync.ts";
 import { onAccessCodeVerified } from "../infrastructure/accessCodeEvents.ts";
-import { useRouter } from "../components/Router.tsx";
+import { hashOf } from "../components/Router.tsx";
 import {
   readMemberContainers,
   positionContainerOf,
@@ -196,7 +196,6 @@ export function ModelEditorPage({
   const [KERNEL, setKERNEL] = useState(() =>
     assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() }),
   );
-  const { navigate } = useRouter();
 
   // ---- the living workshop -----------------------------------------
   const [additions, setAdditions] = useState<LivingAddition[]>([]);
@@ -1531,14 +1530,14 @@ export function ModelEditorPage({
             </option>
           ))}
         </select>
-        <button
+        <a
           type="button"
-          onClick={() => navigate("formalism", lens)}
+           href={hashOf("formalism", lens)}
           title={t("edit the lens — its DSL source on the formalism page")}
           className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900"
         >
           {t("edit the lens")}
-        </button>
+        </a>
         <button type="button"
           onClick={() => setCreationOpen(!creationOpen)}
           title={t("create a new model — pick its parent formalisms in the list")}

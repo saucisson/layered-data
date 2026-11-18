@@ -9,6 +9,7 @@ import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { LAYER_COLOR, LAYER_ROLE, RefinementDag } from "./workshopInventory.ts";
 import { computeRefinementGraphLayout, NODE_HEIGHT } from "./refinementGraphLayout.ts";
 import { localized } from "./i18n.ts";
+import { hashOf } from "../components/Router.tsx";
 import type { Language } from "../domain/messages.ts";
 
 /** The shared refinement graph: bands, one curve per refinement, one
@@ -34,7 +35,10 @@ export function RefinementGraph({
   focus: string | null;
   search: string;
   closureSet?: Set<string>;
-  onPick: (layerName: string) => void;
+  /** absent on the hierarchy page: the pill is then a real link to
+   *  #formalism/<layer>; present in the workshop, where picking a
+   *  layer is an in-panel selection, not a page change */
+  onPick?: (layerName: string) => void;
   onHover?: (layerName: string | null) => void;
   language: Language;
   /** the family grouping (issue #231): with activeFamily set, the
@@ -217,42 +221,24 @@ export function RefinementGraph({
         const matches =
           (!needle || layerName.toLowerCase().includes(needle)) &&
           (activeFamily === null || familyOf === undefined || familyOf(layerName) === activeFamily);
-        return (
-          <button
-            type="button"
-            key={layerName}
-            onClick={() => onPick(layerName)}
-            onMouseEnter={() => onHover?.(layerName)}
-            onMouseLeave={() => onHover?.(null)}
-            style={{
-              position: "absolute",
-              left: position.x,
-              top: position.y,
-              width: position.w,
-              height: NODE_HEIGHT,
-            }}
-            title={localized({
-              language,
-              text: LAYER_ROLE[layerName] ?? { en: layerName },
-            })}
-            className={
-              "flex items-center gap-1.5 rounded-full border px-2 font-mono text-[10px] leading-4 transition-opacity " +
-              (layerName === focus
-                ? "border-slate-900 ring-2 ring-slate-900 dark:border-slate-100 dark:ring-slate-100 "
-                : inAncestors
-                  ? "border-slate-500 dark:border-slate-400 "
-                  : "border-slate-300 dark:border-slate-600 ") +
-              (!matches
-                ? "opacity-10"
-                : focus === null
-                  ? "opacity-100"
-                  : inAncestors || layerName === focus
-                    ? "font-semibold opacity-100"
-                    : inDescendants
-                      ? "opacity-60"
-                      : "opacity-40")
-            }
-          >
+        const pillClassName =
+          "flex items-center gap-1.5 rounded-full border px-2 font-mono text-[10px] leading-4 transition-opacity " +
+          (layerName === focus
+            ? "border-slate-900 ring-2 ring-slate-900 dark:border-slate-100 dark:ring-slate-100 "
+            : inAncestors
+              ? "border-slate-500 dark:border-slate-400 "
+              : "border-slate-300 dark:border-slate-600 ") +
+          (!matches
+            ? "opacity-10"
+            : focus === null
+              ? "opacity-100"
+              : inAncestors || layerName === focus
+                ? "font-semibold opacity-100"
+                : inDescendants
+                  ? "opacity-60"
+                  : "opacity-40");
+        const pillBody = (
+          <>
             <span
               className={
                 "h-2 w-2 shrink-0 rounded-full " +
@@ -266,7 +252,35 @@ export function RefinementGraph({
                 className="absolute -top-1 -right-1 h-2 w-2 rounded-full border border-amber-500 bg-amber-300"
               />
             )}
+          </>
+        );
+        const sharedProps = {
+          key: layerName,
+          onMouseEnter: () => onHover?.(layerName),
+          onMouseLeave: () => onHover?.(null),
+          style: {
+            position: "absolute" as const,
+            left: position.x,
+            top: position.y,
+            width: position.w,
+            height: NODE_HEIGHT,
+          },
+          title: localized({
+            language,
+            text: LAYER_ROLE[layerName] ?? { en: layerName },
+          }),
+          className: pillClassName,
+        };
+        // without onPick (hierarchy page) the pill is a real link to the
+        // formalism page; with onPick (workshop) it is an in-panel pick
+        return onPick ? (
+          <button type="button" {...sharedProps} onClick={() => onPick(layerName)}>
+            {pillBody}
           </button>
+        ) : (
+          <a {...sharedProps} href={hashOf("formalism", layerName)}>
+            {pillBody}
+          </a>
         );
       })}
     </div>

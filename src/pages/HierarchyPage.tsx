@@ -6,7 +6,6 @@
 // on the picked layer — the address is the artifact.
 
 import { useMemo, useState } from "react";
-import { useRouter } from "../components/Router";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import { materializeSessionAdditions } from "../application/session.ts";
 import { loadKernelLayerSources } from "../infrastructure/corpusLoader.ts";
@@ -24,7 +23,6 @@ interface HierarchyPageProps {
 const KERNEL = assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() });
 
 export function HierarchyPage({ language }: HierarchyPageProps) {
-  const { navigate } = useRouter();
   const session = useMemo(() => materializeSessionAdditions({ kernel: KERNEL }), []);
   const layerNames = session.layerNames;
   const dag = useMemo(() => new RefinementDag({ space: KERNEL.space, layerNames }), [layerNames]);
@@ -112,7 +110,6 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
             dag={dag}
             focus={hovered}
             search={search}
-            onPick={(layerName) => navigate("formalism", layerName)}
             onHover={setHovered}
             language={language}
             familyOf={(layerName) => dag.familyOf(layerName)}
