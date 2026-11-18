@@ -92,7 +92,7 @@ jobs:
       - run: npm run test:pages
 
   harness-i18n:
-    name: "harness: i18n (i18n, i18n:check)"
+    name: "harness: i18n + lenses (i18n, lens-inventory, lens, node-sizes, connection-points, i18n:check)"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -157,7 +157,7 @@ jobs:
       - run: npm ci
       - run: npm run test:reviewer
       - run: npm run test:error-boundary
-      - name: Coverage gate (c8, lines >= 85%)
+      - name: Coverage gates (c8 lines >= 85% global + 100% on versionClassifier.ts)
         run: npm run test:coverage
       - name: Upload coverage report
         uses: actions/upload-artifact@v4
