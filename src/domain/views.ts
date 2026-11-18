@@ -119,11 +119,12 @@ export const GLYPH_SHAPES: readonly string[] = [
  * comma) — nothing else, ever (no text, no references). */
 export function isValidPathData(value: unknown): boolean {
   if (typeof value !== "string" || value.trim() === "") return false;
-  const residue = value
-    .replace(/[MLHVCSQTAZmlhvcsqtaz]/g, " ")
-    .replace(/-?\d*\.?\d+(?:[eE][-+]?\d+)?/g, " ")
-    .replace(/[\s,]+/g, " ");
-  return residue.trim() === "";
+  // commands become separators; every remaining chunk (split on
+  // spaces/commas) must be exactly one number — "1.2.3" is two numbers
+  // glued without a separator, hence refused
+  const withoutCommands = value.replace(/[MLHVCSQTAZmlhvcsqtaz]/g, " ");
+  const chunks = withoutCommands.split(/[\s,]+/).filter((chunk) => chunk !== "");
+  return chunks.every((chunk) => /^-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?$/.test(chunk));
 }
 
 /** The staging verdict a raw glyph carries, if any (issue #287): an
@@ -322,14 +323,15 @@ export function readDisplayTemplate({
   lens: LayerName;
   path: LayerPath;
 }): Glyph[] | null {
-  // A multi-glyph `glyphs` block is read whole at its nearest defining
-  // source (block-level override). A single-glyph template is merged
-  // FIELD BY FIELD along the closure (oldest first, the child wins):
-  // a partial override (`override fill = …` alone) inherits the
-  // parent's shape instead of producing an empty glyph (issue #287).
+  // A multi-glyph `glyphs` block is read whole at its NEAREST defining
+  // source (block-level override — the closure yields the own node
+  // first, so the first block found is the child's). A single-glyph
+  // template is merged FIELD BY FIELD along the closure, the child
+  // winning each field: a partial override (`override fill = …` alone)
+  // inherits the parent's shape instead of producing an empty glyph
+  // (issue #287).
   let merged: Record<string, unknown> | null = null;
-  const sources = [...space.closure({ layer: lens, path })];
-  for (const [sourceLayer, sourcePath] of sources.reverse()) {
+  for (const [sourceLayer, sourcePath] of space.closure({ layer: lens, path })) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
     if (!isDictionary(node) || !("display" in node)) continue;
     const display = node["display"];
@@ -337,10 +339,11 @@ export function readDisplayTemplate({
     if (isDictionary(display) && isDictionary(display["glyphs"])) {
       return asGlyphList(display);
     }
-    if (isDictionary(display)) {
-      merged = { ...(merged ?? {}), ...display };
-    } else if (Array.isArray(display)) {
+    if (Array.isArray(display)) {
       return asGlyphList(display);
+    }
+    if (isDictionary(display)) {
+      merged = { ...display, ...(merged ?? {}) };
     }
   }
   return merged === null ? null : asGlyphList(merged);
