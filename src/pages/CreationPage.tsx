@@ -127,7 +127,7 @@ export function CreationPage({ language }: CreationPageProps) {
                     }
                   />
                   <span className="font-mono font-semibold">{layerName}</span>
-                  <a type="button"
+                  <a
                      href={hashOf("formalism", layerName)}
                     className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
                   >

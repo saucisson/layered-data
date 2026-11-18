@@ -531,7 +531,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
           </div>
           <div className="flex max-h-64 flex-col gap-1 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
             {matchedLayerNames.map((layerName) => (
-              <a type="button"
+              <a
                 key={layerName}
                  href={hashOf("formalism", layerName)}
                 className={
@@ -586,7 +586,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 <span className="font-mono text-slate-600 dark:text-slate-400">∅</span>
               ) : (
                 parentNames.map((parentName) => (
-                  <a type="button"
+                  <a
                     key={parentName}
                      href={hashOf("formalism", parentName)}
                     className="underline decoration-slate-300 dark:decoration-slate-600 hover:text-slate-900 dark:hover:text-slate-100"
@@ -610,7 +610,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 })}
               </span>
               {closureNames.map((closureName) => (
-                <a type="button"
+                <a
                   key={closureName}
                    href={hashOf("formalism", closureName)}
                   className="underline decoration-slate-300 dark:decoration-slate-600 hover:text-slate-900 dark:hover:text-slate-100"
