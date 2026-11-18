@@ -498,7 +498,11 @@ export function* streamValidation({
         const where = layer + "::" + (nodePath.join("/") || ".");
         let merged: Record<string, unknown> | null = null;
         let blockGlyphs: unknown[] | null = null;
-        for (const [sourceLayer, sourcePath] of [...space.closure({ layer, path: nodePath as LayerPath })].reverse()) {
+        // nearest-first (the closure yields the own node first): the
+        // first `glyphs` block found is the child's — block-level
+        // override; single-glyph templates merge field by field, the
+        // child winning each field (same merge as readDisplayTemplate)
+        for (const [sourceLayer, sourcePath] of space.closure({ layer, path: nodePath as LayerPath })) {
           const sourceNode = space.raw({ layer: sourceLayer, path: sourcePath });
           if (!isDictionary(sourceNode) || !("display" in sourceNode)) continue;
           const sourceDisplay = sourceNode["display"];
@@ -507,11 +511,11 @@ export function* streamValidation({
             blockGlyphs = Object.values(sourceDisplay["glyphs"]);
             break;
           }
-          if (isDictionary(sourceDisplay)) merged = { ...(merged ?? {}), ...sourceDisplay };
-          else if (Array.isArray(sourceDisplay)) {
+          if (Array.isArray(sourceDisplay)) {
             blockGlyphs = sourceDisplay;
             break;
           }
+          if (isDictionary(sourceDisplay)) merged = { ...sourceDisplay, ...(merged ?? {}) };
         }
         const rawGlyphs: unknown[] =
           blockGlyphs ?? (merged !== null ? [merged] : []);
