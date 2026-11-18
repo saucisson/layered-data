@@ -772,7 +772,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
           <p className="mb-2 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
             {say({
               language,
-              en: "The closure of the formalism as strata: one row per formalism with the major its reference pins (a bare name resolves to the latest frozen of the latest major), what it refines, and its status. A diamond pinned to divergent majors is a version-conflict, shown as its two paths; when the measured dump is unchanged under a re-pin, the re-pin is suggested one click.",
+              en: "The closure of the formalism as strata: one row per formalism: the major version its reference pins, what it refines, its status — a bare name resolves to the latest frozen version of the latest major. A diamond pinned to divergent majors is a version-conflict, shown as its two paths; when the measured dump is unchanged under a re-pin, the re-pin is suggested one click.",
             })}
           </p>
           <StratigraphyView

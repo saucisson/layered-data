@@ -43,7 +43,7 @@ export function WorkshopHeader({
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           {say({
             language,
-            en: "Formalism design workshop — Layered Data, refinement, first-winner reading",
+            en: "Formalism design workshop — Layered Data, refinement, first-wins reading",
           })}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
