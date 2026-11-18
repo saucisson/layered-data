@@ -25,7 +25,7 @@ export function LandingPage({ language }: LandingPageProps) {
           <p className="mx-auto max-w-2xl text-lg text-slate-600 dark:text-slate-400">
             {say({
               language,
-              en: "A demonstrator where formalisms and models are layered data. Refinement, inheritance: the first definition wins, and the system becomes powerful.",
+              en: "Formalisms and models as layered data — refinement, inheritance, the first definition wins.",
             })}
           </p>
         </section>
