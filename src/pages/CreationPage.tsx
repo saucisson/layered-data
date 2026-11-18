@@ -4,7 +4,7 @@
 // it answers, the deterministic simulated proposal otherwise —
 // honestly labeled, never a silent failure); the draft is
 // corrected freely; the staging judges corpus + supplement and
-// demands 0 verdict; the accepted layer enters the living session
+// demands zero failed checks; the accepted layer enters the living session
 // and stays visible from the hierarchy and formalism pages.
 
 import { useMemo, useState } from "react";
@@ -70,7 +70,7 @@ export function CreationPage({ language }: CreationPageProps) {
           <p>
             {say({
               language,
-              en: "You say the intention; the geologist (the workshop's AI, grounded in the real state of the corpus and verified by the staging loop) proposes a draft in the language; you correct it freely; the staging judges corpus + supplement and demands 0 verdict; the accepted layer enters the living session. Without a server or a key, the deterministic simulated AI of the canvas answers instead — degraded, honestly labeled, never a silent failure.",
+              en: "You say the intention; the geologist (the workshop's AI, grounded in the real state of the corpus and verified by the staging loop) proposes a draft in the language; you correct it freely; the staging judges corpus + supplement and demands zero failed checks; the accepted layer enters the living session. Without a server or a key, the deterministic simulated AI of the workshop answers instead — degraded, honestly labeled, never a silent failure.",
             })}
           </p>
           <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">

@@ -54,7 +54,7 @@ export function ViewpointPanel({
         {say({
           language,
           en:
-            "The look is chosen in the tree: lenses dress the types with a " +
+            "The viewpoint is chosen in the tree: lenses dress the types with a " +
             "display templates scheme; viewpoints designate a model and " +
             "a lens through LRef fields. A viewpoint imposes its model — " +
             "a lone lens applies to the current model of ①. The " +
@@ -165,7 +165,7 @@ export function ViewpointPanel({
                     en: "lone lens — the chosen model",
                   })
                 : look.viewpointDecidesPositions
-                  ? say({ language, en: "course positions" })
+                  ? say({ language, en: "dinner-course positions" })
                   : look.modelCarriesPositions
                     ? say({
                         language,
