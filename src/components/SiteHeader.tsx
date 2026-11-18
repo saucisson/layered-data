@@ -8,6 +8,7 @@ import { useEffect, useRef, useState } from "react";
 import { SUPPORTED_LANGUAGES } from "../infrastructure/i18n.ts";
 import { THEMES, type ThemeId } from "../infrastructure/themes.ts";
 import { LOGOS, type LogoId } from "../infrastructure/logos.ts";
+import { apiFetch, readAccessCode } from "../infrastructure/wardrobeClient.ts";
 import { Logo } from "./Logo.tsx";
 import type { Language } from "../domain/messages.ts";
 import type { Page } from "./Router.tsx";
@@ -20,7 +21,7 @@ interface NavEntry {
 }
 
 const NAV_ENTRIES: readonly NavEntry[] = [
-  { page: "landing", label: "Landing" },
+  { page: "landing", label: "Home" },
   { page: "tutorial", label: "Tutorial" },
   { page: "filiation", label: "Filiation" },
   { page: "hierarchy", label: "Hierarchy" },
@@ -51,6 +52,22 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
   // form; once verified the form hides itself and the button shows it.
   const [accessOpen, setAccessOpen] = useState(false);
   const [accessVerified, setAccessVerified] = useState(false);
+  // A remembered code is re-verified on mount, so the lock shows its
+  // verified state right after a reload (#306).
+  useEffect(() => {
+    if (readAccessCode().trim() === "") return;
+    let cancelled = false;
+    void apiFetch({ endpoint: "api/whoami" })
+      .then((response) => {
+        if (!cancelled && response.ok) setAccessVerified(true);
+      })
+      .catch(() => {
+        // unreachable proxy: the form says why when opened
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const accessPopoverRef = useRef<HTMLSpanElement>(null);
   // An open popover closes on outside click or Escape.
   useEffect(() => {
@@ -103,8 +120,14 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
               type="button"
               onClick={() => setAccessOpen(!accessOpen)}
               aria-expanded={accessOpen}
-              aria-label={say({ language, en: "site access code" })}
-              title={say({ language, en: "site access code" })}
+              aria-label={say({
+                language,
+                en: accessVerified ? "site access code — verified" : "site access code",
+              })}
+              title={say({
+                language,
+                en: accessVerified ? "site access code — verified" : "site access code",
+              })}
               className={
                 "rounded border px-2 py-1 font-semibold " +
                 (accessVerified
@@ -112,7 +135,7 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
                   : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700")
               }
             >
-              {accessVerified ? "🔑" : "key"}
+              {"🔑"}
             </button>
             {accessOpen && (
               <span className="absolute right-0 top-full z-50 mt-2 block w-80 shadow-lg">
