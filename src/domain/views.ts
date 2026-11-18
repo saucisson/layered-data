@@ -328,7 +328,8 @@ export function readDisplayTemplate({
   // a partial override (`override fill = …` alone) inherits the
   // parent's shape instead of producing an empty glyph (issue #287).
   let merged: Record<string, unknown> | null = null;
-  for (const [sourceLayer, sourcePath] of space.closure({ layer: lens, path })) {
+  const sources = [...space.closure({ layer: lens, path })];
+  for (const [sourceLayer, sourcePath] of sources.reverse()) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
     if (!isDictionary(node) || !("display" in node)) continue;
     const display = node["display"];

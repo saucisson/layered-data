@@ -265,6 +265,7 @@ function glyphLabel({ glyph, language }: { glyph: Glyph; language: Language }): 
       en: "box (" + (glyph.label ?? "") + ")",
     });
   }
+  if (glyph.shape === "path") return say({ language, en: "path"});
   if (glyph.shape === "line") {
     return glyph.ports === 2
       ? say({ language, en: "2-port arc"})

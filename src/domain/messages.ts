@@ -95,6 +95,18 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
       ", read " +
       text(p, "read"),
   },
+  "unknown-shape": {
+    en: (p) =>
+      text(p, "where") +
+      ' : display shape "' +
+      text(p, "shape") +
+      '" is outside the vocabulary (circle, ellipse, rectangle, box, path, line)',
+  },
+  "invalid-path": {
+    en: (p) =>
+      text(p, "where") +
+      " : the path d is outside the grammar (commands M L H V C S Q T A Z, numbers, separators — nothing else)",
+  },
   "order-conflict": {
     en: (p) =>
       text(p, "where") +
@@ -347,6 +359,8 @@ export const VOCABULARY: Record<string, { en: string; fr?: string | undefined }>
   syntaxe: { en: "syntax"},
   validation: { en: "validation"},
   "attendu-trahi": { en: "expectation-betrayed"},
+  "forme-inconnue": { en: "unknown-shape"},
+  "tracé-invalide": { en: "invalid-path"},
   "cible-inconnue": { en: "unknown-target"},
   "surcharge-implicite": { en: "implicit-overload"},
   "déclaration-fantôme": { en: "ghost-declaration"},
