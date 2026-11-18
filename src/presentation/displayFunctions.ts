@@ -35,7 +35,8 @@ import {
  * try/catch and validates the output. CSP: the site consignes
  * unsafe-eval for this single call site. */
 function runDisplayFn(fn: DisplayFn, args: unknown[]): unknown {
-  // eslint-disable-next-line no-new-func -- ADR-0119: the one code slot, executed only here, output whitelisted
+  // ADR-0119: the one code slot of the language, executed only here,
+  // in a try/catch by the caller, output whitelisted before rendering
   const factory = new Function(...fn.params, "return (" + fn.code + ");") as (
     ...params: unknown[]
   ) => unknown;
