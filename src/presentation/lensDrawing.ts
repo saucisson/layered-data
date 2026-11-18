@@ -10,7 +10,7 @@ import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { AddressView } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
 import { drawnShape, dressingApplicability } from "../domain/views.ts";
-import { bindingOf, circlePosition, LENS_LAYERS, positionOf } from "./viewTree.ts";
+import { bindingOf, circlePosition, isLensLayer, positionOf } from "./viewTree.ts";
 
 /** One drawn vertex: its resolved position and the shape the lens
  * decides for its type (null: the lens knows nothing of it, the
@@ -60,7 +60,7 @@ export function buildWorkshopLook({
   selectedView: string;
   currentLayer: string;
 }): WorkshopLook {
-  const isLens = LENS_LAYERS.includes(selectedView);
+  const isLens = isLensLayer({ space, layer: selectedView });
   // The model: the viewpoint's (model slot resolved as an
   // address), otherwise the current model of ①.
   let model = currentLayer;

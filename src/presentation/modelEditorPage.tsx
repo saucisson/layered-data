@@ -36,7 +36,7 @@ import { drawnShape, type Glyph } from "../domain/views.ts";
 import { flattenLayer } from "../application/flatten.ts";
 import { RefinementDag } from "./workshopInventory.ts";
 import { expectationsOf, formatExpectation, readMatchesExpectation } from "../domain/validation.ts";
-import { circlePosition, LENS_LAYERS } from "./viewTree.ts";
+import { circlePosition, lensLayers } from "./viewTree.ts";
 import { EdgeGlyph } from "./glyphs.tsx";
 import { editionRefusalLabel, labelOf } from "./i18n.ts";
 import { t } from "../infrastructure/i18n.ts";
@@ -202,7 +202,7 @@ export function ModelEditorPage({
   const serverVersionRef = useRef(0);
   // ---- the editor's own choices ------------------------------------
   const [model, setModel] = useState<string | null>(null);
-  const [lens, setLens] = useState<string>(LENS_LAYERS[0] ?? "");
+  const [lens, setLens] = useState<string>(() => lensLayers({ space: KERNEL.space })[0] ?? "");
   const [tool, setTool] = useState<EditorTool>({ kind: "select" });
   const [selected, setSelected] = useState<SelectedMember | null>(null);
   const [banner, setBanner] = useState<Banner | null>(null);
@@ -1385,7 +1385,7 @@ export function ModelEditorPage({
           title={t("a lens is a layer that refines a display scheme (e.g. @graph-display) and overrides the display fields of each type — shape, label, fill, stroke, arrow, ports. Define one in formalisms/kernel/*.ld or from the Creation page.")}
           className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs"
         >
-          {LENS_LAYERS.map((lensName) => (
+          {lensLayers({ space: KERNEL.space }).map((lensName) => (
             <option key={lensName} value={lensName}>
               {lensName}
             </option>
