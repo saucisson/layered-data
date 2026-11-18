@@ -18,6 +18,7 @@ import { applyStagedAddition, stageLayerAddition } from "../src/application/stag
 import {
   asGlyph,
   drawnShape,
+  glyphShapeVerdict,
   isValidPathData,
   readDisplayTemplate,
 } from "../src/domain/views.ts";
@@ -202,6 +203,92 @@ const partial = readDisplayTemplate({
 check(
   "readDisplayTemplate merges field by field (place_type keeps its ellipse shape)",
   partial !== null && partial.length === 1 && partial[0]?.shape === "ellipse",
+);
+
+// a child `glyphs` block overrides the parent's block WHOLE (nearest
+// defining source wins — not the oldest ancestor)
+const childGlyphsDraft =
+  "layer child-display refines @automaton-display\n" +
+  "  extend specification\n" +
+  "    extend state_type\n" +
+  "      extend display when accepting\n" +
+  "        override glyphs\n" +
+  "          only\n" +
+  "            shape = \"rectangle\"\n" +
+  "            w = 30\n";
+const childStaging = stage(childGlyphsDraft, [modelDraft]);
+check("the child glyphs-block draft is accepted", childStaging.verdicts.length === 0);
+applyStagedAddition({
+  space: kernel.space,
+  staging: childStaging,
+  knownLayerNames: bedrock,
+  readonlyLayerNames: bedrock,
+});
+const childTemplate = readDisplayTemplate({
+  space: kernel.space,
+  lens: asLayerName("child-display"),
+  path: asLayerPath(["specification", "state_type"]),
+});
+check(
+  "a child glyphs block wins whole over the parent's block (nearest source)",
+  childTemplate !== null &&
+    childTemplate.length === 1 &&
+    childTemplate[0]?.shape === "rectangle" &&
+    (childTemplate[0] as { w?: number }).w === 30,
+);
+
+// ---- the verdict helper and the narrowing edges -----------------------
+
+check(
+  "glyphShapeVerdict names the fault (unknown shape, invalid path, valid, non-dictionary)",
+  glyphShapeVerdict({ shape: "double-circle" }) === "forme-inconnue" &&
+    glyphShapeVerdict({ shape: "path", d: "M0,0 <b>" }) === "tracé-invalide" &&
+    glyphShapeVerdict({ shape: "circle" }) === null &&
+    glyphShapeVerdict("nope") === "forme-inconnue" &&
+    glyphShapeVerdict({ shape: "path", d: "M0,0 L1,1 Z" }) === null,
+);
+check(
+  "the path grammar refuses glued numbers and trailing dots, accepts exponents and leading dots",
+  !isValidPathData("M1.2.3 L0,0") &&
+    !isValidPathData("M5. L0,0") &&
+    isValidPathData("M1e3,0 L.5,2 Z") &&
+    !isValidPathData("M0,0 L10,10 <script>"),
+);
+check(
+  "asGlyph narrows every genre's fields and ignores invalid ones",
+  asGlyph({ shape: "ellipse", rx: 30, ry: 10 })?.rx === 30 &&
+    (asGlyph({ shape: "box", w: 60, h: 20 }) as { h?: number })?.h === 20 &&
+    asGlyph({ shape: "line", dash: true, curve: "bezier", arrow: "vee" })?.curve === "bezier" &&
+    asGlyph({ shape: "circle", r: "big", "label-side": "diagonal" })?.r === undefined &&
+    (asGlyph({ shape: "circle", r: 5, "label-side": "diagonal" }) as { "label-side"?: string })?.[
+      "label-side"
+    ] === undefined &&
+    asGlyph({ shape: "line", curve: "spiral" })?.curve === undefined &&
+    asGlyph({ shape: "triangle" }) === null &&
+    asGlyph(42) === null,
+);
+check(
+  "labelPosition covers the four sides and the label-dx/dy offset",
+  labelPosition({ glyph: asGlyph({ shape: "circle", r: 20, "label-side": "south" })!, x: 0, y: 0 }).y === 29 &&
+    labelPosition({ glyph: asGlyph({ shape: "circle", r: 20, "label-side": "east" })!, x: 0, y: 0 })
+      .textAnchor === "start" &&
+    labelPosition({ glyph: asGlyph({ shape: "circle", r: 20, "label-side": "west" })!, x: 0, y: 0 })
+      .textAnchor === "end" &&
+    labelPosition({ glyph: asGlyph({ shape: "circle", "label-dx": 4, "label-dy": -2 })!, x: 10, y: 10 })
+      .x === 14 &&
+    labelPosition({ glyph: asGlyph({ shape: "circle", "label-dx": 4, "label-dy": -2 })!, x: 10, y: 10 })
+      .y === 11,
+);
+check(
+  "glyphBounds covers ellipse, path and the line fallback",
+  glyphBounds(asGlyph({ shape: "ellipse", rx: 30, ry: 10 })!).x1 === 30 &&
+    glyphBounds(asGlyph({ shape: "path", d: "M-5,-5 L10,20 Z" })!).x1 === 10 &&
+    glyphBounds(asGlyph({ shape: "path", d: "M0,0 Z" })!).x1 === 0 &&
+    glyphBounds(asGlyph({ shape: "line" })!).x1 === 16,
+);
+check(
+  "a bezier arc with fewer than 3 points falls back to the polyline",
+  !arcPathData({ points: [{ x: 0, y: 0 }, { x: 10, y: 10 }], curve: "bezier" }).includes("C"),
 );
 
 // ---- the ledger -------------------------------------------------------
