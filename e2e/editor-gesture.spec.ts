@@ -29,7 +29,7 @@ test("a canvas gesture drafts a .ld block and the staging verdict appears", asyn
   await canvas.click({ position: { x: 320, y: 240 } });
 
   // the staging verdict appears
-  await expect(page.getByText(/staging: 0 verdict/)).toBeVisible();
+  await expect(page.getByText(/staging: 0 failed checks/)).toBeVisible();
 
   // the drafted .ld block is the only truth: show the source panel
   await page.getByRole("button", { name: "source", exact: true }).click();
@@ -62,7 +62,7 @@ test("#219 dragging a vertex moves it — the drafted position lands in the sour
   await expect(canvas).toBeVisible({ timeout: 10_000 });
   await page.getByRole("button", { name: "places" }).click();
   await canvas.click({ position: { x: 400, y: 300 } });
-  await expect(page.getByText(/staging: 0 verdict/)).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/staging: 0 failed checks/)).toBeVisible({ timeout: 10_000 });
 
   // the drafted position is the exact world point under the click:
   // the svg letterboxes its viewBox (meet), so the mapping goes
@@ -187,7 +187,7 @@ test("#220 an arc carries waypoints — double-click bends it, drag moves the ha
   });
   const canvas = page.getByRole("application", { name: /model canvas/ });
   await expect(canvas).toBeVisible({ timeout: 10_000 });
-  await expect(page.getByText(/staging accepted it|0 verdict/)).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/staging accepted it|0 failed checks/)).toBeVisible({ timeout: 10_000 });
 
   // the arc is drawn between the two vertices
   const edge = page.locator("g[data-edge]").first();
@@ -196,7 +196,7 @@ test("#220 an arc carries waypoints — double-click bends it, drag moves the ha
   // a double-click on the arc bends it: a waypoint lands in the source
   const edgeBox = await edge.boundingBox();
   await page.mouse.dblclick(edgeBox!.x + edgeBox!.width / 2, edgeBox!.y + edgeBox!.height / 2);
-  await expect(page.getByText(/staging: 0 verdict/)).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/staging: 0 failed checks/)).toBeVisible({ timeout: 10_000 });
   await page.getByRole("button", { name: "source" }).click();
   const source = page.locator("pre").first();
   await expect(source).toContainText(/waypoints = "\d+,\d+"/);
@@ -213,7 +213,7 @@ test("#220 an arc carries waypoints — double-click bends it, drag moves the ha
   await page.mouse.down();
   await page.mouse.move(handleBox!.x + handleBox!.width / 2 + 60, handleBox!.y + handleBox!.height / 2 + 40, { steps: 10 });
   await page.mouse.up();
-  await expect(page.getByText(/staging: 0 verdict/)).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/staging: 0 failed checks/)).toBeVisible({ timeout: 10_000 });
   await page.getByRole("button", { name: "source" }).click();
   const after = await source.textContent();
   const waypointAfter = /waypoints = "(\d+),(\d+)"/.exec(after ?? "")?.slice(1);
@@ -223,7 +223,7 @@ test("#220 an arc carries waypoints — double-click bends it, drag moves the ha
 
   // a double-click on the handle removes the waypoint
   await page.locator("circle[data-waypoint]").first().dblclick();
-  await expect(page.getByText(/staging: 0 verdict/)).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText(/staging: 0 failed checks/)).toBeVisible({ timeout: 10_000 });
   await page.getByRole("button", { name: "source" }).click();
   await expect(page.locator("pre").first()).toContainText('waypoints = ""');
 });
