@@ -122,7 +122,10 @@ export function HierarchyPage({ language }: HierarchyPageProps) {
 
         <p className="mt-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
           {hovered !== null
-            ? hovered
+            ? say({
+                language,
+                en: "layer " + hovered + " — click to open it",
+              })
             : say({
                 language,
                 en: "Hover a layer: its closure (upward) and its descendants (downward) come to the front; click it: the formalism page opens on it.",

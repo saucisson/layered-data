@@ -306,7 +306,7 @@ export function ViewpointPanel({
                   (look.applicability.dressed === 0
                     ? say({
                         language,
-                        en: " — blind lens: domain error (check_view_lens)",
+                        en: " — blind lens: dresses no vertex (domain error)",
                       })
                     : "") +
                   (look.applicability.dressed > 0 &&
