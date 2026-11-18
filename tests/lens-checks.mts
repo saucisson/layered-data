@@ -302,7 +302,8 @@ check(
 // (surcharge-implicite x2 + attendu-trahi on states/green/acceptance).
 // The corrected draft — extend instead of refines, extend tests, no
 // expect on the acceptance slot that reads null — must stage with
-// zero verdicts. The fix-vs-delete decision is the maintainer's (#289).
+// zero verdicts. Decision recorded on #289: the orphan file is deleted,
+// not fixed; the corrected draft below still proves the staging accepts it.
 const orphanDraft =
   "layer buchi-traffic-light refines @moore-traffic-light then @buchi-automaton\n" +
   "  extend states\n" +
