@@ -8,7 +8,7 @@
 // and stays visible from the hierarchy and formalism pages.
 
 import { useMemo, useState } from "react";
-import { useRouter } from "../components/Router";
+import { hashOf } from "../components/Router";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import {
   materializeSessionAdditions,
@@ -45,7 +45,6 @@ const EXAMPLE_INTENTIONS: { en: string; fr?: string | undefined }[] = [
 ];
 
 export function CreationPage({ language }: CreationPageProps) {
-  const { navigate } = useRouter();
   const [sessionVersion, setSessionVersion] = useState(readSessionVersion());
   const session = useMemo(() => materializeSessionAdditions({ kernel: KERNEL }), [sessionVersion]);
   const createdLayerNames = session.layerNames.slice(KERNEL.layerNames.length);
@@ -128,21 +127,20 @@ export function CreationPage({ language }: CreationPageProps) {
                     }
                   />
                   <span className="font-mono font-semibold">{layerName}</span>
-                  <button type="button"
-                    onClick={() => navigate("formalism", layerName)}
+                  <a type="button"
+                     href={hashOf("formalism", layerName)}
                     className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
                   >
                     {say({ language, en: "understand it →"})}
-                  </button>
-                  <button type="button"
-                    onClick={() => navigate("hierarchy")}
+                  </a>
+                  <a href={hashOf("hierarchy")}
                     className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
                   >
                     {say({
                       language,
                       en: "see it in the hierarchy →",
                     })}
-                  </button>
+                  </a>
                 </div>
               ))}
             </div>
