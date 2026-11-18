@@ -15,7 +15,7 @@ binary**: yes or no, with `file:line` evidence for every "no".
 
 ## 2. Style
 
-- [ ] All parameters passed as named object parameters (exceptions: 
+- [ ] All parameters passed as named object parameters (exceptions:
       single obvious primitive).
 - [ ] No abbreviations (allowed: `id`, `url`, `http`).
 - [ ] Every literal with meaning is a named `UPPER_CASE` constant.
@@ -47,7 +47,19 @@ binary**: yes or no, with `file:line` evidence for every "no".
 - [ ] Every new behavior is covered by an assertion that **fails if the
       behavior regresses** (not just "executes without crashing").
 - [ ] The executable specification tests pass (`npm run test:specification`).
-- [ ] No test weakened or deleted to make CI pass.
+- [ ] The full gate chain passes locally before pushing: `npm run verify`
+      (strict typecheck on both configs, structure, lint, `test:coverage`,
+      build). CI runs the same chain split into parallel harness jobs
+      (`.github/workflows/ci.yml`).
+- [ ] Coverage gates hold: global c8 `--lines 85` over `src/domain` +
+      `src/application`, plus the dedicated 100% line gate on
+      `src/domain/versionClassifier.ts` (`scripts/check-classifier-coverage.mjs`,
+      wired at the end of `test:coverage`).
+- [ ] Mutation gates hold: `npx stryker run` (cron workflow
+      `mutation.yml`) must stay above `break: 80` / `high: 90` on
+      `src/domain/language/**` + `src/domain/versionClassifier.ts`
+      (`stryker.config.json`).
+- [ ] No test weakened or deleted to make CI pass; no threshold lowered.
 - [ ] New tests added for new functionality.
 
 ## 6. Security and autonomy
@@ -79,9 +91,14 @@ binary**: yes or no, with `file:line` evidence for every "no".
 
 ## 8. Versioning and schema (ADR-0116, ADR-0114)
 
-- [ ] New verdicts (`version-conflict`, `drift`, `formalism-frozen`,
-      `kernel-shadowing`) are emitted with structured diagnostics naming
-      the formalism, the conflicting versions, and both diamond paths.
+- [ ] New verdicts are emitted with structured diagnostics naming the
+      formalism, the conflicting versions, and both diamond paths
+      (`conflit-de-version`, `dérive`, `formalisme-figé`, `masquage-socle`).
+      Every verdict code is a stable French key of the `VOCABULARY` table
+      in `src/domain/messages.ts` with an English translation — never a
+      bare string at the call site. Display/lens verdicts included:
+      `forme-inconnue`, `tracé-invalide`, `cible-inconnue`,
+      `étiquette-inconnue`, `contrat-illisible`, `formule-illisible`.
 - [ ] The version classifier (`src/domain/versionClassifier.ts`) assigns
       PATCH/MINOR/MAJOR structurally — the author never declares a level.
 - [ ] `refines` pins the major (`@user/name@2`); bare names resolve to the
