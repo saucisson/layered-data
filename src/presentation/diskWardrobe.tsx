@@ -309,7 +309,7 @@ export function DiskWardrobe({
             <span className="text-[10px] leading-4 text-slate-600 dark:text-slate-400">
               {say({
                 language,
-                en: "the layer is corrected here like any other — the staging revalidates corpus + supplements + candidate, 0 verdict demanded",
+                en: "the layer is corrected here like any other — the staging revalidates corpus + supplements + candidate, zero failed checks demanded",
               })}
             </span>
           </div>
@@ -386,7 +386,7 @@ export function DiskWardrobe({
               {say({
                 language,
                 en:
-                  "staging: 0 verdict — " +
+                  "staging: 0 failed checks — " +
                   loadResult.newLayerNames.length +
                   " layer(s) loaded from the disk: " +
                   loadResult.newLayerNames.join(", "),

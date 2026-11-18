@@ -115,7 +115,7 @@ export function LayerEditor({
       <p className="mb-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
         {say({
           language,
-          en: "the layer leaves the living context for the time of the judgement: the staging revalidates the whole corpus + supplements, replays the expectations of the other living layers and demands 0 verdict; renaming the layer or sliding another one in is not editing; and the bedrock is read-only by protocol — an edition never aims at it (ADR-0103)",
+          en: "the layer leaves the living context for the time of the judgement: the staging revalidates the whole corpus + supplements, replays the expectations of the other living layers and demands zero failed checks; renaming the layer or sliding another one in is not editing; and the bedrock is read-only by protocol — an edition never aims at it (ADR-0103)",
         })}
       </p>
       <textarea
@@ -203,7 +203,7 @@ export function LayerEditor({
           {say({
             language,
             en:
-              "staging: 0 verdict — the layer « " +
+              "staging: 0 failed checks — the layer « " +
               layerName +
               " » is rewritten, the write is declared, the workshop re-reads the space",
           })}

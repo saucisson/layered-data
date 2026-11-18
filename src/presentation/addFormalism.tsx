@@ -1,7 +1,7 @@
 // The living workshop composer (the ＋ button): the intention is
 // said, the geologist writes (or is generated), the staging judges, the
 // space extends. Dual mode: the local project (small proxy →
-// api.mistral.ai) when it answers, the simulated AI of the canvas
+// api.mistral.ai) when it answers, the simulated AI of the workshop
 // otherwise — degraded stream, deterministic, honestly labeled;
 // never a silent failure.
 
@@ -79,7 +79,7 @@ export function AddFormalismComposer({
     // source of the proposal always speaks.
     let origin = say({
       language,
-      en: "simulated AI — degraded stream of the canvas (no network, no key)",
+      en: "simulated AI — degraded stream of the workshop (no network, no key)",
     });
     let text = simulatedAssistantProposal({ intention, language });
     try {

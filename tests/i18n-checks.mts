@@ -226,8 +226,30 @@ const glossarySource = readFileSync(
 const glossaryTermCount = (glossarySource.match(/term:\s*\{/g) ?? []).length;
 check(
   "the glossary keeps its entries, each with a non-empty English term",
-  glossaryTermCount === 35 &&
+  glossaryTermCount === 43 &&
     !glossarySource.includes("term: { en: \"\" }"),
+);
+
+// every ⟪notion⟫ marker of the tutorial resolves to a glossary entry (#323)
+const glossaryTerms = [
+  ...glossarySource.matchAll(/term:\s*\{\s*en:\s*"([^"]+)"/g),
+].map((match) => (match[1] ?? "").toLowerCase());
+const glossaryIdsLower = [
+  ...glossarySource.matchAll(/^ {2}"?([a-z0-9- ]+)"?:\s*\{/gm),
+].map((match) => (match[1] ?? "").toLowerCase());
+const tutorialMarkerSource = readFileSync(
+  join(import.meta.dirname, "..", "src", "presentation", "tutorial.en.md"),
+  "utf8",
+);
+const tutorialMarkers = [
+  ...new Set([...tutorialMarkerSource.matchAll(/⟪([^⟫]+)⟫/g)].map((m) => (m[1] ?? "").toLowerCase())),
+];
+check(
+  "every ⟪notion⟫ marker of the tutorial resolves to a glossary entry (#323)",
+  tutorialMarkers.length > 0 &&
+    tutorialMarkers.every(
+      (marker) => glossaryTerms.includes(marker) || glossaryIdsLower.includes(marker),
+    ),
 );
 
 // ---- the tutorial: one markdown file, English ------------------------

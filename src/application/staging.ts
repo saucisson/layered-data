@@ -570,7 +570,7 @@ export function simulatedAssistantProposal({
     }),
     parseText({
       language,
-      en: "// the staging will judge corpus + supplement, 0 verdict demanded",
+      en: "// the staging will judge corpus + supplement, zero failed checks demanded",
     }),
     "layer " + name + " refines @weighted-hypergraph then @graph",
     "  extend edge_type",
