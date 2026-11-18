@@ -61,8 +61,9 @@ check(
     lenses.includes(lens),
   ) &&
     lenses.every((lens, index) => {
+      const previous = index === 0 ? null : (lenses[index - 1] ?? null);
       const assemblyIndex = bedrock.indexOf(lens);
-      return index === 0 || bedrock.indexOf(lenses[index - 1]) < assemblyIndex;
+      return previous === null || bedrock.indexOf(previous) < assemblyIndex;
     }),
 );
 check(
