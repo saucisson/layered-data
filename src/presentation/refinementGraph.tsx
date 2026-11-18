@@ -255,7 +255,6 @@ export function RefinementGraph({
           </>
         );
         const sharedProps = {
-          key: layerName,
           onMouseEnter: () => onHover?.(layerName),
           onMouseLeave: () => onHover?.(null),
           style: {
@@ -274,11 +273,11 @@ export function RefinementGraph({
         // without onPick (hierarchy page) the pill is a real link to the
         // formalism page; with onPick (workshop) it is an in-panel pick
         return onPick ? (
-          <button type="button" {...sharedProps} onClick={() => onPick(layerName)}>
+          <button type="button" key={layerName} {...sharedProps} onClick={() => onPick(layerName)}>
             {pillBody}
           </button>
         ) : (
-          <a {...sharedProps} href={hashOf("formalism", layerName)}>
+          <a key={layerName} {...sharedProps} href={hashOf("formalism", layerName)}>
             {pillBody}
           </a>
         );
