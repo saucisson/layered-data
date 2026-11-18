@@ -7,7 +7,7 @@
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { isDictionary, LayerReference, PathReference, type RawTree } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
-import type { Glyph } from "../domain/views.ts";
+import { DEFAULT_NODE_SIZE, type Glyph, type NodeSize } from "../domain/views.ts";
 import type { Language } from "../domain/messages.ts";
 import { resolvePositionAt } from "../application/positions.ts";
 import { say } from "./i18n.ts";
@@ -240,6 +240,43 @@ export function positionOf({
   y: number;
 } | null {
   return resolvedPosition({ space, layer: source, path: ["positions", name], visited: new Set() });
+}
+
+/** The size datum of a named object within one source layer's
+ * `sizes` collection (issue #285): `scale` and `angle`, each read
+ * with its default when the member exists but the field is absent.
+ * Null when the source poses no `sizes/<name>` member at all — the
+ * cascade (viewpoint > model > gabarit default) then falls through,
+ * exactly like the positions. */
+export function sizeOf({
+  space,
+  source,
+  container,
+  name,
+}: {
+  space: Space;
+  source: string;
+  container: string;
+  name: string;
+}): NodeSize | null {
+  const member = space.read({
+    layer: asLayerName(source),
+    path: asLayerPath([container, name]),
+    key: "scale",
+  });
+  const angle = space.read({
+    layer: asLayerName(source),
+    path: asLayerPath([container, name]),
+    key: "angle",
+  });
+  if (member === null && angle === null) return null;
+  return {
+    scale:
+      typeof member === "number" && Number.isFinite(member) && member > 0
+        ? member
+        : DEFAULT_NODE_SIZE.scale,
+    angle: typeof angle === "number" && Number.isFinite(angle) ? angle : DEFAULT_NODE_SIZE.angle,
+  };
 }
 
 /** The bound value of one key of a viewpoint, with the layer that

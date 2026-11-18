@@ -68,6 +68,17 @@ export function walkLayerObserved({
  * the edges' idiom (outside, on the named side of the bounds). */
 export type LabelSide = "inside" | "north" | "south" | "east" | "west";
 
+/** The per-node size datum (issue #285): a `sizes` block of the model
+ * (or of the viewpoint) carries, per vertex name, a `scale` factor
+ * and/or an `angle` in degrees. The gabarit's defaults apply when no
+ * datum is posed — a node without data keeps the template's sizes. */
+export interface NodeSize {
+  scale: number;
+  angle: number;
+}
+
+export const DEFAULT_NODE_SIZE: NodeSize = { scale: 1, angle: 0 };
+
 export const LABEL_SIDES: readonly LabelSide[] = ["inside", "north", "south", "east", "west"];
 
 /** The fields every vertex glyph may carry (issue #284): dimensions
