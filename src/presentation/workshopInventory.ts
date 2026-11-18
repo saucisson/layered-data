@@ -104,16 +104,16 @@ export const LAYER_ROLE: Record<string, BilingualText> = {
     en: "the bounded arity axis: exactly 2 arrows, no roles — an undirected graph",
   },
   graph: {
-    en: "the mathematician's simple graph: 2-uniform and pure — « a 2-uniform hypergraph is a graph » (a recycled name, orientation lives in multidigraph)",
+    en: "the mathematician's simple graph: 2-uniform and pure — “ a 2-uniform hypergraph is a graph ” (a recycled name, orientation lives in multidigraph)",
   },
   "graph-with-positions": {
-    en: "a « positions » derivation: a graph whose vertices get placed — the composition of the graph and the grid",
+    en: "a “ positions ” derivation: a graph whose vertices get placed — the composition of the graph and the grid",
   },
   multidigraph: {
     en: "orientation: 2 arrows source / target, a renaming of the connection points; the base leaves parallel arcs and loops permitted there (ex graph)",
   },
   digraph: {
-    en: "pure arcs: orientation x purity — neither parallel arcs nor arc-loops, legal 2-cycles (the « simple digraph »)",
+    en: "pure arcs: orientation x purity — neither parallel arcs nor arc-loops, legal 2-cycles (the “ simple digraph ”)",
   },
   "oriented-graph": {
     en: "the strict sense: no pair of opposite arcs (check oriented, per arc address)",

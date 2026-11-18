@@ -98,7 +98,7 @@ export function LayerEditor({
         <span className="text-xs font-semibold text-slate-700 dark:text-slate-200">
           {say({
             language,
-            en: "edit the living layer « " + layerName + " »",
+            en: "edit the living layer “ " + layerName + " ”",
           })}
         </span>
         <button type="button"
@@ -203,9 +203,9 @@ export function LayerEditor({
           {say({
             language,
             en:
-              "staging: 0 failed checks — the layer « " +
+              "staging: 0 failed checks — the layer “ " +
               layerName +
-              " » is rewritten, the write is declared, the workshop re-reads the space",
+              " ” is rewritten, the write is declared, the workshop re-reads the space",
           })}
         </div>
       )}

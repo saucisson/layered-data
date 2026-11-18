@@ -180,28 +180,28 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
   "vacant-slot": {
     en: (p) =>
       text(p, "where") +
-      " : the check « " +
+      " : the check “ " +
       text(p, "tag") +
-      " » cannot judge — the slot « " +
+      " ” cannot judge — the slot “ " +
       text(p, "slot") +
-      " » is unbound (ADR-0101)",
+      " ” is unbound (ADR-0101)",
   },
   "check-betrayed": {
     en: (p) => text(p, "where") + " : the carried check refuses — " + text(p, "error"),
   },
   "algorithm-missing": {
     en: (p) =>
-      "the check « " +
+      "the check “ " +
       text(p, "tag") +
-      " » is declared in the registry but no algorithm executes it (ADR-0102)",
+      " ” is declared in the registry but no algorithm executes it (ADR-0102)",
   },
   // ---- the declarative strate's facts (ADR-0105) ----
   "redefined-check": {
     en: (p) =>
       text(p, "where") +
-      " : the check « " +
+      " : the check “ " +
       text(p, "name") +
-      " » is re-posed divergently (" +
+      " ” is re-posed divergently (" +
       text(p, "first") +
       " then " +
       text(p, "second") +
@@ -210,94 +210,94 @@ export const TEMPLATES: Record<string, MessageTemplate> = {
   "unsupported-level": {
     en: (p) =>
       text(p, "where") +
-      " : the check « " +
+      " : the check “ " +
       text(p, "name") +
-      " » judges at the level « " +
+      " ” judges at the level “ " +
       text(p, "level") +
-      " » — the reading strate judges at layer roots only",
+      " ” — the reading strate judges at layer roots only",
   },
   "missing-condition": {
     en: (p) =>
       text(p, "where") +
-      " : the judgment of « " +
+      " : the judgment of “ " +
       text(p, "name") +
-      " » carries a « when » but the couple declares no condition",
+      " ” carries a “ when ” but the couple declares no condition",
   },
   "unreadable-formula": {
     en: (p) =>
-      "the check « " +
+      "the check “ " +
       text(p, "tag") +
-      " » carries an unreadable formula: " +
+      " ” carries an unreadable formula: " +
       text(p, "detail") +
       " (ADR-0105)",
   },
   "template-out-of-scope": {
     en: (p) =>
       text(p, "where") +
-      " : the message of « " +
+      " : the message of “ " +
       text(p, "name") +
-      " » names « " +
+      " ” names “ " +
       text(p, "term") +
-      " », outside the judgment's quantified scope",
+      " ”, outside the judgment's quantified scope",
   },
   "exhausted-formula": {
     en: (p) =>
-      "the check « " +
+      "the check “ " +
       text(p, "tag") +
-      " » exhausted its budget (" +
+      " ” exhausted its budget (" +
       text(p, "steps") +
       " steps) — it never judges silently",
   },
   "contract-without-algorithm": {
     en: (p) =>
-      "the registry declares « " +
+      "the registry declares “ " +
       text(p, "tag") +
-      " » but the kernel binds no algorithm to it (ADR-0102)",
+      " ” but the kernel binds no algorithm to it (ADR-0102)",
   },
   "algorithm-without-contract": {
     en: (p) =>
-      "the kernel binds an algorithm for « " +
+      "the kernel binds an algorithm for “ " +
       text(p, "tag") +
-      " » that the registry never declares (ADR-0102)",
+      " ” that the registry never declares (ADR-0102)",
   },
   "contract-unreadable": {
     en: (p) =>
       text(p, "where") +
-      " : the contract of « " +
+      " : the contract of “ " +
       text(p, "tag") +
-      " » is unreadable — a clause the kernel cannot parse (ADR-0102)",
+      " ” is unreadable — a clause the kernel cannot parse (ADR-0102)",
   },
   "bedrock-occupied": {
     en: (p) =>
-      "the name « " +
+      "the name “ " +
       text(p, "layer") +
-      " » belongs to the bedrock — the read-only corpus: its layers are never rewritten, a draft may refine them, never replace them (ADR-0103)",
+      " ” belongs to the bedrock — the read-only corpus: its layers are never rewritten, a draft may refine them, never replace them (ADR-0103)",
   },
   "kernel-shadowing": {
     en: (p) =>
-      "the visitors' layer « " +
+      "the visitors' layer “ " +
       text(p, "layer") +
-      " » masks a bedrock name — the contextual resolution (user, then kernel) would hide the read-only layer: rename the visitor layer (issue #145)",
+      " ” masks a bedrock name — the contextual resolution (user, then kernel) would hide the read-only layer: rename the visitor layer (issue #145)",
   },
   "version-conflict": {
     en: (p) =>
-      "the formalism « " +
+      "the formalism “ " +
       text(p, "formalism") +
-      " » is pinned to divergent majors (" +
+      " ” is pinned to divergent majors (" +
       text(p, "majors") +
       ") in this assembly — one major per name per closure (ADR-0116 rule 3): re-pin one of the diamond paths",
   },
   "formalism-frozen": {
     en: (p) =>
-      "the formalism « " +
+      "the formalism “ " +
       text(p, "layer") +
-      " » is frozen — read-only by protocol (ADR-0116): to change it, fork into the next version, whose level the workshop computes",
+      " ” is frozen — read-only by protocol (ADR-0116): to change it, fork into the next version, whose level the workshop computes",
   },
   drift: {
     en: (p) =>
-      "the assembly « " +
+      "the assembly “ " +
       text(p, "layer") +
-      " » drifted: a minor lift of a dependency changed its measured dump (fingerprint " +
+      " ” drifted: a minor lift of a dependency changed its measured dump (fingerprint " +
       text(p, "fingerprint") +
       ") — re-certify the dependent explicitly, never silently (ADR-0116 rule 4)",
   },

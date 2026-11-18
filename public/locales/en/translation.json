@@ -39,7 +39,7 @@
   "sperner: edge {e2} contained in {e1}": "sperner: edge {e2} contained in {e1}",
   "staging — create the model": "staging — create the model",
   "staging: 0 failed checks — the layer is rewritten, the write is declared, the canvas re-reads the space": "staging: 0 failed checks — the layer is rewritten, the write is declared, the canvas re-reads the space",
-  "the formalism declares no arc from « {{fromContainer}} » to « {{toContainer}} » — the direction is the formalism's to decide": "the formalism declares no arc from « {{fromContainer}} » to « {{toContainer}} » — the direction is the formalism's to decide",
+  "the formalism declares no arc from “ {{fromContainer}} ” to “ {{toContainer}} ” — the direction is the formalism's to decide": "the formalism declares no arc from “ {{fromContainer}} ” to “ {{toContainer}} ” — the direction is the formalism's to decide",
   "the graphical model editor": "the graphical model editor",
   "the imported draft entered the space — the staging accepted it": "the imported draft entered the space — the staging accepted it",
   "the member is cited — delete the citing arcs first: {{citations}}": "the member is cited — delete the citing arcs first: {{citations}}",
