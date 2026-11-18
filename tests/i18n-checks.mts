@@ -226,7 +226,7 @@ const glossarySource = readFileSync(
 const glossaryTermCount = (glossarySource.match(/term:\s*\{/g) ?? []).length;
 check(
   "the glossary keeps its entries, each with a non-empty English term",
-  glossaryTermCount === 43 &&
+  glossaryTermCount === 45 &&
     !glossarySource.includes("term: { en: \"\" }"),
 );
 
