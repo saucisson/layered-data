@@ -296,6 +296,29 @@ check(
   !arcPathData({ points: [{ x: 0, y: 0 }, { x: 10, y: 10 }], curve: "bezier" }).includes("C"),
 );
 
+// ---- L7: the corrected orphan stages clean -----------------------------
+
+// formalisms/kernel/buchi-traffic-light.ld as it stands is refused
+// (surcharge-implicite x2 + attendu-trahi on states/green/acceptance).
+// The corrected draft — extend instead of refines, extend tests, no
+// expect on the acceptance slot that reads null — must stage with
+// zero verdicts. The fix-vs-delete decision is the maintainer's (#289).
+const orphanDraft =
+  "layer buchi-traffic-light refines @moore-traffic-light then @buchi-automaton\n" +
+  "  extend states\n" +
+  "    extend green\n" +
+  "      accepting = true\n" +
+  "  extend tests\n" +
+  "    expect states/green/accepting = true\n" +
+  "    expect states/red/accepting absent\n" +
+  "    expect states/amber/accepting absent\n" +
+  "    expect states/green/output = \"go\"\n";
+const orphanStaging = stage(orphanDraft, []);
+check(
+  "the corrected buchi-traffic-light draft stages with zero verdicts",
+  orphanStaging.verdicts.length === 0,
+);
+
 // ---- the ledger -------------------------------------------------------
 
 console.log("lens checks: " + assertions + " assertions, " + failures.length + " failure(s)");
