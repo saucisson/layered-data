@@ -1,6 +1,6 @@
 # ADR-0119: Display functions — code legal in exactly one place
 
-- Status: proposed (awaiting the human owner's acceptance)
+- Status: accepted (owner decision on issue #288, 2026-11-18; implemented in PR F)
 - Date: 2026-11-18
 - Related: issue #288 (L6 of the lens mission), ADR-0103 (frozen bedrock),
   ADR-0107 (the editor), `docs/connection-points.md` (L4 study)

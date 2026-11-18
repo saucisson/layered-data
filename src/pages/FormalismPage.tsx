@@ -393,6 +393,7 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
             key={edge.name}
             name={edge.name}
             shape={edge.drawn ? edge.drawn.spec : null}
+            fnContext={edge.fnContext}
             weight={edge.weight}
             from={from}
             to={to}
@@ -412,6 +413,8 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
             key={vertex.name}
             name={vertex.name}
             shape={vertex.drawn ? vertex.drawn.spec : null}
+            draw={vertex.drawn ? vertex.drawn.draw : null}
+            fnContext={vertex.fnContext}
             position={vertex.position}
             size={vertex.size}
             selected={selectedGlyph === vertex.name}

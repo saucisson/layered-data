@@ -5,6 +5,7 @@
 // rendering over the narrowed Glyph, no kernel reads.
 
 import type { Glyph, NodeSize } from "../domain/views.ts";
+import type { SvgDataNode } from "./displayFunctions.ts";
 import { scaledGlyph } from "./glyphGeometry.ts";
 
 export { arcPathData, glyphBounds, labelPosition, scaledGlyph } from "./glyphGeometry.ts";
@@ -53,4 +54,13 @@ export function vertexGlyphElement({
     return null;
   })();
   return <g transform={transform}>{inner}</g>;
+}
+
+/** One whitelisted SVG-data node as a React element — the ONLY way
+ * display-function output (ADR-0119) reaches the DOM: React elements,
+ * never markup in text, never innerHTML. */
+export function svgDataElement(node: SvgDataNode, key: number): React.ReactNode {
+  const attrs: Record<string, string | number> = { ...node.attrs, key };
+  const Tag = node.tag as keyof React.JSX.IntrinsicElements;
+  return <Tag {...attrs}>{node.children.map((child, index) => svgDataElement(child, index))}</Tag>;
 }

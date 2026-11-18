@@ -4,31 +4,43 @@
 // arrowhead — dashed when undressed). Pure rendering, no kernel
 // reads.
 
-import type { Glyph, NodeSize } from "../domain/views.ts";
-import { labelPosition, vertexGlyphElement } from "./glyphShape.tsx";
+import type { NodeSize, RawGlyph } from "../domain/views.ts";
+import { labelPosition, svgDataElement, vertexGlyphElement } from "./glyphShape.tsx";
 import { arcPathData, glyphBounds, scaledGlyph } from "./glyphGeometry.ts";
+import {
+  resolveDrawFn,
+  resolveGlyphList,
+  type DisplayFnContext,
+} from "./displayFunctions.ts";
+import type { Glyph } from "../domain/views.ts";
 
 /** One drawn vertex: the glyphs decided by the lens for its type,
  * overlaid in the order posed, the name inside, dashed when the lens
  * knows nothing of it. The node's size datum (issue #285) scales the
- * glyphs and rotates them around the node's centre. */
+ * glyphs and rotates them around the node's centre. Display functions
+ * (ADR-0119) resolve here, per node, against the fn context. */
 export function NodeGlyph({
   name,
   shape,
+  draw,
+  fnContext,
   position,
   size,
   selected,
   onPick,
 }: {
   name: string;
-  shape: Glyph[] | null;
+  shape: RawGlyph[] | null;
+  draw?: import("../domain/displayFunctions.ts").DisplayFn | null;
+  fnContext?: DisplayFnContext | undefined;
   position: { x: number; y: number };
   size?: NodeSize | undefined;
   selected: boolean;
   onPick: () => void;
 }) {
   const { x, y } = position;
-  const glyphs = shape ?? [];
+  const glyphs = resolveGlyphList(shape ?? [], fnContext);
+  const drawTree = resolveDrawFn(draw ?? null, fnContext);
   const shapeKind = glyphs.length > 0 ? (glyphs[0]?.shape ?? null) : null;
   const stroke = "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
@@ -42,7 +54,10 @@ export function NodeGlyph({
       {glyphs.map((glyph, index) => (
         <g key={index}>{vertexGlyphElement({ glyph, x, y, strokeWidth, size })}</g>
       ))}
-      {glyphs.length === 0 && (
+      {drawTree !== null && (
+        <g transform={"translate(" + x + " " + y + ")"}>{svgDataElement(drawTree, 0)}</g>
+      )}
+      {glyphs.length === 0 && drawTree === null && (
         <circle cx={x} cy={y} r={16} fill="none" stroke={stroke} strokeDasharray="3 3" />
       )}
       <text
@@ -67,6 +82,7 @@ export function NodeGlyph({
 export function EdgeGlyph({
   name,
   shape,
+  fnContext,
   from,
   to,
   waypoints = [],
@@ -83,14 +99,15 @@ export function EdgeGlyph({
   waypointDragIndex = null,
 }: {
   name: string;
-  shape: Glyph[] | null;
+  shape: RawGlyph[] | null;
+  fnContext?: DisplayFnContext | undefined;
   weight?: number | null;
   from: { x: number; y: number };
   to: { x: number; y: number };
   waypoints?: { x: number; y: number }[];
-  fromShape?: Glyph[] | null;
+  fromShape?: RawGlyph[] | null;
   fromSize?: NodeSize | undefined;
-  toShape?: Glyph[] | null;
+  toShape?: RawGlyph[] | null;
   toSize?: NodeSize | undefined;
   selected: boolean;
   onPick: () => void;
@@ -99,7 +116,9 @@ export function EdgeGlyph({
   onWaypointDoubleClick?: (index: number) => void;
   waypointDragIndex?: number | null;
 }) {
-  const glyphs = (shape ?? []).filter((glyph) => glyph.shape === "line");
+  const glyphs = resolveGlyphList(shape ?? [], fnContext).filter(
+    (glyph): glyph is Glyph & { shape: "line" } => glyph.shape === "line",
+  );
   const hasPorts = glyphs.some((glyph) => glyph.shape === "line" && glyph.ports === 2);
   const hasArrow = glyphs.some((glyph) => glyph.shape === "line" && glyph.arrow === "plain");
   const curve = glyphs.find((glyph) => glyph.shape === "line" && glyph.curve !== undefined)?.curve ?? "polyline";
@@ -113,12 +132,12 @@ export function EdgeGlyph({
   // EFFECTIVE bounds (scaled, rotated — issue #285), not a constant
   const polyline = [from, ...waypoints, to];
   const trimDistance = (
-    endpointShape: Glyph[] | null,
+    endpointShape: RawGlyph[] | null,
     endpointSize: NodeSize | undefined,
     dx: number,
     dy: number,
   ): number => {
-    const glyphs = endpointShape ?? [];
+    const glyphs = resolveGlyphList(endpointShape ?? [], fnContext);
     if (glyphs.length === 0) return 20;
     const scale = endpointSize?.scale ?? 1;
     const angle = endpointSize?.angle ?? 0;
