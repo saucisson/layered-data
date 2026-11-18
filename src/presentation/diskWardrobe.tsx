@@ -397,7 +397,7 @@ export function DiskWardrobe({
             <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 text-[11px] leading-4 text-slate-600 dark:text-slate-400">
               {say({
                 language,
-                en: "staging: 0 verdict — but these layers are already in the space: nothing to add.",
+                en: "staging: 0 failed checks — but these layers are already in the space: nothing to add.",
               })}
             </div>
           )}
