@@ -13,6 +13,7 @@ import { Logo } from "./Logo.tsx";
 import type { Language } from "../domain/messages.ts";
 import type { Page } from "./Router.tsx";
 import { AccessCodeForm } from "../presentation/accessForm.tsx";
+import { UserAccountForm } from "../presentation/userAccountForm.tsx";
 import { say } from "../presentation/i18n.ts";
 
 interface NavEntry {
@@ -53,7 +54,9 @@ interface SiteHeaderProps {
 export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onChooseTheme, logo, onChooseLogo }: SiteHeaderProps) {
   // The access-code lock lives here (issue #222): one click opens the
   // form; once verified the form hides itself and the button shows it.
-  const [accessOpen, setAccessOpen] = useState(false);
+  // one popover at a time: the access code, the account, the
+  // preferences (logo + theme, out of the permanent chrome, #307)
+  const [openPopover, setOpenPopover] = useState<"access" | "account" | "prefs" | null>(null);
   const [accessVerified, setAccessVerified] = useState(false);
   // A remembered code is re-verified on mount, so the lock shows its
   // verified state right after a reload (#306).
@@ -71,15 +74,15 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
       cancelled = true;
     };
   }, []);
-  const accessPopoverRef = useRef<HTMLSpanElement>(null);
+  const popoverRef = useRef<HTMLSpanElement>(null);
   // An open popover closes on outside click or Escape.
   useEffect(() => {
-    if (!accessOpen) return;
+    if (openPopover === null) return;
     const onPointerDown = (event: MouseEvent) => {
-      if (!accessPopoverRef.current?.contains(event.target as Node)) setAccessOpen(false);
+      if (!popoverRef.current?.contains(event.target as Node)) setOpenPopover(null);
     };
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setAccessOpen(false);
+      if (event.key === "Escape") setOpenPopover(null);
     };
     document.addEventListener("pointerdown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
@@ -87,7 +90,7 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
       document.removeEventListener("pointerdown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [accessOpen]);
+  }, [openPopover]);
   return (
     <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-900/95">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3 sm:px-6">
@@ -117,12 +120,29 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
             );
           })}
         </nav>
-        <span className="ml-auto flex shrink-0 items-center gap-2 text-xs">
-          <span className="relative" ref={accessPopoverRef}>
+        <span className="ml-auto flex shrink-0 items-center gap-2 text-xs" ref={popoverRef}>
+          <span className="relative">
             <button
               type="button"
-              onClick={() => setAccessOpen(!accessOpen)}
-              aria-expanded={accessOpen}
+              onClick={() => setOpenPopover(openPopover === "account" ? null : "account")}
+              aria-expanded={openPopover === "account"}
+              aria-label={say({ language, en: "user account" })}
+              title={say({ language, en: "user account" })}
+              className="rounded border border-slate-300 bg-white px-2 py-1 font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              {say({ language, en: "account" })}
+            </button>
+            {openPopover === "account" && (
+              <span className="absolute right-0 top-full z-50 mt-2 block w-80 shadow-lg">
+                <UserAccountForm language={language} />
+              </span>
+            )}
+          </span>
+          <span className="relative">
+            <button
+              type="button"
+              onClick={() => setOpenPopover(openPopover === "access" ? null : "access")}
+              aria-expanded={openPopover === "access"}
               aria-label={say({
                 language,
                 en: accessVerified ? "site access code — verified" : "site access code",
@@ -140,7 +160,7 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
             >
               {"🔑"}
             </button>
-            {accessOpen && (
+            {openPopover === "access" && (
               <span className="absolute right-0 top-full z-50 mt-2 block w-80 shadow-lg">
                 <AccessCodeForm
                   language={language}
@@ -180,35 +200,53 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
               </span>
             )
           )}
-          {/* The logo picker (issue #234): persisted in localStorage. */}
-          <select
-            value={logo}
-            onChange={(event) => onChooseLogo(event.target.value as LogoId)}
-            aria-label={say({ language, en: "logo" })}
-            title={say({ language, en: "logo" })}
-            className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            {LOGOS.map((choice) => (
-              <option key={choice.id} value={choice.id}>
-                {choice.label}
-              </option>
-            ))}
-          </select>
-          {/* The theme picker (issue #233): the choice is persisted in
-              localStorage and applied as classes on <html>. */}
-          <select
-            value={theme}
-            onChange={(event) => onChooseTheme(event.target.value as ThemeId)}
-            aria-label={say({ language, en: "theme" })}
-            title={say({ language, en: "theme" })}
-            className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-          >
-            {THEMES.map((choice) => (
-              <option key={choice.id} value={choice.id}>
-                {choice.label}
-              </option>
-            ))}
-          </select>
+          {/* The preferences popover (issue #307): the logo picker
+              (issue #234) and the theme picker (issue #233) live here,
+              out of the permanent chrome; both persist in localStorage. */}
+          <span className="relative">
+            <button
+              type="button"
+              onClick={() => setOpenPopover(openPopover === "prefs" ? null : "prefs")}
+              aria-expanded={openPopover === "prefs"}
+              aria-label={say({ language, en: "preferences" })}
+              title={say({ language, en: "preferences" })}
+              className="rounded border border-slate-300 bg-white px-2 py-1 font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              {say({ language, en: "prefs" })}
+            </button>
+            {openPopover === "prefs" && (
+              <span className="absolute right-0 top-full z-50 mt-2 flex w-44 flex-col gap-2 rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-800">
+                <select
+                    value={logo}
+              onChange={(event) => onChooseLogo(event.target.value as LogoId)}
+              aria-label={say({ language, en: "logo" })}
+              title={say({ language, en: "logo" })}
+              className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+            >
+              {LOGOS.map((choice) => (
+                <option key={choice.id} value={choice.id}>
+                  {choice.label}
+                </option>
+              ))}
+            </select>
+            {/* The theme picker (issue #233): the choice is persisted in
+                localStorage and applied as classes on <html>. */}
+                <select
+                  value={theme}
+                  onChange={(event) => onChooseTheme(event.target.value as ThemeId)}
+                  aria-label={say({ language, en: "theme" })}
+                  title={say({ language, en: "theme" })}
+                  className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
+                >
+                  {THEMES.map((choice) => (
+                    <option key={choice.id} value={choice.id}>
+                      {choice.label}
+                    </option>
+                  ))}
+                </select>
+              </span>
+            )}
+          </span>
         </span>
       </div>
     </header>
