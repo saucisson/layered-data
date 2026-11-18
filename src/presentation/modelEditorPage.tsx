@@ -1531,7 +1531,6 @@ export function ModelEditorPage({
           ))}
         </select>
         <a
-          type="button"
            href={hashOf("formalism", lens)}
           title={t("edit the lens — its DSL source on the formalism page")}
           className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900"
