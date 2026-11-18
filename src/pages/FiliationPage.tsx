@@ -354,7 +354,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
             <NotionText
               text={say({
                 language,
-                en: "This idea did not fall from the sky. Layered data is the latest stratum of a long sediment: knowledge representation, object languages, the style sheets of the web, product lines, configuration languages, modeling stacks. This page walks that lineage — for the honesty of the story, not for the comfort of a name — then measures the differences: two axes read the neighbors, a table compares them side by side, and the last section says what the workshop adds and what it does not — the tutorial explains the gesture, this page names the ancestors. The companion document is docs/filiation.md, in the repository.",
+                en: "This idea did not fall from the sky. Layered data is the latest stratum of a long sediment: knowledge representation, object languages, the style sheets of the web, product lines, configuration languages, modeling stacks. This page walks that lineage — for the honesty of the story, not for the comfort of a name — then measures the differences: two axes read the neighbors, a table compares them side by side, and the last section says what the workshop adds and what it does not — the tutorial explains the gesture, this page names the ancestors. The companion document is docs/archive/filiation.md, in the repository.",
               })}
               language={language}
             />
