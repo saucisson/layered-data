@@ -38,7 +38,9 @@ import {
 } from "../src/application/session.ts";
 import { buildWorkshopLook } from "../src/presentation/lensDrawing.ts";
 import {
+  belongsToPivotFamily,
   computeGraphLayout,
+  FAMILY_PIVOTS,
   RefinementDag,
 } from "../src/presentation/workshopInventory.ts";
 import { computeRefinementGraphLayout } from "../src/presentation/refinementGraphLayout.ts";
@@ -590,6 +592,49 @@ check(
   "(d4) a layer whose principal parent is petrinet-scheme shares its family (pt-petrinet); a layer with another principal parent (petrinet-display → graph-display) does not",
   corpusDag.familyOf("pt-petrinet") === "petrinet-scheme" &&
     corpusDag.familyOf("petrinet-display") === "graph-display",
+);
+
+// (d5) the derived family filter (issue #363): one pivot layer per
+// family, membership by closure test — zero datum posed in the .ld
+check(
+  "(d5) every family pivot is a corpus layer with a non-empty family, and membership is exactly “pivot in the refines closure”",
+  FAMILY_PIVOTS.every(({ pivot }) => KERNEL_LAYER_NAMES.map(String).includes(pivot)) &&
+    FAMILY_PIVOTS.every(({ pivot }) =>
+      KERNEL_LAYER_NAMES.some((layerName) =>
+        belongsToPivotFamily({ dag: corpusDag, layerName, pivot }),
+      ),
+    ) &&
+    belongsToPivotFamily({ dag: corpusDag, layerName: "pn-philosophers-5", pivot: "petrinet-scheme" }) &&
+    belongsToPivotFamily({ dag: corpusDag, layerName: "moore-traffic-light", pivot: "automaton-scheme" }) &&
+    belongsToPivotFamily({ dag: corpusDag, layerName: "ss-pn-philosophers-5", pivot: "petrinet-statespace" }) &&
+    belongsToPivotFamily({ dag: corpusDag, layerName: "petrinet-display", pivot: "graph-display" }) &&
+    belongsToPivotFamily({ dag: corpusDag, layerName: "kahn-course", pivot: "view-scheme" }) &&
+    !belongsToPivotFamily({ dag: corpusDag, layerName: "half-adder", pivot: "petrinet-scheme" }) &&
+    !belongsToPivotFamily({ dag: corpusDag, layerName: "record", pivot: "graph-display" }),
+);
+check(
+  "(d5) the circuits family is exactly the logic-circuit closure — logic-circuit, half-adder, logic-circuit-display",
+  KERNEL_LAYER_NAMES.filter((layerName) =>
+    belongsToPivotFamily({ dag: corpusDag, layerName, pivot: "logic-circuit" }),
+  ).join(",") === "logic-circuit,half-adder,logic-circuit-display",
+);
+check(
+  "(d5) multiselect = union of the closures; no selection = every layer passes (the current view)",
+  (() => {
+    const inSelected = (layerName: string, pivots: string[]) =>
+      pivots.length === 0 ||
+      pivots.some((pivot) => belongsToPivotFamily({ dag: corpusDag, layerName, pivot }));
+    const shown = KERNEL_LAYER_NAMES.filter((layerName) =>
+      inSelected(layerName, ["petrinet-scheme", "logic-circuit"]),
+    );
+    const shownNames = shown.map(String);
+    return (
+      shownNames.includes("pn-philosophers-5") &&
+      shownNames.includes("half-adder") &&
+      !shownNames.includes("record") &&
+      KERNEL_LAYER_NAMES.every((layerName) => inSelected(layerName, []))
+    );
+  })(),
 );
 
 // (d2) the SHARED wrapped layout (issue #217) — the one component the
