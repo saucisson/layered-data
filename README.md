@@ -180,7 +180,7 @@ All fronts run under bare Node (native type stripping) — the CI
    conformance measurements, not formal proofs: closures (dedup, own
    node first, the measured diamond), reads (first-wins, statuses),
    keys, anchors, immutability (call-order independence, permutation
-   invariance of the 90-layer assembly), the cycle guard, late binding,
+   invariance of the 91-layer assembly), the cycle guard, late binding,
    desugaring (topological order, idempotence), the exact invalidation
    protocol — and, since ADR-0106, the two-regime algebra theorems.
 2. **The staging checks** (`npm run test:staging`,
