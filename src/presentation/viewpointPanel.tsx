@@ -3,6 +3,7 @@
 // chosen look on the right, and the dressing detail of the selected
 // glyph. Pure presentation — the state lives in the page.
 
+import { useMemo } from "react";
 import type { Language } from "../domain/messages.ts";
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { coversAddresses, dressingEntries, type RawGlyph } from "../domain/views.ts";
@@ -13,13 +14,14 @@ import { LayerBadge } from "./layerBadge.tsx";
 import { NodeGlyph, EdgeGlyph } from "./glyphs.tsx";
 import {
   bindingOf,
+  displaySchemeLayers,
   groupTree,
   lensLayers,
   shapeLabel,
   viewNote,
   viewpointLayers,
 } from "./viewTree.ts";
-import type { buildWorkshopLook } from "./lensDrawing.ts";
+import { buildWorkshopLook } from "./lensDrawing.ts";
 import type { SelectedGlyph } from "./workshop/workshopKernel.ts";
 
 export function ViewpointPanel({
@@ -39,6 +41,21 @@ export function ViewpointPanel({
   selectedGlyph: SelectedGlyph | null;
   onSelectGlyph: (glyph: SelectedGlyph | null) => void;
 }) {
+  // The legal degradation of the selected viewpoint: the generic lens
+  // (the display root, derived from the space) applied to the model the
+  // viewpoint designates — circle and line for everything, zero error.
+  // The pedagogical counterpoint of the Petri/Kahn trio.
+  const genericDegradation = useMemo(() => {
+    if (look.isLens || look.lens === null) return null;
+    const genericLens = displaySchemeLayers({ space: kernel.space })[0];
+    if (genericLens === undefined) return null;
+    const generic = buildWorkshopLook({
+      space: kernel.space,
+      selectedView: genericLens,
+      currentLayer: look.model,
+    });
+    return { lens: genericLens, applicability: generic.applicability };
+  }, [kernel, look]);
   return (
     <section className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
       <h2 id="panel-viewpoint-heading" className="text-sm font-bold text-slate-800 dark:text-slate-100">
@@ -127,13 +144,19 @@ export function ViewpointPanel({
                     >
                       <LayerBadge layer={viewLayer} small />
                       <span className="truncate text-slate-600 dark:text-slate-400">
-                        {bindingOf({ space: kernel.space, view: viewLayer, key: "model" })
-                          .value instanceof AddressView
-                          ? say({ language, en: "→ designated model" })
-                          : say({
-                              language,
-                              en: "→ model: the chosen one",
-                            })}
+                        {(() => {
+                          const modelBinding = bindingOf({
+                            space: kernel.space,
+                            view: viewLayer,
+                            key: "model",
+                          }).value;
+                          return modelBinding instanceof AddressView
+                            ? "→ " + modelBinding.layer
+                            : say({
+                                language,
+                                en: "→ model: the chosen one",
+                              });
+                        })()}
                       </span>
                     </button>
                   </div>
@@ -320,6 +343,22 @@ export function ViewpointPanel({
                       })
                     : "")}
           </div>
+          {!look.isLens && genericDegradation !== null && (
+            <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+              {say({ language, en: "legal degradation — the generic lens " })}
+              <span className="font-mono">{genericDegradation.lens}</span>
+              {say({ language, en: " on " })}
+              <span className="font-mono">{look.model}</span>
+              {": " +
+                genericDegradation.applicability.dressed +
+                "/" +
+                genericDegradation.applicability.total +
+                say({
+                  language,
+                  en: " dressed — circle and line for everything, zero error",
+                })}
+            </div>
+          )}
           <p className="mt-1 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
             {localized({ language, text: viewNote({ space: kernel.space, layer: selectedView }) })}
           </p>
