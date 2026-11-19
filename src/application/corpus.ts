@@ -69,6 +69,7 @@ export const KERNEL_LAYER_NAMES: LayerName[] = [
   "pn-philosophers-5-course",
   "kahn-course",
   "wb-course",
+  "half-adder-course",
   // ---- extended Petri nets (structural axes) ----
   "priority-petrinet",
   "labelled-petrinet",

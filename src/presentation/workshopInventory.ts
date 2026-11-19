@@ -68,6 +68,7 @@ export const PRINCIPAL_PARENT: Record<string, string | null> = {
   "pn-philosophers-5-course": "petrinet-view",
   "kahn-course": "view-scheme",
   "wb-course": "view-scheme",
+  "half-adder-course": "view-scheme",
 };
 
 /** The role sentence of each corpus layer, shown as its inventory
@@ -211,6 +212,9 @@ export const LAYER_ROLE: Record<string, BilingualText> = {
   "wb-course": {
     en: "the diamond viewpoint: wb1 through the generic lens — the weights read through the diamond",
   },
+  "half-adder-course": {
+    en: "the circuit viewpoint: the half-adder through the circuit lens, positions = decisions (a, b left — gates center — s, c right)",
+  },
 };
 
 /** The corpus layers that carry a role sentence, in declaration order. */
@@ -266,6 +270,7 @@ export const LAYER_COLOR: Record<string, string> = {
   "pn-philosophers-5-course": "bg-emerald-600",
   "kahn-course": "bg-rose-700",
   "wb-course": "bg-amber-700",
+  "half-adder-course": "bg-lime-500",
   // the tutorial corpus names — the dedicated hierarchy the tutorial
   // page flattens; the same map feeds their badges, the hues mirror
   // the kernel's analogues (petri sky, philosophers violet/emerald,

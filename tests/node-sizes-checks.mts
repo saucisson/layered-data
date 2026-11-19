@@ -29,7 +29,7 @@ function check(label: string, condition: boolean): void {
   if (!condition) failures.push(label);
 }
 
-// ---- the kernel (90 layers, node-sizes included) -------------------
+// ---- the kernel (91 layers, node-sizes included) -------------------
 
 const corpusDirectory = join(import.meta.dirname, "..", "formalisms", "kernel");
 const layerSources: Record<string, string> = Object.fromEntries(
@@ -42,8 +42,8 @@ const kernel = assembleLayeredDataKernel({ layerSources });
 const bedrock = kernel.layerNames.map(String);
 
 check(
-  "the kernel assembles 90 layers with 0 verdicts (node-sizes included)",
-  kernel.layerNames.length === 90 && kernel.validation.verdicts.length === 0,
+  "the kernel assembles 91 layers with 0 verdicts (node-sizes included)",
+  kernel.layerNames.length === 91 && kernel.validation.verdicts.length === 0,
 );
 
 const stage = (draftSource: string, previous: string[], living: string[]) =>
