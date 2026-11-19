@@ -17,6 +17,7 @@ export function RefinesGraph({
   layerNames,
   dag,
   language,
+  filterMatches,
 }: {
   layer: string;
   closureSet: Set<string>;
@@ -25,6 +26,9 @@ export function RefinesGraph({
   layerNames: readonly string[];
   dag: RefinementDag;
   language: Language;
+  /** the family filter (issue #363): non-matching layers fade like
+   * non-matching search hits — the layout and the bands never change */
+  filterMatches?: (layerName: string) => boolean;
 }) {
   const [hovered, setHovered] = useState<string | null>(null);
   const focus = hovered ?? layer;
@@ -37,6 +41,7 @@ export function RefinesGraph({
           focus={focus}
           search={search}
           closureSet={closureSet}
+          {...(filterMatches !== undefined ? { filterMatches } : {})}
           onPick={onPick}
           onHover={setHovered}
           language={language}
