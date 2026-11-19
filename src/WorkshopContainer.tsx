@@ -33,7 +33,11 @@ import {
   type HistoryEntry,
   type AcceptedAdditionState,
 } from "./presentation/workshop/workshopKernel.ts";
-import { collectUsageTargets } from "./presentation/workshopInventory.ts";
+import {
+  belongsToPivotFamily,
+  collectUsageTargets,
+  FAMILY_PIVOTS,
+} from "./presentation/workshopInventory.ts";
 import { WorkshopHeader } from "./presentation/workshop/WorkshopHeader.tsx";
 import { WorkshopLayersPanel } from "./presentation/workshop/WorkshopLayersPanel.tsx";
 import { FormalismPanel } from "./presentation/formalismPanel.tsx";
@@ -90,6 +94,10 @@ export function WorkshopPage({
   // stack of visited addresses (back), the clipboard (the address
   // is the shareable artifact of the workshop).
   const [search, setSearch] = useState("");
+  // The family filter of ① (issue #363): the selected pivot layers,
+  // multiselect — empty means no filter (the current view). The
+  // membership test is one closure read per layer, presentation side.
+  const [selectedFamilyPivots, setSelectedFamilyPivots] = useState<string[]>([]);
   const [guidedTourOpen, setGuidedTourOpen] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [copied, setCopied] = useState(false);
@@ -150,6 +158,22 @@ export function WorkshopPage({
   // returns to it from anywhere (onKeyDown of the container).
   const needle = search.toLowerCase();
   const layerMatches = (layerName: string) => !needle || layerName.toLowerCase().includes(needle);
+  // The family filter composes with the search: a layer shows when it
+  // matches the search AND belongs to at least one selected family
+  // (no selection = no filtering). The bands never change — a filtered
+  // layer hides, it never moves.
+  const familyMatches = (layerName: string) =>
+    selectedFamilyPivots.length === 0 ||
+    selectedFamilyPivots.some((pivot) =>
+      belongsToPivotFamily({ dag: REFINEMENT_DAG, layerName, pivot }),
+    );
+  const toggleFamilyPivot = (pivot: string) =>
+    setSelectedFamilyPivots((previous) =>
+      previous.includes(pivot)
+        ? previous.filter((entry) => entry !== pivot)
+        : [...previous, pivot],
+    );
+  const clearFamilyPivots = () => setSelectedFamilyPivots([]);
   const keyMatches = (key: string) => !needle || key.toLowerCase().includes(needle);
   function submitSearch() {
     // The search also walks the layers added at runtime.
@@ -414,6 +438,11 @@ export function WorkshopPage({
           onPickLayer={goto}
           closureSet={new Set(closureData.closure.map((address) => address[0]))}
           layerMatches={layerMatches}
+          familyMatches={familyMatches}
+          familyPivots={FAMILY_PIVOTS}
+          selectedFamilyPivots={selectedFamilyPivots}
+          onToggleFamilyPivot={toggleFamilyPivot}
+          onClearFamilyPivots={clearFamilyPivots}
           editableLayerSet={editableLayerSet}
           onEditorToggle={(layerName) => setEditorLayer(editorLayer === layerName ? null : layerName)}
         />

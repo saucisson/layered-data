@@ -63,6 +63,7 @@ export function RefinementGraph({
   language,
   familyOf,
   activeFamily = null,
+  filterMatches,
 }: {
   layerNames: readonly string[];
   dag: RefinementDag;
@@ -80,6 +81,10 @@ export function RefinementGraph({
    * layers outside the family fade like non-matching search hits */
   familyOf?: (layerName: string) => string;
   activeFamily?: string | null;
+  /** the family filter of the workshop (issue #363): non-matching
+   * layers fade like non-matching search hits — the layout and the
+   * bands are computed over every layer, they never change */
+  filterMatches?: (layerName: string) => boolean;
 }) {
   const markerId = "refinement-arrow-" + useId().replace(/[^a-zA-Z0-9]/g, "");
   const usageMarkerId = "refinement-usage-" + useId().replace(/[^a-zA-Z0-9]/g, "");
@@ -221,6 +226,7 @@ export function RefinementGraph({
         const inDescendants = descendants.has(layerName);
         const matches =
           (!needle || layerName.toLowerCase().includes(needle)) &&
+          (filterMatches === undefined || filterMatches(layerName)) &&
           (activeFamily === null || familyOf === undefined || familyOf(layerName) === activeFamily);
         const pillClassName =
           "flex items-center gap-1.5 rounded-full border px-2 font-mono text-[10px] leading-4 transition-opacity " +

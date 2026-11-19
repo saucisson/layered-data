@@ -512,6 +512,38 @@ export class RefinementDag {
   }
 }
 
+// ---- the derived family axis (issue #363) ---------------------------
+// The cross-cutting filter of panel ①: one PIVOT layer per family,
+// designated explicitly as UI data of the corpus. A layer belongs to a
+// family when the pivot is in its refines closure — the axis is
+// DERIVED from the DAG, zero datum posed in the .ld files.
+
+/** The pivot layers of the family filter, in display order, with their
+ * bilingual chip label (English the default). */
+export const FAMILY_PIVOTS: { pivot: string; label: BilingualText }[] = [
+  { pivot: "petrinet-scheme", label: { en: "Petri nets", fr: "réseaux de Pétri" } },
+  { pivot: "automaton-scheme", label: { en: "automata", fr: "automates" } },
+  { pivot: "logic-circuit", label: { en: "circuits", fr: "circuits" } },
+  { pivot: "petrinet-statespace", label: { en: "state spaces", fr: "espaces d'états" } },
+  { pivot: "graph-display", label: { en: "lenses", fr: "lentilles" } },
+  { pivot: "view-scheme", label: { en: "viewpoints", fr: "points de vue" } },
+];
+
+/** The single closure read of the family filter: does the layer belong
+ * to the pivot's family (the pivot is in its refines closure, itself
+ * included)? Presentation-side only — the kernel never changes. */
+export function belongsToPivotFamily({
+  dag,
+  layerName,
+  pivot,
+}: {
+  dag: RefinementDag;
+  layerName: string;
+  pivot: string;
+}): boolean {
+  return dag.ancestorsOf(layerName).has(pivot);
+}
+
 /** One laid-out node of the graph. */
 export interface GraphNodePosition {
   x: number;
