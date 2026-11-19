@@ -309,6 +309,129 @@ check(
     viewpointLook.viewpointDecidesPositions === true,
 );
 
+// (b2) the circuit viewpoint (issue #362): the half-adder drawn through
+// the circuit lens, at the viewpoint's positions
+const circuitLook = buildWorkshopLook({
+  space: kernel.space,
+  selectedView: "half-adder-course",
+  currentLayer: "record",
+});
+check(
+  "(b2) the circuit viewpoint imposes the half-adder as model, the circuit lens as display, and decides the positions",
+  circuitLook.model === "half-adder" &&
+    circuitLook.lens === "logic-circuit-display" &&
+    circuitLook.viewpointDecidesPositions === true,
+);
+check(
+  "(b2) the drawn reading through the viewpoint: andg = box, xorg = circle (xor keeps the base circle), ports = rectangles labeled by direction, wires = plain-arrow lines, 6/6 dressed",
+  circuitLook.vertices.length === 6 &&
+    circuitLook.edges.length === 6 &&
+    circuitLook.applicability.dressed === 6 &&
+    circuitLook.applicability.total === 6 &&
+    (() => {
+      const byName = new Map(circuitLook.vertices.map((vertex) => [vertex.name, vertex]));
+      const andg = byName.get("andg");
+      const xorg = byName.get("xorg");
+      const portA = byName.get("a");
+      return (
+        andg?.drawn?.spec.some((glyph) => glyph.shape === "box") === true &&
+        xorg?.drawn?.spec.some((glyph) => glyph.shape === "circle") === true &&
+        portA?.drawn?.spec.some(
+          (glyph) => glyph.shape === "rectangle" && glyph.label === "direction",
+        ) === true &&
+        circuitLook.edges.every(
+          (edge) =>
+            edge.drawn?.spec.some(
+              (glyph) => glyph.shape === "line" && glyph.arrow === "plain",
+            ) === true,
+        )
+      );
+    })(),
+);
+check(
+  "(b2) the wires read left to right through the viewpoint (a→xorg, b→xorg, a→andg, b→andg, xorg→s, andg→c) at the viewpoint's positions (a,b left — gates center — s,c right)",
+  circuitLook.edges
+    .map((edge) => edge.name + ":" + edge.from + ">" + edge.to)
+    .join(",") === "w1:a>xorg,w2:b>xorg,w3:a>andg,w4:b>andg,w5:xorg>s,w6:andg>c" &&
+    (() => {
+      const byName = new Map(circuitLook.vertices.map((vertex) => [vertex.name, vertex.position]));
+      return (
+        JSON.stringify(byName.get("a")) === JSON.stringify({ x: 60, y: 60 }) &&
+        JSON.stringify(byName.get("b")) === JSON.stringify({ x: 60, y: 160 }) &&
+        JSON.stringify(byName.get("xorg")) === JSON.stringify({ x: 210, y: 60 }) &&
+        JSON.stringify(byName.get("andg")) === JSON.stringify({ x: 210, y: 160 }) &&
+        JSON.stringify(byName.get("s")) === JSON.stringify({ x: 360, y: 60 }) &&
+        JSON.stringify(byName.get("c")) === JSON.stringify({ x: 360, y: 160 })
+      );
+    })(),
+);
+const courseModelBinding = kernel.space.read({
+  layer: asLayerName("half-adder-course"),
+  path: asLayerPath([]),
+  key: "model",
+});
+check(
+  "(b2) through the viewpoint, the decisive reads of the designated model: xor/and kinds, in/out directions, the wire's source and target",
+  courseModelBinding instanceof AddressView &&
+    courseModelBinding.layer === "half-adder" &&
+    kernel.space.read({
+      layer: asLayerName("half-adder"),
+      path: asLayerPath(["gates", "xorg"]),
+      key: "kind",
+    }) === "xor" &&
+    kernel.space.read({
+      layer: asLayerName("half-adder"),
+      path: asLayerPath(["gates", "andg"]),
+      key: "kind",
+    }) === "and" &&
+    kernel.space.read({
+      layer: asLayerName("half-adder"),
+      path: asLayerPath(["ports", "a"]),
+      key: "direction",
+    }) === "in" &&
+    kernel.space.read({
+      layer: asLayerName("half-adder"),
+      path: asLayerPath(["ports", "s"]),
+      key: "direction",
+    }) === "out" &&
+    (() => {
+      const source = kernel.space.read({
+        layer: asLayerName("half-adder"),
+        path: asLayerPath(["wires", "w1"]),
+        key: "source",
+      });
+      const target = kernel.space.read({
+        layer: asLayerName("half-adder"),
+        path: asLayerPath(["wires", "w1"]),
+        key: "target",
+      });
+      return (
+        source instanceof AddressView &&
+        source.path.join("/") === "ports/a" &&
+        target instanceof AddressView &&
+        target.path.join("/") === "gates/xorg"
+      );
+    })(),
+);
+const circuitGenericLook = buildWorkshopLook({
+  space: kernel.space,
+  selectedView: "graph-display",
+  currentLayer: "half-adder",
+});
+check(
+  "(b2) the legal degradation of the half-adder through the generic lens: 6 circles, 6 lines, 6/6 dressed — zero error",
+  circuitGenericLook.vertices.length === 6 &&
+    circuitGenericLook.edges.length === 6 &&
+    circuitGenericLook.applicability.dressed === 6 &&
+    circuitGenericLook.applicability.total === 6 &&
+    circuitGenericLook.vertices.every(
+      (vertex) => vertex.drawn !== null && vertex.drawn.spec.every((glyph) => glyph.shape === "circle"),
+    ) &&
+    circuitGenericLook.edges.every(
+      (edge) => edge.drawn !== null && edge.drawn.spec.every((glyph) => glyph.shape === "line"),
+    ),
+);
+
 // =====================================================================
 // (c) the session ledger of the creation page — written once,
 //     materialized everywhere, never twice

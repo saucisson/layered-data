@@ -31,7 +31,7 @@ The code follows an onion architecture, documented in
   the states live there, the panels (① layers, ② formalism, ③ flattened
   data, ④ mechanism, ⑤ resolution cascade) are wired there; the point of
   view lives on the #lenses page.
-- `formalisms/kernel/` — the 90 layers of the bedrock, one `.ld` file
+- `formalisms/kernel/` — the 91 layers of the bedrock, one `.ld` file
   per layer.
 - `formalisms/users/` — the personal quarry (empty at first).
 - `server.ts` — the quarry: layers API + AI geologist + static serving.
@@ -115,7 +115,7 @@ it and return JSON, unless stated otherwise.
 | `PUT /api/layers/:nom` | writes a visitor layer (403 on the bedrock, 400 invalid name)     |
 | `POST /api/generate`   | body `{ prompt }`, **plain text** response: the layer in the language; with `Accept: text/event-stream`, an SSE stream of the two-pass steps (see below) |
 
-The bedrock (the 90 layers of the corpus) is read-only: `PUT` and `DELETE`
+The bedrock (the 91 layers of the corpus) is read-only: `PUT` and `DELETE`
 answer 403 there — and since ADR-0103, the rule lives in the protocol
 itself, not only at the quarry's door: staging and edition carry the
 bedrock's signature and refuse to touch it themselves ("bedrock-occupied",
