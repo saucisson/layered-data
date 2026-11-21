@@ -75,50 +75,41 @@ check(
   clientKeyOf({ request: { headers: {}, socket: { remoteAddress: "127.0.0.1" } } as never }) === "127.0.0.1",
 );
 
-// ---- the per-user rate-limit key (issue #140) --------------------------
+// ---- the per-identity rate-limit key (milestone Auth v1) ---------------
 
-// Pin the legacy code before importing the server modules: config.ts
-// reads .env, which CI does not have (same pattern as server-http-checks).
-process.env.API_TOKEN = "test-token";
-const { rateLimitKeyOf, resolveIdentity, hashAccessCode } = await import("../server/httpUtils.ts");
+const { rateLimitKeyOf, hashAccessCode } = await import("../server/httpUtils.ts");
 check(
-  "the legacy shared code keys the limiter as shared-code",
+  "a session cookie keys the limiter per session hash, never per IP",
   rateLimitKeyOf({
     request: {
-      headers: { "x-access-code": process.env.API_TOKEN ?? "test-token" },
+      headers: { cookie: "sid=abc123; other=1" },
       socket: { remoteAddress: "127.0.0.1" },
     } as never,
-  }) === "shared-code",
+  }) === "session:" + hashAccessCode({ code: "abc123" }).slice(0, 16),
 );
 check(
-  "a personal code keys the limiter per user hash, never per IP",
+  "a bearer token keys the limiter per token hash",
+  rateLimitKeyOf({
+    request: {
+      headers: { authorization: "Bearer some-token" },
+      socket: { remoteAddress: "127.0.0.1" },
+    } as never,
+  }) === "bearer:" + hashAccessCode({ code: "Bearer some-token" }).slice(0, 16),
+);
+check(
+  "a personal access code keys the limiter per user hash, never per IP",
   rateLimitKeyOf({
     request: {
       headers: { "x-access-code": "personal-secret" },
       socket: { remoteAddress: "127.0.0.1" },
     } as never,
-  }) === "user:" + hashAccessCode({ code: "personal-secret" }),
+  }) === "code:" + hashAccessCode({ code: "personal-secret" }).slice(0, 16),
 );
 check(
-  "without any code the limiter falls back to the client address",
+  "without any credential the limiter falls back to the client address",
   rateLimitKeyOf({
     request: { headers: {}, socket: { remoteAddress: "127.0.0.1" } } as never,
   }) === "127.0.0.1",
-);
-check(
-  "resolveIdentity maps the legacy code to shared-code",
-  resolveIdentity({
-    request: { headers: { "x-access-code": process.env.API_TOKEN ?? "test-token" } } as never,
-  }).kind === "shared-code",
-);
-check(
-  "resolveIdentity maps a personal code to personal-code with a hash",
-  resolveIdentity({ request: { headers: { "x-access-code": "personal-secret" } } as never }).kind ===
-    "personal-code",
-);
-check(
-  "resolveIdentity without a code is anonymous-local",
-  resolveIdentity({ request: { headers: {} } as never }).kind === "anonymous-local",
 );
 
 // ---- the wiring --------------------------------------------------------

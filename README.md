@@ -24,7 +24,8 @@ The code follows an onion architecture, documented in
   staging of additions (a breaking candidate is refused), flattened
   views, linting.
 - `src/infrastructure/` — the effects towards the outside: corpus
-  loading (Vite glob), HTTP client of the quarry, access-code storage.
+  loading (Vite glob), HTTP client of the quarry (the session cookie
+  travels automatically; no token is ever stored client-side).
 - `src/presentation/` — the React components: pure in rendering, no
   business logic.
 - `src/App.tsx` — the composition root: the kernel is assembled there,
@@ -52,7 +53,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) — humans and agents follow the protocol
 
 ```bash
 npm install
-cp .env.example .env          # then edit API_TOKEN
+cp .env.example .env          # then set AUTH_DISABLED=1 for local dev without an IdP
 npm run serve                 # quarry (API 127.0.0.1:8791) + workshop with hot reload (localhost:5173, proxy /api)
 npm run dev                   # the workshop alone, with hot reload
 npm run build && npm run serve:prod # the built workshop, served by the quarry
@@ -63,7 +64,7 @@ npm run check:structure       # JSX/tsx balance (safety net, no compiler)
 ### With Docker
 
 ```bash
-cp .env.example .env           # then edit API_TOKEN, POSTGRES_USERNAME, POSTGRES_PASSWORD
+cp .env.example .env           # then edit AUTH_* (or AUTH_DISABLED=1), POSTGRES_USERNAME, POSTGRES_PASSWORD
 docker compose up --build      # workshop on 127.0.0.1:8791 (loopback only, issue #242) + PostgreSQL (rate limiting active)
 ```
 
@@ -73,7 +74,7 @@ The `docker-compose.yml` deploys two services: `postgres` (named volume
 and receives `DATABASE_URL` — the rate-limit counters then live in the
 database. Without a database (local dev): `DATABASE_URL= docker compose up --no-deps --build atelier`.
 
-`API_TOKEN`, `POSTGRES_USERNAME` and `POSTGRES_PASSWORD` must be defined in the
+`POSTGRES_USERNAME` and `POSTGRES_PASSWORD` must be defined in the
 environment or `.env` (compose refuses to start otherwise). See
 [docs/deployment.md](docs/deployment.md) for deployment behind a reverse
 proxy.
@@ -104,12 +105,12 @@ whole `.ld` corpus.
 See [docs/deployment.md](docs/deployment.md) for production deployment
 (reverse proxy, HTTPS, checklist).
 
-The access code travels in the `x-access-code` header. All routes require
-it and return JSON, unless stated otherwise.
+All `/api/*` routes require authentication (see below) and return JSON,
+unless stated otherwise.
 
 | Route                  | Effect                                                            |
 | ---------------------- | ----------------------------------------------------------------- |
-| `GET /api/whoami`      | 200 with a valid code, 401 otherwise                              |
+| `GET /api/whoami`      | 200 with a valid session/token, 401 otherwise                     |
 | `GET /api/layers`      | `{ layers: [{ name, builtIn }] }` — bedrock + visitors' layers    |
 | `GET /api/layers/:nom` | `{ name, builtIn, source }` — the `.ld` layer                     |
 | `PUT /api/layers/:nom` | writes a visitor layer (403 on the bedrock, 400 invalid name)     |
@@ -120,6 +121,42 @@ answer 403 there — and since ADR-0103, the rule lives in the protocol
 itself, not only at the quarry's door: staging and edition carry the
 bedrock's signature and refuse to touch it themselves ("bedrock-occupied",
 "bedrock-edited").
+
+## Authentication
+
+Unified sign-in through the Zitadel IdP (`https://auth.linard.fr`,
+milestone Auth v1): OIDC / OAuth 2.1, Authorization Code Flow with PKCE
+(S256) + `state` + `nonce`. The browser only ever holds the httpOnly
+`sid` session cookie (`Secure` in production, `SameSite=Lax`); the id,
+access and refresh tokens stay server-side, never in the page or in
+`localStorage`. No endpoint URL is hard-coded: everything is read from
+`<AUTH_ISSUER>/.well-known/openid-configuration`.
+
+| Route              | Effect                                                                 |
+| ------------------ | ---------------------------------------------------------------------- |
+| `GET /auth/login`  | 302 to the IdP authorize endpoint (PKCE S256 + state + nonce)          |
+| `GET /auth/callback` | code exchange, id_token verification, `Set-Cookie sid`, 302 home    |
+| `GET /auth/me`     | the connected user (sub, name, email), 401 when anonymous              |
+| `GET /auth/logout` | local session destruction + RP-initiated logout at the IdP             |
+
+The `/api/*` middleware accepts three credentials: the `sid` session
+cookie, a `Authorization: Bearer <jwt>` access token (validated locally,
+RS256 via the JWKS, `iss`/`aud`/`exp`/`nbf` checked, 60 s leeway), or a
+`Authorization: Bearer <pat>` opaque token validated by introspection at
+the IdP (machines: scripts and CI — see `scripts/pat-example.mjs`,
+`PAT=<service-user-pat> node scripts/pat-example.mjs`). A personal access
+code still travels in `x-access-code` (hashed lookup, issue #140).
+
+Configuration (all in `.env`, see `.env.example`): `AUTH_ISSUER`,
+`AUTH_CLIENT_ID`, `AUTH_CLIENT_SECRET`, `AUTH_ALLOWED_AUDIENCES`,
+`AUTH_API_CLIENT_ID` / `AUTH_API_CLIENT_SECRET`, `AUTH_PUBLIC_BASE_URL`,
+`AUTH_COOKIE_SECURE`, `AUTH_SESSION_TTL_SECONDS`. No secret is ever
+committed; the real values arrive through a secure channel.
+
+Local development without an IdP: `AUTH_DISABLED=1` — `/auth/me` answers
+a fictitious dev user and the API does not 401. The server refuses to
+boot with `AUTH_DISABLED=1` and `NODE_ENV=production` (a dedicated test
+pins this guard).
 
 ## The geologist and the contract
 

@@ -27,7 +27,16 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=8791
-      - API_TOKEN=${API_TOKEN:?Set API_TOKEN in .env or the environment — never use the default}
+      # Authentification unifiée Zitadel (milestone Auth v1) — en dev
+      # local sans IdP : AUTH_DISABLED=1 docker compose up --no-deps --build atelier
+      - AUTH_DISABLED=${AUTH_DISABLED:-}
+      - AUTH_ISSUER=${AUTH_ISSUER:-}
+      - AUTH_CLIENT_ID=${AUTH_CLIENT_ID:-}
+      - AUTH_CLIENT_SECRET=${AUTH_CLIENT_SECRET:-}
+      - AUTH_ALLOWED_AUDIENCES=${AUTH_ALLOWED_AUDIENCES:-}
+      - AUTH_API_CLIENT_ID=${AUTH_API_CLIENT_ID:-}
+      - AUTH_API_CLIENT_SECRET=${AUTH_API_CLIENT_SECRET:-}
+      - AUTH_PUBLIC_BASE_URL=${AUTH_PUBLIC_BASE_URL:-}
       - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
       - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-large-4}
       - SURVEY_MODEL=${SURVEY_MODEL:-mistral-small-latest}
