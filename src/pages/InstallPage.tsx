@@ -42,14 +42,14 @@ export function InstallPage({ language }: InstallPageProps) {
           <p className="mb-2 text-sm leading-5 text-slate-600 dark:text-slate-400">
             {say({
               language,
-              en: "Clone the repository, install the dependencies, set the API token, and start the quarry (API + workshop with hot reload):",
+              en: "Clone the repository, install the dependencies, set AUTH_DISABLED=1 (local dev without an IdP), and start the quarry (API + workshop with hot reload):",
             })}
           </p>
           <CodeBlock>{
 `git clone https://github.com/saucisson/layered-data.git
 cd layered-data
 npm ci
-cp .env.example .env        # then set API_TOKEN in .env
+cp .env.example .env        # then set AUTH_DISABLED=1 in .env (no IdP locally)
 npm run serve               # quarry on 127.0.0.1:8791 + workshop on localhost:5173 (hot reload, /api proxied)
 npm run dev                 # the workshop alone, with hot reload
 npm test                    # the verification harnesses
@@ -58,7 +58,7 @@ npm run build && npm run serve:prod   # the built workshop, served by the quarry
           <p className="mt-2 text-sm leading-5 text-slate-600 dark:text-slate-400">
             {say({
               language,
-              en: "With Docker instead: cp .env.example .env (set API_TOKEN, POSTGRES_USERNAME, POSTGRES_PASSWORD), then docker compose up --build — workshop on 127.0.0.1:8791 plus PostgreSQL for the rate-limit counters. Without a database: DATABASE_URL= docker compose up --no-deps --build atelier.",
+              en: "With Docker instead: cp .env.example .env (set AUTH_* or AUTH_DISABLED=1, POSTGRES_USERNAME, POSTGRES_PASSWORD), then docker compose up --build — workshop on 127.0.0.1:8791 plus PostgreSQL for the rate-limit counters. Without a database: DATABASE_URL= docker compose up --no-deps --build atelier.",
             })}
           </p>
         </section>

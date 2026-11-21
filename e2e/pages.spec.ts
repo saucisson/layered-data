@@ -2,8 +2,8 @@
 // bounded time and produces no console errors / page errors.
 //
 // Known exception: #editor calls /api/editor/session, which answers 401
-// when no access code is stored — the page shows the access-code form
-// instead (issue #198). Those specific 401s are filtered by URL below.
+// when no session is connected (issue #198). Those specific 401s are
+// filtered by URL below.
 import { test, expect, type Page } from "@playwright/test";
 
 const ROUTES: ReadonlyArray<{ hash: string; heading: RegExp }> = [
@@ -21,7 +21,7 @@ const ROUTES: ReadonlyArray<{ hash: string; heading: RegExp }> = [
 ];
 
 /** Console/page errors, excluding the known unauthorized session call
- * (401 on /api/editor/session without a stored access code, #198) and
+ * (401 on /api/editor/session without a session, #198) and
  * the "Failed to load resource" console noise that duplicates HTTP
  * error responses already collected via the response listener. */
 function collectErrors(page: Page): string[] {

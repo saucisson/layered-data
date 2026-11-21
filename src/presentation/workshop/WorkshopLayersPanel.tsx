@@ -16,7 +16,6 @@ import {
 } from "../workshopInventory.ts";
 import { localized, say, type BilingualText } from "../i18n.ts";
 import { RefinesGraph } from "../refinesGraph.tsx";
-import { UserAccountForm } from "../userAccountForm.tsx";
 import type { AcceptedAddition } from "../addFormalism.tsx";
 import type { AppliedEdition } from "../../application/edition.ts";
 import type { AcceptedAdditionState } from "./workshopKernel.ts";
@@ -159,9 +158,8 @@ export function WorkshopLayersPanel({
         </h2>
         {composerOpen && (
           <div className="space-y-2">
-            {/* The access code is asked from the key button of the
-                site header (issue #222), not here. */}
-            <UserAccountForm language={language} />
+            {/* Sign-in happens from the key button of the site header
+                (milestone Auth v1), not here. */}
             <Suspense fallback={<PanelToolFallback />}>
               <AddFormalismComposer
                 kernel={kernel}
