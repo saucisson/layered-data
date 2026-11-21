@@ -233,7 +233,8 @@ export async function introspectToken({
 }
 
 /** Short-lived cache around introspection: machines poll, the IdP
- * does not need every call. Only the verdict is cached, never logged. */
+ * does not need every call. Only ACTIVE verdicts are cached — a
+ * revoked PAT must stop working immediately, never 30 s later. */
 export function createIntrospectionCache({
   ttlMs = 30_000,
   now = () => Date.now(),
@@ -253,7 +254,8 @@ export function createIntrospectionCache({
       const cached = cache.get(token);
       if (cached !== undefined && now() - cached.cachedAt < ttlMs) return cached.result;
       const result = await call();
-      cache.set(token, { result, cachedAt: now() });
+      if (result.active) cache.set(token, { result, cachedAt: now() });
+      else cache.delete(token);
       return result;
     },
   };

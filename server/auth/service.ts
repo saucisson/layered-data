@@ -19,7 +19,6 @@ import {
   createJwksCache,
   isJwtShape,
   verifyAccessToken,
-  TokenValidationError,
   type FetchLike,
 } from "./jwt.ts";
 import {
@@ -168,9 +167,10 @@ export function createAuthService(
               sub: typeof claims.sub === "string" ? claims.sub : "",
               claims,
             };
-          } catch (error) {
-            if (error instanceof TokenValidationError) return { kind: "anonymous" };
-            throw error;
+          } catch {
+            // fail closed: a rejected token AND an unreachable IdP both
+            // mean anonymous — never a 500 on the API
+            return { kind: "anonymous" };
           }
         }
         // opaque token: a PAT, validated by introspection
