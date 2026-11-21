@@ -55,7 +55,7 @@ import {
   type EditorSyncHandle,
   type SessionSnapshot,
 } from "../infrastructure/editorSync.ts";
-import { onAccessCodeVerified } from "../infrastructure/accessCodeEvents.ts";
+import { onAuthChanged } from "../infrastructure/authEvents.ts";
 import { hashOf } from "../components/Router.tsx";
 import { WIDE_WIDTH } from "../components/PageShell.tsx";
 import {
@@ -222,12 +222,12 @@ export function ModelEditorPage({
   // true when the session stream was refused (401) or the server is
   // absent — the page then points at the key button of the site
   // header instead of a silent local fallback (issues #198, #222).
-  // accessVersion re-triggers the connection after a code is verified.
+  // accessVersion re-triggers the connection after a sign-in.
   const [needsAccess, setNeedsAccess] = useState(false);
   const [accessVersion, setAccessVersion] = useState(0);
   useEffect(
     () =>
-      onAccessCodeVerified(() => setAccessVersion((version) => version + 1)),
+      onAuthChanged(() => setAccessVersion((version) => version + 1)),
     [],
   );
   const syncRef = useRef<EditorSyncHandle | null>(null);

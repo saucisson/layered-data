@@ -1,19 +1,18 @@
 // The shared site header: brand, global navigation menu (plain text
 // links, current page highlighted), language picker, dark-mode
-// toggle and the site access-code lock (issue #222: the code is asked
-// from one click here, not on each page). Rendered once in App.tsx so
+// toggle and the sign-in lock (milestone Auth v1: one click here opens
+// the auth panel, not on each page). Rendered once in App.tsx so
 // every page has the same chrome.
 
 import { useEffect, useRef, useState } from "react";
 import { SUPPORTED_LANGUAGES } from "../infrastructure/i18n.ts";
 import { THEMES, type ThemeId } from "../infrastructure/themes.ts";
 import { LOGOS, type LogoId } from "../infrastructure/logos.ts";
-import { apiFetch, readAccessCode } from "../infrastructure/wardrobeClient.ts";
+import { apiFetch } from "../infrastructure/wardrobeClient.ts";
 import { Logo } from "./Logo.tsx";
 import type { Language } from "../domain/messages.ts";
 import type { Page } from "./Router.tsx";
-import { AccessCodeForm } from "../presentation/accessForm.tsx";
-import { UserAccountForm } from "../presentation/userAccountForm.tsx";
+import { AuthPanel } from "../presentation/authPanel.tsx";
 import { say } from "../presentation/i18n.ts";
 
 interface NavEntry {
@@ -52,23 +51,22 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onChooseTheme, logo, onChooseLogo }: SiteHeaderProps) {
-  // The access-code lock lives here (issue #222): one click opens the
-  // form; once verified the form hides itself and the button shows it.
-  // one popover at a time: the access code, the account, the
-  // preferences (logo + theme, out of the permanent chrome, #307)
-  const [openPopover, setOpenPopover] = useState<"access" | "account" | "prefs" | null>(null);
-  const [accessVerified, setAccessVerified] = useState(false);
-  // A remembered code is re-verified on mount, so the lock shows its
-  // verified state right after a reload (#306).
+  // The auth lock lives here (milestone Auth v1): one click opens the
+  // auth panel; the button turns green while a session is connected.
+  // One popover at a time: the auth panel or the preferences (logo +
+  // theme, out of the permanent chrome, #307).
+  const [openPopover, setOpenPopover] = useState<"auth" | "prefs" | null>(null);
+  const [signedIn, setSignedIn] = useState(false);
+  // The session is probed on mount, so the lock shows its state right
+  // after a reload.
   useEffect(() => {
-    if (readAccessCode().trim() === "") return;
     let cancelled = false;
-    void apiFetch({ endpoint: "api/whoami" })
+    void apiFetch({ endpoint: "auth/me" })
       .then((response) => {
-        if (!cancelled && response.ok) setAccessVerified(true);
+        if (!cancelled && response.ok) setSignedIn(true);
       })
       .catch(() => {
-        // unreachable proxy: the form says why when opened
+        // unreachable server: the panel says why when opened
       });
     return () => {
       cancelled = true;
@@ -124,53 +122,28 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
           <span className="relative">
             <button
               type="button"
-              onClick={() => setOpenPopover(openPopover === "account" ? null : "account")}
-              aria-expanded={openPopover === "account"}
-              aria-label={say({ language, en: "user account" })}
-              title={say({ language, en: "user account" })}
-              className="rounded border border-slate-300 bg-white px-2 py-1 font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-            >
-              {say({ language, en: "account" })}
-            </button>
-            {openPopover === "account" && (
-              <span className="absolute right-0 top-full z-50 mt-2 block w-80 shadow-lg">
-                <UserAccountForm language={language} />
-              </span>
-            )}
-          </span>
-          <span className="relative">
-            <button
-              type="button"
-              onClick={() => setOpenPopover(openPopover === "access" ? null : "access")}
-              aria-expanded={openPopover === "access"}
+              onClick={() => setOpenPopover(openPopover === "auth" ? null : "auth")}
+              aria-expanded={openPopover === "auth"}
               aria-label={say({
                 language,
-                en: accessVerified ? "site access code — verified" : "site access code",
+                en: signedIn ? "account — signed in" : "sign in",
               })}
               title={say({
                 language,
-                en: accessVerified ? "site access code — verified" : "site access code",
+                en: signedIn ? "account — signed in" : "sign in",
               })}
               className={
                 "rounded border px-2 py-1 font-semibold " +
-                (accessVerified
+                (signedIn
                   ? "border-emerald-600 bg-emerald-600 text-white dark:bg-emerald-700"
                   : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700")
               }
             >
               {"🔑"}
             </button>
-            {openPopover === "access" && (
+            {openPopover === "auth" && (
               <span className="absolute right-0 top-full z-50 mt-2 block w-80 shadow-lg">
-                <AccessCodeForm
-                  language={language}
-                  onVerified={() => setAccessVerified(true)}
-                />
-                {accessVerified && (
-                  <p className="px-3 pb-2 text-[10px] text-slate-500 dark:text-slate-400">
-                    {say({ language, en: "code verified — the quarry and the AI geologist are open" })}
-                  </p>
-                )}
+                <AuthPanel language={language} onChanged={() => setSignedIn(true)} />
               </span>
             )}
           </span>
