@@ -132,6 +132,7 @@ HTTPS is automatic.
 ## Checklist de production
 
 - [ ] Variables `AUTH_*` renseignées dans `.env` (émetteur Zitadel `https://auth.linard.fr`, client OIDC, redirect URI `https://<app>.linard.fr/auth/callback` enregistrée côté IdP).
+- [ ] `NODE_ENV=production` (posé par défaut dans `docker-compose.yml`) : `AUTH_DISABLED=1` y est alors fatal et le cookie `sid` porte `Secure`.
 - [ ] `HOST=0.0.0.0` **uniquement** derrière un reverse proxy authentifié.
 - [ ] HTTPS actif (Let's Encrypt / Caddy automatique).
 - [ ] Rate limiting activé sur `/api/generate` (voir issue #85).

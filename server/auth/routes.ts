@@ -50,9 +50,18 @@ function sendRedirect({
 }
 
 /** Only same-site paths are valid return targets — never an absolute
- * URL (open redirect). */
+ * URL (open redirect). A leading `/` is required, `//` (protocol-
+ * relative) and any backslash (browsers normalize `\` to `/` in
+ * special schemes, so `/\evil.com` would leave the site) are refused. */
 function safeReturnTo({ candidate }: { candidate: string | null }): string {
-  if (candidate !== null && candidate.startsWith("/") && !candidate.startsWith("//")) return candidate;
+  if (
+    candidate !== null &&
+    candidate.startsWith("/") &&
+    !candidate.startsWith("//") &&
+    !candidate.includes("\\")
+  ) {
+    return candidate;
+  }
   return "/";
 }
 
