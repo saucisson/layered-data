@@ -27,6 +27,9 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=8791
+      # production mode: the AUTH_DISABLED=1 guard is fatal here, and the
+      # sid session cookie gets its Secure flag by default
+      - NODE_ENV=production
       # Authentification unifiée Zitadel (milestone Auth v1) — en dev
       # local sans IdP : AUTH_DISABLED=1 docker compose up --no-deps --build atelier
       - AUTH_DISABLED=${AUTH_DISABLED:-}
