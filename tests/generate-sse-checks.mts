@@ -146,7 +146,6 @@ const mockPort = (mockUpstream.address() as AddressInfo).port;
 const sandbox = mkdtempSync(join(tmpdir(), "ld-sse-test-"));
 process.env.LD_USERS_DIRECTORY = join(sandbox, "users");
 process.env.LD_DATA_DIRECTORY = join(sandbox, "data");
-process.env.API_TOKEN = "test-token";
 process.env.MISTRAL_API_KEY = "test-key";
 process.env.MISTRAL_MODEL = "mistral-large-4";
 process.env.SURVEY_MODEL = "mistral-small-latest";
@@ -154,10 +153,17 @@ process.env.MISTRAL_URL = "http://127.0.0.1:" + mockPort + "/v1/chat/completions
 process.env.DATABASE_URL = "";
 
 const { createQuarryServer } = await import("../server/routes.ts");
-const server: Server = createQuarryServer();
+const { createAuthService, authConfigFromEnv } = await import("../server/auth/service.ts");
+// AUTH_DISABLED=1: the SSE checks exercise the geologist, not the auth
+// (the session/JWT/PAT paths live in tests/auth-flow-checks.mts).
+const server: Server = createQuarryServer({
+  authService: createAuthService({
+    config: { ...authConfigFromEnv({ env: {} }), disabled: true },
+  }),
+});
 await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
 const base = "http://127.0.0.1:" + (server.address() as AddressInfo).port;
-const auth = { "x-access-code": "test-token" };
+const auth = {};
 
 /** POST /api/generate as SSE and collect the events until the stream
  * closes. */

@@ -22,7 +22,6 @@ if (existsSync(environmentFilePath)) {
 export const VERSION = "2.25.0";
 export const PORT = Number(process.env.PORT ?? 8791);
 export const HOST = process.env.HOST ?? "127.0.0.1";
-export const API_TOKEN = process.env.API_TOKEN ?? "changez-moi";
 export const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY ?? "";
 export const MISTRAL_URL = process.env.MISTRAL_URL ?? "https://api.mistral.ai/v1/chat/completions";
 export const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? "mistral-large-4";
