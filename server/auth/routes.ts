@@ -50,15 +50,18 @@ function sendRedirect({
 }
 
 /** Only same-site paths are valid return targets — never an absolute
- * URL (open redirect). A leading `/` is required, `//` (protocol-
- * relative) and any backslash (browsers normalize `\` to `/` in
- * special schemes, so `/\evil.com` would leave the site) are refused. */
+ * URL (open redirect). A leading `/` is required; `//` (protocol-
+ * relative), backslashes (browsers normalize `\` to `/` in special
+ * schemes) and any control character (the WHATWG URL parser strips
+ * tabs/newlines before parsing, so `/\t/evil.com` would parse as
+ * `//evil.com`) are all refused. */
 function safeReturnTo({ candidate }: { candidate: string | null }): string {
   if (
     candidate !== null &&
     candidate.startsWith("/") &&
     !candidate.startsWith("//") &&
-    !candidate.includes("\\")
+    !candidate.includes("\\") &&
+    !/[\x00-\x20\x7f]/.test(candidate)
   ) {
     return candidate;
   }

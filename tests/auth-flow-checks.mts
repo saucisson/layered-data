@@ -133,7 +133,7 @@ const idpServer: Server = createServer(async (request, response) => {
     // test hook: tamper_nonce=1 makes the IdP issue an id_token whose
     // nonce does not match the authorize request
     const nonce =
-      url.searchParams.get("tamper_nonce") === "1" ? "tampered-nonce" : url.searchParams.get("nonce") ?? "";
+      url.searchParams.get("tamper_nonce") === "1" ? "tampered-nonce" : (url.searchParams.get("nonce") ?? "");
     const codeChallenge = url.searchParams.get("code_challenge") ?? "";
     const redirectUri = url.searchParams.get("redirect_uri") ?? "";
     const code = "code-" + Math.random().toString(36).slice(2);
@@ -331,6 +331,17 @@ try {
   response = await fetch(evilCallbackUrl, { redirect: "manual" });
   check(
     "a backslash returnTo falls back to / (no open redirect)",
+    response.status === 302 && (response.headers.get("location") ?? "") === "/",
+  );
+  // a control character (tab) in returnTo is refused the same way: the
+  // WHATWG URL parser strips tabs, so /\t/evil.com would parse as //evil.com
+  response = await fetch(base + "/auth/login?returnTo=" + encodeURIComponent("/\t/evil.com"), {
+    redirect: "manual",
+  });
+  const tabIdpResponse = await fetch(response.headers.get("location") ?? "", { redirect: "manual" });
+  response = await fetch(tabIdpResponse.headers.get("location") ?? "", { redirect: "manual" });
+  check(
+    "a control-character returnTo falls back to / (no open redirect)",
     response.status === 302 && (response.headers.get("location") ?? "") === "/",
   );
 
