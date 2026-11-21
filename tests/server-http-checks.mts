@@ -28,56 +28,48 @@ function check(label: string, condition: boolean): void {
 const sandbox = mkdtempSync(join(tmpdir(), "ld-server-test-"));
 process.env.LD_USERS_DIRECTORY = join(sandbox, "users");
 process.env.LD_DATA_DIRECTORY = join(sandbox, "data");
-process.env.API_TOKEN = "test-token";
 // an empty string counts as set: .env must not reintroduce a real key
 process.env.MISTRAL_API_KEY = "";
 // same isolation for the stores: this harness runs on the disk stores
 process.env.DATABASE_URL = "";
 
 const { createQuarryServer } = await import("../server/routes.ts");
-const server: Server = createQuarryServer();
+const { createAuthService, authConfigFromEnv } = await import("../server/auth/service.ts");
+// The CRUD checks run with AUTH_DISABLED=1 (local mode without IdP,
+// milestone Auth v1): the session/JWT/PAT paths and the 401s are
+// covered by tests/auth-flow-checks.mts.
+const server: Server = createQuarryServer({
+  authService: createAuthService({
+    config: { ...authConfigFromEnv({ env: {} }), disabled: true },
+  }),
+});
 await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
 const port = (server.address() as AddressInfo).port;
 const base = "http://127.0.0.1:" + port;
-const auth = { "x-access-code": "test-token" };
+const auth = {};
 
 try {
-  // ---- auth ----
+  // ---- auth (AUTH_DISABLED=1 in this harness; the 401 paths live in
+  // tests/auth-flow-checks.mts) ----
   let response = await fetch(base + "/api/whoami");
-  check("whoami without token is 401", response.status === 401);
-  response = await fetch(base + "/api/whoami", {
-    headers: { "x-access-code": "wrong" },
-  });
-  check("whoami with a wrong token is 401", response.status === 401);
-  response = await fetch(base + "/api/whoami", { headers: auth });
-  check("whoami with the token is 200", response.status === 200);
+  check("whoami without credentials is 200 in AUTH_DISABLED mode", response.status === 200);
   const whoamiBody = (await response.json()) as { utilisateur: string; identity: string };
   check(
-    "whoami with the legacy shared code resolves to the shared identity (issue #140)",
-    whoamiBody.utilisateur === "porteur-du-code" && whoamiBody.identity === "shared-code",
+    "whoami resolves to the dev user (milestone Auth v1)",
+    whoamiBody.utilisateur === "développeur-local" && whoamiBody.identity === "dev-user",
   );
   response = await fetch(base + "/api/layers");
-  check("layers without token is 401", response.status === 401);
-  // A personal access code without a matching user row is refused
-  // (issue #140): without DATABASE_URL the null user store misses.
-  response = await fetch(base + "/api/whoami", {
-    headers: { "x-access-code": "personal-code-without-user" },
-  });
-  check("whoami with an unknown personal code is 401", response.status === 401);
-  response = await fetch(base + "/api/layers", {
-    headers: { "x-access-code": "personal-code-without-user" },
-  });
-  check("layers with an unknown personal code is 401", response.status === 401);
-  // Admin routes require an admin user (issue #142): the shared code
-  // is not an admin, so 403.
-  response = await fetch(base + "/api/admin/users", { headers: auth });
-  check("admin users list with the shared code is 403", response.status === 403);
+  check("layers without credentials is 200 in AUTH_DISABLED mode", response.status === 200);
+  // Admin routes require an admin user (issue #142): the dev user is
+  // not an admin, so 403.
+  response = await fetch(base + "/api/admin/users");
+  check("admin users list without an admin user is 403", response.status === 403);
   response = await fetch(base + "/api/admin/users/revoke", {
     method: "POST",
-    headers: { ...auth, "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id: 1 }),
   });
-  check("admin revoke with the shared code is 403", response.status === 403);
+  check("admin revoke without an admin user is 403", response.status === 403);
   // Account creation (issue #141): without DATABASE_URL the null
   // user store refuses creation with a 500 typed error.
   response = await fetch(base + "/api/users", {
