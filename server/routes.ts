@@ -52,9 +52,11 @@ import {
   hashAccessCode,
   rateLimitKeyOf,
   readRequestBody,
-  resolveIdentity,
   sourceOfRequestBody,
 } from "./httpUtils.ts";
+import { authConfigFromEnv, createAuthService, type AuthService } from "./auth/service.ts";
+import { createAuthRouteHandler, refreshSessionIfNeeded } from "./auth/routes.ts";
+import { parseCookies, SESSION_COOKIE_NAME } from "./auth/sessions.ts";
 import {
   MIME_TYPES,
   cacheControlOf,
@@ -96,17 +98,31 @@ function createApiRateLimiters(): {
 
 export function createQuarryServer({
   stores = createQuarryStoresFromEnv(),
+  authService = createAuthService({ config: authConfigFromEnv() }),
 }: {
   stores?: QuarryStores;
+  authService?: AuthService;
 } = {}) {
   setEditorSessionStore({ editorSessionStore: stores.editorSession });
   const rateLimiters = createApiRateLimiters();
+  const handleAuthRoute = createAuthRouteHandler({ service: authService });
   return createServer(async (request, response) => {
     applySecurityHeaders({ response });
     const url = new URL(request.url ?? "/", "http://" + (request.headers.host ?? "localhost"));
     const segments = url.pathname.split("/").filter(Boolean);
 
     try {
+      // ---- the unified auth routes (milestone Auth v1): /auth/* ----
+      if (segments[0] === "auth") {
+        const handled = await handleAuthRoute({ request, response, url });
+        if (handled) return;
+        return sendJson({
+          response,
+          statusCode: 404,
+          body: { erreur: "route auth inconnue : " + request.method + " " + url.pathname },
+        });
+      }
+
       // ---- the quarry and geologist API ----
       if (segments[0] === "api") {
         // Rate limit before the auth check: the counters also blunt
@@ -131,9 +147,9 @@ export function createQuarryServer({
         }
 
         if (url.pathname === "/api/whoami") {
-          const identity = resolveIdentity({ request });
-          if (identity.kind === "anonymous-local") {
-            return sendJson({ response, statusCode: 401, body: { erreur: "code d'accès requis" } });
+          const identity = await authService.resolveIdentity({ request });
+          if (identity.kind === "anonymous") {
+            return sendJson({ response, statusCode: 401, body: { erreur: "authentification requise" } });
           }
           // A personal access code resolves to the user profile
           // (issue #140, ADR-0114); the shared code keeps the legacy
@@ -164,14 +180,37 @@ export function createQuarryServer({
               },
             });
           }
+          if (identity.kind === "session") {
+            return sendJson({
+              response,
+              statusCode: 200,
+              body: {
+                version: VERSION,
+                utilisateur: identity.user.name,
+                email: identity.user.email,
+                sub: identity.user.sub,
+                identity: identity.kind,
+              },
+            });
+          }
+          if (identity.kind === "bearer-jwt" || identity.kind === "pat") {
+            const claims = identity.kind === "bearer-jwt" ? identity.claims : {};
+            return sendJson({
+              response,
+              statusCode: 200,
+              body: {
+                version: VERSION,
+                utilisateur:
+                  typeof claims.name === "string" && claims.name !== "" ? claims.name : identity.sub,
+                sub: identity.sub,
+                identity: identity.kind,
+              },
+            });
+          }
           return sendJson({
             response,
             statusCode: 200,
-            body: {
-              version: VERSION,
-              utilisateur: "porteur-du-code",
-              identity: identity.kind,
-            },
+            body: { version: VERSION, utilisateur: "développeur-local", identity: identity.kind },
           });
         }
         // ---- account creation (issue #141, ADR-0114): optional,
@@ -232,14 +271,20 @@ export function createQuarryServer({
           }
         }
 
-        // Resolve the access: the shared code or a personal code
-        // with a matching user row (issue #140, ADR-0114).
-        const identity = resolveIdentity({ request });
+        // Resolve the access (milestone Auth v1): a server-side session
+        // (OIDC), a Bearer JWT validated via the JWKS, a PAT via
+        // introspection, the dev user when AUTH_DISABLED=1 — or a
+        // personal access code (issue #140, ADR-0114).
+        const identity = await authService.resolveIdentity({ request });
+        if (identity.kind === "session") {
+          // silent refresh of the access token, server-side only
+          const cookies = parseCookies({ header: request.headers.cookie });
+          const sid = cookies[SESSION_COOKIE_NAME];
+          if (typeof sid === "string") await refreshSessionIfNeeded({ service: authService, sid });
+        }
         let ownerId: number | undefined;
         let currentUser: UserProfile | null = null;
-        if (identity.kind === "shared-code") {
-          // the legacy shared identity — no owner scoping
-        } else if (identity.kind === "personal-code") {
+        if (identity.kind === "personal-code") {
           const profile = await stores.users.findByAccessCodeHash({
             accessCodeHash: identity.accessCodeHash,
           });
@@ -247,14 +292,16 @@ export function createQuarryServer({
             return sendJson({
               response,
               statusCode: 401,
-              body: { erreur: "code d'accès requis" },
+              body: { erreur: "authentification requise" },
             });
           }
           ownerId = profile.id;
           currentUser = profile;
-        } else {
-          return sendJson({ response, statusCode: 401, body: { erreur: "code d'accès requis" } });
+        } else if (identity.kind === "anonymous") {
+          return sendJson({ response, statusCode: 401, body: { erreur: "authentification requise" } });
         }
+        // session / bearer-jwt / pat / dev-user: authenticated, no owner
+        // scoping (the workshop had a single shared code before Auth v1)
 
         // ---- admin routes (issue #142, ADR-0114): admin role only ----
         if (segments[1] === "admin") {
