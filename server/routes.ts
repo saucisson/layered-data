@@ -48,6 +48,7 @@ import {
 import {
   applySecurityHeaders,
   sendJson,
+  sendProblem,
   sendText,
   hashAccessCode,
   rateLimitKeyOf,
@@ -149,7 +150,13 @@ export function createQuarryServer({
         if (url.pathname === "/api/whoami") {
           const identity = await authService.resolveIdentity({ request });
           if (identity.kind === "anonymous") {
-            return sendJson({ response, statusCode: 401, body: { erreur: "authentification requise" } });
+            // ADR-0120 §2: problem+json, the front reads the reason
+            return sendProblem({
+              response,
+              statusCode: 401,
+              reason: "session_required",
+              title: "a session is required for the workshop API",
+            });
           }
           // A personal access code resolves to the user profile
           // (issue #140, ADR-0114); the shared code keeps the legacy
@@ -159,10 +166,11 @@ export function createQuarryServer({
               accessCodeHash: identity.accessCodeHash,
             });
             if (profile === null) {
-              return sendJson({
+              return sendProblem({
                 response,
                 statusCode: 401,
-                body: { erreur: "code d'accès personnel inconnu" },
+                reason: "unknown_access_code",
+                title: "unknown personal access code",
               });
             }
             return sendJson({
@@ -289,16 +297,24 @@ export function createQuarryServer({
             accessCodeHash: identity.accessCodeHash,
           });
           if (profile === null) {
-            return sendJson({
+            return sendProblem({
               response,
               statusCode: 401,
-              body: { erreur: "authentification requise" },
+              reason: "unknown_access_code",
+              title: "unknown personal access code",
             });
           }
           ownerId = profile.id;
           currentUser = profile;
         } else if (identity.kind === "anonymous") {
-          return sendJson({ response, statusCode: 401, body: { erreur: "authentification requise" } });
+          // ADR-0120 §2: a workshop route without a session answers
+          // 401 application/problem+json reason "session_required"
+          return sendProblem({
+            response,
+            statusCode: 401,
+            reason: "session_required",
+            title: "a session is required for the workshop API",
+          });
         }
         // session / bearer-jwt / pat / dev-user: authenticated, no owner
         // scoping (the workshop had a single shared code before Auth v1)

@@ -1,15 +1,22 @@
-// The workshop-without-session error page (LD-9, common web contract
+// The workshop-without-session page (LD-7, common web contract
 // ADR-0120 §2): the Atelier zone requires an account. An anonymous
-// visitor gets one explicit message and a single sign-in form — never
-// a raw error. Same charter as the 404 page, FR/EN.
+// visitor gets one explicit message and a single sign-in button —
+// never a raw error. The button starts the OIDC round trip with
+// returnTo set to the page that was asked for, so the visitor lands
+// back on it right after signing in. Same charter as the 404 page,
+// FR/EN.
 
-import { useState } from "react";
 import type { Language } from "../domain/messages";
 import { say } from "../presentation/i18n";
-import { AuthPanel } from "../presentation/authPanel";
+
+/** The single sign-in action: /auth/login with the current page as
+ *  returnTo (the hash carries the Atelier page that was asked for). */
+function signInWithReturnTo(): void {
+  const here = window.location.pathname + window.location.hash;
+  window.location.assign("/auth/login?returnTo=" + encodeURIComponent(here === "" ? "/" : here));
+}
 
 export function WorkshopLockedPage({ language }: { language: Language }) {
-  const [signedIn, setSignedIn] = useState(false);
   return (
     <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-100 p-4 text-center text-slate-900 sm:p-8 dark:bg-slate-800 dark:text-slate-100">
       <p className="text-6xl font-bold text-slate-300 dark:text-slate-600" aria-hidden="true">
@@ -27,24 +34,13 @@ export function WorkshopLockedPage({ language }: { language: Language }) {
           fr: "Connectez-vous pour ouvrir les formalismes, l'éditeur de modèles, la création et la hiérarchie. Les pages d'accueil et de découverte restent publiques.",
         })}
       </p>
-      {signedIn ? (
-        <a
-          href="#formalisms"
-          className="rounded bg-sky-600 dark:bg-sky-700 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 dark:hover:bg-sky-600"
-        >
-          {say({ language, en: "Open the workshop", fr: "Ouvrir l'atelier" })}
-        </a>
-      ) : (
-        <span className="w-80 text-left">
-          <AuthPanel
-            language={language}
-            onChanged={() => {
-              setSignedIn(true);
-              window.dispatchEvent(new CustomEvent("ld:access-verified"));
-            }}
-          />
-        </span>
-      )}
+      <button
+        type="button"
+        onClick={signInWithReturnTo}
+        className="rounded bg-sky-600 dark:bg-sky-700 px-4 py-2 text-sm font-semibold text-white hover:bg-sky-500 dark:hover:bg-sky-600"
+      >
+        {say({ language, en: "Sign in with auth.linard.fr", fr: "Se connecter avec auth.linard.fr" })}
+      </button>
       <a
         href="#landing"
         className="text-sm font-semibold text-sky-700 hover:underline dark:text-sky-400"

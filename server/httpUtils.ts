@@ -54,6 +54,29 @@ export function sendText({
   response.end(body);
 }
 
+/** An RFC 7807 problem detail (ADR-0120 §2): the workshop API answers
+ * a session-less call with `401 application/problem+json` carrying a
+ * machine-readable `reason` — the front reads it and shows its sign-in
+ * page instead of a raw error. */
+export function sendProblem({
+  response,
+  statusCode,
+  reason,
+  title,
+}: {
+  response: ServerResponse;
+  statusCode: number;
+  reason: string;
+  title: string;
+}): void {
+  const text = JSON.stringify({ type: "about:blank", title, status: statusCode, reason });
+  response.writeHead(statusCode, {
+    "Content-Type": "application/problem+json; charset=utf-8",
+    "Content-Length": Buffer.byteLength(text),
+  });
+  response.end(text);
+}
+
 /** SHA-256 of a personal access code — the value stored in
  * users.access_code_hash. The clear code never persists, never logs. */
 export function hashAccessCode({ code }: { code: string }): string {
