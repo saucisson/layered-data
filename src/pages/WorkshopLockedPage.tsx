@@ -6,7 +6,7 @@
 import { useState } from "react";
 import type { Language } from "../domain/messages";
 import { say } from "../presentation/i18n";
-import { AccessCodeForm } from "../presentation/accessForm";
+import { AuthPanel } from "../presentation/authPanel";
 
 export function WorkshopLockedPage({ language }: { language: Language }) {
   const [signedIn, setSignedIn] = useState(false);
@@ -36,9 +36,9 @@ export function WorkshopLockedPage({ language }: { language: Language }) {
         </a>
       ) : (
         <span className="w-80 text-left">
-          <AccessCodeForm
+          <AuthPanel
             language={language}
-            onVerified={() => {
+            onChanged={() => {
               setSignedIn(true);
               window.dispatchEvent(new CustomEvent("ld:access-verified"));
             }}

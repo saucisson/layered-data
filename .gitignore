@@ -12,3 +12,6 @@ public/locales/**/*_old.json
 reports/
 playwright-report/
 test-results/
+
+# local env files with real credentials
+layered-data.env

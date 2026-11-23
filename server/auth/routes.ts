@@ -55,13 +55,24 @@ function sendRedirect({
  * schemes) and any control character (the WHATWG URL parser strips
  * tabs/newlines before parsing, so `/\t/evil.com` would parse as
  * `//evil.com`) are all refused. */
+/** True when any char is a C0 control or DEL — written as a char-code
+ * scan so the linter's no-control-regex rule stays green (the rejection
+ * is deliberate: WHATWG strips tabs/newlines before parsing). */
+function hasControlCharacter({ value }: { value: string }): boolean {
+  for (const character of value) {
+    const code = character.charCodeAt(0);
+    if (code <= 0x20 || code === 0x7f) return true;
+  }
+  return false;
+}
+
 function safeReturnTo({ candidate }: { candidate: string | null }): string {
   if (
     candidate !== null &&
     candidate.startsWith("/") &&
     !candidate.startsWith("//") &&
     !candidate.includes("\\") &&
-    !/[\x00-\x20\x7f]/.test(candidate)
+    !hasControlCharacter({ value: candidate })
   ) {
     return candidate;
   }
