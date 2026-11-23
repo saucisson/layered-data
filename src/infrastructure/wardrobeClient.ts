@@ -121,7 +121,28 @@ export async function apiFetch({
   }
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    return await fetch(endpoint, { ...options, headers, signal: controller.signal });
+    const response = await fetch(endpoint, { ...options, headers, signal: controller.signal });
+    // Auth v1 contract (ADR-0120 §2): a workshop route without a session
+    // answers 401 application/problem+json with reason "session_required"
+    // — the front shows its sign-in page instead of a raw error.
+    if (response.status === 401) {
+      void response
+        .clone()
+        .json()
+        .then((body: unknown) => {
+          if (
+            typeof body === "object" &&
+            body !== null &&
+            (body as { reason?: unknown }).reason === "session_required"
+          ) {
+            window.dispatchEvent(new CustomEvent("ld:session-required"));
+          }
+        })
+        .catch(() => {
+          // not a problem+json body: plain 401, no sign-in page
+        });
+    }
+    return response;
   } finally {
     clearTimeout(timer);
   }

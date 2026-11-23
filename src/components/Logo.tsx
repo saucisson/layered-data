@@ -4,10 +4,51 @@
 
 import type { LogoId } from "../infrastructure/logos.ts";
 
+/** The proposed "L" (LD-9): five stacked isometric slabs, violet at
+ *  the top to cyan at the base, over a foot slab stretching right —
+ *  the exact construction of public/logos/layered-data-logo-proposition.png,
+ *  not a retrace. Same polygons as layered-data-logo-proposition-mark.svg. */
+function ProposalMark() {
+  const slabs: readonly { cx: number; cy: number; hw: number; color: string }[] = [
+    { cx: 24, cy: 12, hw: 20, color: "#8b5cf6" },
+    { cx: 24, cy: 23, hw: 20, color: "#7c3aed" },
+    { cx: 24, cy: 34, hw: 20, color: "#6366f1" },
+    { cx: 24, cy: 45, hw: 20, color: "#3b82f6" },
+    { cx: 24, cy: 56, hw: 20, color: "#06b6d4" },
+    { cx: 44, cy: 62, hw: 26, color: "#22d3ee" },
+  ];
+  const h = 10;
+  const e = 3;
+  return (
+    <svg viewBox="0 0 74 76" className="h-6 w-auto" aria-hidden="true">
+      {slabs.map((slab) => (
+        <g key={`${slab.cx}-${slab.cy}`}>
+          <polygon
+            points={`${slab.cx},${slab.cy - h} ${slab.cx + slab.hw},${slab.cy} ${slab.cx},${slab.cy + h} ${slab.cx - slab.hw},${slab.cy}`}
+            fill={slab.color}
+          />
+          <polygon
+            points={`${slab.cx - slab.hw},${slab.cy} ${slab.cx},${slab.cy + h} ${slab.cx},${slab.cy + h + e} ${slab.cx - slab.hw},${slab.cy + e}`}
+            fill={slab.color}
+            opacity="0.72"
+          />
+          <polygon
+            points={`${slab.cx},${slab.cy + h} ${slab.cx + slab.hw},${slab.cy} ${slab.cx + slab.hw},${slab.cy + e} ${slab.cx},${slab.cy + h + e}`}
+            fill={slab.color}
+            opacity="0.55"
+          />
+        </g>
+      ))}
+    </svg>
+  );
+}
+
 function Mark({ variant }: { variant: LogoId }) {
   const accent = "fill-emerald-600 dark:fill-emerald-400";
   const ink = "fill-slate-900 dark:fill-slate-50";
   switch (variant) {
+    case "proposal":
+      return <ProposalMark />;
     case "stack":
       // three stacked layers, the top one accented
       return (
@@ -90,7 +131,15 @@ export function Logo({ variant }: { variant: LogoId }) {
     <span className="flex items-center gap-1.5">
       <Mark variant={variant} />
       <span>
-        Layered<span className="text-emerald-600 dark:text-emerald-400">Data</span>
+        {variant === "proposal" ? (
+          <>
+            ayered <span className="font-extrabold">Data</span>
+          </>
+        ) : (
+          <>
+            Layered<span className="text-emerald-600 dark:text-emerald-400">Data</span>
+          </>
+        )}
       </span>
     </span>
   );
