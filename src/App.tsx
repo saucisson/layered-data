@@ -4,7 +4,7 @@
 // and the graphical editor are two top-level pages (issue #216).
 
 import { lazy, Suspense, useEffect, useState } from "react";
-import { RouterProvider, useRouter } from "./components/Router";
+import { RouterProvider, useRouter, type Page } from "./components/Router";
 import { SiteHeader } from "./components/SiteHeader";
 import { ToastProvider } from "./components/Toast";
 import { readWorkshopLanguage, writeWorkshopLanguage } from "./infrastructure/browserLanguage";
@@ -79,6 +79,12 @@ const ModelEditorPage = lazy(() =>
 const NotFoundPage = lazy(() =>
   import("./pages/NotFoundPage").then((module) => ({ default: module.NotFoundPage })),
 );
+const WorkshopLockedPage = lazy(() =>
+  import("./pages/WorkshopLockedPage").then((module) => ({ default: module.WorkshopLockedPage })),
+);
+
+/** The Atelier-zone pages (ADR-0120 §2): they require a session. */
+const WORKSHOP_PAGES: readonly Page[] = ["formalisms", "models", "hierarchy", "creation", "formalism"];
 
 // No text on purpose: the fallback must not depend on the i18n catalog
 // being loaded yet.
@@ -110,6 +116,19 @@ function AppContent() {
     document.documentElement.lang = language;
   }, [language]);
 
+  // A workshop API call answered 401 problem+json session_required
+  // (ADR-0120 §2): the Atelier zone shows its sign-in page (LD-9).
+  const [sessionRequired, setSessionRequired] = useState(false);
+  useEffect(() => {
+    const onSessionRequired = () => setSessionRequired(true);
+    window.addEventListener("ld:session-required", onSessionRequired);
+    return () => window.removeEventListener("ld:session-required", onSessionRequired);
+  }, []);
+  useEffect(() => {
+    if (!WORKSHOP_PAGES.includes(page)) setSessionRequired(false);
+  }, [page]);
+  const workshopLocked = sessionRequired && WORKSHOP_PAGES.includes(page);
+
   return (
     <Suspense fallback={<PageFallback />}>
       <SiteHeader
@@ -122,7 +141,9 @@ function AppContent() {
         onChooseLogo={chooseLogo}
       />
       <main id="main-content">
-      {(() => {
+      {workshopLocked ? (
+        <WorkshopLockedPage language={language} />
+      ) : (() => {
         switch (page) {
           case "tutorial":
             return <TutorialPage language={language} />;

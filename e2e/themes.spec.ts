@@ -1,11 +1,17 @@
 // Theme picker E2E (issue #233): the header offers several themes; the
 // choice is applied on <html> and persisted in localStorage across
 // reloads.
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
+
+/** Open the preferences panel: account menu (header) -> Preferences. */
+async function openPrefs(page: Page) {
+  await page.getByRole("button", { name: "account menu" }).click();
+  await page.getByRole("button", { name: "Preferences" }).click();
+}
 
 test("#233 the theme chosen in the header is applied and survives a reload", async ({ page }) => {
   await page.goto("/#landing");
-  await page.getByRole("button", { name: "preferences" }).click();
+  await openPrefs(page);
   const picker = page.getByRole("combobox", { name: "theme" });
   await expect(picker).toBeVisible({ timeout: 10_000 });
 
@@ -19,7 +25,7 @@ test("#233 the theme chosen in the header is applied and survives a reload", asy
 
   // a reload keeps the theme
   await page.reload();
-  await page.getByRole("button", { name: "preferences" }).click();
+  await openPrefs(page);
   await expect(picker).toHaveValue("nord", { timeout: 10_000 });
   await expect
     .poll(() => page.evaluate("document.documentElement.classList.contains('theme-nord')"))
@@ -38,7 +44,7 @@ test("#233 the theme chosen in the header is applied and survives a reload", asy
 
 test("#234 the logo variant chosen in the header is persisted across reloads", async ({ page }) => {
   await page.goto("/#landing");
-  await page.getByRole("button", { name: "preferences" }).click();
+  await openPrefs(page);
   const picker = page.getByRole("combobox", { name: "logo" });
   await expect(picker).toBeVisible({ timeout: 10_000 });
 
@@ -50,13 +56,13 @@ test("#234 the logo variant chosen in the header is persisted across reloads", a
   await expect(page.locator("header svg path").first()).toBeVisible();
 
   await page.reload();
-  await page.getByRole("button", { name: "preferences" }).click();
+  await openPrefs(page);
   await expect(picker).toHaveValue("diamond", { timeout: 10_000 });
 });
 
 test("the artwork logo variant renders the provided PNG wordmark and persists", async ({ page }) => {
   await page.goto("/#landing");
-  await page.getByRole("button", { name: "preferences" }).click();
+  await openPrefs(page);
   const picker = page.getByRole("combobox", { name: "logo" });
   await expect(picker).toBeVisible({ timeout: 10_000 });
 
@@ -73,14 +79,14 @@ test("the artwork logo variant renders the provided PNG wordmark and persists", 
   expect((await page.request.get("/logos/layered-data-logo.png")).status()).toBe(200);
 
   await page.reload();
-  await page.getByRole("button", { name: "preferences" }).click();
+  await openPrefs(page);
   await expect(picker).toHaveValue("artwork", { timeout: 10_000 });
   await expect(artwork).toBeVisible();
 });
 
 test("the Tokyo Night theme applies its indigo palette and survives a reload", async ({ page }) => {
   await page.goto("/#landing");
-  await page.getByRole("button", { name: "preferences" }).click();
+  await openPrefs(page);
   const picker = page.getByRole("combobox", { name: "theme" });
   await expect(picker).toBeVisible({ timeout: 10_000 });
 
@@ -101,7 +107,7 @@ test("the Tokyo Night theme applies its indigo palette and survives a reload", a
     .toBe("rgb(26, 27, 38)");
 
   await page.reload();
-  await page.getByRole("button", { name: "preferences" }).click();
+  await openPrefs(page);
   await expect(picker).toHaveValue("tokyonight", { timeout: 10_000 });
   await expect
     .poll(() => page.evaluate("document.documentElement.classList.contains('theme-tokyonight')"))

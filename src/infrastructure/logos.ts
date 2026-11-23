@@ -2,7 +2,7 @@
 // like the theme (per browser; a per-user storage would need a server
 // preference, not built yet).
 
-export type LogoId = "classic" | "stack" | "diamond" | "mono" | "wave" | "artwork";
+export type LogoId = "classic" | "stack" | "diamond" | "mono" | "wave" | "artwork" | "proposal";
 
 export interface LogoDefinition {
   id: LogoId;
@@ -16,6 +16,7 @@ export const LOGOS: readonly LogoDefinition[] = [
   { id: "mono", label: "Mono" },
   { id: "wave", label: "Wave" },
   { id: "artwork", label: "Artwork" },
+  { id: "proposal", label: "Proposal (LD-9)" },
 ];
 
 export const LOGO_STORAGE_KEY = "ld-logo";
