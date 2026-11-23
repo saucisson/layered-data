@@ -43,15 +43,15 @@ const ZONES: readonly ZoneEntry[] = [
   },
 ];
 
-const ZONE_PAGES: readonly { page: Page; label: string }[] = [
-  { page: "tutorial", label: "Tutorial" },
-  { page: "filiation", label: "Filiation" },
-  { page: "lenses", label: "Lenses" },
-  { page: "install", label: "Install" },
-  { page: "formalisms", label: "Formalisms" },
-  { page: "models", label: "Models" },
-  { page: "hierarchy", label: "Hierarchy" },
-  { page: "creation", label: "Creation" },
+const ZONE_PAGES: readonly { page: Page; label: { en: string; fr: string } }[] = [
+  { page: "tutorial", label: { en: "Tutorial", fr: "Tutoriel" } },
+  { page: "filiation", label: { en: "Filiation", fr: "Filiation" } },
+  { page: "lenses", label: { en: "Lenses", fr: "Lentilles" } },
+  { page: "install", label: { en: "Install", fr: "Installation" } },
+  { page: "formalisms", label: { en: "Formalisms", fr: "Formalismes" } },
+  { page: "models", label: { en: "Models", fr: "Modèles" } },
+  { page: "hierarchy", label: { en: "Hierarchy", fr: "Hiérarchie" } },
+  { page: "creation", label: { en: "Creation", fr: "Création" } },
 ];
 
 function zoneOf({ page }: { page: Page }): ZoneId | null {
@@ -190,7 +190,7 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
                         aria-current={currentPage === entry.page || (currentPage === "formalism" && entry.page === "formalisms") ? "page" : undefined}
                         className="rounded px-2 py-1 text-left text-sm text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700"
                       >
-                        {entry.label}
+                        {say({ language, en: entry.label.en, fr: entry.label.fr })}
                       </a>
                     ))}
                   </span>
