@@ -36,7 +36,13 @@ export function WorkshopLockedPage({ language }: { language: Language }) {
         </a>
       ) : (
         <span className="w-80 text-left">
-          <AccessCodeForm language={language} onVerified={() => setSignedIn(true)} />
+          <AccessCodeForm
+            language={language}
+            onVerified={() => {
+              setSignedIn(true);
+              window.dispatchEvent(new CustomEvent("ld:access-verified"));
+            }}
+          />
         </span>
       )}
       <a
