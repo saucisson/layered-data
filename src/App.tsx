@@ -121,8 +121,14 @@ function AppContent() {
   const [sessionRequired, setSessionRequired] = useState(false);
   useEffect(() => {
     const onSessionRequired = () => setSessionRequired(true);
+    // signing in (header menu or locked page) unlocks the workshop at once
+    const onAccessVerified = () => setSessionRequired(false);
     window.addEventListener("ld:session-required", onSessionRequired);
-    return () => window.removeEventListener("ld:session-required", onSessionRequired);
+    window.addEventListener("ld:access-verified", onAccessVerified);
+    return () => {
+      window.removeEventListener("ld:session-required", onSessionRequired);
+      window.removeEventListener("ld:access-verified", onAccessVerified);
+    };
   }, []);
   useEffect(() => {
     if (!WORKSHOP_PAGES.includes(page)) setSessionRequired(false);

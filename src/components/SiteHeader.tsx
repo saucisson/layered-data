@@ -54,11 +54,12 @@ const ZONE_PAGES: readonly { page: Page; label: string }[] = [
   { page: "creation", label: "Creation" },
 ];
 
-function zoneOf({ page }: { page: Page }): ZoneId {
+function zoneOf({ page }: { page: Page }): ZoneId | null {
   for (const zone of ZONES) {
     if (zone.pages.includes(page)) return zone.id;
   }
-  return "home";
+  // an unknown route (notfound) highlights no zone
+  return null;
 }
 
 interface SiteHeaderProps {
@@ -269,7 +270,10 @@ export function SiteHeader({ currentPage, language, onChooseLanguage, theme, onC
                   ) : (
                     <AccessCodeForm
                       language={language}
-                      onVerified={() => setAccessVerified(true)}
+                      onVerified={() => {
+                        setAccessVerified(true);
+                        window.dispatchEvent(new CustomEvent("ld:access-verified"));
+                      }}
                     />
                   )}
                   <button
