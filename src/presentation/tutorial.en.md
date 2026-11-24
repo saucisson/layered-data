@@ -2,11 +2,12 @@
 
 This tutorial goes from the concrete to the formal, and the code carries the proof. Every listing below is **computed by the application at display time**: the ⟪closure⟫ of one layer of the tutorial corpus, resolved in place, line by line. Every line carries its parentage (the badge of the layer that provides the value, or declares the slot); click it: the card tells where the value comes from, or the chain of ⟪refines⟫ types. The `.ld` files speak the geologist's language: one line per gesture, the layout structures, no JSON.
 
-The tutorial corpus is **dedicated**: ten layers, simpler than the workshop's ⟪bedrock⟫ (85 layers), and its stratigraphic column reads at a glance:
+The tutorial corpus is **dedicated**: nine layers, simpler than the workshop's ⟪bedrock⟫ (91 layers), and its stratigraphic column reads at a glance:
 
 ```text
-graph ─ petrinet (metamodel) ─ philosophers (template) ─ philosophers-5 (model)
-  └── automaton ─ state-space (metamodels) ─ philosophers-5-state-space (model)
+record ─ graph ─ petrinet (metamodel) ─ philosophers (template) ─ philosophers-5 (model)
+            └── automaton ─ state-space (metamodels) ─ philosophers-5-state-space (model)
+collection — a second root, beside record
 ```
 
 ## The data to represent
@@ -27,7 +28,7 @@ Layered data answers with a single move: one kind of datum (the layer), one act 
 
 ## The minimal bedrock
 
-Three layers declare no parent: they descend from nothing.
+Two layers declare no parent: they descend from nothing. (The `checks` note below is prose about the language, not a layer of the corpus.)
 
 ### record — the slab
 
@@ -123,9 +124,50 @@ To read an ⟪address⟫ is to walk its closure, from the newest layer to the ol
 
 This whole tutorial employed only that gesture: write little, inherit the rest, read by core sample. The ⟪order conflict⟫ does not appear here: the tutorial's layers never contradict each other; the workshop shows it on the ⟪bedrock⟫.
 
+## Defining a lens
+
+A ⟪lens⟫ is an ordinary layer that refines a display scheme — `@graph-display` for graphs, or a more specific one — and overrides the `display` fields of each type: `shape`, `label`, `fill`, `stroke`, `arrow`, `ports`. That is the whole mechanism: the editor and the lenses page read the lens's `display` block per type, and fall back to a dashed generic circle for the types the lens does not know. To define one, draft it on the Creation page (`#creation`), or contribute a `.ld` file via pull request — the corpus only changes through review (the bedrock is read-only, ADR-0103). Then: the editor's lens picker lists every lens of the space — the inventory is derived from the data (a layer whose `refines` closure contains a display scheme), not from a hardcoded list, so a lens you just staged appears there without any code change — and its "edit the lens" button opens the lens's DSL on the formalism page.
+
+```ld
+layer my-display refines @graph-display
+  extend specification
+    extend vertex_type
+      extend display
+        override shape = "circle"
+        override fill = "#ffffff"
+```
+
+## Display functions — code in exactly one place
+
+Some drawings are computations, not parameters: a multiplicity (one dot per token), one input per incoming arc. For those, the `display` blocks of lenses are the **only** place where the language accepts code (ADR-0119): a function literal between `[[ … ]]`, never between quotes. `rx = fn (place) [[ 8 + 2 * place.marking ]]` computes the radius from the node's own data; `draw = fn (place, net) [[ … ]]` replaces the whole glyph with a group of shapes built as data. The functions receive **pure data** — the flattened element and the flattened model — and their output is validated before it reaches a pixel: a field parameter against its schema, a returned SVG tree against a closed whitelist of tags and attributes. The server parses the code at staging (an unreadable body is refused with `expression-illisible`) but never executes it; only the browser renderers run it, per drawn node, and a function that throws falls back to the default. There is no syntax for writing code anywhere else — the parser offers no other slot.
+
+```ld
+layer token-lens refines @petrinet-display then @petrinet-scheme
+  extend specification
+    extend place_type
+      extend display
+        draw = fn (place, net) [[ Array.from({ length: place.marking }, (_, i) => ({ tag: "circle", attrs: { cx: -6 + i * 6, cy: 0, r: 2, fill: "#455555" }, children: [] })) ]]
+```
+
+## Resize and rotate
+
+A lens fixes the *default* look of each type; each node can then depart from it with **data**, exactly like the positions. A model (or a viewpoint) that refines `@node-sizes` carries a `sizes` block whose keys name the vertices — each entry poses a `scale` factor and/or an `angle` in degrees. The cascade is the positions' one: the viewpoint decides, else the model carries, else the gabarit's defaults apply — a node without a datum keeps the template's sizes. In the editor, a selected vertex shows two handles: drag the square one to resize, the round one to rotate; the gesture writes the `sizes` entry in the model's source (visible, and it survives a reload), and a double-click on a handle removes the datum. The arcs attach to the effective bounds of the scaled, rotated glyph.
+
+```ld
+layer my-buchi refines @moore-traffic-light then @buchi-automaton then @node-sizes
+  extend states
+    extend green
+      accepting = true
+  extend sizes
+    green refines @node-sizes/specification/size_type
+      scale = 2
+      angle = 45
+```
+
 ## To go further
 
-- The workshop (`#workshop`): the kernel corpus and its real dinner, the four panels, the layers' ⟪quarry⟫.
+- The workshop (`#formalisms`): the kernel corpus and its real dinner, the layers' ⟪quarry⟫.
+- The lenses (`#lenses`): the tree of lenses and viewpoints, a model seen through a look.
 - The complete hierarchy (`#hierarchy`): the bedrock's refinement graph.
 - Create a formalism (`#creation`): every entry goes through the staging.
 - Understand a formalism (`#formalism`): the source, the flattened closure, the lenses.

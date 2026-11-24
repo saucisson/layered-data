@@ -31,7 +31,6 @@ function check(label: string, condition: boolean): void {
 const sandbox = mkdtempSync(join(tmpdir(), "ld-pg-test-"));
 process.env.LD_USERS_DIRECTORY = join(sandbox, "users");
 process.env.LD_DATA_DIRECTORY = join(sandbox, "data");
-process.env.API_TOKEN = "test-token";
 process.env.MISTRAL_API_KEY = "";
 
 const { DATABASE_URL } = await import("../server/config.ts");
@@ -215,7 +214,16 @@ const server: Server = createQuarryServer({ stores });
 await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
 const port = (server.address() as AddressInfo).port;
 const base = "http://127.0.0.1:" + port;
-const auth = { "x-access-code": "test-token" };
+// The shared static API_TOKEN is gone (LD-6): the harness authenticates
+// with a personal access code (issue #140), created directly in the store.
+const { hashAccessCode } = await import("../server/httpUtils.ts");
+const harnessCode = "pg-harness-code";
+await stores.users.create({
+  displayName: "pg-harness",
+  accessCodeHash: hashAccessCode({ code: harnessCode }),
+  role: "user",
+});
+const auth = { "x-access-code": harnessCode };
 
 try {
   // ---- the layer store over HTTP ----

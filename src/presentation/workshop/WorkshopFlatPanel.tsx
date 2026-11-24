@@ -134,7 +134,7 @@ export function WorkshopFlatPanel({
                   })
                 : say({
                     language,
-                    en: "No key matches « " + search + " ».",
+                    en: "No key matches “ " + search + " ”.",
                   })}
             </div>
           )}
@@ -190,7 +190,7 @@ export function WorkshopFlatPanel({
             language,
             en:
               "Each line: the key, the layer providing the value " +
-              "(first-wins), the value. A node is traversed (« → go there »); " +
+              "(first-wins), the value. A node is traversed (“→ go there”); " +
               "a resolved reference is recognized by its designated address.",
           })}
         </p>

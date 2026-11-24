@@ -1,7 +1,9 @@
 // The composition root of the workshop: one kernel assembled from
-// the corpus, one refinement graph over it, and the four panels —
-// ① the layers, ② the formalism, ③ the reading and its
-// resolution, ④ the point of view. The first render is a pure
+// the corpus, one refinement graph over it, and the three panels —
+// ① the layers, ② the formalism, ③ the flattened data,
+// ④ the mechanism, ⑤ the cascade (the point of view lives on
+// #lenses, issue #227).
+// The first render is a pure
 // pass: every derivation is a memo, nothing is written back.
 // The panels live in ./presentation/workshop/ (issue #200); this
 // file keeps only the state, the handlers and the memos.
@@ -22,7 +24,6 @@ import {
   rewriteLivingAddition,
   type AppliedEdition,
 } from "./application/edition.ts";
-import { buildWorkshopLook } from "./presentation/lensDrawing.ts";
 import { useToast } from "./components/Toast.tsx";
 
 import {
@@ -30,9 +31,13 @@ import {
   REFINEMENT_DAG,
   SOURCE_LINE_TARGETS,
   type HistoryEntry,
-  type SelectedGlyph,
   type AcceptedAdditionState,
 } from "./presentation/workshop/workshopKernel.ts";
+import {
+  belongsToPivotFamily,
+  collectUsageTargets,
+  FAMILY_PIVOTS,
+} from "./presentation/workshopInventory.ts";
 import { WorkshopHeader } from "./presentation/workshop/WorkshopHeader.tsx";
 import { WorkshopLayersPanel } from "./presentation/workshop/WorkshopLayersPanel.tsx";
 import { FormalismPanel } from "./presentation/formalismPanel.tsx";
@@ -42,7 +47,6 @@ import {
   type ClosureData,
   type SelectedKeyDetail,
 } from "./presentation/workshop/WorkshopMechanismPanel.tsx";
-import { WorkshopViewpointPanel } from "./presentation/workshop/WorkshopViewpointPanel.tsx";
 import type { AcceptedAddition } from "./presentation/addFormalism.tsx";
 
 // ---- the kernel, the graph, the line-target table -------------
@@ -70,13 +74,6 @@ export function WorkshopPage({
   // The closure calculation folds — opened automatically by the
   // click on a key, closed with one gesture.
   const [showClosureCalculation, setShowClosureCalculation] = useState(false);
-  // The selected glyph names a shape of the current drawing —
-  // kind + name are enough.
-  const [selectedGlyph, setSelectedGlyph] = useState<SelectedGlyph | null>(null);
-  // The look chosen in the tree of ④ — a lens dresses the current
-  // model of ①, a viewpoint imposes its own; default: the dinner
-  // course.
-  const [selectedView, setSelectedView] = useState("pn-philosophers-5-course");
   // The ＋ button of ① — the additions accepted by the staging, as
   // state; the composer opens/closes with one click.
   const [additions, setAdditions] = useState<AcceptedAdditionState[]>([]);
@@ -97,6 +94,10 @@ export function WorkshopPage({
   // stack of visited addresses (back), the clipboard (the address
   // is the shareable artifact of the workshop).
   const [search, setSearch] = useState("");
+  // The family filter of ① (issue #363): the selected pivot layers,
+  // multiselect — empty means no filter (the current view). The
+  // membership test is one closure read per layer, presentation side.
+  const [selectedFamilyPivots, setSelectedFamilyPivots] = useState<string[]>([]);
   const [guidedTourOpen, setGuidedTourOpen] = useState(false);
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [copied, setCopied] = useState(false);
@@ -157,6 +158,22 @@ export function WorkshopPage({
   // returns to it from anywhere (onKeyDown of the container).
   const needle = search.toLowerCase();
   const layerMatches = (layerName: string) => !needle || layerName.toLowerCase().includes(needle);
+  // The family filter composes with the search: a layer shows when it
+  // matches the search AND belongs to at least one selected family
+  // (no selection = no filtering). The bands never change — a filtered
+  // layer hides, it never moves.
+  const familyMatches = (layerName: string) =>
+    selectedFamilyPivots.length === 0 ||
+    selectedFamilyPivots.some((pivot) =>
+      belongsToPivotFamily({ dag: REFINEMENT_DAG, layerName, pivot }),
+    );
+  const toggleFamilyPivot = (pivot: string) =>
+    setSelectedFamilyPivots((previous) =>
+      previous.includes(pivot)
+        ? previous.filter((entry) => entry !== pivot)
+        : [...previous, pivot],
+    );
+  const clearFamilyPivots = () => setSelectedFamilyPivots([]);
   const keyMatches = (key: string) => !needle || key.toLowerCase().includes(needle);
   function submitSearch() {
     // The search also walks the layers added at runtime.
@@ -200,7 +217,15 @@ export function WorkshopPage({
     }
     setAddedLayerBlocks(nextBlocks);
     for (const [layerName, targets] of Object.entries(addition.refinementTargets)) {
-      REFINEMENT_DAG.addLayer({ layerName, targets });
+      REFINEMENT_DAG.addLayer({
+        layerName,
+        targets,
+        uses: collectUsageTargets({
+          layerTree: KERNEL.space.layers[layerName],
+          layerName,
+          layerNames: livingLayerNames,
+        }),
+      });
     }
   }
   function handleComposerAdded(addition: AcceptedAddition) {
@@ -230,6 +255,11 @@ export function WorkshopPage({
     REFINEMENT_DAG.retargetLayer({
       layerName: edition.layerName,
       targets: edition.refinementTargetsOf,
+      uses: collectUsageTargets({
+        layerTree: KERNEL.space.layers[edition.layerName],
+        layerName: edition.layerName,
+        layerNames: livingLayerNames,
+      }),
     });
     setSpaceVersion(spaceVersion + 1);
     setEditorLayer(null);
@@ -318,16 +348,6 @@ export function WorkshopPage({
   // current address is its last step; pure derivation, nothing is
   // stored twice.
   const cascade = [...history, { layer, path, key: selectedKey }];
-
-  // ---- the current look (panel ④) ---------------------------------
-  // Pure derivation — the tree chooses, the drawing follows. A
-  // lone lens applies to the current model of ①; a viewpoint
-  // imposes its own model; without decided positions, the circle
-  // layout takes over.
-  const look = useMemo(
-    () => buildWorkshopLook({ space: KERNEL.space, selectedView, currentLayer: layer }),
-    [selectedView, layer],
-  );
 
   // The living layers — the loaded corpus plus those added at
   // runtime; the structures of ① extend on addition, the ranks of
@@ -418,12 +438,18 @@ export function WorkshopPage({
           onPickLayer={goto}
           closureSet={new Set(closureData.closure.map((address) => address[0]))}
           layerMatches={layerMatches}
+          familyMatches={familyMatches}
+          familyPivots={FAMILY_PIVOTS}
+          selectedFamilyPivots={selectedFamilyPivots}
+          onToggleFamilyPivot={toggleFamilyPivot}
+          onClearFamilyPivots={clearFamilyPivots}
           editableLayerSet={editableLayerSet}
           onEditorToggle={(layerName) => setEditorLayer(editorLayer === layerName ? null : layerName)}
         />
 
         {/* ② the formalism — side by side with ③ the flattened
-            data (issue #239) */}
+            data (issue #239); ④ the mechanism and ⑤ the cascade
+            sit below */}
         <FormalismPanel
           kernel={KERNEL}
           layer={layer}
@@ -469,20 +495,10 @@ export function WorkshopPage({
         />
       </div>
 
-      <WorkshopViewpointPanel
-        language={language}
-        kernel={KERNEL}
-        look={look}
-        selectedView={selectedView}
-        onSelectView={setSelectedView}
-        selectedGlyph={selectedGlyph}
-        onSelectGlyph={setSelectedGlyph}
-      />
-
       {/* The panels are counted on one hand — ① the layers, ② the
-          formalism, ③ the reading and its resolution, ④ the point
-          of view; the ＋ button of ① covers the flow, from the
-          request to the validation */}
+          formalism, ③ the flattened data, ④ the mechanism, ⑤ the
+          resolution cascade; the ＋ button of ① covers the flow,
+          from the request to the validation */}
 
       {/* The diagnostics and the validation live in the
           "Diagnostics & validation" fold of the formalism (②), the

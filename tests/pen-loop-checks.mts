@@ -25,6 +25,8 @@ import {
   type PenLoopOutcome,
   type PenRound,
 } from "../src/application/penLoop.ts";
+import { buildSystemPrompt, corpusBackbone } from "../server/geologistPrompts.ts";
+import { extractProposalContent } from "../server/mistralClient.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -35,6 +37,30 @@ function check(label: string, condition: boolean): void {
   assertions++;
   if (!condition) failures.push(label);
 }
+
+// ---- the upstream content extraction (mistral-large answers with
+// content blocks: thinking first, then text) ----
+check(
+  "(0) a plain string content passes through unchanged",
+  extractProposalContent({ content: "layer x refines @graph" }) === "layer x refines @graph",
+);
+check(
+  "(0) a content-block list joins only the text blocks (thinking skipped)",
+  extractProposalContent({
+    content: [
+      { type: "thinking", thinking: [{ type: "text", text: "hmm" }] },
+      { type: "text", text: "layer a" },
+      { type: "text", text: "layer b" },
+    ],
+  }) === "layer alayer b",
+);
+check(
+  "(0) a missing or non-text content yields an empty proposal",
+  extractProposalContent({ content: undefined }) === "" &&
+    extractProposalContent({ content: null }) === "" &&
+    extractProposalContent({ content: 42 }) === "" &&
+    extractProposalContent({ content: [{ type: "thinking" }] }) === "",
+);
 
 // ---- the bedrock context, as the server builds it ---------------------
 
@@ -355,6 +381,221 @@ const formattedFrench = formatPenFeedback(formatterRefusal, "fr");
 check(
   "the formatter falls back to English when asked for French — French content is absent (ADR-0113)",
   formattedFrench === formatted,
+);
+
+// ---- the grounding prompt (issue #245): the geologist must see the
+// column WITH its descriptions, the expected structure, and complete
+// examples of both species (formalism and model) ----------------------
+
+const systemPrompt = buildSystemPrompt({ visitorLayers: [] });
+check(
+  "(h) the column carries each layer's header AND its leading comments",
+  corpusBackbone({ visitorLayers: [] }).includes("layer petrinet-scheme refines") &&
+    corpusBackbone({ visitorLayers: [] }).includes("//"),
+);
+check(
+  "(h) the prompt spells out the expected structure (formalism vs model, most specific parent)",
+  systemPrompt.includes("LA STRUCTURE ATTENDUE") &&
+    systemPrompt.includes("@petrinet-scheme, pas @graph"),
+);
+check(
+  "(h) the prompt embeds the complete formalism example (bipartite-digraph) — body line, not just the column header",
+  systemPrompt.includes("override container = @bipartite-digraph/left"),
+);
+check(
+  "(h) the prompt embeds the complete model example (pn-philosophers-1) — body line, not just the column header",
+  systemPrompt.includes("think1 refines @pn-philosophers/specification/think"),
+);
+check(
+  "(h) the visitor layers travel in the column and in the prompt",
+  buildSystemPrompt({
+    visitorLayers: [{ name: "visiteur-1", source: "layer visiteur-1 refines @graph\n" }],
+  }).includes("layer visiteur-1 refines @graph"),
+);
+
+// =====================================================================
+// (i) the two-pass fixtures (issue #279): proposals that the real
+// staging accepts in ONE attempt — a distant formalism+model pair
+// (boolean-circuit / bc-half-adder) and a close model
+// (pn-philosophers-3, authored for this test) — plus a refusal that
+// the loop carries back (expectation-betrayed) before accepting the
+// corrected round
+// =====================================================================
+
+const booleanCircuitFixture = `layer boolean-circuit refines @dag
+  extend specification
+    gate_type refines @boolean-circuit/specification/vertex_type
+      extend specification
+        extend record
+          override abstract identifier
+          abstract function
+    port_type refines @boolean-circuit/specification/vertex_type
+      extend specification
+        extend record
+          override abstract identifier
+          abstract direction
+    wire_type refines @boolean-circuit/edge_type
+      extend specification
+        extend record
+          override abstract identifier
+          extend source
+            override container = @boolean-circuit/vertices
+          extend target
+            override container = @boolean-circuit/vertices
+  gates refines @collection
+    extend specification
+      extend collection
+        override type = @boolean-circuit/specification/gate_type
+  ports refines @collection
+    extend specification
+      extend collection
+        override type = @boolean-circuit/specification/port_type
+  wires refines @collection
+    extend specification
+      extend collection
+        override type = @boolean-circuit/specification/wire_type
+  extend vertices refines @boolean-circuit/gates then @boolean-circuit/ports
+  extend edges refines @boolean-circuit/wires
+
+layer bc-half-adder refines @boolean-circuit
+  extend gates
+    xorg refines @boolean-circuit/specification/gate_type
+      identifier = 1
+      function = "xor"
+    andg refines @boolean-circuit/specification/gate_type
+      identifier = 2
+      function = "and"
+  extend ports
+    a refines @boolean-circuit/specification/port_type
+      identifier = 1
+      direction = "in"
+    b refines @boolean-circuit/specification/port_type
+      identifier = 2
+      direction = "in"
+    s refines @boolean-circuit/specification/port_type
+      identifier = 3
+      direction = "out"
+    c refines @boolean-circuit/specification/port_type
+      identifier = 4
+      direction = "out"
+  extend wires
+    w1 refines @boolean-circuit/specification/wire_type
+      identifier = 1
+      source = @bc-half-adder/ports/a
+      target = @bc-half-adder/gates/xorg
+    w2 refines @boolean-circuit/specification/wire_type
+      identifier = 2
+      source = @bc-half-adder/ports/b
+      target = @bc-half-adder/gates/xorg
+    w3 refines @boolean-circuit/specification/wire_type
+      identifier = 3
+      source = @bc-half-adder/ports/a
+      target = @bc-half-adder/gates/andg
+    w4 refines @boolean-circuit/specification/wire_type
+      identifier = 4
+      source = @bc-half-adder/ports/b
+      target = @bc-half-adder/gates/andg
+    w5 refines @boolean-circuit/specification/wire_type
+      identifier = 5
+      source = @bc-half-adder/gates/xorg
+      target = @bc-half-adder/ports/s
+    w6 refines @boolean-circuit/specification/wire_type
+      identifier = 6
+      source = @bc-half-adder/gates/andg
+      target = @bc-half-adder/ports/c
+  tests
+    expect gates/xorg/function = "xor"
+    expect ports/a/direction = "in"
+    expect wires/w1/source = @bc-half-adder/ports/a
+    expect ports/s/direction = "out"`;
+
+const philosophers3Fixture = `layer pn-philosophers-3 refines @pn-philosophers then @positions-grid
+  philosophes refines @collection
+    philo1 refines @pn-philosophers-1
+      identifier = 1
+    philo2 refines @pn-philosophers-1
+      identifier = 2
+    philo3 refines @pn-philosophers-1
+      identifier = 3
+  extend places refines @pn-philosophers-3/philosophes/philo1/places then @pn-philosophers-3/philosophes/philo2/places then @pn-philosophers-3/philosophes/philo3/places
+  extend transitions refines @pn-philosophers-3/philosophes/philo1/transitions then @pn-philosophers-3/philosophes/philo2/transitions then @pn-philosophers-3/philosophes/philo3/transitions
+  extend pre_arcs refines @pn-philosophers-3/philosophes/philo1/pre_arcs then @pn-philosophers-3/philosophes/philo2/pre_arcs then @pn-philosophers-3/philosophes/philo3/pre_arcs
+    fk1 refines @petrinet-scheme/specification/pre_arc_type
+      source = @pn-philosophers-3/places/philo1.fork1
+      target = @pn-philosophers-3/transitions/philo2.take1
+    fk2 refines @petrinet-scheme/specification/pre_arc_type
+      source = @pn-philosophers-3/places/philo2.fork1
+      target = @pn-philosophers-3/transitions/philo3.take1
+    fk3 refines @petrinet-scheme/specification/pre_arc_type
+      source = @pn-philosophers-3/places/philo3.fork1
+      target = @pn-philosophers-3/transitions/philo1.take1
+  extend post_arcs refines @pn-philosophers-3/philosophes/philo1/post_arcs then @pn-philosophers-3/philosophes/philo2/post_arcs then @pn-philosophers-3/philosophes/philo3/post_arcs
+    rf1 refines @petrinet-scheme/specification/post_arc_type
+      source = @pn-philosophers-3/transitions/philo2.release1
+      target = @pn-philosophers-3/places/philo1.fork1
+    rf2 refines @petrinet-scheme/specification/post_arc_type
+      source = @pn-philosophers-3/transitions/philo3.release1
+      target = @pn-philosophers-3/places/philo2.fork1
+    rf3 refines @petrinet-scheme/specification/post_arc_type
+      source = @pn-philosophers-3/transitions/philo1.release1
+      target = @pn-philosophers-3/places/philo3.fork1
+  extend positions refines @pn-philosophers-3/philosophes/philo1/positions then @pn-philosophers-3/philosophes/philo2/positions then @pn-philosophers-3/philosophes/philo3/positions
+    table refines @positions-grid/specification/position_type
+      x = 0
+      y = 0
+    philo1.seat refines @positions-grid/specification/position_type
+      abstract x
+      abstract y
+      system = "polar"
+      relative_to = @pn-philosophers-3/positions/table
+      r = 190
+      theta = 0
+    philo2.seat refines @positions-grid/specification/position_type
+      abstract x
+      abstract y
+      system = "polar"
+      relative_to = @pn-philosophers-3/positions/table
+      r = 190
+      theta = 120
+    philo3.seat refines @positions-grid/specification/position_type
+      abstract x
+      abstract y
+      system = "polar"
+      relative_to = @pn-philosophers-3/positions/table
+      r = 190
+      theta = 240
+  tests
+    expect places/philo1.think1/marking = 1
+    expect places/philo2.eat1/marking = 0
+    expect philosophes/philo3/identifier = 3
+    expect pre_arcs/fk3/source = @pn-philosophers-3/places/philo3.fork1
+    expect post_arcs/rf1/target = @pn-philosophers-3/places/philo1.fork1
+    expect positions/philo2.seat/theta = 120
+    expect positions/philo1.seat/x absent`;
+
+const annexAOutcome = await runLoop({ scripts: [booleanCircuitFixture] });
+check(
+  "(i) the distant fixture (boolean-circuit + bc-half-adder) is accepted in ONE attempt by the real staging",
+  annexAOutcome.ok && annexAOutcome.attempts === 1,
+);
+
+const annexBOutcome = await runLoop({ scripts: [philosophers3Fixture] });
+check(
+  "(i) the close fixture (pn-philosophers-3, ring modulo 3, polar seats 0/120/240) is accepted in ONE attempt",
+  annexBOutcome.ok && annexBOutcome.attempts === 1,
+);
+
+const betrayedFixture = philosophers3Fixture.replace(
+  "expect places/philo1.think1/marking = 1",
+  "expect places/philo1.think1/marking = 7",
+);
+const refusalOutcome = await runLoop({ scripts: [betrayedFixture, philosophers3Fixture] });
+check(
+  "(i) a betrayed expectation is refused (attendu-trahi) and the corrected round is accepted",
+  refusalOutcome.ok &&
+    refusalOutcome.attempts === 2 &&
+    refusalOutcome.refusals.length === 1 &&
+    refusalOutcome.refusals[0]?.verdicts.some((verdict) => verdict.kind === "attendu-trahi") === true,
 );
 
 // =====================================================================

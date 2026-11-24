@@ -7,8 +7,12 @@ authenticated reverse proxy to expose it.
 ## Prérequis
 
 - Node 22+, npm.
-- A `.env` with a **changed** `API_TOKEN` (never `changez-moi`), and
-  `MISTRAL_API_KEY` if the pen (`POST /api/generate`) must work.
+- A `.env` with the Zitadel auth variables (`AUTH_ISSUER`,
+  `AUTH_CLIENT_ID`, `AUTH_CLIENT_SECRET`, `AUTH_API_CLIENT_ID`,
+  `AUTH_API_CLIENT_SECRET` — secrets through a secure channel, never
+  committed). No Mistral key on the server (LD-8, ADR-0120 §3): each
+  visitor brings their own token in the site's Preferences — the pen
+  (`POST /api/generate`) reads it from the `x-mistral-api-token` header.
 - `HOST=0.0.0.0` in `.env` **only** behind an authenticated reverse proxy.
 
 ## Build et lancement
@@ -24,7 +28,7 @@ npm run serve:prod    # sert dist/ + l'API sur $HOST:$PORT (127.0.0.1:8791 par d
 Un seul `docker compose up --build` déploie **l'atelier + PostgreSQL** :
 
 ```bash
-cp .env.example .env    # puis éditez API_TOKEN, POSTGRES_USERNAME, POSTGRES_PASSWORD
+cp .env.example .env    # puis éditez AUTH_*, POSTGRES_USERNAME, POSTGRES_PASSWORD
 docker compose up --build
 ```
 
@@ -36,8 +40,9 @@ docker compose up --build
   (`depends_on: condition: service_healthy`) et reçoit
   `DATABASE_URL=postgres://…@postgres:5432/…` : **le rate limiting est
   actif**, partagé entre instances (compteurs en base).
-- Vérification : `curl -H "Authorization: Bearer $API_TOKEN" http://127.0.0.1:8791/api/whoami`
-  répond 200, et `POST /api/generate` répond **429** après la limite
+- Vérification : `curl -H "Authorization: Bearer $PAT" http://127.0.0.1:8791/api/whoami`
+  répond 200 (PAT d'un service user, validé par introspection), et
+  `POST /api/generate` répond **429** après la limite
   (`GENERATE_MAX_REQUESTS` par fenêtre, 10/min par défaut).
 
 Déploiement **sans base** (dev local) : le rate limiting est alors
@@ -115,10 +120,9 @@ server {
         proxy_buffering off;
         proxy_cache off;
 
-        # En-têtes de sécurité
-        add_header X-Content-Type-Options nosniff always;
-        add_header X-Frame-Options DENY always;
-        add_header Referrer-Policy no-referrer always;
+        # En-têtes de sécurité : posés par l'application elle-même
+        # (server/httpUtils.ts, sur chaque réponse) — pas ici, sinon
+        # ils apparaissent en double (issue #296).
     }
 }
 ```
@@ -128,18 +132,21 @@ HTTPS is automatic.
 
 ## Checklist de production
 
-- [ ] `API_TOKEN` changé dans `.env` (jamais la valeur par défaut).
+- [ ] Variables `AUTH_*` renseignées dans `.env` (émetteur Zitadel `https://auth.linard.fr`, client OIDC, redirect URI `https://<app>.linard.fr/auth/callback` enregistrée côté IdP).
+- [ ] `NODE_ENV=production` (posé par défaut dans `docker-compose.yml`) : `AUTH_DISABLED=1` y est alors fatal et le cookie `sid` porte `Secure`.
 - [ ] `HOST=0.0.0.0` **uniquement** derrière un reverse proxy authentifié.
 - [ ] HTTPS actif (Let's Encrypt / Caddy automatique).
 - [ ] Rate limiting activé sur `/api/generate` (voir issue #85).
 - [ ] En-têtes de sécurité servis (voir bloc nginx ci-dessus, issue #84).
 - [ ] Logs redirigés vers un fichier ou un collecteur (`npm run serve:prod > quarry.log 2>&1` sous systemd).
-- [ ] Health check : `curl -H "Authorization: Bearer $API_TOKEN" https://atelier.example.com/api/whoami` répond 200.
+- [ ] Health check : `curl -H "Authorization: Bearer $PAT" https://atelier.example.com/api/whoami` répond 200.
 
 ## Health check
 
-`GET /api/whoami` (avec l'en-tête `Authorization: Bearer <API_TOKEN>`)
-renvoie l'identité du serveur — utilisable comme sonde de vie.
+`GET /api/whoami` (avec `Authorization: Bearer <PAT>` ou le cookie de
+session `sid`) renvoie l'identité appelante — utilisable comme sonde de
+vie. `GET /auth/login` lance le flux OIDC (PKCE), `GET /auth/me` lit la
+session, `GET /auth/logout` la détruit (logout RP-initiated côté IdP).
 
 ## Procédure de mise à jour
 

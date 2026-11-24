@@ -6,8 +6,8 @@
 // for every client.
 // ============================================================
 import { createServer } from "node:http";
-import { readFileSync, existsSync } from "node:fs";
-import { join, extname } from "node:path";
+import { readFileSync } from "node:fs";
+import { basename, extname } from "node:path";
 import { randomUUID } from "node:crypto";
 
 import { composeVerifiedLayerDraft } from "../src/application/penLoop.ts";
@@ -32,7 +32,7 @@ import {
 import { lookupLayer } from "./userLayerStore.ts";
 import type { UserProfile } from "./userStore.ts";
 import { createQuarryStoresFromEnv, type QuarryStores } from "./stores.ts";
-import { PenInfraFailure, generateLayer } from "./mistralClient.ts";
+import { PenInfraFailure, generateLayer, selectLayers } from "./mistralClient.ts";
 import {
   editorSession,
   editorClients,
@@ -48,13 +48,21 @@ import {
 import {
   applySecurityHeaders,
   sendJson,
+  sendProblem,
   sendText,
   hashAccessCode,
   rateLimitKeyOf,
   readRequestBody,
-  resolveIdentity,
   sourceOfRequestBody,
 } from "./httpUtils.ts";
+import { authConfigFromEnv, createAuthService, type AuthService } from "./auth/service.ts";
+import { createAuthRouteHandler, refreshSessionIfNeeded } from "./auth/routes.ts";
+import { parseCookies, SESSION_COOKIE_NAME } from "./auth/sessions.ts";
+import {
+  MIME_TYPES,
+  cacheControlOf,
+  resolveStaticFile,
+} from "./staticFiles.ts";
 import {
   createPostgresRateLimitStore,
   createRateLimiter,
@@ -91,17 +99,31 @@ function createApiRateLimiters(): {
 
 export function createQuarryServer({
   stores = createQuarryStoresFromEnv(),
+  authService = createAuthService({ config: authConfigFromEnv() }),
 }: {
   stores?: QuarryStores;
+  authService?: AuthService;
 } = {}) {
   setEditorSessionStore({ editorSessionStore: stores.editorSession });
   const rateLimiters = createApiRateLimiters();
+  const handleAuthRoute = createAuthRouteHandler({ service: authService });
   return createServer(async (request, response) => {
     applySecurityHeaders({ response });
     const url = new URL(request.url ?? "/", "http://" + (request.headers.host ?? "localhost"));
     const segments = url.pathname.split("/").filter(Boolean);
 
     try {
+      // ---- the unified auth routes (milestone Auth v1): /auth/* ----
+      if (segments[0] === "auth") {
+        const handled = await handleAuthRoute({ request, response, url });
+        if (handled) return;
+        return sendJson({
+          response,
+          statusCode: 404,
+          body: { erreur: "route auth inconnue : " + request.method + " " + url.pathname },
+        });
+      }
+
       // ---- the quarry and geologist API ----
       if (segments[0] === "api") {
         // Rate limit before the auth check: the counters also blunt
@@ -126,9 +148,15 @@ export function createQuarryServer({
         }
 
         if (url.pathname === "/api/whoami") {
-          const identity = resolveIdentity({ request });
-          if (identity.kind === "anonymous-local") {
-            return sendJson({ response, statusCode: 401, body: { erreur: "code d'accès requis" } });
+          const identity = await authService.resolveIdentity({ request });
+          if (identity.kind === "anonymous") {
+            // ADR-0120 §2: problem+json, the front reads the reason
+            return sendProblem({
+              response,
+              statusCode: 401,
+              reason: "session_required",
+              title: "a session is required for the workshop API",
+            });
           }
           // A personal access code resolves to the user profile
           // (issue #140, ADR-0114); the shared code keeps the legacy
@@ -138,10 +166,11 @@ export function createQuarryServer({
               accessCodeHash: identity.accessCodeHash,
             });
             if (profile === null) {
-              return sendJson({
+              return sendProblem({
                 response,
                 statusCode: 401,
-                body: { erreur: "code d'accès personnel inconnu" },
+                reason: "unknown_access_code",
+                title: "unknown personal access code",
               });
             }
             return sendJson({
@@ -159,14 +188,37 @@ export function createQuarryServer({
               },
             });
           }
+          if (identity.kind === "session") {
+            return sendJson({
+              response,
+              statusCode: 200,
+              body: {
+                version: VERSION,
+                utilisateur: identity.user.name,
+                email: identity.user.email,
+                sub: identity.user.sub,
+                identity: identity.kind,
+              },
+            });
+          }
+          if (identity.kind === "bearer-jwt" || identity.kind === "pat") {
+            const claims = identity.kind === "bearer-jwt" ? identity.claims : {};
+            return sendJson({
+              response,
+              statusCode: 200,
+              body: {
+                version: VERSION,
+                utilisateur:
+                  typeof claims.name === "string" && claims.name !== "" ? claims.name : identity.sub,
+                sub: identity.sub,
+                identity: identity.kind,
+              },
+            });
+          }
           return sendJson({
             response,
             statusCode: 200,
-            body: {
-              version: VERSION,
-              utilisateur: "porteur-du-code",
-              identity: identity.kind,
-            },
+            body: { version: VERSION, utilisateur: "développeur-local", identity: identity.kind },
           });
         }
         // ---- account creation (issue #141, ADR-0114): optional,
@@ -227,29 +279,45 @@ export function createQuarryServer({
           }
         }
 
-        // Resolve the access: the shared code or a personal code
-        // with a matching user row (issue #140, ADR-0114).
-        const identity = resolveIdentity({ request });
+        // Resolve the access (milestone Auth v1): a server-side session
+        // (OIDC), a Bearer JWT validated via the JWKS, a PAT via
+        // introspection, the dev user when AUTH_DISABLED=1 — or a
+        // personal access code (issue #140, ADR-0114).
+        const identity = await authService.resolveIdentity({ request });
+        if (identity.kind === "session") {
+          // silent refresh of the access token, server-side only
+          const cookies = parseCookies({ header: request.headers.cookie });
+          const sid = cookies[SESSION_COOKIE_NAME];
+          if (typeof sid === "string") await refreshSessionIfNeeded({ service: authService, sid });
+        }
         let ownerId: number | undefined;
         let currentUser: UserProfile | null = null;
-        if (identity.kind === "shared-code") {
-          // the legacy shared identity — no owner scoping
-        } else if (identity.kind === "personal-code") {
+        if (identity.kind === "personal-code") {
           const profile = await stores.users.findByAccessCodeHash({
             accessCodeHash: identity.accessCodeHash,
           });
           if (profile === null) {
-            return sendJson({
+            return sendProblem({
               response,
               statusCode: 401,
-              body: { erreur: "code d'accès requis" },
+              reason: "unknown_access_code",
+              title: "unknown personal access code",
             });
           }
           ownerId = profile.id;
           currentUser = profile;
-        } else {
-          return sendJson({ response, statusCode: 401, body: { erreur: "code d'accès requis" } });
+        } else if (identity.kind === "anonymous") {
+          // ADR-0120 §2: a workshop route without a session answers
+          // 401 application/problem+json reason "session_required"
+          return sendProblem({
+            response,
+            statusCode: 401,
+            reason: "session_required",
+            title: "a session is required for the workshop API",
+          });
         }
+        // session / bearer-jwt / pat / dev-user: authenticated, no owner
+        // scoping (the workshop had a single shared code before Auth v1)
 
         // ---- admin routes (issue #142, ADR-0114): admin role only ----
         if (segments[1] === "admin") {
@@ -508,8 +576,12 @@ export function createQuarryServer({
           const body = JSON.parse((await readRequestBody({ request })) || "{}") as {
             prompt?: unknown;
             instruction?: unknown;
+            answers?: unknown;
           };
           const instruction = body?.prompt ?? body?.instruction;
+          const answers = Array.isArray(body?.answers)
+            ? body.answers.filter((answer): answer is string => typeof answer === "string")
+            : [];
           if (typeof instruction !== "string" || !instruction.trim()) {
             return sendJson({
               response,
@@ -517,6 +589,14 @@ export function createQuarryServer({
               body: { erreur: 'corps JSON attendu : { "prompt": "…" }' },
             });
           }
+          // LD-8 (ADR-0120 §3): the visitor's personal Mistral token
+          // arrives as its own header — read once, passed to every
+          // upstream call of this request, never logged, never echoed.
+          const mistralTokenHeader = request.headers["x-mistral-api-token"];
+          const apiToken =
+            typeof mistralTokenHeader === "string" && mistralTokenHeader.trim() !== ""
+              ? mistralTokenHeader
+              : undefined;
           // The living context of the loop: the kernel once, the
           // visitors' layers read at the call through the store —
           // a layer written seconds ago stays refinable for the
@@ -530,6 +610,132 @@ export function createQuarryServer({
             if (read.found) visitorLayers.push({ name, source: read.source });
           }
           const previousAdditionSources = visitorLayers.map((visitorLayer) => visitorLayer.source);
+          // Two-pass geologist (issue #279): with Accept:
+          // text/event-stream the route streams its steps as SSE
+          // events; without it, the documented plain-text behavior
+          // is unchanged.
+          const wantsStream = (request.headers.accept ?? "").includes("text/event-stream");
+          if (wantsStream) {
+            response.writeHead(200, {
+              "Content-Type": "text/event-stream; charset=utf-8",
+              "Cache-Control": "no-cache",
+              Connection: "keep-alive",
+            });
+            response.write("retry: 3000\n\n");
+            const heartbeat = setInterval(() => {
+              response.write(": ping\n\n");
+            }, 25_000);
+            const closeStream = () => {
+              clearInterval(heartbeat);
+              response.end();
+            };
+            request.on("close", closeStream);
+            try {
+              // Pass A — the survey chooses the ground on a fast
+              // model. An empty selection or a survey failure falls
+              // back to the monolith prompt, never worse than before.
+              let selectedLayerNames: string[] | undefined;
+              try {
+                const survey = await selectLayers({
+                  intention: instruction,
+                  answers,
+                  visitorLayers,
+                  apiToken,
+                });
+                if (survey.kind === "questions") {
+                  sendEvent({ response, event: "questions", data: { questions: survey.questions } });
+                  closeStream();
+                  return;
+                }
+                const fallback = survey.layers.length === 0;
+                if (!fallback) selectedLayerNames = survey.selected;
+                sendEvent({
+                  response,
+                  event: "selection",
+                  data: { selected: survey.selected, closure: survey.closure, fallback },
+                });
+              } catch (error) {
+                if (!(error instanceof PenInfraFailure)) throw error;
+                sendEvent({
+                  response,
+                  event: "selection",
+                  data: { selected: [], closure: [], fallback: true },
+                });
+              }
+              const loopOutcome = await composeVerifiedLayerDraft({
+                instruction,
+                languageSource: KERNEL_LANGUAGE_SOURCE,
+                livingLayerNames: [...KERNEL_LAYER_NAMES, ...userNames],
+                readonlyLayerNames: [...KERNEL_LAYER_NAMES],
+                previousAdditionSources,
+                maxAttempts: MAX_PEN_ATTEMPTS,
+                strictConflicts: STRICT_CONFLICTS,
+                strictChecks: STRICT_CHECKS,
+                onRefusal: (refusal) => {
+                  sendEvent({
+                    response,
+                    event: "refusal",
+                    data: {
+                      attempt: refusal.attempt,
+                      step: refusal.step,
+                      verdicts: refusal.verdicts.map((verdict) => verdict.kind),
+                      feedback: refusal.feedback,
+                    },
+                  });
+                },
+                propose: async ({ attempt, instruction, feedback }) => {
+                  sendEvent({ response, event: "round", data: { attempt } });
+                  const generated = await generateLayer({
+                    instruction,
+                    feedback,
+                    visitorLayers,
+                    ...(selectedLayerNames === undefined
+                      ? {}
+                      : { selectedLayerNames }),
+                    apiToken,
+                  });
+                  if (generated.statusCode !== 200) {
+                    throw new PenInfraFailure({
+                      statusCode: generated.statusCode,
+                      body: generated.body,
+                    });
+                  }
+                  return generated.body;
+                },
+              });
+              if (loopOutcome.ok && loopOutcome.draftSource !== null) {
+                sendEvent({
+                  response,
+                  event: "draft",
+                  data: { source: loopOutcome.draftSource },
+                });
+              } else {
+                const lastRefusal = loopOutcome.refusals[loopOutcome.refusals.length - 1];
+                sendEvent({
+                  response,
+                  event: "refused",
+                  data: {
+                    attempts: loopOutcome.attempts,
+                    feedback: lastRefusal?.feedback ?? "",
+                  },
+                });
+              }
+              closeStream();
+            } catch (error) {
+              if (error instanceof PenInfraFailure) {
+                sendEvent({
+                  response,
+                  event: "error",
+                  data: { statusCode: error.statusCode, body: error.body },
+                });
+                closeStream();
+                return;
+              }
+              closeStream();
+              throw error;
+            }
+            return;
+          }
           try {
             const loopOutcome = await composeVerifiedLayerDraft({
               instruction,
@@ -541,7 +747,12 @@ export function createQuarryServer({
               strictConflicts: STRICT_CONFLICTS,
               strictChecks: STRICT_CHECKS,
               propose: async ({ instruction, feedback }) => {
-                const generated = await generateLayer({ instruction, feedback, visitorLayers });
+                const generated = await generateLayer({
+                  instruction,
+                  feedback,
+                  visitorLayers,
+                  apiToken,
+                });
                 if (generated.statusCode !== 200) {
                   throw new PenInfraFailure({
                     statusCode: generated.statusCode,
@@ -750,28 +961,45 @@ export function createQuarryServer({
       }
 
       // ---- the static build, when it exists ----
-      if (request.method === "GET") {
-        if (!existsSync(DIST_DIRECTORY)) {
+      // GET and HEAD share the resolution and the headers; HEAD ends
+      // without a body (#292). The SPA fallback only covers
+      // extensionless navigation paths — a missing asset is a real
+      // 404 (#293).
+      if (request.method === "GET" || request.method === "HEAD") {
+        const resolution = resolveStaticFile({
+          distDirectory: DIST_DIRECTORY,
+          pathname: url.pathname,
+        });
+        if (resolution.kind === "no-dist") {
           return sendJson({
             response,
             statusCode: 404,
             body: { erreur: "dist/ absent — npm run build pour construire l'atelier" },
           });
         }
-        const requestedPath = url.pathname === "/" ? "index.html" : url.pathname;
-        let filePath = join(DIST_DIRECTORY, requestedPath);
-        if (!existsSync(filePath)) filePath = join(DIST_DIRECTORY, "index.html");
-        const mimeTypes: Record<string, string> = {
-          ".html": "text/html; charset=utf-8",
-          ".js": "text/javascript",
-          ".css": "text/css",
-          ".svg": "image/svg+xml",
-          ".json": "application/json",
+        if (resolution.kind === "not-found") {
+          return sendJson({
+            response,
+            statusCode: 404,
+            body: { erreur: "fichier introuvable : " + url.pathname },
+          });
+        }
+        const body = readFileSync(resolution.filePath);
+        const extension = extname(resolution.filePath).toLowerCase();
+        const headers: Record<string, string | number> = {
+          "Content-Type": MIME_TYPES[extension] ?? "application/octet-stream",
+          "Content-Length": body.length,
+          "Cache-Control": cacheControlOf({
+            distDirectory: DIST_DIRECTORY,
+            filePath: resolution.filePath,
+          }),
         };
-        const body = readFileSync(filePath);
-        response.writeHead(200, {
-          "Content-Type": mimeTypes[extname(filePath)] ?? "application/octet-stream",
-        });
+        if (extension === ".vsix") {
+          headers["Content-Disposition"] =
+            'attachment; filename="' + basename(resolution.filePath) + '"';
+        }
+        response.writeHead(200, headers);
+        if (request.method === "HEAD") return response.end();
         return response.end(body);
       }
 

@@ -12,7 +12,7 @@
 // a second tribunal (the message names the citing arcs, the
 // deletion goes through once they have left).
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useId, useMemo, useRef, useState } from "react";
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { AddressView } from "../domain/addresses.ts";
 import { renderMessage, type Language } from "../domain/messages.ts";
@@ -32,10 +32,22 @@ import {
   type EditionOutcome,
   type LivingAddition,
 } from "../application/edition.ts";
-import { drawnShape, type Glyph } from "../domain/views.ts";
+import {
+  DEFAULT_NODE_SIZE,
+  drawnShape,
+  flattenAddress,
+  type Glyph,
+  type NodeSize,
+  type RawGlyph,
+} from "../domain/views.ts";
+import type { DisplayFn, DisplayFnContext } from "../domain/displayFunctions.ts";
+import { resolveDrawFn, resolveGlyphList } from "./displayFunctions.ts";
+import { flattenLayer } from "../application/flatten.ts";
+import { RefinementDag } from "./workshopInventory.ts";
 import { expectationsOf, formatExpectation, readMatchesExpectation } from "../domain/validation.ts";
-import { circlePosition, LENS_LAYERS } from "./viewTree.ts";
+import { circlePosition, lensLayers, sizeOf } from "./viewTree.ts";
 import { EdgeGlyph } from "./glyphs.tsx";
+import { glyphBounds, labelPosition, scaledGlyph, svgDataElement, vertexGlyphElement } from "./glyphShape.tsx";
 import { editionRefusalLabel, labelOf } from "./i18n.ts";
 import { t } from "../infrastructure/i18n.ts";
 import {
@@ -43,15 +55,20 @@ import {
   type EditorSyncHandle,
   type SessionSnapshot,
 } from "../infrastructure/editorSync.ts";
-import { AccessCodeForm } from "./accessForm.tsx";
+import { onAuthChanged } from "../infrastructure/authEvents.ts";
+import { hashOf } from "../components/Router.tsx";
+import { WIDE_WIDTH } from "../components/PageShell.tsx";
 import {
   readMemberContainers,
   positionContainerOf,
+  sizeContainerOf,
+  draftMemberSize,
   readMemberNames,
   nextMemberName,
   readMemberPosition,
   readMemberCitations,
   draftMemberInsertion,
+  draftMemberRemoval,
   draftMemberRemovalCascade,
   draftMemberFieldEdition,
   draftMemberPosition,
@@ -60,7 +77,11 @@ import {
   suggestModelRefines,
   memberReferenceText,
   typeReferenceText,
+  parseArcWaypoints,
+  draftArcWaypoints,
+  waypointInsertionAt,
   type MemberContainer,
+  type ArcWaypoint,
 } from "../application/modelEditing.ts";
 
 const CANVAS_WIDTH = 960;
@@ -71,7 +92,7 @@ const MINIMUM_SCALE = 0.3;
 
 /** The shape template of a lens entry, as the glyphs read it (null:
  * the lens knows nothing of the type, the dashed fallback). */
-type ShapeSpec = Glyph[] | null;
+type ShapeSpec = RawGlyph[] | null;
 
 /** The tool in the hand: the plain pointer, one vertex container, or
  * the SINGLE arc tool — pre or post is never the user's question,
@@ -86,12 +107,17 @@ interface SelectedMember {
 }
 
 /** One drawn vertex: its container, its name, its resolved position,
- * the lens's shape for its type (null: the dashed fallback). */
+ * its size datum (issue #285 — the gabarit's defaults when the model
+ * poses none), the lens's shape for its type (null: the dashed
+ * fallback). */
 interface VertexView {
   container: string;
   name: string;
   position: { x: number; y: number };
+  size: NodeSize;
   spec: ShapeSpec;
+  draw: DisplayFn | null;
+  fnContext: DisplayFnContext;
 }
 
 /** One drawn arc: its container, its name, its two ends (null: a
@@ -102,8 +128,13 @@ interface ArcView {
   name: string;
   from: { x: number; y: number } | null;
   to: { x: number; y: number } | null;
+  fromVertex: VertexView | null;
+  toVertex: VertexView | null;
   spec: ShapeSpec;
+  draw: DisplayFn | null;
+  fnContext: DisplayFnContext;
   weight: number | null;
+  waypoints: ArcWaypoint[];
 }
 
 /** The gesture in flight: a pan of the canvas, a drag of one vertex,
@@ -135,6 +166,27 @@ type Gesture =
       fromY: number;
       x: number;
       y: number;
+    }
+  | {
+      kind: "waypoint";
+      container: string;
+      name: string;
+      index: number;
+      startX: number;
+      startY: number;
+      x: number;
+      y: number;
+      moved: boolean;
+    }
+  | {
+      kind: "resize" | "rotate";
+      container: string;
+      name: string;
+      startX: number;
+      startY: number;
+      x: number;
+      y: number;
+      moved: boolean;
     };
 
 /** The verdict banner of the last gesture: the tribunal's refusal,
@@ -168,16 +220,21 @@ export function ModelEditorPage({
   const [shared, setShared] = useState(false);
   const [presence, setPresence] = useState<{ id: string; focus: string | null }[]>([]);
   // true when the session stream was refused (401) or the server is
-  // absent — the access-code form is then shown instead of a silent
-  // local fallback (issue #198). accessVersion re-triggers the
-  // connection after a code is verified.
+  // absent — the page then points at the key button of the site
+  // header instead of a silent local fallback (issues #198, #222).
+  // accessVersion re-triggers the connection after a sign-in.
   const [needsAccess, setNeedsAccess] = useState(false);
   const [accessVersion, setAccessVersion] = useState(0);
+  useEffect(
+    () =>
+      onAuthChanged(() => setAccessVersion((version) => version + 1)),
+    [],
+  );
   const syncRef = useRef<EditorSyncHandle | null>(null);
   const serverVersionRef = useRef(0);
   // ---- the editor's own choices ------------------------------------
   const [model, setModel] = useState<string | null>(null);
-  const [lens, setLens] = useState<string>(LENS_LAYERS[0] ?? "");
+  const [lens, setLens] = useState<string>(() => lensLayers({ space: KERNEL.space })[0] ?? "");
   const [tool, setTool] = useState<EditorTool>({ kind: "select" });
   const [selected, setSelected] = useState<SelectedMember | null>(null);
   const [banner, setBanner] = useState<Banner | null>(null);
@@ -185,12 +242,24 @@ export function ModelEditorPage({
   // ---- the model creation form -------------------------------------
   const [creationOpen, setCreationOpen] = useState(false);
   const [creationName, setCreationName] = useState("");
-  const [creationRefines, setCreationRefines] = useState(() =>
-    suggestModelRefines({ space: KERNEL.space, layerNames: KERNEL.layerNames }),
+  const [creationParents, setCreationParents] = useState<string[]>(() =>
+    suggestModelRefines({ space: KERNEL.space, layerNames: KERNEL.layerNames })
+      .split(" then ")
+      .map((entry) => entry.trim().replace(/^@/, ""))
+      .filter((entry) => entry.length > 0),
   );
+
   // ---- the canvas in motion ----------------------------------------
   const [view, setView] = useState({ x: 0, y: 0, scale: 1 });
   const [gesture, setGesture] = useState<Gesture | null>(null);
+  // the last bare tap on a waypoint handle — a second tap within 400ms
+  // on the same handle removes the waypoint (issue #220)
+  const lastWaypointTapRef = useRef<{
+    container: string;
+    name: string;
+    index: number;
+    time: number;
+  } | null>(null);
   const [showSource, setShowSource] = useState(false);
   const svgRef = useRef<SVGSVGElement | null>(null);
   const importInputRef = useRef<HTMLInputElement | null>(null);
@@ -214,12 +283,26 @@ export function ModelEditorPage({
     return editableLayerNames({ livingLayerNames, readonlyLayerNames: KERNEL.layerNames });
   }, [livingLayerNames]);
 
+  // The candidate parents (issue #218): the living layers that carry
+  // member containers — the formalisms a new model can refine.
+  const candidateParents = useMemo(
+    () =>
+      livingLayerNames.filter(
+        (layerName) => readMemberContainers({ space: KERNEL.space, model: layerName }).length > 0,
+      ),
+    [livingLayerNames, spaceVersion],
+  );
+
   const containers = useMemo(() => {
     if (model === null) return [];
     return readMemberContainers({ space: KERNEL.space, model });
   }, [model, spaceVersion]);
 
   const positionContainer = useMemo(() => positionContainerOf({ containers }), [containers]);
+
+  /** The size container (issue #285): the model's `sizes` block when
+   * the formalism poses one — the resize/rotate gestures draft there. */
+  const sizeContainer = useMemo(() => sizeContainerOf({ containers }), [containers]);
 
   /** The model's declared expectations (`expect` lines), re-read live:
    * each shows its current value and whether it still holds. */
@@ -244,14 +327,47 @@ export function ModelEditorPage({
       };
     });
   }, [model, spaceVersion]);
+  /** The palette's containers (issue #218): the vocabulary the model
+   * itself declares — the first layer of the refinement chain (the
+   * model, then its parents in consultation order) that wins at least
+   * one container provides the palette. Inherited axis containers
+   * (left/right of bipartite-digraph under petrinet-scheme) stay out. */
+  const paletteContainers = useMemo(() => {
+    if (model === null) return containers;
+    const flattened = flattenLayer({ space: KERNEL.space, layer: asLayerName(model) });
+    const winnerOf = new Map(
+      flattened.root.entries.map((entry) => [entry.key, entry.winner] as const),
+    );
+    const dag = new RefinementDag({ space: KERNEL.space, layerNames: livingLayerNames });
+    const chain: string[] = [];
+    const queue = [model];
+    const seen = new Set<string>();
+    while (queue.length > 0) {
+      const current = queue.shift();
+      if (current === undefined || seen.has(current)) continue;
+      seen.add(current);
+      chain.push(current);
+      queue.push(...dag.targetsOf(current));
+    }
+    for (const layerName of chain) {
+      // the position container never counts as a vocabulary: a
+      // positions layer in the chain must not mask the scheme below it
+      const own = containers.filter(
+        (container) =>
+          container.name !== positionContainer?.name && winnerOf.get(container.name) === layerName,
+      );
+      if (own.length > 0) return own;
+    }
+    return containers;
+  }, [model, containers, livingLayerNames, spaceVersion, positionContainer]);
   const vertexContainers = useMemo(() => {
-    return containers.filter(
+    return paletteContainers.filter(
       (container) => container.kind === "sommet" && container.name !== positionContainer?.name,
     );
-  }, [containers, positionContainer]);
+  }, [paletteContainers, positionContainer]);
   const arcContainers = useMemo(() => {
-    return containers.filter((container) => container.kind === "arc");
-  }, [containers]);
+    return paletteContainers.filter((container) => container.kind === "arc");
+  }, [paletteContainers]);
 
   /** The model's own source block (header included), as every gesture
    * drafts on it. */
@@ -273,8 +389,18 @@ export function ModelEditorPage({
       container: string;
       name: string;
       position: { x: number; y: number } | null;
+      size: NodeSize;
       spec: ShapeSpec;
+      draw: DisplayFn | null;
+      fnContext: DisplayFnContext;
     }[] = [];
+    // the pure-data context of the display functions (ADR-0119):
+    // the model flattened once, each element at its own address
+    const modelFlat = flattenAddress({
+      space: KERNEL.space,
+      layer: asLayerName(model),
+      path: asLayerPath([]),
+    });
     for (const container of vertexContainers) {
       const names = readMemberNames({ space: KERNEL.space, model, container: container.name });
       for (const name of names) {
@@ -288,13 +414,33 @@ export function ModelEditorPage({
                 visited: new Set<string>(),
               })
             : null;
+        const size =
+          sizeContainer !== null
+            ? (sizeOf({ space: KERNEL.space, source: model, container: sizeContainer.name, name }) ??
+              DEFAULT_NODE_SIZE)
+            : DEFAULT_NODE_SIZE;
         const shape = drawnShape({
           space: KERNEL.space,
           lens: asLayerName(lens),
           layer: asLayerName(model),
           path: asLayerPath([container.name, name]),
         });
-        pending.push({ container: container.name, name, position, spec: shape?.spec ?? null });
+        pending.push({
+          container: container.name,
+          name,
+          position,
+          size,
+          spec: shape?.spec ?? null,
+          draw: shape?.draw ?? null,
+          fnContext: {
+            element: flattenAddress({
+              space: KERNEL.space,
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, name]),
+            }),
+            model: modelFlat,
+          },
+        });
       }
     }
     const vertices: VertexView[] = pending.map((vertex, index) => ({
@@ -305,14 +451,22 @@ export function ModelEditorPage({
           x: CANVAS_WIDTH / 2,
           y: CANVAS_HEIGHT / 2,
         },
+      size: vertex.size,
       spec: vertex.spec,
+      draw: vertex.draw,
+      fnContext: vertex.fnContext,
     }));
-    const positionOfMember = (reference: unknown): { x: number; y: number } | null => {
+    const vertexOfMember = (reference: unknown): VertexView | null => {
       if (!(reference instanceof AddressView) || reference.path.length !== 2) return null;
-      const vertex = vertices.find(
-        (candidate) =>
-          candidate.container === reference.path[0] && candidate.name === reference.path[1],
+      return (
+        vertices.find(
+          (candidate) =>
+            candidate.container === reference.path[0] && candidate.name === reference.path[1],
+        ) ?? null
       );
+    };
+    const positionOfMember = (reference: unknown): { x: number; y: number } | null => {
+      const vertex = vertexOfMember(reference);
       return vertex ? vertex.position : null;
     };
     const arcs: ArcView[] = [];
@@ -362,13 +516,43 @@ export function ModelEditorPage({
               key: "target",
             }),
           ),
+          fromVertex: vertexOfMember(
+            KERNEL.space.read({
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, arcName]),
+              key: "source",
+            }),
+          ),
+          toVertex: vertexOfMember(
+            KERNEL.space.read({
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, arcName]),
+              key: "target",
+            }),
+          ),
           spec: shape?.spec ?? null,
+          draw: shape?.draw ?? null,
+          fnContext: {
+            element: flattenAddress({
+              space: KERNEL.space,
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, arcName]),
+            }),
+            model: modelFlat,
+          },
           weight: typeof label === "number" ? label : null,
+          waypoints: parseArcWaypoints({
+            value: KERNEL.space.read({
+              layer: asLayerName(model),
+              path: asLayerPath([container.name, arcName]),
+              key: "waypoints",
+            }),
+          }),
         });
       }
     }
     return { vertices, arcs };
-  }, [model, lens, spaceVersion, vertexContainers, arcContainers, positionContainer]);
+  }, [model, lens, spaceVersion, vertexContainers, arcContainers, positionContainer, sizeContainer]);
 
   // ---- the shared session (ADR-0110) ----------------------------------
 
@@ -565,7 +749,7 @@ export function ModelEditorPage({
     setBanner({
       tone: "written",
       text: t(
-        "staging: 0 verdict — the layer is rewritten, the write is declared, the canvas re-reads the space",
+        "staging: 0 failed checks — the layer is rewritten, the write is declared, the canvas re-reads the space",
       ),
     });
     return true;
@@ -616,17 +800,52 @@ export function ModelEditorPage({
 
   // ---- the gestures ---------------------------------------------------
 
+  /** The viewBox transform of the svg's rendered rect: with the
+   * default preserveAspectRatio="xMidYMid meet" the drawing is
+   * letterboxed — scale = min(rect/viewBox), centered. Pointer
+   * events must go through this mapping, not a plain proportion
+   * (issue #221: the canvas now has its own height, the rect aspect
+   * differs from the viewBox aspect). */
+  function viewBoxTransform(): {
+    scale: number;
+    offsetX: number;
+    offsetY: number;
+    left: number;
+    top: number;
+  } {
+    const svg = svgRef.current;
+    if (svg === null) return { scale: 1, offsetX: 0, offsetY: 0, left: 0, top: 0 };
+    const rectangle = svg.getBoundingClientRect();
+    const scale = Math.min(rectangle.width / CANVAS_WIDTH, rectangle.height / CANVAS_HEIGHT);
+    return {
+      scale,
+      offsetX: (rectangle.width - CANVAS_WIDTH * scale) / 2,
+      offsetY: (rectangle.height - CANVAS_HEIGHT * scale) / 2,
+      left: rectangle.left,
+      top: rectangle.top,
+    };
+  }
+
+  /** The canvas point (viewBox coordinates, before the pan/zoom view)
+   * under one pointer position. */
+  function toCanvasPoint({ clientX, clientY }: { clientX: number; clientY: number }): {
+    x: number;
+    y: number;
+  } {
+    const transform = viewBoxTransform();
+    return {
+      x: (clientX - transform.left - transform.offsetX) / transform.scale,
+      y: (clientY - transform.top - transform.offsetY) / transform.scale,
+    };
+  }
+
   /** The world point under one pointer event. */
   function toWorld({ clientX, clientY }: { clientX: number; clientY: number }): {
     x: number;
     y: number;
   } {
-    const svg = svgRef.current;
-    if (svg === null) return { x: 0, y: 0 };
-    const rectangle = svg.getBoundingClientRect();
-    const baseX = (CANVAS_WIDTH * (clientX - rectangle.left)) / rectangle.width;
-    const baseY = (CANVAS_HEIGHT * (clientY - rectangle.top)) / rectangle.height;
-    return { x: (baseX - view.x) / view.scale, y: (baseY - view.y) / view.scale };
+    const base = toCanvasPoint({ clientX, clientY });
+    return { x: (base.x - view.x) / view.scale, y: (base.y - view.y) / view.scale };
   }
 
   function handleBackgroundPointerDown(event: React.PointerEvent<SVGRectElement>) {
@@ -671,6 +890,124 @@ export function ModelEditorPage({
     });
   }
 
+  /** Grab one waypoint handle of a selected arc: the gesture drags
+   * it, the drop drafts the new `waypoints` field (issue #220). */
+  function handleWaypointPointerDown(
+    event: React.PointerEvent<SVGCircleElement>,
+    arc: ArcView,
+    index: number,
+  ) {
+    event.stopPropagation();
+    svgRef.current?.setPointerCapture(event.pointerId);
+    const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
+    setGesture({
+      kind: "waypoint",
+      container: arc.container,
+      name: arc.name,
+      index,
+      startX: world.x,
+      startY: world.y,
+      x: world.x,
+      y: world.y,
+      moved: false,
+    });
+  }
+
+  /** A double-click on the arc bends it: the waypoint inserts at the
+   * projection of the click on the nearest segment. */
+  function handleEdgeDoubleClick(event: React.MouseEvent<SVGGElement>, arc: ArcView) {
+    if (arc.from === null || arc.to === null || model === null) return;
+    const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
+    const insertion = waypointInsertionAt({
+      from: arc.from,
+      to: arc.to,
+      waypoints: arc.waypoints,
+      point: world,
+    });
+    const waypoints = [...arc.waypoints];
+    waypoints.splice(insertion.index, 0, insertion.point);
+    proposeEdition({
+      draftedSource: draftArcWaypoints({
+        block: modelSource,
+        container: arc.container,
+        name: arc.name,
+        waypoints,
+      }),
+    });
+  }
+
+  /** A double-click on a waypoint handle removes it. */
+  function handleWaypointDoubleClick(arc: ArcView, index: number) {
+    if (model === null) return;
+    const waypoints = arc.waypoints.filter((_, cursor) => cursor !== index);
+    proposeEdition({
+      draftedSource: draftArcWaypoints({
+        block: modelSource,
+        container: arc.container,
+        name: arc.name,
+        waypoints,
+      }),
+    });
+  }
+
+  /** Grab the resize or rotate handle of the selected vertex (issue
+   * #285): the gesture drags it, the drop drafts the `sizes` datum. */
+  function handleSizePointerDown(
+    event: React.PointerEvent<SVGGElement>,
+    vertex: VertexView,
+    kind: "resize" | "rotate",
+  ) {
+    event.stopPropagation();
+    svgRef.current?.setPointerCapture(event.pointerId);
+    const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
+    setGesture({
+      kind,
+      container: vertex.container,
+      name: vertex.name,
+      startX: world.x,
+      startY: world.y,
+      x: world.x,
+      y: world.y,
+      moved: false,
+    });
+  }
+
+  /** A double-click on a size handle removes the datum: the node
+   * falls back to the gabarit's defaults. */
+  function handleSizeHandleDoubleClick(vertex: VertexView, kind: "resize" | "rotate") {
+    if (model === null || sizeContainer === null) return;
+    void kind;
+    proposeEdition({
+      draftedSource: draftMemberRemoval({
+        block: modelSource,
+        container: sizeContainer.name,
+        name: vertex.name,
+      }),
+    });
+  }
+
+  /** The live size of a vertex during a resize/rotate gesture. */
+  function gestureSizeOf(vertex: VertexView): NodeSize {
+    if (
+      gesture === null ||
+      (gesture.kind !== "resize" && gesture.kind !== "rotate") ||
+      gesture.container !== vertex.container ||
+      gesture.name !== vertex.name
+    ) {
+      return vertex.size;
+    }
+    const center = vertex.position;
+    const startDistance = Math.hypot(gesture.startX - center.x, gesture.startY - center.y);
+    const distance = Math.hypot(gesture.x - center.x, gesture.y - center.y);
+    if (gesture.kind === "resize") {
+      const scale = startDistance > 0 ? distance / startDistance : 1;
+      return { ...vertex.size, scale: Math.min(4, Math.max(0.25, scale)) };
+    }
+    const startAngle = (Math.atan2(gesture.startY - center.y, gesture.startX - center.x) * 180) / Math.PI;
+    const angle = (Math.atan2(gesture.y - center.y, gesture.x - center.x) * 180) / Math.PI;
+    return { ...vertex.size, angle: vertex.size.angle + angle - startAngle };
+  }
+
   function handlePointerMove(event: React.PointerEvent<SVGSVGElement>) {
     if (gesture === null) return;
     if (gesture.kind === "pan") {
@@ -687,7 +1024,12 @@ export function ModelEditorPage({
       return;
     }
     const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
-    if (gesture.kind === "drag") {
+    if (
+      gesture.kind === "drag" ||
+      gesture.kind === "waypoint" ||
+      gesture.kind === "resize" ||
+      gesture.kind === "rotate"
+    ) {
       const moved =
         gesture.moved ||
         Math.abs(world.x - gesture.startX) > DRAG_THRESHOLD ||
@@ -738,8 +1080,99 @@ export function ModelEditorPage({
       setGesture(null);
       return;
     }
+    if (gesture.kind === "waypoint") {
+      const arc = drawing.arcs.find(
+        (candidate) => candidate.container === gesture.container && candidate.name === gesture.name,
+      );
+      const moved =
+        arc !== undefined &&
+        (Math.abs(gesture.x - gesture.startX) > DRAG_THRESHOLD ||
+          Math.abs(gesture.y - gesture.startY) > DRAG_THRESHOLD);
+      // a bare tap on a handle twice in a row removes the waypoint —
+      // the pointer capture of the drag retargets the derived
+      // dblclick to the svg, so the double-tap is detected here
+      if (!moved && arc !== undefined) {
+        const now = Date.now();
+        const last = lastWaypointTapRef.current;
+        if (
+          last !== null &&
+          last.container === arc.container &&
+          last.name === arc.name &&
+          last.index === gesture.index &&
+          now - last.time < 400
+        ) {
+          lastWaypointTapRef.current = null;
+          if (model !== null) {
+            proposeEdition({
+              draftedSource: draftArcWaypoints({
+                block: modelSource,
+                container: arc.container,
+                name: arc.name,
+                waypoints: arc.waypoints.filter((_, cursor) => cursor !== gesture.index),
+              }),
+            });
+          }
+          setGesture(null);
+          return;
+        }
+        lastWaypointTapRef.current = {
+          container: arc.container,
+          name: arc.name,
+          index: gesture.index,
+          time: now,
+        };
+      }
+      if (moved && arc !== undefined && model !== null) {
+        const original = arc.waypoints[gesture.index];
+        if (original !== undefined) {
+          const waypoints = [...arc.waypoints];
+          waypoints[gesture.index] = {
+            x: Math.round(original.x + gesture.x - gesture.startX),
+            y: Math.round(original.y + gesture.y - gesture.startY),
+          };
+          proposeEdition({
+            draftedSource: draftArcWaypoints({
+              block: modelSource,
+              container: arc.container,
+              name: arc.name,
+              waypoints,
+            }),
+          });
+        }
+      }
+      setGesture(null);
+      return;
+    }
+    if (gesture.kind === "resize" || gesture.kind === "rotate") {
+      const vertex = drawing.vertices.find(
+        (candidate) => candidate.container === gesture.container && candidate.name === gesture.name,
+      );
+      const moved =
+        vertex !== undefined &&
+        (Math.abs(gesture.x - gesture.startX) > DRAG_THRESHOLD ||
+          Math.abs(gesture.y - gesture.startY) > DRAG_THRESHOLD);
+      if (moved && vertex !== undefined && model !== null && sizeContainer !== null) {
+        const size = gestureSizeOf(vertex);
+        proposeEdition({
+          draftedSource: draftMemberSize({
+            block: modelSource,
+            sizeContainer: sizeContainer.name,
+            name: gesture.name,
+            scale: Math.round(size.scale * 100) / 100,
+            angle: Math.round(size.angle),
+            typeReference: typeReferenceText({ address: sizeContainer.memberType }),
+          }),
+        });
+      }
+      setGesture(null);
+      return;
+    }
     // the elastic arc: drop on a vertex — the formalism's rules say
     // which container the arc belongs to, or the banner refuses
+    if (gesture.kind !== "elastic") {
+      setGesture(null);
+      return;
+    }
     const world = toWorld({ clientX: event.clientX, clientY: event.clientY });
     const hit = drawing.vertices.find((vertex) => {
       if (vertex.container === gesture.fromContainer && vertex.name === gesture.fromName)
@@ -756,7 +1189,7 @@ export function ModelEditorPage({
         setBanner({
           tone: "refused",
           text: t(
-            "the formalism declares no arc from « {{fromContainer}} » to « {{toContainer}} » — the direction is the formalism's to decide",
+            "the formalism declares no arc from “ {{fromContainer}} ” to “ {{toContainer}} ” — the direction is the formalism's to decide",
             { fromContainer: gesture.fromContainer, toContainer: hit.container },
           ),
         });
@@ -958,8 +1391,9 @@ export function ModelEditorPage({
       event.preventDefault();
       const factor = event.deltaY < 0 ? 1.1 : 1 / 1.1;
       const rectangle = svg.getBoundingClientRect();
-      const baseX = (CANVAS_WIDTH * (event.clientX - rectangle.left)) / rectangle.width;
-      const baseY = (CANVAS_HEIGHT * (event.clientY - rectangle.top)) / rectangle.height;
+      const scale = Math.min(rectangle.width / CANVAS_WIDTH, rectangle.height / CANVAS_HEIGHT);
+      const baseX = (event.clientX - rectangle.left - (rectangle.width - CANVAS_WIDTH * scale) / 2) / scale;
+      const baseY = (event.clientY - rectangle.top - (rectangle.height - CANVAS_HEIGHT * scale) / 2) / scale;
       setView((previous) => {
         const nextScale = Math.min(MAXIMUM_SCALE, Math.max(MINIMUM_SCALE, previous.scale * factor));
         return {
@@ -1032,7 +1466,8 @@ export function ModelEditorPage({
   // ---- the model creation ---------------------------------------------
 
   function handleCreateModel() {
-    const draftSource = "layer " + creationName.trim() + " refines " + creationRefines.trim();
+    const refinesText = creationParents.map((parent) => "@" + parent).join(" then ");
+    const draftSource = "layer " + creationName.trim() + " refines " + refinesText;
     const staging = stageLayerAddition({
       languageSource: KERNEL.languageSource,
       previousAdditionSources: additions.map((addition) => addition.source),
@@ -1079,17 +1514,16 @@ export function ModelEditorPage({
     selected !== null ? containerNamed({ name: selected.container }) : null;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-6" aria-live="off">
+    <div className={"mx-auto " + WIDE_WIDTH + " px-4 py-6"} aria-live="off">
       {/* Editor state changes are announced via the banner below */}
       <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
         {t("the graphical model editor")}
       </h1>
       {needsAccess && !shared && (
         <div className="mb-4" role="status">
-          <p className="mb-2 text-sm text-slate-600 dark:text-slate-300">
-            {t("the shared session needs the site access code — enter it to collaborate; the editor also works locally")}
+          <p className="text-sm text-slate-600 dark:text-slate-300">
+            {t("the shared session needs the site access code — enter it via the key button of the site header to collaborate; the editor also works locally")}
           </p>
-          <AccessCodeForm language={language} onVerified={() => setAccessVersion((version) => version + 1)} />
         </div>
       )}
       <div className="mb-4 flex flex-wrap items-center gap-2">
@@ -1129,20 +1563,33 @@ export function ModelEditorPage({
             </option>
           ))}
         </select>
+        <label className="text-xs text-slate-500 dark:text-slate-400" htmlFor="editor-lens-picker">
+          {t("lens")}
+        </label>
         <select
+          id="editor-lens-picker"
           value={lens}
           onChange={(event) => setLens(event.target.value)}
+          title={t("a lens is a layer that refines a display scheme (e.g. @graph-display) and overrides the display fields of each type — shape (circle, ellipse, rectangle, box, path, line), label, fill, stroke, arrow, ports, plus r/rx/ry/w/h, dash, dx/dy, angle, label-side, curve. Inside a display block only, a field may be a function: r = fn (place) [[ 8 + 2 * place.marking ]], or the whole glyph draw = fn (place, net) [[ … ]] returning shapes as data (ADR-0119). Define one in formalisms/kernel/*.ld or from the Creation page.")}
           className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-2 py-1 text-xs"
         >
-          {LENS_LAYERS.map((lensName) => (
+          {lensLayers({ space: KERNEL.space }).map((lensName) => (
             <option key={lensName} value={lensName}>
               {lensName}
             </option>
           ))}
         </select>
+        <a
+           href={hashOf("formalism", lensLayers({ space: KERNEL.space }).includes(lens) ? lens : "")}
+          title={t("edit the lens — its DSL source on the formalism page")}
+          className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900"
+        >
+          {t("edit the lens")}
+        </a>
         <button type="button"
           onClick={() => setCreationOpen(!creationOpen)}
-          className="rounded bg-sky-600 dark:bg-sky-700 px-2 py-1 text-xs font-semibold text-white hover:bg-sky-500 dark:hover:bg-sky-600"
+          title={t("create a new model — pick its parent formalisms in the list")}
+          className="rounded bg-sky-600 dark:bg-sky-700 px-3 py-1.5 text-xs font-bold text-white shadow ring-1 ring-sky-300 dark:ring-sky-600 hover:bg-sky-500 dark:hover:bg-sky-600"
         >
           {t("+ new model")}
         </button>
@@ -1211,12 +1658,33 @@ export function ModelEditorPage({
               className="rounded border border-slate-300 dark:border-slate-600 px-2 py-1 text-xs"
             />
             <span className="text-xs text-slate-600 dark:text-slate-400">refines</span>
-            <input
-              value={creationRefines}
-              onChange={(event) => setCreationRefines(event.target.value)}
-              spellCheck={false}
-              className="w-72 rounded border border-slate-300 dark:border-slate-600 px-2 py-1 font-mono text-xs"
-            />
+            <div className="flex max-h-32 flex-wrap gap-1 overflow-auto rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 p-1.5">
+              {candidateParents.map((parentName) => (
+                <label
+                  key={parentName}
+                  className={
+                    "flex cursor-pointer items-center gap-1 rounded border px-1.5 py-0.5 font-mono text-[10px] " +
+                    (creationParents.includes(parentName)
+                      ? "border-sky-500 bg-sky-50 dark:bg-sky-950 text-sky-700 dark:text-sky-300"
+                      : "border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400 hover:border-slate-400")
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    className="h-3 w-3"
+                    checked={creationParents.includes(parentName)}
+                    onChange={(event) =>
+                      setCreationParents((previous) =>
+                        event.target.checked
+                          ? [...previous, parentName]
+                          : previous.filter((entry) => entry !== parentName),
+                      )
+                    }
+                  />
+                  {parentName}
+                </label>
+              ))}
+            </div>
             <button type="button"
               onClick={handleCreateModel}
               disabled={creationName.trim().length === 0}
@@ -1228,9 +1696,9 @@ export function ModelEditorPage({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-start">
         {/* the palette: read from the formalism, never hardcoded */}
-        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 lg:col-span-2">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2 lg:w-44 lg:shrink-0">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
             {t("palette")}
           </div>
@@ -1256,13 +1724,21 @@ export function ModelEditorPage({
                 key={container.name}
                 onClick={() => setTool({ kind: "sommet", container: container.name })}
                 className={
-                  "rounded px-2 py-1 text-left text-[11px] " +
+                  "flex items-center gap-1.5 rounded px-2 py-1 text-left text-[11px] " +
                   (tool.kind === "sommet" && tool.container === container.name
                     ? "bg-sky-600 dark:bg-sky-700 text-white"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600")
                 }
                 title={container.name + " — " + container.annotationKeys.join(", ")}
               >
+                <PaletteGlyph
+                  spec={drawnShape({
+                    space: KERNEL.space,
+                    lens: asLayerName(lens),
+                    layer: asLayerName(container.memberType[0]),
+                    path: asLayerPath(container.memberType[1]),
+                  })?.spec ?? null}
+                />
                 {container.name}
               </button>
             ))}
@@ -1270,7 +1746,7 @@ export function ModelEditorPage({
               <button type="button"
                 onClick={() => setTool({ kind: "arc" })}
                 className={
-                  "rounded px-2 py-1 text-left text-[11px] " +
+                  "flex items-center gap-1.5 rounded px-2 py-1 text-left text-[11px] " +
                   (tool.kind === "arc"
                     ? "bg-sky-600 dark:bg-sky-700 text-white"
                     : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-600")
@@ -1279,6 +1755,7 @@ export function ModelEditorPage({
                   "drag from a vertex to another — pre or post, the formalism's rules decide",
                 )}
               >
+                <PaletteGlyph spec={[{ shape: "line", arrow: "plain" }]} />
                 {t("arc")}
               </button>
             )}
@@ -1286,16 +1763,16 @@ export function ModelEditorPage({
         </div>
 
         {/* the canvas: a reading of the model's truth */}
-        <div className={showSource ? "lg:col-span-5" : "lg:col-span-7"}>
-          <div className="overflow-x-auto">
+        <div className="min-w-0 flex-1">
+          <div>
           <svg
             ref={svgRef}
             viewBox={"0 0 " + CANVAS_WIDTH + " " + CANVAS_HEIGHT}
             role="application"
             aria-label={t(
-              "model canvas — drag vertices to move them, pull an arc from a vertex to another",
+              "model canvas — drag vertices to move them, pull an arc from a vertex to another, drag the square handle of a selected vertex to resize it, the round handle to rotate it (double-click a handle to remove the datum)",
             )}
-            className="w-full touch-none select-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
+            className="h-[calc(100vh-13rem)] min-h-[24rem] w-full touch-none select-none rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800"
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={() => setGesture(null)}
@@ -1316,23 +1793,58 @@ export function ModelEditorPage({
             <g transform={"translate(" + view.x + "," + view.y + ") scale(" + view.scale + ")"}>
               {drawing.arcs.map((arc) => {
                 if (arc.from === null || arc.to === null) return null;
+                const dragOfWaypoint =
+                  gesture !== null &&
+                  gesture.kind === "waypoint" &&
+                  gesture.container === arc.container &&
+                  gesture.name === arc.name
+                    ? gesture
+                    : null;
+                const displayWaypoints =
+                  dragOfWaypoint !== null
+                    ? arc.waypoints.map((point, index) =>
+                        index === dragOfWaypoint.index
+                          ? {
+                              x: point.x + dragOfWaypoint.x - dragOfWaypoint.startX,
+                              y: point.y + dragOfWaypoint.y - dragOfWaypoint.startY,
+                            }
+                          : point,
+                      )
+                    : arc.waypoints;
                 return (
                   <EdgeGlyph
                     key={arc.container + "/" + arc.name}
                     name={arc.name}
                     shape={arc.spec}
+                    fnContext={arc.fnContext}
                     weight={arc.weight}
                     from={arc.from}
                     to={arc.to}
+                    fromShape={arc.fromVertex?.spec ?? null}
+                    fromSize={arc.fromVertex?.size}
+                    toShape={arc.toVertex?.spec ?? null}
+                    toSize={arc.toVertex?.size}
+                    waypoints={displayWaypoints}
                     selected={
                       selected !== null &&
                       selected.container === arc.container &&
                       selected.name === arc.name
                     }
+                    waypointDragIndex={
+                      gesture !== null &&
+                      gesture.kind === "waypoint" &&
+                      gesture.container === arc.container &&
+                      gesture.name === arc.name
+                        ? gesture.index
+                        : null
+                    }
                     onPick={() => {
                       setSelected({ container: arc.container, name: arc.name });
                       setFieldDrafts({});
                     }}
+                    onAddWaypoint={(event) => handleEdgeDoubleClick(event, arc)}
+                    onWaypointPointerDown={(index, event) => handleWaypointPointerDown(event, arc, index)}
+                    onWaypointDoubleClick={(index) => handleWaypointDoubleClick(arc, index)}
                   />
                 );
               })}
@@ -1362,13 +1874,19 @@ export function ModelEditorPage({
                     key={vertex.container + "/" + vertex.name}
                     name={vertex.name}
                     shape={vertex.spec}
+                    draw={vertex.draw}
+                    fnContext={vertex.fnContext}
                     position={{ x: vertex.position.x + offsetX, y: vertex.position.y + offsetY }}
+                    size={gestureSizeOf(vertex)}
                     selected={
                       selected !== null &&
                       selected.container === vertex.container &&
                       selected.name === vertex.name
                     }
                     onPointerDown={(event) => handleVertexPointerDown(event, vertex)}
+                    onResizePointerDown={(event) => handleSizePointerDown(event, vertex, "resize")}
+                    onRotatePointerDown={(event) => handleSizePointerDown(event, vertex, "rotate")}
+                    onSizeHandleDoubleClick={(kind) => handleSizeHandleDoubleClick(vertex, kind)}
                   />
                 );
               })}
@@ -1392,21 +1910,22 @@ export function ModelEditorPage({
           )}
         </div>
 
-        {/* the source panel: the block the canvas reads — shown beside
-            the canvas on demand, the only truth made visible */}
+        {/* the right column: the source (on demand) and the
+            inspector, compact — the canvas keeps the width and the
+            height (issue #221) */}
+        <div className="flex flex-col gap-4 lg:w-72 lg:shrink-0">
         {showSource && model !== null && (
-          <div className="lg:col-span-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
+          <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
             <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
               {t("source — the only truth")}
             </div>
-            <pre className="max-h-[540px] overflow-auto whitespace-pre-wrap font-mono text-[10px] leading-4 text-slate-600 dark:text-slate-400">
+            <pre className="max-h-64 overflow-auto whitespace-pre-wrap font-mono text-[10px] leading-4 text-slate-600 dark:text-slate-400">
               {modelSource}
             </pre>
           </div>
         )}
 
-        {/* the inspector: the selected member and its declared keys */}
-        <div className="lg:col-span-3 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
+        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
           <div className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-400">
             {t("inspector")}
           </div>
@@ -1516,8 +2035,53 @@ export function ModelEditorPage({
             </div>
           )}
         </div>
+        </div>
       </div>
     </div>
+  );
+}
+
+/** The palette's mini-glyph (issue #218): the lens's shape for the
+ * container's member type — a place is an ellipse, a transition a
+ * rectangle, an arc a line — the name stays beside it. */
+function PaletteGlyph({ spec }: { spec: ShapeSpec }) {
+  const arrowId = useId();
+  // the miniature has no node context: display functions (ADR-0119)
+  // resolve to their defaults here
+  const resolved = resolveGlyphList(spec ?? [], undefined);
+  const glyph = resolved.length > 0 ? resolved[0] : undefined;
+  const stroke = (glyph !== undefined && "stroke" in glyph ? glyph.stroke : undefined) ?? "#64748b";
+  const fill = (glyph !== undefined && "fill" in glyph ? glyph.fill : undefined) ?? "#ffffff";
+  // a vertex glyph renders as a miniature normalised to its bounds
+  // (the `path` genre included); the line keeps its own strip
+  if (glyph !== undefined && glyph.shape !== "line") {
+    const bounds = glyphBounds(glyph);
+    const width = Math.max(bounds.x1 - bounds.x0, 1);
+    const height = Math.max(bounds.y1 - bounds.y0, 1);
+    const scale = Math.min(18 / width, 12 / height, 1);
+    const viewX = bounds.x0 - (18 / scale - width) / 2;
+    const viewY = bounds.y0 - (12 / scale - height) / 2;
+    return (
+      <svg width="20" height="14" viewBox={viewX + " " + viewY + " " + 18 / scale + " " + 12 / scale} aria-hidden="true" className="shrink-0">
+        <g transform={"translate(" + (-viewX - (18 / scale) / 2) + " " + (-viewY - (12 / scale) / 2) + ") scale(" + scale + ")"}>
+          {vertexGlyphElement({ glyph, x: 0, y: 0, strokeWidth: 1.5 / scale })}
+        </g>
+      </svg>
+    );
+  }
+  return (
+    <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true" className="shrink-0">
+      {glyph === undefined ? (
+        <circle cx="10" cy="7" r="5" fill={fill} stroke={stroke} strokeDasharray="2 2" />
+      ) : (
+        <line x1="2" y1="7" x2="18" y2="7" stroke={stroke} strokeWidth="1.5" markerEnd={"url(#" + arrowId + ")"} />
+      )}
+      <defs>
+        <marker id={arrowId} viewBox="0 0 6 6" refX="5" refY="3" markerWidth="5" markerHeight="5" orient="auto">
+          <path d="M0,0 L6,3 L0,6 z" fill={stroke} />
+        </marker>
+      </defs>
+    </svg>
   );
 }
 
@@ -1528,82 +2092,58 @@ export function ModelEditorPage({
 function EditorVertexGlyph({
   name,
   shape,
+  draw,
+  fnContext,
   position,
+  size,
   selected,
   onPointerDown,
+  onResizePointerDown,
+  onRotatePointerDown,
+  onSizeHandleDoubleClick,
 }: {
   name: string;
   shape: ShapeSpec;
+  draw?: DisplayFn | null;
+  fnContext?: DisplayFnContext | undefined;
   position: { x: number; y: number };
+  size?: NodeSize | undefined;
   selected: boolean;
   onPointerDown: (event: React.PointerEvent<SVGGElement>) => void;
+  onResizePointerDown?: (event: React.PointerEvent<SVGGElement>) => void;
+  onRotatePointerDown?: (event: React.PointerEvent<SVGGElement>) => void;
+  onSizeHandleDoubleClick?: (kind: "resize" | "rotate") => void;
 }) {
   const { x, y } = position;
-  const glyphs = shape ?? [];
+  // display functions (ADR-0119) resolve here, per node, against the
+  // pure-data context — a fault falls back to the gabarit's defaults
+  const glyphs = resolveGlyphList(shape ?? [], fnContext);
+  const drawTree = resolveDrawFn(draw ?? null, fnContext);
   const shapeKind = glyphs.length > 0 ? (glyphs[0]?.shape ?? null) : null;
   const stroke = "#94a3b8";
   const strokeWidth = selected ? 2.5 : 1.5;
+  const nodeAngle = size?.angle ?? 0;
+  const label =
+    glyphs.length > 0
+      ? labelPosition({ glyph: scaledGlyph(glyphs[0] as Glyph, size?.scale ?? 1), x, y, angle: nodeAngle })
+      : null;
+  // the handles sit on the EFFECTIVE bounds of the (scaled, rotated)
+  // primary glyph — the same bounds the arcs attach to (issue #285)
+  const bounds =
+    glyphs.length > 0
+      ? glyphBounds(scaledGlyph(glyphs[0] as Glyph, size?.scale ?? 1), nodeAngle)
+      : { x0: -16, y0: -16, x1: 16, y1: 16 };
+  const resizeHandle = { x: x + bounds.x1 + 8, y };
+  const rotateHandle = { x, y: y + bounds.y0 - 12 };
   return (
     <g onPointerDown={onPointerDown} style={{ cursor: "grab" }}>
-      {glyphs.map((glyph, index) => {
-        const glyphStroke = glyph.stroke ?? stroke;
-        const glyphFill = glyph.shape !== "line" && glyph.fill ? glyph.fill : "none";
-        if (glyph.shape === "circle")
-          return (
-            <circle
-              key={index}
-              cx={x}
-              cy={y}
-              r={16}
-              fill={glyphFill}
-              stroke={glyphStroke}
-              strokeWidth={strokeWidth}
-            />
-          );
-        if (glyph.shape === "ellipse")
-          return (
-            <ellipse
-              key={index}
-              cx={x}
-              cy={y}
-              rx={24}
-              ry={14}
-              fill={glyphFill}
-              stroke={glyphStroke}
-              strokeWidth={strokeWidth}
-            />
-          );
-        if (glyph.shape === "rectangle")
-          return (
-            <rect
-              key={index}
-              x={x - 22}
-              y={y - 12}
-              width={44}
-              height={24}
-              rx={2}
-              fill={glyphFill}
-              stroke={glyphStroke}
-              strokeWidth={strokeWidth}
-            />
-          );
-        if (glyph.shape === "box")
-          return (
-            <rect
-              key={index}
-              x={x - 26}
-              y={y - 12}
-              width={52}
-              height={24}
-              rx={3}
-              fill="#ffffff"
-              className="stroke-slate-600 dark:stroke-slate-400"
-              strokeWidth={strokeWidth}
-            />
-          );
-        return null;
-      })}
-      {glyphs.length === 0 && (
+      {glyphs.map((glyph, index) => (
+        <g key={index}>{vertexGlyphElement({ glyph, x, y, strokeWidth, size })}</g>
+      ))}
+      {drawTree !== null && (
+        <g transform={"translate(" + x + " " + y + ")"}>{svgDataElement(drawTree, 0)}</g>
+      )}
+      {glyphs.length === 0 && drawTree === null && (
         <circle
           cx={x}
           cy={y}
@@ -1618,17 +2158,50 @@ function EditorVertexGlyph({
         <circle
           cx={x}
           cy={y}
-          r={21}
+          r={Math.max(bounds.x1, bounds.y1) + 5}
           fill="none"
           stroke="#0ea5e9"
           strokeWidth={1}
           strokeDasharray="2 2"
         />
       )}
+      {selected && (
+        <>
+          <rect
+            x={resizeHandle.x - 4}
+            y={resizeHandle.y - 4}
+            width={8}
+            height={8}
+            className="fill-sky-500 stroke-white dark:stroke-slate-800"
+            strokeWidth={1}
+            style={{ cursor: "ew-resize" }}
+            data-handle={"resize:" + name}
+            onPointerDown={onResizePointerDown}
+            onDoubleClick={(event) => {
+              event.stopPropagation();
+              onSizeHandleDoubleClick?.("resize");
+            }}
+          />
+          <circle
+            cx={rotateHandle.x}
+            cy={rotateHandle.y}
+            r={4}
+            className="fill-sky-500 stroke-white dark:stroke-slate-800"
+            strokeWidth={1}
+            style={{ cursor: "crosshair" }}
+            data-handle={"rotate:" + name}
+            onPointerDown={onRotatePointerDown}
+            onDoubleClick={(event) => {
+              event.stopPropagation();
+              onSizeHandleDoubleClick?.("rotate");
+            }}
+          />
+        </>
+      )}
       <text
-        x={x}
-        y={y + 3}
-        textAnchor="middle"
+        x={label?.x ?? x}
+        y={label?.y ?? y + 3}
+        textAnchor={label?.textAnchor ?? "middle"}
         fontSize={9}
         className={shapeKind === "rectangle" ? "fill-slate-50 dark:fill-slate-100" : shapeKind === null ? "fill-slate-700 dark:fill-slate-300" : "fill-slate-700"}
       >

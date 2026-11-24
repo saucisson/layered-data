@@ -18,11 +18,11 @@ export default defineConfig({
   projects: [{ name: "chromium", use: { browserName: "chromium" } }],
   webServer: [
     {
-      // the wardrobe API on its real port, so /api/* answers real 401s
-      // (no access code in the test browser) instead of proxy errors
-      command: "API_TOKEN=e2e-test-token PORT=8791 HOST=127.0.0.1 node --experimental-strip-types server.ts",
-      // /api/whoami answers 401 without a code — an accepted readiness
-      // status, and it does not depend on dist/ being built
+      // the wardrobe API on its real port with AUTH_DISABLED=1 (no IdP
+      // in the test browser): /api/* answers without a session, and
+      // /auth/me answers the dev user — an accepted readiness status,
+      // and it does not depend on dist/ being built
+      command: "AUTH_DISABLED=1 PORT=8791 HOST=127.0.0.1 node --experimental-strip-types server.ts",
       url: "http://127.0.0.1:8791/api/whoami",
       reuseExistingServer: !process.env.CI,
       timeout: 120_000,

@@ -24,13 +24,15 @@ The code follows an onion architecture, documented in
   staging of additions (a breaking candidate is refused), flattened
   views, linting.
 - `src/infrastructure/` — the effects towards the outside: corpus
-  loading (Vite glob), HTTP client of the quarry, access-code storage.
+  loading (Vite glob), HTTP client of the quarry (the session cookie
+  travels automatically; no token is ever stored client-side).
 - `src/presentation/` — the React components: pure in rendering, no
   business logic.
 - `src/App.tsx` — the composition root: the kernel is assembled there,
-  the states live there, the panels (① layers, ② formalism, ③ reading,
-  ④ point of view) are wired there.
-- `formalisms/kernel/` — the 85 layers of the bedrock, one `.ld` file
+  the states live there, the panels (① layers, ② formalism, ③ flattened
+  data, ④ mechanism, ⑤ resolution cascade) are wired there; the point of
+  view lives on the #lenses page.
+- `formalisms/kernel/` — the 91 layers of the bedrock, one `.ld` file
   per layer.
 - `formalisms/users/` — the personal quarry (empty at first).
 - `server.ts` — the quarry: layers API + AI geologist + static serving.
@@ -51,7 +53,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) — humans and agents follow the protocol
 
 ```bash
 npm install
-cp .env.example .env          # then edit API_TOKEN
+cp .env.example .env          # then set AUTH_DISABLED=1 for local dev without an IdP
 npm run serve                 # quarry (API 127.0.0.1:8791) + workshop with hot reload (localhost:5173, proxy /api)
 npm run dev                   # the workshop alone, with hot reload
 npm run build && npm run serve:prod # the built workshop, served by the quarry
@@ -62,8 +64,8 @@ npm run check:structure       # JSX/tsx balance (safety net, no compiler)
 ### With Docker
 
 ```bash
-cp .env.example .env           # then edit API_TOKEN, POSTGRES_USERNAME, POSTGRES_PASSWORD
-docker compose up --build      # workshop on 0.0.0.0:8791 + PostgreSQL (rate limiting active)
+cp .env.example .env           # then edit AUTH_* (or AUTH_DISABLED=1), POSTGRES_USERNAME, POSTGRES_PASSWORD
+docker compose up --build      # workshop on 127.0.0.1:8791 (loopback only, issue #242) + PostgreSQL (rate limiting active)
 ```
 
 The `docker-compose.yml` deploys two services: `postgres` (named volume
@@ -72,7 +74,7 @@ The `docker-compose.yml` deploys two services: `postgres` (named volume
 and receives `DATABASE_URL` — the rate-limit counters then live in the
 database. Without a database (local dev): `DATABASE_URL= docker compose up --no-deps --build atelier`.
 
-`API_TOKEN`, `POSTGRES_USERNAME` and `POSTGRES_PASSWORD` must be defined in the
+`POSTGRES_USERNAME` and `POSTGRES_PASSWORD` must be defined in the
 environment or `.env` (compose refuses to start otherwise). See
 [docs/deployment.md](docs/deployment.md) for deployment behind a reverse
 proxy.
@@ -90,8 +92,8 @@ code --extensionDevelopmentPath=vscode
 # package the .vsix (vsce via npx, from the extension folder):
 cd vscode && npx @vscode/vsce package
 
-# install (a prebuilt .vsix is provided in vscode/):
-code --install-extension vscode/layered-data-0.2.0.vsix
+# install (a prebuilt .vsix ships in public/, served by the Install page):
+code --install-extension public/layered-data-0.3.0.vsix
 ```
 
 After any grammar change, regenerate the `.vsix` before installing. The
@@ -103,22 +105,58 @@ whole `.ld` corpus.
 See [docs/deployment.md](docs/deployment.md) for production deployment
 (reverse proxy, HTTPS, checklist).
 
-The access code travels in the `x-access-code` header. All routes require
-it and return JSON, unless stated otherwise.
+All `/api/*` routes require authentication (see below) and return JSON,
+unless stated otherwise.
 
 | Route                  | Effect                                                            |
 | ---------------------- | ----------------------------------------------------------------- |
-| `GET /api/whoami`      | 200 with a valid code, 401 otherwise                              |
+| `GET /api/whoami`      | 200 with a valid session/token, 401 otherwise                     |
 | `GET /api/layers`      | `{ layers: [{ name, builtIn }] }` — bedrock + visitors' layers    |
 | `GET /api/layers/:nom` | `{ name, builtIn, source }` — the `.ld` layer                     |
 | `PUT /api/layers/:nom` | writes a visitor layer (403 on the bedrock, 400 invalid name)     |
-| `POST /api/generate`   | body `{ prompt }`, **plain text** response: the layer in the language |
+| `POST /api/generate`   | body `{ prompt }`, **plain text** response: the layer in the language; with `Accept: text/event-stream`, an SSE stream of the two-pass steps (see below) |
 
-The bedrock (the 85 layers of the corpus) is read-only: `PUT` and `DELETE`
+The bedrock (the 91 layers of the corpus) is read-only: `PUT` and `DELETE`
 answer 403 there — and since ADR-0103, the rule lives in the protocol
 itself, not only at the quarry's door: staging and edition carry the
 bedrock's signature and refuse to touch it themselves ("bedrock-occupied",
 "bedrock-edited").
+
+## Authentication
+
+Unified sign-in through the Zitadel IdP (`https://auth.linard.fr`,
+milestone Auth v1): OIDC / OAuth 2.1, Authorization Code Flow with PKCE
+(S256) + `state` + `nonce`. The browser only ever holds the httpOnly
+`sid` session cookie (`Secure` in production, `SameSite=Lax`); the id,
+access and refresh tokens stay server-side, never in the page or in
+`localStorage`. No endpoint URL is hard-coded: everything is read from
+`<AUTH_ISSUER>/.well-known/openid-configuration`.
+
+| Route              | Effect                                                                 |
+| ------------------ | ---------------------------------------------------------------------- |
+| `GET /auth/login`  | 302 to the IdP authorize endpoint (PKCE S256 + state + nonce)          |
+| `GET /auth/callback` | code exchange, id_token verification, `Set-Cookie sid`, 302 home    |
+| `GET /auth/me`     | the connected user (sub, name, email), 401 when anonymous              |
+| `GET /auth/logout` | local session destruction + RP-initiated logout at the IdP             |
+
+The `/api/*` middleware accepts three credentials: the `sid` session
+cookie, a `Authorization: Bearer <jwt>` access token (validated locally,
+RS256 via the JWKS, `iss`/`aud`/`exp`/`nbf` checked, 60 s leeway), or a
+`Authorization: Bearer <pat>` opaque token validated by introspection at
+the IdP (machines: scripts and CI — see `scripts/pat-example.mjs`,
+`PAT=<service-user-pat> node scripts/pat-example.mjs`). A personal access
+code still travels in `x-access-code` (hashed lookup, issue #140).
+
+Configuration (all in `.env`, see `.env.example`): `AUTH_ISSUER`,
+`AUTH_CLIENT_ID`, `AUTH_CLIENT_SECRET`, `AUTH_ALLOWED_AUDIENCES`,
+`AUTH_API_CLIENT_ID` / `AUTH_API_CLIENT_SECRET`, `AUTH_PUBLIC_BASE_URL`,
+`AUTH_COOKIE_SECURE`, `AUTH_SESSION_TTL_SECONDS`. No secret is ever
+committed; the real values arrive through a secure channel.
+
+Local development without an IdP: `AUTH_DISABLED=1` — `/auth/me` answers
+a fictitious dev user and the API does not 401. The server refuses to
+boot with `AUTH_DISABLED=1` and `NODE_ENV=production` (a dedicated test
+pins this guard).
 
 ## The geologist and the contract
 
@@ -134,6 +172,21 @@ silenced.
 proposal is verified server-side by the workshop's own staging (syntax,
 unknown target, betrayed expectations…); a refusal goes back to the model
 with its verdicts, up to `PEN_MAX_ATTEMPTS` proposals (3 by default).
+
+**Two passes (ADR-0118)**: a fast survey model (`SURVEY_MODEL`, default
+`mistral-small-latest`) first chooses the ground — the living layers the
+new layer should refine or cite — over a one-comment-line column, and
+answers either `QUESTION:` lines (streamed back, answered by a new POST
+with `{ prompt, answers }`) or `@names`, validated and closed over their
+`refines` ancestors. The pen then writes on the main model with a system
+prompt cut to the selected layers' full sources (the monolith prompt is
+the fallback when the survey cannot choose). Token ceilings
+(`SURVEY_MAX_TOKENS`, `PEN_MAX_TOKENS`) and prompt cache keys bound each
+call. With `Accept: text/event-stream`, one POST streams the steps as SSE
+events — `questions`, `selection` (`{ selected, closure, fallback }`),
+`round`, `refusal`, `draft`, `refused`, `error` — so the client sees the
+ground in seconds instead of waiting out a mute 300 s timeout; without
+the header, the plain-text behavior above is unchanged.
 Since ADR-0102, the checks registry is itself a bedrock layer
 (`formalisms/kernel/check-registry.ld`): contracts are data, and the lint
 audits the seams ("contract-without-algorithm", "algorithm-without-contract",
@@ -164,7 +217,7 @@ All fronts run under bare Node (native type stripping) — the CI
    conformance measurements, not formal proofs: closures (dedup, own
    node first, the measured diamond), reads (first-wins, statuses),
    keys, anchors, immutability (call-order independence, permutation
-   invariance of the 85-layer assembly), the cycle guard, late binding,
+   invariance of the 91-layer assembly), the cycle guard, late binding,
    desugaring (topological order, idempotence), the exact invalidation
    protocol — and, since ADR-0106, the two-regime algebra theorems.
 2. **The staging checks** (`npm run test:staging`,
@@ -200,5 +253,8 @@ exists only once.
 
 - The server listens on `127.0.0.1` by default; only change `HOST` behind
   an authenticated reverse proxy.
-- No key is embedded: the geologist only goes out if `MISTRAL_API_KEY` is
-  set in the environment or `.env`.
+- No key is embedded: the server never holds a Mistral key in production
+  (LD-8) — each visitor sets their personal token in the site's
+  Preferences, sent only as the `x-mistral-api-token` header on
+  `POST /api/generate`. In local dev only, `MISTRAL_API_KEY` in `.env`
+  remains a fallback.

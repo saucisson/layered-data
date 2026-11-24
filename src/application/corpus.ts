@@ -34,6 +34,7 @@ export const KERNEL_LAYER_NAMES: LayerName[] = [
   "digraph",
   "oriented-graph",
   "dag",
+  "logic-circuit",
   "tree",
   "sperner-hypergraph",
   "k-partite-hypergraph",
@@ -51,6 +52,7 @@ export const KERNEL_LAYER_NAMES: LayerName[] = [
   "pn-philosophers-5",
   "pn-philosophers-5-bounds",
   "pn-philosophers-5-bounds-c1",
+  "half-adder",
   "wb1",
   "automaton-scheme",
   "petrinet-behavior",
@@ -61,11 +63,13 @@ export const KERNEL_LAYER_NAMES: LayerName[] = [
   "graph-display",
   "petrinet-display",
   "kahn-display",
+  "logic-circuit-display",
   "view-scheme",
   "petrinet-view",
   "pn-philosophers-5-course",
   "kahn-course",
   "wb-course",
+  "half-adder-course",
   // ---- extended Petri nets (structural axes) ----
   "priority-petrinet",
   "labelled-petrinet",
@@ -104,6 +108,10 @@ export const KERNEL_LAYER_NAMES: LayerName[] = [
   "pushdown-automaton",
   "register-automaton",
   "moore-traffic-light",
+  // ---- display lenses ----
+  "automaton-display",
+  // ---- per-node size data (issue #285) ----
+  "node-sizes",
 ].map(asLayerName);
 
 /** The whole kernel, assembled and validated: what the workshop and
@@ -133,7 +141,7 @@ export function assembleLayeredDataKernel({
   return assembleCorpusKernel({ layerSources, layerNames: KERNEL_LAYER_NAMES });
 }
 
-// The tutorial corpus: a dedicated, simpler hierarchy — ten layers,
+// The tutorial corpus: a dedicated, simpler hierarchy — nine layers,
 // beside the kernel corpus. The two chains the tutorial walks
 // (graph → petrinet → philosophers → philosophers-5, and graph →
 // automaton → state-space → philosophers-5-state-space) live in

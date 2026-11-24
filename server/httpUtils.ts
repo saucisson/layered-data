@@ -5,7 +5,6 @@
 import { createHash } from "node:crypto";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-import { API_TOKEN } from "./config.ts";
 import { clientKeyOf } from "./rateLimit.ts";
 
 /** The conservative security header baseline (approved on issue #84):
@@ -55,50 +54,54 @@ export function sendText({
   response.end(body);
 }
 
-/** The access code travels in the `x-access-code` header (the
- * workshop protocol) — never in the URL, never in the page. */
-export function isAccessGranted({ request }: { request: IncomingMessage }): boolean {
-  const workshopHeader = request.headers["x-access-code"];
-  return (
-    typeof workshopHeader === "string" &&
-    workshopHeader.trim() !== "" &&
-    workshopHeader.trim() === API_TOKEN
-  );
+/** An RFC 7807 problem detail (ADR-0120 §2): the workshop API answers
+ * a session-less call with `401 application/problem+json` carrying a
+ * machine-readable `reason` — the front reads it and shows its sign-in
+ * page instead of a raw error. */
+export function sendProblem({
+  response,
+  statusCode,
+  reason,
+  title,
+}: {
+  response: ServerResponse;
+  statusCode: number;
+  reason: string;
+  title: string;
+}): void {
+  const text = JSON.stringify({ type: "about:blank", title, status: statusCode, reason });
+  response.writeHead(statusCode, {
+    "Content-Type": "application/problem+json; charset=utf-8",
+    "Content-Length": Buffer.byteLength(text),
+  });
+  response.end(text);
 }
 
-/** The resolved identity behind a request (ADR-0114, issue #140).
- * The legacy shared code maps to the shared identity; a personal
- * access code will resolve to its user row (hashed lookup in
- * `users`, when the database is wired). Without any code the
- * identity is anonymous-local. */
-export type ResolvedIdentity =
-  | { kind: "shared-code" }
-  | { kind: "personal-code"; accessCodeHash: string }
-  | { kind: "anonymous-local" };
-
-export function resolveIdentity({ request }: { request: IncomingMessage }): ResolvedIdentity {
-  const workshopHeader = request.headers["x-access-code"];
-  if (typeof workshopHeader !== "string" || workshopHeader.trim() === "") {
-    return { kind: "anonymous-local" };
-  }
-  const code = workshopHeader.trim();
-  if (code === API_TOKEN) return { kind: "shared-code" };
-  // A personal access code: the hash is the stable key — the clear
-  // code never persists, never logs.
-  return { kind: "personal-code", accessCodeHash: hashAccessCode({ code }) };
-}
-
-/** SHA-256 of an access code — the value stored in users.access_code_hash. */
+/** SHA-256 of a personal access code — the value stored in
+ * users.access_code_hash. The clear code never persists, never logs. */
 export function hashAccessCode({ code }: { code: string }): string {
   return createHash("sha256").update(code).digest("hex");
 }
 
-/** The rate-limit key of a request (issue #140): keyed per resolved
- * user when a code is present, per client address otherwise. */
+/** The rate-limit key of a request (issue #140, Auth v1): keyed per
+ * session cookie, per bearer token or per access code when present —
+ * hashed, never stored raw — per client address otherwise. */
 export function rateLimitKeyOf({ request }: { request: IncomingMessage }): string {
-  const identity = resolveIdentity({ request });
-  if (identity.kind === "shared-code") return "shared-code";
-  if (identity.kind === "personal-code") return "user:" + identity.accessCodeHash;
+  const cookieHeader = request.headers.cookie;
+  if (typeof cookieHeader === "string") {
+    const match = cookieHeader.match(/(?:^|;\s*)sid=([^;]+)/);
+    if (match !== null && match[1] !== undefined) {
+      return "session:" + createHash("sha256").update(match[1]).digest("hex").slice(0, 16);
+    }
+  }
+  const authorization = request.headers.authorization;
+  if (typeof authorization === "string" && authorization !== "") {
+    return "bearer:" + createHash("sha256").update(authorization).digest("hex").slice(0, 16);
+  }
+  const workshopHeader = request.headers["x-access-code"];
+  if (typeof workshopHeader === "string" && workshopHeader.trim() !== "") {
+    return "code:" + hashAccessCode({ code: workshopHeader.trim() }).slice(0, 16);
+  }
   return clientKeyOf({ request });
 }
 

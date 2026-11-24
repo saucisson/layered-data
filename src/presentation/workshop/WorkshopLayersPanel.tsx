@@ -8,11 +8,14 @@
 import { lazy, Suspense } from "react";
 import type { Language } from "../../domain/messages.ts";
 import type { LayeredDataKernel } from "../../application/corpus.ts";
-import { LAYER_COLOR, LAYER_ROLE, PRINCIPAL_PARENT, type RefinementDag } from "../workshopInventory.ts";
-import { localized, say } from "../i18n.ts";
+import {
+  LAYER_COLOR,
+  LAYER_ROLE,
+  PRINCIPAL_PARENT,
+  type RefinementDag,
+} from "../workshopInventory.ts";
+import { localized, say, type BilingualText } from "../i18n.ts";
 import { RefinesGraph } from "../refinesGraph.tsx";
-import { AccessCodeForm } from "../accessForm.tsx";
-import { UserAccountForm } from "../userAccountForm.tsx";
 import type { AcceptedAddition } from "../addFormalism.tsx";
 import type { AppliedEdition } from "../../application/edition.ts";
 import type { AcceptedAdditionState } from "./workshopKernel.ts";
@@ -59,6 +62,11 @@ export function WorkshopLayersPanel({
   onPickLayer,
   closureSet,
   layerMatches,
+  familyMatches,
+  familyPivots,
+  selectedFamilyPivots,
+  onToggleFamilyPivot,
+  onClearFamilyPivots,
   editableLayerSet,
   onEditorToggle,
 }: {
@@ -83,6 +91,13 @@ export function WorkshopLayersPanel({
   onPickLayer: (layerName: string, path: string[], key?: string | null) => void;
   closureSet: Set<string>;
   layerMatches: (layerName: string) => boolean;
+  /** The family filter (issue #363): a layer shows when it belongs to
+   * at least one selected pivot family — empty selection = no filter. */
+  familyMatches: (layerName: string) => boolean;
+  familyPivots: { pivot: string; label: BilingualText }[];
+  selectedFamilyPivots: string[];
+  onToggleFamilyPivot: (pivot: string) => void;
+  onClearFamilyPivots: () => void;
   editableLayerSet: Set<string>;
   onEditorToggle: (layerName: string) => void;
 }) {
@@ -143,8 +158,8 @@ export function WorkshopLayersPanel({
         </h2>
         {composerOpen && (
           <div className="space-y-2">
-            <AccessCodeForm language={language} />
-            <UserAccountForm language={language} />
+            {/* Sign-in happens from the key button of the site header
+                (milestone Auth v1), not here. */}
             <Suspense fallback={<PanelToolFallback />}>
               <AddFormalismComposer
                 kernel={kernel}
@@ -178,6 +193,47 @@ export function WorkshopLayersPanel({
             />
           </Suspense>
         )}
+        {/* The family filter (issue #363): one chip per pivot layer,
+            multiselect — a layer shows when it belongs to at least one
+            selected family (closure test); no chip selected = the
+            current view. The filter composes with the search; the
+            layers never change band, they hide. */}
+        <div className="mb-2 flex flex-wrap items-center gap-1" role="group" aria-label={say({ language, en: "filter by family" })}>
+          <span className="mr-1 text-[10px] uppercase tracking-wide text-slate-500 dark:text-slate-400">
+            {say({ language, en: "families" })}
+          </span>
+          {familyPivots.map(({ pivot, label }) => {
+            const active = selectedFamilyPivots.includes(pivot);
+            return (
+              <button key={pivot} type="button"
+                onClick={() => onToggleFamilyPivot(pivot)}
+                aria-pressed={active}
+                title={say({
+                  language,
+                  en:
+                    "layers whose refines closure contains " + pivot +
+                    " — a closure test, zero datum posed",
+                })}
+                className={
+                  "rounded-full border px-2 py-0.5 text-[10px] leading-4 " +
+                  (active
+                    ? "border-slate-800 bg-slate-800 text-white dark:border-slate-200 dark:bg-slate-200 dark:text-slate-900"
+                    : "border-slate-300 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700")
+                }
+              >
+                {localized({ language, text: label })}
+              </button>
+            );
+          })}
+          {selectedFamilyPivots.length > 0 && (
+            <button type="button"
+              onClick={onClearFamilyPivots}
+              className="rounded-full px-1.5 py-0.5 text-[10px] leading-4 text-slate-500 underline hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200"
+            >
+              {say({ language, en: "clear" })}
+            </button>
+          )}
+        </div>
         {graphView ? (
           <RefinesGraph
             layer={layer}
@@ -186,6 +242,7 @@ export function WorkshopLayersPanel({
             layerNames={livingLayerNames}
             dag={dag}
             closureSet={closureSet}
+            filterMatches={familyMatches}
             onPick={(layerName) => onPickLayer(layerName, [])}
           />
         ) : (
@@ -200,15 +257,22 @@ export function WorkshopLayersPanel({
               : Math.max(currentIndex - 1, 0);
             buttons[nextIndex]?.focus();
           }}>
-            {livingLayerNames.filter(layerMatches).length === 0 && (
+            {livingLayerNames.filter(layerMatches).filter(familyMatches).length === 0 && (
               <div className="py-2 text-xs text-slate-600 dark:text-slate-400">
-                {say({
-                  language,
-                  en: "No layer matches « " + search + " ».",
-                })}
+                {selectedFamilyPivots.length > 0
+                  ? say({
+                      language,
+                      en:
+                        "No layer matches “ " + search + " ” in the selected families (" +
+                        selectedFamilyPivots.join(", ") + ").",
+                    })
+                  : say({
+                      language,
+                      en: "No layer matches “ " + search + " ”.",
+                    })}
               </div>
             )}
-            {livingLayerNames.filter(layerMatches).map((layerName) => {
+            {livingLayerNames.filter(layerMatches).filter(familyMatches).map((layerName) => {
               const depth = (() => {
                 let steps = 0;
                 let current: string | null = layerName;
@@ -264,7 +328,7 @@ export function WorkshopLayersPanel({
                           language,
                           en:
                             "edit the living layer — staging rejudges it " +
-                            "(0 verdict demanded), the write is declared, " +
+                            "(zero failed checks demanded), the write is declared, " +
                             "the workshop re-reads the space",
                         })}
                         aria-label={

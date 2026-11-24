@@ -38,9 +38,12 @@ import {
 } from "../src/application/session.ts";
 import { buildWorkshopLook } from "../src/presentation/lensDrawing.ts";
 import {
+  belongsToPivotFamily,
   computeGraphLayout,
+  FAMILY_PIVOTS,
   RefinementDag,
 } from "../src/presentation/workshopInventory.ts";
+import { computeRefinementGraphLayout } from "../src/presentation/refinementGraphLayout.ts";
 
 // ---- the assertion ledger ------------------------------------------
 
@@ -178,6 +181,58 @@ check(
     ),
 );
 
+// ---- (a2) the notes render as comments, Python-style (issue #247) ----
+
+const flatPetrinetLines = writeFlattenedLayerSource({
+  space: kernel.space,
+  layer: asLayerName("petrinet-scheme"),
+}).split("\n");
+check(
+  "(a2) no raw __note: datum leaks into the flattened text",
+  flatPetrinetLines.every((line) => !line.includes("__note:")),
+);
+check(
+  "(a2) a source comment is attached to the element below, as a comment line at the same indent",
+  flatPetrinetLines.some(
+    (line, index) =>
+      line.trimStart().startsWith("place_marking =") &&
+      (flatPetrinetLines[index - 1]?.trimStart().startsWith("//") ?? false) &&
+      line.startsWith("  ") === flatPetrinetLines[index - 1]?.startsWith("  "),
+  ),
+);
+
+// The closure can move a documented element into a child (multidigraph
+// redefines `bindings` as a record holding `ordered`): the note must
+// follow its key down, never land on a flat-order neighbour.
+const flatMultidigraphLines = writeFlattenedLayerSource({
+  space: kernel.space,
+  layer: asLayerName("multidigraph"),
+}).split("\n");
+const commentBlockAbove = (lines: string[], index: number): string[] => {
+  const block: string[] = [];
+  for (let cursor = index - 1; cursor >= 0; cursor -= 1) {
+    const line = lines[cursor];
+    if (line === undefined || !line.trimStart().startsWith("//")) break;
+    block.unshift(line);
+  }
+  return block;
+};
+const orderedLineIndex = flatMultidigraphLines.findIndex((line) =>
+  line.trimStart().startsWith("ordered ="),
+);
+check(
+  "(a2) a note follows its key into a child node: the `ordered` comment sits directly above `ordered =`, not above `edge_type`",
+  orderedLineIndex > 0 &&
+    commentBlockAbove(flatMultidigraphLines, orderedLineIndex).some((line) =>
+      line.includes("ordered"),
+    ) &&
+    flatMultidigraphLines.every(
+      (line, index) =>
+        !line.trimStart().startsWith("edge_type =") ||
+        commentBlockAbove(flatMultidigraphLines, index).length === 0,
+    ),
+);
+
 // =====================================================================
 // (b) the lens drawing of the formalism page — the exact discipline
 //     of panel ④ (the extraction the workshop now calls too)
@@ -254,6 +309,129 @@ check(
   viewpointLook.model === "pn-philosophers-5" &&
     viewpointLook.lens === "petrinet-display" &&
     viewpointLook.viewpointDecidesPositions === true,
+);
+
+// (b2) the circuit viewpoint (issue #362): the half-adder drawn through
+// the circuit lens, at the viewpoint's positions
+const circuitLook = buildWorkshopLook({
+  space: kernel.space,
+  selectedView: "half-adder-course",
+  currentLayer: "record",
+});
+check(
+  "(b2) the circuit viewpoint imposes the half-adder as model, the circuit lens as display, and decides the positions",
+  circuitLook.model === "half-adder" &&
+    circuitLook.lens === "logic-circuit-display" &&
+    circuitLook.viewpointDecidesPositions === true,
+);
+check(
+  "(b2) the drawn reading through the viewpoint: andg = box, xorg = circle (xor keeps the base circle), ports = rectangles labeled by direction, wires = plain-arrow lines, 6/6 dressed",
+  circuitLook.vertices.length === 6 &&
+    circuitLook.edges.length === 6 &&
+    circuitLook.applicability.dressed === 6 &&
+    circuitLook.applicability.total === 6 &&
+    (() => {
+      const byName = new Map(circuitLook.vertices.map((vertex) => [vertex.name, vertex]));
+      const andg = byName.get("andg");
+      const xorg = byName.get("xorg");
+      const portA = byName.get("a");
+      return (
+        andg?.drawn?.spec.some((glyph) => glyph.shape === "box") === true &&
+        xorg?.drawn?.spec.some((glyph) => glyph.shape === "circle") === true &&
+        portA?.drawn?.spec.some(
+          (glyph) => glyph.shape === "rectangle" && glyph.label === "direction",
+        ) === true &&
+        circuitLook.edges.every(
+          (edge) =>
+            edge.drawn?.spec.some(
+              (glyph) => glyph.shape === "line" && glyph.arrow === "plain",
+            ) === true,
+        )
+      );
+    })(),
+);
+check(
+  "(b2) the wires read left to right through the viewpoint (a→xorg, b→xorg, a→andg, b→andg, xorg→s, andg→c) at the viewpoint's positions (a,b left — gates center — s,c right)",
+  circuitLook.edges
+    .map((edge) => edge.name + ":" + edge.from + ">" + edge.to)
+    .join(",") === "w1:a>xorg,w2:b>xorg,w3:a>andg,w4:b>andg,w5:xorg>s,w6:andg>c" &&
+    (() => {
+      const byName = new Map(circuitLook.vertices.map((vertex) => [vertex.name, vertex.position]));
+      return (
+        JSON.stringify(byName.get("a")) === JSON.stringify({ x: 60, y: 60 }) &&
+        JSON.stringify(byName.get("b")) === JSON.stringify({ x: 60, y: 160 }) &&
+        JSON.stringify(byName.get("xorg")) === JSON.stringify({ x: 210, y: 60 }) &&
+        JSON.stringify(byName.get("andg")) === JSON.stringify({ x: 210, y: 160 }) &&
+        JSON.stringify(byName.get("s")) === JSON.stringify({ x: 360, y: 60 }) &&
+        JSON.stringify(byName.get("c")) === JSON.stringify({ x: 360, y: 160 })
+      );
+    })(),
+);
+const courseModelBinding = kernel.space.read({
+  layer: asLayerName("half-adder-course"),
+  path: asLayerPath([]),
+  key: "model",
+});
+check(
+  "(b2) through the viewpoint, the decisive reads of the designated model: xor/and kinds, in/out directions, the wire's source and target",
+  courseModelBinding instanceof AddressView &&
+    courseModelBinding.layer === "half-adder" &&
+    kernel.space.read({
+      layer: asLayerName("half-adder"),
+      path: asLayerPath(["gates", "xorg"]),
+      key: "kind",
+    }) === "xor" &&
+    kernel.space.read({
+      layer: asLayerName("half-adder"),
+      path: asLayerPath(["gates", "andg"]),
+      key: "kind",
+    }) === "and" &&
+    kernel.space.read({
+      layer: asLayerName("half-adder"),
+      path: asLayerPath(["ports", "a"]),
+      key: "direction",
+    }) === "in" &&
+    kernel.space.read({
+      layer: asLayerName("half-adder"),
+      path: asLayerPath(["ports", "s"]),
+      key: "direction",
+    }) === "out" &&
+    (() => {
+      const source = kernel.space.read({
+        layer: asLayerName("half-adder"),
+        path: asLayerPath(["wires", "w1"]),
+        key: "source",
+      });
+      const target = kernel.space.read({
+        layer: asLayerName("half-adder"),
+        path: asLayerPath(["wires", "w1"]),
+        key: "target",
+      });
+      return (
+        source instanceof AddressView &&
+        source.path.join("/") === "ports/a" &&
+        target instanceof AddressView &&
+        target.path.join("/") === "gates/xorg"
+      );
+    })(),
+);
+const circuitGenericLook = buildWorkshopLook({
+  space: kernel.space,
+  selectedView: "graph-display",
+  currentLayer: "half-adder",
+});
+check(
+  "(b2) the legal degradation of the half-adder through the generic lens: 6 circles, 6 lines, 6/6 dressed — zero error",
+  circuitGenericLook.vertices.length === 6 &&
+    circuitGenericLook.edges.length === 6 &&
+    circuitGenericLook.applicability.dressed === 6 &&
+    circuitGenericLook.applicability.total === 6 &&
+    circuitGenericLook.vertices.every(
+      (vertex) => vertex.drawn !== null && vertex.drawn.spec.every((glyph) => glyph.shape === "circle"),
+    ) &&
+    circuitGenericLook.edges.every(
+      (edge) => edge.drawn !== null && edge.drawn.spec.every((glyph) => glyph.shape === "line"),
+    ),
 );
 
 // =====================================================================
@@ -366,6 +544,164 @@ check(
       JSON.stringify(layout.position(layerName)) ===
       JSON.stringify(secondLayout.position(layerName)),
   ) && layout.rows.length > 1,
+);
+
+// (d3) the two arrow kinds of the hierarchy (issue #235): inheritance
+// is the principal refines, usage is a field citing another layer
+check(
+  "(d3) petrinet-view USES petrinet-display in a field — a dashed edge, not an inheritance",
+  corpusDag.usesOf("petrinet-view").includes("petrinet-display") &&
+    !corpusDag.targetsOf("petrinet-view").includes("petrinet-display"),
+);
+check(
+  "(d3) kahn-course USES pn-philosophers-5 in a field; multidigraph's inheritance stays named-ends-hypergraph & pair-graph",
+  corpusDag.usesOf("kahn-course").includes("pn-philosophers-5") &&
+    corpusDag.targetsOf("multidigraph").includes("named-ends-hypergraph") &&
+    corpusDag.targetsOf("multidigraph").includes("pair-graph"),
+);
+check(
+  "(d3) a self-relative address (@edge_type/source) is NOT a usage edge — only inventoried layers count",
+  !corpusDag.usesOf("multidigraph").includes("edge_type"),
+);
+check(
+  "(d3) a layer never uses itself — the usage edges are cross-layer only",
+  KERNEL_LAYER_NAMES.every((layerName) => !corpusDag.usesOf(layerName).includes(layerName)),
+);
+
+// (d4) the family grouping (issue #231): the family is the principal
+// parent (the first refines target) — the common ancestor shared with
+// the siblings; the layer itself when it is a root
+check(
+  "(d4) every layer has a family, and a root layer is its own family",
+  KERNEL_LAYER_NAMES.every(
+    (layerName) =>
+      corpusDag.familyOf(layerName) ===
+        (corpusDag.targetsOf(layerName)[0] ?? layerName),
+  ) && corpusDag.familyOf("record") === "record",
+);
+check(
+  "(d4) the families partition the corpus — every layer in exactly one family, counts add up",
+  (() => {
+    const families = corpusDag.familiesOf();
+    const total = families.reduce((sum, entry) => sum + entry.members.length, 0);
+    const all = families.flatMap((entry) => entry.members);
+    return total === KERNEL_LAYER_NAMES.length && new Set(all).size === KERNEL_LAYER_NAMES.length;
+  })(),
+);
+check(
+  "(d4) a layer whose principal parent is petrinet-scheme shares its family (pt-petrinet); a layer with another principal parent (petrinet-display → graph-display) does not",
+  corpusDag.familyOf("pt-petrinet") === "petrinet-scheme" &&
+    corpusDag.familyOf("petrinet-display") === "graph-display",
+);
+
+// (d5) the derived family filter (issue #363): one pivot layer per
+// family, membership by closure test — zero datum posed in the .ld
+check(
+  "(d5) every family pivot is a corpus layer with a non-empty family, and membership is exactly “pivot in the refines closure”",
+  FAMILY_PIVOTS.every(({ pivot }) => KERNEL_LAYER_NAMES.map(String).includes(pivot)) &&
+    FAMILY_PIVOTS.every(({ pivot }) =>
+      KERNEL_LAYER_NAMES.some((layerName) =>
+        belongsToPivotFamily({ dag: corpusDag, layerName, pivot }),
+      ),
+    ) &&
+    belongsToPivotFamily({ dag: corpusDag, layerName: "pn-philosophers-5", pivot: "petrinet-scheme" }) &&
+    belongsToPivotFamily({ dag: corpusDag, layerName: "moore-traffic-light", pivot: "automaton-scheme" }) &&
+    belongsToPivotFamily({ dag: corpusDag, layerName: "ss-pn-philosophers-5", pivot: "petrinet-statespace" }) &&
+    belongsToPivotFamily({ dag: corpusDag, layerName: "petrinet-display", pivot: "graph-display" }) &&
+    belongsToPivotFamily({ dag: corpusDag, layerName: "kahn-course", pivot: "view-scheme" }) &&
+    !belongsToPivotFamily({ dag: corpusDag, layerName: "half-adder", pivot: "petrinet-scheme" }) &&
+    !belongsToPivotFamily({ dag: corpusDag, layerName: "record", pivot: "graph-display" }),
+);
+check(
+  "(d5) the circuits family is exactly the logic-circuit closure — logic-circuit, half-adder, logic-circuit-display",
+  KERNEL_LAYER_NAMES.filter((layerName) =>
+    belongsToPivotFamily({ dag: corpusDag, layerName, pivot: "logic-circuit" }),
+  ).join(",") === "logic-circuit,half-adder,logic-circuit-display",
+);
+check(
+  "(d5) multiselect = union of the closures; no selection = every layer passes (the current view)",
+  (() => {
+    const inSelected = (layerName: string, pivots: string[]) =>
+      pivots.length === 0 ||
+      pivots.some((pivot) => belongsToPivotFamily({ dag: corpusDag, layerName, pivot }));
+    const shown = KERNEL_LAYER_NAMES.filter((layerName) =>
+      inSelected(layerName, ["petrinet-scheme", "logic-circuit"]),
+    );
+    const shownNames = shown.map(String);
+    return (
+      shownNames.includes("pn-philosophers-5") &&
+      shownNames.includes("half-adder") &&
+      !shownNames.includes("record") &&
+      KERNEL_LAYER_NAMES.every((layerName) => inSelected(layerName, []))
+    );
+  })(),
+);
+
+// (d2) the SHARED wrapped layout (issue #217) — the one component the
+// workshop header and the hierarchy page both render — is
+// deterministic and wraps to the given width
+const wrapped = computeRefinementGraphLayout({
+  layerNames: [...KERNEL_LAYER_NAMES],
+  dag: corpusDag,
+  width: 900,
+});
+const wrappedAgain = computeRefinementGraphLayout({
+  layerNames: [...KERNEL_LAYER_NAMES],
+  dag: corpusDag,
+  width: 900,
+});
+check(
+  "(d2) the shared wrapped layout is deterministic and fits the width (no horizontal scroll)",
+  wrapped.W === 900 &&
+    KERNEL_LAYER_NAMES.every(
+      (layerName) =>
+        JSON.stringify(wrapped.position(layerName)) ===
+        JSON.stringify(wrappedAgain.position(layerName)),
+    ) &&
+    KERNEL_LAYER_NAMES.every((layerName) => {
+      const position = wrapped.position(layerName);
+      return position.x >= 0 && position.x + position.w <= 900;
+    }),
+);
+
+// (d2b) every inheritance edge has a route, and no routed leg ever
+// enters a pill other than its two ends — the arrows travel the empty
+// channels of the wrapped geometry
+const sampleRoute = (route: { x: number; y: number }[]): { x: number; y: number }[] => {
+  const points: { x: number; y: number }[] = [];
+  for (let index = 0; index + 1 < route.length; index++) {
+    const from = route[index];
+    const to = route[index + 1];
+    if (!from || !to) continue;
+    const steps = Math.max(1, Math.ceil(Math.hypot(to.x - from.x, to.y - from.y) / 6));
+    for (let step = 0; step < steps; step++) {
+      points.push({ x: from.x + (step / steps) * (to.x - from.x), y: from.y + (step / steps) * (to.y - from.y) });
+    }
+  }
+  const end = route[route.length - 1];
+  if (end) points.push(end);
+  return points;
+};
+check(
+  "(d2b) every refinement edge is routed, and no route crosses a foreign pill",
+  KERNEL_LAYER_NAMES.every((layerName) =>
+    corpusDag.targetsOf(layerName).every((parentName) => {
+      const route = wrapped.route(layerName, parentName);
+      if (route === null || route.length < 2) return false;
+      return sampleRoute(route).every((point) =>
+        KERNEL_LAYER_NAMES.every((other) => {
+          if (other === layerName || other === parentName) return true;
+          const pill = wrapped.position(other);
+          return !(
+            point.x >= pill.x &&
+            point.x <= pill.x + pill.w &&
+            point.y >= pill.y &&
+            point.y <= pill.y + 26
+          );
+        }),
+      );
+    }),
+  ),
 );
 
 // =====================================================================

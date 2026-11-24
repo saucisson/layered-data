@@ -48,6 +48,13 @@ const makeReference = (value: LanguageValue & { kind: "reference" }): LayerRefer
 const makeValue = (value: LanguageValue): RawValue => {
   if (value.kind === "literal") return value.value;
   if (value.kind === "reference") return makeReference(value);
+  if (value.kind === "fn") {
+    // The display function (ADR-0119) compiles to DATA: the __fn
+    // dictionary travels like any other value — the server parses it
+    // (syntax check at staging) but never executes it; only the
+    // browser renderers run it, per drawn node.
+    return { __fn: { params: [...value.params], code: value.code } };
+  }
   return value.items.map(makeValue);
 };
 

@@ -27,9 +27,25 @@ services:
     environment:
       - HOST=0.0.0.0
       - PORT=8791
-      - API_TOKEN=${API_TOKEN:?Set API_TOKEN in .env or the environment — never use the default}
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
-      - MISTRAL_MODEL=${MISTRAL_MODEL:-codestral-latest}
+      # production mode: the AUTH_DISABLED=1 guard is fatal here, and the
+      # sid session cookie gets its Secure flag by default
+      - NODE_ENV=production
+      # Authentification unifiée Zitadel (milestone Auth v1) — en dev
+      # local sans IdP : AUTH_DISABLED=1 docker compose up --no-deps --build atelier
+      - AUTH_DISABLED=${AUTH_DISABLED:-}
+      - AUTH_ISSUER=${AUTH_ISSUER:-}
+      - AUTH_CLIENT_ID=${AUTH_CLIENT_ID:-}
+      - AUTH_CLIENT_SECRET=${AUTH_CLIENT_SECRET:-}
+      - AUTH_ALLOWED_AUDIENCES=${AUTH_ALLOWED_AUDIENCES:-}
+      - AUTH_API_CLIENT_ID=${AUTH_API_CLIENT_ID:-}
+      - AUTH_API_CLIENT_SECRET=${AUTH_API_CLIENT_SECRET:-}
+      - AUTH_PUBLIC_BASE_URL=${AUTH_PUBLIC_BASE_URL:-}
+      # LD-8 : aucune clé Mistral côté serveur en production — chaque
+      # visiteur apporte son token personnel (en-tête x-mistral-api-token).
+      - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-large-4}
+      - SURVEY_MODEL=${SURVEY_MODEL:-mistral-small-latest}
+      - SURVEY_MAX_TOKENS=${SURVEY_MAX_TOKENS:-256}
+      - PEN_MAX_TOKENS=${PEN_MAX_TOKENS:-4096}
       # Rate limiting partagé entre instances (issue #85) : les compteurs
       # vivent dans PostgreSQL. Une DATABASE_URL posée dans l'environnement
       # l'emporte sur cette valeur. Déploiement sans base (dev local) :

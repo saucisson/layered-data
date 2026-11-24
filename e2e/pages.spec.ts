@@ -2,8 +2,8 @@
 // bounded time and produces no console errors / page errors.
 //
 // Known exception: #editor calls /api/editor/session, which answers 401
-// when no access code is stored — the page shows the access-code form
-// instead (issue #198). Those specific 401s are filtered by URL below.
+// when no session is connected (issue #198). Those specific 401s are
+// filtered by URL below.
 import { test, expect, type Page } from "@playwright/test";
 
 const ROUTES: ReadonlyArray<{ hash: string; heading: RegExp }> = [
@@ -12,14 +12,16 @@ const ROUTES: ReadonlyArray<{ hash: string; heading: RegExp }> = [
   { hash: "#filiation", heading: /Filiation/ },
   { hash: "#hierarchy", heading: /hierarchy/i },
   { hash: "#creation", heading: /Create a formalism/ },
-  { hash: "#workshop", heading: /workshop/i },
-  { hash: "#editor", heading: /model editor/i },
+  { hash: "#formalisms", heading: /workshop/i },
+  { hash: "#lenses", heading: /Lenses/ },
+  { hash: "#models", heading: /model editor/i },
+  { hash: "#install", heading: /install/i },
   { hash: "#formalism/petrinet", heading: /formalism/i },
   { hash: "#nimportequoi", heading: /Page not found/ },
 ];
 
 /** Console/page errors, excluding the known unauthorized session call
- * (401 on /api/editor/session without a stored access code, #198) and
+ * (401 on /api/editor/session without a session, #198) and
  * the "Failed to load resource" console noise that duplicates HTTP
  * error responses already collected via the response listener. */
 function collectErrors(page: Page): string[] {
@@ -49,4 +51,81 @@ test.describe("every page renders without errors", () => {
       expect(errors).toEqual([]);
     });
   }
+});
+
+test("#217 the workshop header and the hierarchy page render the SAME shared refinement graph", async ({ page }) => {
+  // the hierarchy page: pill per layer + one svg curve per refinement
+  await page.goto("/#hierarchy");
+  await expect(page.getByRole("heading", { name: /hierarchy/i })).toBeVisible();
+  const hierarchyPill = page.getByRole("link", { name: "petrinet-scheme", exact: true });
+  await expect(hierarchyPill).toBeVisible({ timeout: 15_000 });
+  const hierarchyCurves = page.locator("svg path[marker-end]");
+  await expect(hierarchyCurves.first()).toBeVisible();
+  expect(await hierarchyCurves.count()).toBeGreaterThan(10);
+
+  // the workshop header: the same component — same pill, same curves
+  await page.goto("/#formalisms");
+  await expect(page.getByRole("heading", { name: /workshop/i })).toBeVisible({ timeout: 15_000 });
+  await page.getByRole("button", { name: "graph", exact: true }).first().click();
+  const workshopPill = page.getByRole("button", { name: /^petrinet-scheme/ });
+  await expect(workshopPill).toBeVisible({ timeout: 15_000 });
+  const workshopCurves = page.locator("svg path[marker-end]");
+  await expect(workshopCurves.first()).toBeVisible();
+  expect(await workshopCurves.count()).toBeGreaterThan(10);
+});
+
+test("#235 the hierarchy draws two arrow kinds — solid inheritance, dashed usage", async ({ page }) => {
+  await page.goto("/#hierarchy");
+  await expect(page.getByRole("heading", { name: /hierarchy/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: "petrinet-scheme", exact: true })).toBeVisible({ timeout: 15_000 });
+  // solid inheritance curves (filled arrowhead marker)
+  const solid = page.locator("svg path[marker-end]:not([stroke-dasharray])");
+  await expect(solid.first()).toBeVisible();
+  expect(await solid.count()).toBeGreaterThan(10);
+  // dashed usage curves (hollow arrowhead) — petrinet-view uses petrinet-display
+  const dashed = page.locator("svg path[stroke-dasharray]");
+  await expect(dashed.first()).toBeVisible();
+  expect(await dashed.count()).toBeGreaterThan(0);
+});
+
+test("#231 the hierarchy groups the formalisms by families — chips fade the other families", async ({ page }) => {
+  await page.goto("/#hierarchy");
+  await expect(page.getByRole("heading", { name: /hierarchy/i })).toBeVisible();
+  await expect(page.getByRole("link", { name: "petrinet-scheme", exact: true })).toBeVisible({ timeout: 15_000 });
+  // one chip per family + the "all families" chip
+  const allChip = page.getByRole("button", { name: "all families", exact: true });
+  await expect(allChip).toBeVisible();
+  const familyChip = page.getByRole("button", { name: /^petrinet-scheme · \d+$/ });
+  await expect(familyChip).toBeVisible();
+
+  // click the family chip: the layers outside the family fade (opacity-10)
+  await familyChip.click();
+  const outsidePill = page.getByRole("link", { name: "multihypergraph", exact: true });
+  await expect(outsidePill).toHaveClass(/\bopacity-10\b/);
+  const insidePill = page.getByRole("link", { name: "pt-petrinet", exact: true });
+  await expect(insidePill).not.toHaveClass(/\bopacity-10\b/);
+
+  // back to all
+  await allChip.click();
+  await expect(outsidePill).not.toHaveClass(/\bopacity-10\b/);
+  await expect(page.getByRole("link", { name: "petrinet-scheme", exact: true })).not.toHaveClass(/\bopacity-10\b/);
+});
+
+test("#246 the install page explains the local install and serves the VS Code extension .vsix", async ({ page }) => {
+  const errors = collectErrors(page);
+  await page.goto("/#install");
+  await expect(page.locator("h1")).toContainText(/install/i);
+  // local install instructions mention the clone and the npm commands
+  await expect(page.getByRole("heading", { name: /local install/i })).toBeVisible();
+  await expect(page.locator("pre").filter({ hasText: "git clone" }).first()).toBeVisible();
+  // the extension section with the downloadable prebuilt package
+  await expect(page.getByRole("heading", { name: /vs code extension/i })).toBeVisible();
+  const download = page.locator('a[href="/layered-data-0.3.0.vsix"][download]');
+  await expect(download).toBeVisible();
+  // the .vsix is actually served (200, non-empty zip)
+  const response = await page.request.get("/layered-data-0.3.0.vsix");
+  expect(response.status()).toBe(200);
+  const body = await response.body();
+  expect(body.length).toBeGreaterThan(1000);
+  expect(errors).toEqual([]);
 });

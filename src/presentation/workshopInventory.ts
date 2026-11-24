@@ -12,7 +12,7 @@
 // inventory — pastilles may slide horizontally, never change
 // bands).
 
-import { LayerReference } from "../domain/addresses.ts";
+import { AddressView, LayerReference } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
 import type { BilingualText } from "./i18n.ts";
 
@@ -68,6 +68,7 @@ export const PRINCIPAL_PARENT: Record<string, string | null> = {
   "pn-philosophers-5-course": "petrinet-view",
   "kahn-course": "view-scheme",
   "wb-course": "view-scheme",
+  "half-adder-course": "view-scheme",
 };
 
 /** The role sentence of each corpus layer, shown as its inventory
@@ -104,16 +105,16 @@ export const LAYER_ROLE: Record<string, BilingualText> = {
     en: "the bounded arity axis: exactly 2 arrows, no roles — an undirected graph",
   },
   graph: {
-    en: "the mathematician's simple graph: 2-uniform and pure — « a 2-uniform hypergraph is a graph » (a recycled name, orientation lives in multidigraph)",
+    en: "the mathematician's simple graph: 2-uniform and pure — “ a 2-uniform hypergraph is a graph ” (a recycled name, orientation lives in multidigraph)",
   },
   "graph-with-positions": {
-    en: "a « positions » derivation: a graph whose vertices get placed — the composition of the graph and the grid",
+    en: "a “ positions ” derivation: a graph whose vertices get placed — the composition of the graph and the grid",
   },
   multidigraph: {
     en: "orientation: 2 arrows source / target, a renaming of the connection points; the base leaves parallel arcs and loops permitted there (ex graph)",
   },
   digraph: {
-    en: "pure arcs: orientation x purity — neither parallel arcs nor arc-loops, legal 2-cycles (the « simple digraph »)",
+    en: "pure arcs: orientation x purity — neither parallel arcs nor arc-loops, legal 2-cycles (the “ simple digraph ”)",
   },
   "oriented-graph": {
     en: "the strict sense: no pair of opposite arcs (check oriented, per arc address)",
@@ -211,6 +212,9 @@ export const LAYER_ROLE: Record<string, BilingualText> = {
   "wb-course": {
     en: "the diamond viewpoint: wb1 through the generic lens — the weights read through the diamond",
   },
+  "half-adder-course": {
+    en: "the circuit viewpoint: the half-adder through the circuit lens, positions = decisions (a, b left — gates center — s, c right)",
+  },
 };
 
 /** The corpus layers that carry a role sentence, in declaration order. */
@@ -266,6 +270,7 @@ export const LAYER_COLOR: Record<string, string> = {
   "pn-philosophers-5-course": "bg-emerald-600",
   "kahn-course": "bg-rose-700",
   "wb-course": "bg-amber-700",
+  "half-adder-course": "bg-lime-500",
   // the tutorial corpus names — the dedicated hierarchy the tutorial
   // page flattens; the same map feeds their badges, the hues mirror
   // the kernel's analogues (petri sky, philosophers violet/emerald,
@@ -283,10 +288,62 @@ export const LAYER_COLOR: Record<string, string> = {
  * — the generations align in horizontal bands. Extensible at
  * runtime: staged additions enter the living inventory, the corpus
  * ranks stay frozen. */
+/** Walk one layer's own tree and collect the layers its FIELDS cite
+ * (issue #235): any address value under a key other than `refines`,
+ * pointing at another inventoried layer. `refines` is inheritance —
+ * it is the solid arrow, never a usage edge. */
+export function collectUsageTargets({
+  layerTree,
+  layerName,
+  layerNames,
+}: {
+  layerTree: unknown;
+  layerName: string;
+  layerNames: readonly string[];
+}): string[] {
+  const known = new Set(layerNames);
+  const found = new Set<string>();
+  const walk = (node: unknown, key: string | null) => {
+    if (node instanceof AddressView) {
+      if (key !== "refines" && node.layer !== layerName && known.has(node.layer)) {
+        found.add(node.layer);
+      }
+      return;
+    }
+    if (node instanceof LayerReference) {
+      if (key !== "refines" && node.layer !== layerName && known.has(node.layer)) {
+        found.add(node.layer);
+      }
+      return;
+    }
+    if (Array.isArray(node)) {
+      for (const entry of node) walk(entry, key);
+      return;
+    }
+    if (node !== null && typeof node === "object") {
+      for (const [childKey, childValue] of Object.entries(node)) {
+        walk(childValue, childKey);
+      }
+    }
+  };
+  walk(layerTree, null);
+  return [...found].sort();
+}
+
 export class RefinementDag {
   private readonly targets: Record<string, string[]> = {};
   private readonly children: Record<string, string[]> = {};
   private readonly ranks: Record<string, number> = {};
+  /** The USAGE edges (issue #235): a layer uses another when one of
+   * its fields (any key but `refines`) cites the other layer's
+   * address — inheritance is the principal `refines`, usage is a
+   * field reference. */
+  private readonly uses: Record<string, string[]> = {};
+  /** The FAMILY of each layer (issue #231): its principal parent (the
+   * first refines target) — the common ancestor the layer shares with
+   * its siblings; the layer itself when it is a root. A generic
+   * grouping that covers the whole corpus, no DSL domain needed. */
+  private readonly families: Record<string, string> = {};
 
   constructor({ space, layerNames }: { space: Space; layerNames: readonly string[] }) {
     // the graph is read in the kernel space, never copied blindly
@@ -295,6 +352,7 @@ export class RefinementDag {
       this.targets[layerName] = ((layerTree && layerTree["refines"]) ?? [])
         .filter((entry: any) => entry instanceof LayerReference)
         .map((entry: any) => entry.layer);
+      this.uses[layerName] = collectUsageTargets({ layerTree, layerName, layerNames });
     }
     for (const layerName of layerNames) this.children[layerName] = [];
     for (const layerName of layerNames) {
@@ -305,6 +363,7 @@ export class RefinementDag {
       }
     }
     for (const layerName of layerNames) this.computeRank(layerName, new Set());
+    for (const layerName of layerNames) this.families[layerName] = this.computeFamily(layerName, new Set());
   }
 
   /** The memoized rank of a layer (computed for every inventoried
@@ -330,6 +389,40 @@ export class RefinementDag {
 
   targetsOf(layerName: string): string[] {
     return this.targets[layerName] ?? [];
+  }
+
+  /** The layers this layer USES in its fields (issue #235) — the
+   * dashed edges of the graph, distinct from the inheritance arrows. */
+  usesOf(layerName: string): string[] {
+    return this.uses[layerName] ?? [];
+  }
+
+  /** The family of a layer (issue #231): its principal parent — the
+   * layer itself when it has no parent. */
+  familyOf(layerName: string): string {
+    return this.families[layerName] ?? layerName;
+  }
+
+  /** All the families of the inventory, with their member counts,
+   * in inventory order — the chips of the hierarchy page. */
+  familiesOf(): { family: string; members: string[] }[] {
+    const byFamily = new Map<string, string[]>();
+    for (const layerName of Object.keys(this.families)) {
+      const family = this.families[layerName] ?? layerName;
+      byFamily.set(family, [...(byFamily.get(family) ?? []), layerName]);
+    }
+    return [...byFamily.entries()].map(([family, members]) => ({ family, members }));
+  }
+
+  private computeFamily(layerName: string, seenLayers: Set<string>): string {
+    const known = this.families[layerName];
+    if (known !== undefined) return known;
+    if (seenLayers.has(layerName)) return layerName;
+    seenLayers.add(layerName);
+    const principal = (this.targets[layerName] ?? [])[0];
+    const family = principal ?? layerName;
+    this.families[layerName] = family;
+    return family;
   }
 
   childrenOf(layerName: string): string[] {
@@ -369,8 +462,17 @@ export class RefinementDag {
   }
 
   /** Enter a staged addition into the living inventory. */
-  addLayer({ layerName, targets }: { layerName: string; targets: string[] }): void {
+  addLayer({
+    layerName,
+    targets,
+    uses = [],
+  }: {
+    layerName: string;
+    targets: string[];
+    uses?: string[];
+  }): void {
     this.targets[layerName] = targets;
+    this.uses[layerName] = uses;
     this.children[layerName] = [];
     for (const parent of targets) {
       if (this.children[parent] !== undefined) this.children[parent].push(layerName);
@@ -383,11 +485,20 @@ export class RefinementDag {
    * parents before joining the new ones, and the ranks are
    * recomputed (the graph is a projection of the space, never a
    * copy). */
-  retargetLayer({ layerName, targets }: { layerName: string; targets: string[] }): void {
+  retargetLayer({
+    layerName,
+    targets,
+    uses,
+  }: {
+    layerName: string;
+    targets: string[];
+    uses?: string[];
+  }): void {
     for (const parent of Object.keys(this.children)) {
       this.children[parent] = (this.children[parent] ?? []).filter((child) => child !== layerName);
     }
     this.targets[layerName] = targets;
+    if (uses !== undefined) this.uses[layerName] = uses;
     if (this.children[layerName] === undefined) this.children[layerName] = [];
     for (const parent of targets) {
       if (this.children[parent] !== undefined) this.children[parent].push(layerName);
@@ -396,7 +507,41 @@ export class RefinementDag {
     // depth of anyone downstream, everything is recomputed
     for (const name of Object.keys(this.targets)) delete this.ranks[name];
     for (const name of Object.keys(this.targets)) this.computeRank(name, new Set());
+    for (const name of Object.keys(this.targets)) delete this.families[name];
+    for (const name of Object.keys(this.targets)) this.computeFamily(name, new Set());
   }
+}
+
+// ---- the derived family axis (issue #363) ---------------------------
+// The cross-cutting filter of panel ①: one PIVOT layer per family,
+// designated explicitly as UI data of the corpus. A layer belongs to a
+// family when the pivot is in its refines closure — the axis is
+// DERIVED from the DAG, zero datum posed in the .ld files.
+
+/** The pivot layers of the family filter, in display order, with their
+ * bilingual chip label (English the default). */
+export const FAMILY_PIVOTS: { pivot: string; label: BilingualText }[] = [
+  { pivot: "petrinet-scheme", label: { en: "Petri nets", fr: "réseaux de Pétri" } },
+  { pivot: "automaton-scheme", label: { en: "automata", fr: "automates" } },
+  { pivot: "logic-circuit", label: { en: "circuits", fr: "circuits" } },
+  { pivot: "petrinet-statespace", label: { en: "state spaces", fr: "espaces d'états" } },
+  { pivot: "graph-display", label: { en: "lenses", fr: "lentilles" } },
+  { pivot: "view-scheme", label: { en: "viewpoints", fr: "points de vue" } },
+];
+
+/** The single closure read of the family filter: does the layer belong
+ * to the pivot's family (the pivot is in its refines closure, itself
+ * included)? Presentation-side only — the kernel never changes. */
+export function belongsToPivotFamily({
+  dag,
+  layerName,
+  pivot,
+}: {
+  dag: RefinementDag;
+  layerName: string;
+  pivot: string;
+}): boolean {
+  return dag.ancestorsOf(layerName).has(pivot);
 }
 
 /** One laid-out node of the graph. */

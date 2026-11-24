@@ -116,6 +116,9 @@ export async function composeVerifiedLayerDraft({
   language = DEFAULT_LANGUAGE,
   strictConflicts = false,
   strictChecks = false,
+  /** called as each refusal is recorded — the SSE route streams it
+   * to the client before the next round (issue #279) */
+  onRefusal,
   propose,
 }: {
   instruction: string;
@@ -141,6 +144,7 @@ export async function composeVerifiedLayerDraft({
    * strict arm of the loop (ADR-0101): the geologist may no longer
    * propose a layer whose carried constraints refuse it */
   strictChecks?: boolean;
+  onRefusal?: (refusal: PenRefusal) => void;
   propose: PenPropose;
 }): Promise<PenLoopOutcome> {
   const refusals: PenRefusal[] = [];
@@ -168,6 +172,7 @@ export async function composeVerifiedLayerDraft({
       refusal.feedback = formatPenFeedback(refusal, language);
       feedback = refusal.feedback;
       refusals.push(refusal);
+      onRefusal?.(refusal);
       continue;
     }
 
@@ -196,6 +201,7 @@ export async function composeVerifiedLayerDraft({
     refusal.feedback = formatPenFeedback(refusal, language);
     feedback = refusal.feedback;
     refusals.push(refusal);
+    onRefusal?.(refusal);
   }
 
   return { ok: false, attempts: budget, draftSource: null, staging: null, refusals };

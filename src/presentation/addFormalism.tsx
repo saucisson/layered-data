@@ -1,7 +1,7 @@
 // The living workshop composer (the ＋ button): the intention is
 // said, the geologist writes (or is generated), the staging judges, the
 // space extends. Dual mode: the local project (small proxy →
-// api.mistral.ai) when it answers, the simulated AI of the canvas
+// api.mistral.ai) when it answers, the simulated AI of the workshop
 // otherwise — degraded stream, deterministic, honestly labeled;
 // never a silent failure.
 
@@ -14,7 +14,8 @@ import {
   applyStagedAddition,
   type StagingOutcome,
 } from "../application/staging.ts";
-import { apiFetch } from "../infrastructure/wardrobeClient.ts";
+import { streamGenerate, GenerateHttpError } from "../infrastructure/wardrobeClient.ts";
+import { readMistralToken } from "../infrastructure/mistralToken.ts";
 import { labelOf, say } from "./i18n.ts";
 
 /** What the composer shows of the last staging: the staging
@@ -33,6 +34,13 @@ export interface AcceptedAddition {
   blocks: Record<string, string>;
   refinementTargets: Record<string, string[]>;
 }
+
+/** The geologist stream (issue #279): the wait is an INACTIVITY
+ * bound — reset at each SSE event — plus a total cap. A healthy
+ * large-model call is never aborted for being slow, only for going
+ * mute. */
+const GENERATE_INACTIVITY_TIMEOUT_MS = 120_000;
+const GENERATE_MAX_DURATION_MS = 600_000;
 
 export function AddFormalismComposer({
   kernel,
@@ -55,53 +63,124 @@ export function AddFormalismComposer({
   const [stagingProgress, setStagingProgress] = useState<{ done: number; total: number } | null>(
     null,
   );
+  // the two-pass stream (issue #279): the survey's ground, its
+  // clarifying questions, the rounds of the verified loop
+  const [surveyLine, setSurveyLine] = useState<string | null>(null);
+  const [surveyQuestions, setSurveyQuestions] = useState<string[] | null>(null);
+  const [answerText, setAnswerText] = useState("");
+  const [roundLine, setRoundLine] = useState<string | null>(null);
+  // LD-8 (ADR-0120 §3): the real geologist needs the personal Mistral
+  // token from Preferences — without it the button stays disabled and
+  // the plume says so, instead of failing opaquely on a 401.
+  const mistralToken = readMistralToken();
 
-  async function requestProposal() {
+  async function requestProposal({ answers = [] }: { answers?: string[] } = {}) {
+    if (mistralToken === null) return;
     setBusy(true);
+    setSurveyLine(null);
+    setSurveyQuestions(null);
+    setRoundLine(null);
     // Dual mode: the local proxy first, the degraded stream of the
     // canvas otherwise — a failed network geologist does not exist, the
     // source of the proposal always speaks.
     let origin = say({
       language,
-      en: "simulated AI — degraded stream of the canvas (no network, no key)",
+      en: "simulated AI — degraded stream of the workshop (no network, no key)",
     });
     let text = simulatedAssistantProposal({ intention, language });
     try {
-      const response = await apiFetch({
-        endpoint: "api/generate",
-        options: {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ prompt: intention }),
+      await streamGenerate({
+        intention,
+        answers,
+        inactivityTimeoutMs: GENERATE_INACTIVITY_TIMEOUT_MS,
+        maxDurationMs: GENERATE_MAX_DURATION_MS,
+        onEvent: (event) => {
+          switch (event.event) {
+            case "selection":
+              setSurveyLine(
+                event.fallback
+                  ? say({ language, en: "survey: no ground chosen — full column (fallback)" })
+                  : say({ language, en: "ground chosen by the survey: " }) +
+                      event.selected.map((name) => "@" + name).join(", "),
+              );
+              break;
+            case "questions":
+              setSurveyQuestions(event.questions);
+              break;
+            case "round":
+              setRoundLine(
+                say({ language, en: "verified loop — proposal #" }) + event.attempt + "…",
+              );
+              break;
+            case "refusal":
+              setRoundLine(
+                say({ language, en: "proposal #" }) +
+                  event.attempt +
+                  say({ language, en: " refused (" }) +
+                  event.verdicts.join(", ") +
+                  ")",
+              );
+              break;
+            case "draft":
+              origin = say({
+                language,
+                en: "api.mistral.ai — via the local project's proxy",
+              });
+              text = event.source;
+              break;
+            case "refused":
+              origin =
+                say({ language, en: "the geologist gave up after " }) +
+                event.attempts +
+                say({ language, en: " proposals; simulated AI of the canvas"});
+              break;
+            case "error":
+              // LD-8: a 401 on the live SSE path means the personal
+              // token was refused — say it in FR/EN, then degrade.
+              if (event.statusCode === 401) {
+                origin = say({
+                  language,
+                  en: "invalid Mistral API token (401) — fix it in Preferences; simulated AI of the canvas",
+                  fr: "token API Mistral invalide (401) — corrigez-le dans les Préférences ; IA simulée du canevas",
+                });
+              } else {
+                origin =
+                  say({ language, en: "the proxy answered " }) +
+                  event.statusCode +
+                  " : " +
+                  event.body.slice(0, 180) +
+                  say({ language, en: " ; simulated AI of the canvas"});
+              }
+              break;
+          }
         },
       });
-      if (response.ok) {
-        const proposedText = (await response.text()).trim();
-        if (proposedText.length > 0) {
-          origin = say({
-            language,
-            en: "api.mistral.ai — via the local project's proxy",
-          });
-          text = proposedText;
+    } catch (error) {
+      if (error instanceof GenerateHttpError) {
+        if (error.statusCode === 401) {
+          // LD-8: a 401 on the non-stream path. A session_required 401
+          // (LD-7) is not a token problem — never blame the token for
+          // it; any other 401 means the personal token was refused.
+          origin = error.body.includes("session_required")
+            ? say({
+                language,
+                en: "session required — sign in again; simulated AI of the canvas",
+                fr: "session requise — reconnectez-vous ; IA simulée du canevas",
+              })
+            : say({
+                language,
+                en: "invalid Mistral API token (401) — fix it in Preferences; simulated AI of the canvas",
+                fr: "token API Mistral invalide (401) — corrigez-le dans les Préférences ; IA simulée du canevas",
+              });
+        } else {
+          origin =
+            say({ language, en: "the proxy answered " }) +
+            error.statusCode +
+            " : " +
+            error.body.slice(0, 180) +
+            say({ language, en: " ; simulated AI of the canvas"});
         }
-      } else if (response.status === 401) {
-        origin = say({
-          language,
-          en: "protected proxy — access code required; simulated AI of the canvas",
-        });
-      } else {
-        // An upstream refusal speaks — refused key, unknown model,
-        // exhausted quota: never a mute "bad gateway", the error
-        // surfaces in the origin line.
-        const detail = (await response.text()).trim();
-        origin =
-          say({ language, en: "the proxy answered "}) +
-          response.status +
-          " : " +
-          detail.slice(0, 180) +
-          say({ language, en: " ; simulated AI of the canvas"});
       }
-    } catch {
       // simulated AI: the proposal is best-effort
     }
     setProposalOrigin(origin);
@@ -174,7 +253,7 @@ export function AddFormalismComposer({
           onChange={(event) => setIntention(event.target.value)}
           placeholder={say({
             language,
-            en: "intention — « a net whose arcs carry a charge »",
+            en: "intention — “ a net whose arcs carry a charge ”",
           })}
           className="min-w-40 flex-1 rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
         />
@@ -182,17 +261,69 @@ export function AddFormalismComposer({
           onClick={() => {
             void requestProposal();
           }}
-          disabled={busy}
+          disabled={busy || mistralToken === null}
+          title={
+            mistralToken === null
+              ? say({
+                  language,
+                  en: "Add your Mistral API token in Preferences to enable the AI",
+                  fr: "Ajoutez votre token API Mistral dans Préférences pour activer l’IA",
+                })
+              : undefined
+          }
           className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-slate-500 disabled:opacity-50"
         >
           {busy ? "…" : say({ language, en: "ask the AI"})}
         </button>
+        {mistralToken === null && (
+          <span className="text-[10px] leading-4 text-amber-700 dark:text-amber-400">
+            {say({
+              language,
+              en: "no Mistral API token — add yours in Preferences to ask the AI",
+              fr: "aucun token API Mistral — ajoutez le vôtre dans Préférences pour interroger l’IA",
+            })}
+          </span>
+        )}
       </div>
       {proposalOrigin !== null && (
         <p className="mb-1 text-[10px] text-slate-500 dark:text-slate-400">
           {say({ language, en: "draft proposed by: "})}
           {proposalOrigin}
         </p>
+      )}
+      {surveyLine !== null && (
+        <p className="mb-1 text-[10px] text-slate-500 dark:text-slate-400">{surveyLine}</p>
+      )}
+      {roundLine !== null && (
+        <p className="mb-1 text-[10px] text-slate-500 dark:text-slate-400">{roundLine}</p>
+      )}
+      {surveyQuestions !== null && surveyQuestions.length > 0 && (
+        <div className="mb-2 rounded border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-2">
+          {surveyQuestions.map((question, index) => (
+            <p key={index} className="text-[11px] leading-4 text-slate-700 dark:text-slate-200">
+              {say({ language, en: "question: " })}
+              {question}
+            </p>
+          ))}
+          <div className="mt-1 flex flex-wrap items-center gap-1.5">
+            <input
+              value={answerText}
+              onChange={(event) => setAnswerText(event.target.value)}
+              placeholder={say({ language, en: "your answer…" })}
+              className="min-w-40 flex-1 rounded border border-slate-200 dark:border-slate-700 px-2 py-1 text-xs"
+            />
+            <button
+              type="button"
+              onClick={() => {
+                void requestProposal({ answers: answerText.trim() ? [answerText.trim()] : [] });
+              }}
+              disabled={busy}
+              className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-slate-500 disabled:opacity-50"
+            >
+              {say({ language, en: "answer" })}
+            </button>
+          </div>
+        </div>
       )}
       <textarea
         value={draftSource}
@@ -265,7 +396,7 @@ export function AddFormalismComposer({
               {say({
                 language,
                 en:
-                  "staging: 0 verdict — " +
+                  "staging: 0 failed checks — " +
                   composerResult.newLayerNames.length +
                   " layer(s) entered the space: " +
                   composerResult.newLayerNames.join(", "),
@@ -276,7 +407,7 @@ export function AddFormalismComposer({
             <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1.5 text-[11px] leading-4 text-slate-600 dark:text-slate-400">
               {say({
                 language,
-                en: "staging: 0 verdict — but these layers are already in the space: nothing to add.",
+                en: "staging: 0 failed checks — but these layers are already in the space: nothing to add.",
               })}
             </div>
           )}

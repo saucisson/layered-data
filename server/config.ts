@@ -22,10 +22,22 @@ if (existsSync(environmentFilePath)) {
 export const VERSION = "2.25.0";
 export const PORT = Number(process.env.PORT ?? 8791);
 export const HOST = process.env.HOST ?? "127.0.0.1";
-export const API_TOKEN = process.env.API_TOKEN ?? "changez-moi";
-export const MISTRAL_API_KEY = process.env.MISTRAL_API_KEY ?? "";
+// LD-8 (ADR-0120 §3): in production the server NEVER holds a Mistral
+// key — every visitor brings their own token (the x-mistral-api-token
+// header on /api/generate). A MISTRAL_API_KEY set with
+// NODE_ENV=production is ignored, like AUTH_DISABLED=1 is forbidden
+// there (server/auth/service.ts): a server-side key is a dev-only
+// convenience.
+export const MISTRAL_API_KEY =
+  process.env.NODE_ENV === "production" ? "" : (process.env.MISTRAL_API_KEY ?? "");
 export const MISTRAL_URL = process.env.MISTRAL_URL ?? "https://api.mistral.ai/v1/chat/completions";
-export const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? "codestral-latest";
+export const MISTRAL_MODEL = process.env.MISTRAL_MODEL ?? "mistral-large-4";
+// The two-pass geologist (issue #279): the survey pass picks the
+// ground on a fast non-reasoning model, the pen pass writes on the
+// main model. The token ceilings keep each call bounded.
+export const SURVEY_MODEL = process.env.SURVEY_MODEL ?? "mistral-small-latest";
+export const SURVEY_MAX_TOKENS = Math.max(1, Number(process.env.SURVEY_MAX_TOKENS ?? 256));
+export const PEN_MAX_TOKENS = Math.max(1, Number(process.env.PEN_MAX_TOKENS ?? 4096));
 // The verified geologist loop: the number of proposals the staging may
 // judge before the route gives up and answers 422.
 export const MAX_PEN_ATTEMPTS = Math.max(1, Number(process.env.PEN_MAX_ATTEMPTS ?? 3));

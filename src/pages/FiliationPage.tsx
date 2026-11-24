@@ -8,7 +8,9 @@
 // last section displays what the workshop adds and what it does not.
 // The companion document is docs/archive/filiation.md, in the repository.
 
-import { useRouter } from "../components/Router";
+import { hashOf } from "../components/Router";
+import { PROSE_WIDTH } from "../components/PageShell";
+import { KERNEL_LAYER_NAMES } from "../application/corpus.ts";
 import { say } from "../presentation/i18n.ts";
 import { NotionText } from "../presentation/notions.tsx";
 import type { BilingualText } from "../presentation/i18n.ts";
@@ -31,7 +33,7 @@ const FILIATION_ERAS: FiliationEra[] = [
     years: "1974–1985",
     title: { en: "Frames and semantic networks"},
     text: {
-      en: "Minsky's frames (1974), then the typed semantic networks of KL-ONE (Brachman & Schmolze, 1985), lay down the whole gesture: linked concepts, slots carried by default, a read that walks the network when the local value is missing. The first-wins core sample is a frames semantics made total.",
+      en: "Minsky's frames (1974), then the typed semantic networks of KL-ONE (Brachman & Schmolze, 1985), lay down the whole gesture: linked concepts, slots carried by default, a read that walks the network when the local value is missing. The ⟪first-wins⟫ ⟪core sample⟫ is a frames semantics made total.",
     },
   },
   {
@@ -40,21 +42,21 @@ const FILIATION_ERAS: FiliationEra[] = [
       en: "Defaults and non-monotonic reasoning",
     },
     text: {
-      en: "Reiter's default logic (1980), McCarthy's circumscription (1980), Touretzky's mathematics of inheritance (1986), Brewka's tour (1991): reasoning that revises itself, and the specificity debate — which of two inherited values should win. The workshop answers with data: the order is the layer's refines list, not an engine heuristic.",
+      en: "Reiter's default logic (1980), McCarthy's circumscription (1980), Touretzky's mathematics of inheritance (1986), Brewka's tour (1991): reasoning that revises itself, and the specificity debate — which of two inherited values should win. The workshop answers with data: the order is the layer's ⟪refines⟫ list, not an engine heuristic.",
     },
   },
   {
     years: "1987–2003",
     title: { en: "Objects that compose"},
     text: {
-      en: "Self's prototypes (Ungar & Smith, 1987) erase the class: objects delegate to objects. CLOS (Bobrow et al., 1988) pays the multiple-inheritance diamond and settles it by computed linearization; mixins (Bracha & Cook, 1990) and traits (Schärli et al., 2003) refine the granularity; the metaobject protocol (1991) opens the engine itself as data. Same gesture, other discipline: here the order is laid in the data, and a conflict is refused.",
+      en: "Self's prototypes (Ungar & Smith, 1987) erase the class: objects delegate to objects. CLOS (Bobrow et al., 1988) pays the multiple-inheritance ⟪diamond⟫ and settles it by computed linearization; mixins (Bracha & Cook, 1990) and traits (Schärli et al., 2003) refine the granularity; the metaobject protocol (1991) opens the engine itself as data. Same gesture, other discipline: here the order is laid in the data, and an ⟪order conflict⟫ is refused.",
     },
   },
   {
     years: "1994–1996",
     title: { en: "The cascade on the web"},
     text: {
-      en: "Cascading Style Sheets (Lie's proposal, 1994; the W3C recommendation, 1996) merge declarations by origin, specificity and source order — a default inheritance over properties, for every page of the web. The proof that ordered override scales. The difference: the cascade's rules live coded in each browser; here the order lives in the data, and one measured operation reads it.",
+      en: "Cascading Style Sheets (Lie's proposal, 1994; the W3C recommendation, 1996) merge declarations by origin, specificity and source order — a default inheritance over properties, for every page of the web. The proof that ordered ⟪override⟫ scales. The difference: the cascade's rules live coded in each browser; here the order lives in the data, and one measured operation reads it.",
     },
   },
   {
@@ -68,7 +70,7 @@ const FILIATION_ERAS: FiliationEra[] = [
     years: "2004–2017",
     title: { en: "The semantic web's stack"},
     text: {
-      en: "RDF: everything is a triple, and the schema lives in the same space as the data — the classes are resources. OWL 2 (2012) layers the reasoning; SHACL (2017) puts constraints as data — the closest gesture to the workshop's checks. The difference: the open world, the commutative semantics, no strict first-wins on a path — and the workshop infers nothing.",
+      en: "RDF: everything is a triple, and the schema lives in the same space as the data — the classes are resources. OWL 2 (2012) layers the reasoning; SHACL (2017) puts constraints as data — the closest gesture to the workshop's ⟪check⟫s. The difference: the open world, the commutative semantics, no strict first-wins on a path — and the workshop infers nothing.",
     },
   },
   {
@@ -84,21 +86,21 @@ const FILIATION_ERAS: FiliationEra[] = [
     years: "2014–2019",
     title: { en: "The configuration languages"},
     text: {
-      en: "Jsonnet (2014) already thinks its object as a stack of layers — A + B, self late-bound. Kustomize (2017) makes the overlay the industrial gesture. CUE (2019, out of Google's GCL) chooses the other semantics: a single lattice, associative, commutative, idempotent — a conflict refuses. Layered data keeps the GCL bet — ordered override — and answers GCL's documented complexity by measurement: order conflicts are refused in strict staging, and the price is displayed.",
+      en: "Jsonnet (2014) already thinks its object as a stack of layers — A + B, self late-bound. Kustomize (2017) makes the overlay the industrial gesture. CUE (2019, out of Google's GCL) chooses the other semantics: a single lattice, associative, commutative, idempotent — a conflict refuses. Layered data keeps the GCL bet — ordered override — and answers GCL's documented complexity by measurement: ⟪order conflict⟫s are refused in strict ⟪staging⟫, and the price is displayed.",
     },
   },
   {
     years: "2016",
     title: { en: "The paper"},
     text: {
-      en: "Layered Data: A Modular Formal Definition without Formalisms (Linard, Barbot, Buchs, Colange, Démoulins, Hillah, Martin — PNSE'16, CEUR Vol-1591): no new formalism, one datum operation. Formalisms and models are layered data; the closure and first-wins read them; unions, masks, citations and late binding compose them.",
+      en: "Layered Data: A Modular Formal Definition without Formalisms (Linard, Barbot, Buchs, Colange, Démoulins, Hillah, Martin — PNSE'16, CEUR Vol-1591): no new formalism, one datum operation. Formalisms and models are layered data; the ⟪closure⟫ and ⟪first-wins⟫ read them; unions, masks, citations and ⟪late binding⟫ compose them.",
     },
   },
   {
     years: "2024–2026",
     title: { en: "This workshop"},
     text: {
-      en: "The idea made executable: 85 layers shipped as .ld files read by one kernel, a specification verified by property, contracts replayed at every assembly, a staged assisted-writing protocol — and every number cited on this site measured by a standalone harness.",
+      en: "The idea made executable: " + KERNEL_LAYER_NAMES.length + " layers shipped as .ld files read by one kernel, a specification verified by property, contracts replayed at every assembly, an assisted-writing protocol through the ⟪staging⟫ — and every number cited on this site measured by a standalone harness.",
     },
   },
 ];
@@ -215,22 +217,22 @@ const COMPARISON_ROWS: ComparisonRow[] = [
  * aloud. */
 const WORKSHOP_ADDS: BilingualText[] = [
   {
-    en: "One writing, one reading. Schema, instance, constraint and rendering are layers; closure then first-wins reads them all with the same operation, from formalism to datum.",
+    en: "One writing, one reading. Schema, instance, constraint and rendering are ⟪layer⟫s; ⟪closure⟫ then ⟪first-wins⟫ reads them all with the same operation, from formalism to datum.",
   },
   {
-    en: "Order as structure. The inheritance conflict is settled by the data — the refines list — never by the engine; the refusal of conflicts is measured.",
+    en: "Order as structure. The inheritance conflict is settled by the data — the ⟪refines⟫ list — never by the engine; the refusal of ⟪order conflict⟫s is measured.",
   },
   {
     en: "A normative specification verified by property. The obligations and conformances of docs/specification.md are replayed as measures by the harness — conformance measured, not theorems.",
   },
   {
-    en: "Contracts carried by the data. Checks travel in the layers, the registry is itself a layer, the bedrock is read-only by protocol — verification is data, not code.",
+    en: "Contracts carried by the data. ⟪Check⟫s travel in the ⟪layer⟫s, the registry is itself a ⟪layer⟫, the ⟪bedrock⟫ is read-only by protocol — verification is data, not code.",
   },
   {
     en: "An assisted-writing protocol. The geologist proposes, staging judges: the proposal is a staged layer, never a truth, and the refusal is spoken.",
   },
   {
-    en: "Everything is data. The 85 layers of the base are .ld files read by the same kernel as the visitors' layers — the metamodel does not write itself here: it loads.",
+    en: "Everything is data. The " + KERNEL_LAYER_NAMES.length + " layers of the base are .ld files read by the same kernel as the visitors' layers — the metamodel does not write itself here: it loads.",
   },
 ];
 
@@ -338,13 +340,12 @@ const PRINTED_REFERENCES: string[] = [
 ];
 
 export function FiliationPage({ language }: FiliationPageProps) {
-  const { navigate } = useRouter();
 
   const cell = (text: BilingualText) => say({ language, en: text.en});
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-4xl space-y-12 p-4 sm:p-8">
+      <div className={"mx-auto " + PROSE_WIDTH + " space-y-12 p-4 sm:p-8"}>
         <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "Filiation — history and comparison" })}
         </h1>
@@ -353,7 +354,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
             <NotionText
               text={say({
                 language,
-                en: "This idea did not fall from the sky. Layered data is the latest stratum of a long sediment: knowledge representation, object languages, the style sheets of the web, product lines, configuration languages, modeling stacks. This page walks that lineage — for the honesty of the story, not for the comfort of a name — then measures the differences: two axes read the neighbors, a table compares them side by side, and the last section says what the workshop adds and what it does not — the tutorial explains the gesture, this page names the ancestors. The companion document is docs/filiation.md, in the repository.",
+                en: "This idea did not fall from the sky. Layered data is the latest stratum of a long sediment: knowledge representation, object languages, the style sheets of the web, product lines, configuration languages, modeling stacks. This page walks that lineage — for the honesty of the story, not for the comfort of a name — then measures the differences: two axes read the neighbors, a table compares them side by side, and the last section says what the workshop adds and what it does not — the tutorial explains the gesture, this page names the ancestors. The companion document is docs/archive/filiation.md, in the repository.",
               })}
               language={language}
             />
@@ -398,7 +399,7 @@ export function FiliationPage({ language }: FiliationPageProps) {
             <NotionText
               text={say({
                 language,
-                en: "Ask two questions of every system on this page. How do the strata merge: by ordered override — an order decides, the first that speaks wins — or by commutative unification — the merge is order-free, a conflict refuses? And how many ontological floors: fixed levels — a wall between the schema and the data, instantiation the only crossing — or a ⟪continuum⟫, where formalisms and models are the same kind of thing? The grid below places the neighbors; it is a lamp, not a verdict — Jsonnet and Kustomize carry no ontology at all (their merge is about values), and MOF/EMF stands outside the grid: floors without merge.",
+                en: "Ask two questions of every system on this page. How do the strata merge: by ordered ⟪override⟫ — an order decides, the ⟪first-wins⟫ that speaks wins — or by commutative unification — the merge is order-free, an ⟪order conflict⟫ refuses? And how many ontological floors: fixed levels — a wall between the schema and the data, instantiation the only crossing — or a ⟪continuum⟫, where formalisms and models are the same kind of thing? The grid below places the neighbors; it is a lamp, not a verdict — Jsonnet and Kustomize carry no ontology at all (their merge is about values), and MOF/EMF stands outside the grid: floors without merge.",
               })}
               language={language}
             />
@@ -582,24 +583,21 @@ export function FiliationPage({ language }: FiliationPageProps) {
         </section>
 
         <div className="flex justify-center gap-4 pt-4">
-          <button type="button"
-            onClick={() => navigate("landing")}
+          <a href={hashOf("landing")}
             className="rounded-lg border-2 border-slate-300 dark:border-slate-600 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-colors"
           >
-            {say({ language, en: "← Landing"})}
-          </button>
-          <button type="button"
-            onClick={() => navigate("tutorial")}
+            {say({ language, en: "← Home"})}
+          </a>
+          <a href={hashOf("tutorial")}
             className="rounded-lg border-2 border-sky-600 px-6 py-3 text-sky-600 dark:text-sky-400 font-semibold hover:bg-sky-50 dark:hover:bg-sky-950 transition-colors"
           >
             {say({ language, en: "Tutorial →"})}
-          </button>
-          <button type="button"
-            onClick={() => navigate("workshop")}
+          </a>
+          <a href={hashOf("formalisms")}
             className="rounded-lg bg-sky-600 dark:bg-sky-700 px-6 py-3 text-white font-semibold hover:bg-sky-500 dark:hover:bg-sky-600 transition-colors"
           >
             {say({ language, en: "Workshop →"})}
-          </button>
+          </a>
         </div>
 
         <footer className="border-t border-slate-200 dark:border-slate-700 pt-6 text-center text-xs text-slate-600 dark:text-slate-400">

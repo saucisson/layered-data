@@ -7,8 +7,9 @@
 // (#formalism/wb1): the address is the artifact, the URL is the
 // state.
 
-import React, { useMemo, useState } from "react";
-import { useRouter } from "../components/Router";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { hashOf } from "../components/Router";
+import { WIDE_WIDTH } from "../components/PageShell";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import { extractLayerBlock } from "../application/staging.ts";
 import {
@@ -16,6 +17,7 @@ import {
   writeFlattenedLayerSections,
   type FlattenedLayerText,
   type FlattenedSection,
+  type FlattenedTarget,
 } from "../application/flattenSource.ts";
 import {
   materializeSessionAdditions,
@@ -24,14 +26,18 @@ import {
 } from "../application/session.ts";
 import { loadKernelLayerSources } from "../infrastructure/corpusLoader.ts";
 import { asLayerName } from "../domain/identifiers.ts";
-import { highlightSourceLine, SPAN_CLASSES } from "../presentation/layerSourceView.tsx";
+import {
+  buildSourceLineTargets,
+  highlightSourceLine,
+  SPAN_CLASSES,
+  type SourceLineTarget,
+} from "../presentation/layerSourceView.tsx";
 import { buildWorkshopLook, type WorkshopLook } from "../presentation/lensDrawing.ts";
 import { LAYER_COLOR, LAYER_ROLE, RefinementDag } from "../presentation/workshopInventory.ts";
-import { LENS_LAYERS, VIEW_NOTES } from "../presentation/viewTree.ts";
+import { lensLayers, viewNote } from "../presentation/viewTree.ts";
 import { NodeGlyph, EdgeGlyph } from "../presentation/glyphs.tsx";
 import { StratigraphyView } from "../presentation/stratigraphyView.tsx";
 import { localized, say } from "../presentation/i18n.ts";
-import type { BilingualText } from "../presentation/i18n.ts";
 import type { Language } from "../domain/messages.ts";
 
 interface FormalismPageProps {
@@ -43,12 +49,31 @@ interface FormalismPageProps {
 // the single source, never an embedded copy. The session
 // additions materialize into it at each mount, idempotently.
 const KERNEL = assembleLayeredDataKernel({ layerSources: loadKernelLayerSources() });
+
+// The line-target table of the corpus (issue #224): each written line
+// designates the address it writes — clicking it reveals the
+// equivalent entry in the flattened view.
+const SOURCE_LINE_TARGETS = buildSourceLineTargets({ parsedLanguage: KERNEL.parsedLanguage });
 const DEFAULT_FORMALISM_LAYER = "multihypergraph";
 
 /** One DSL text, rendered with the workshop's own highlighter —
  * same colors as the language tab of the workshop: violet for the
  * acts, green for the @paths, amber for the strings. */
-function SourceText({ source, maxHeightClass }: { source: string; maxHeightClass: string }) {
+function SourceText({
+  source,
+  maxHeightClass,
+  parsedLayer,
+  revealable,
+  onLine,
+  language,
+}: {
+  source: string;
+  maxHeightClass: string;
+  parsedLayer: { name: string; line: number } | null;
+  revealable: Set<string>;
+  onLine: (target: SourceLineTarget) => void;
+  language: Language;
+}) {
   return (
     <div
       className={
@@ -56,22 +81,75 @@ function SourceText({ source, maxHeightClass }: { source: string; maxHeightClass
         maxHeightClass
       }
     >
-      {source.split("\n").map((line, index) => (
-        <div key={index} className="flex">
-          <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500 dark:text-slate-400">
-            {index + 1}
-          </span>
-          <span className="whitespace-pre">
-            {highlightSourceLine(line).map((span, spanIndex) => (
-              <span key={spanIndex} className={SPAN_CLASSES[span.kind]}>
-                {span.text}
-              </span>
-            ))}
-          </span>
-        </div>
-      ))}
+      {source.split("\n").map((line, index) => {
+        // Displayed line `index` (0-based) is the source line
+        // parsedLayer.line + index: the block is extracted from its
+        // "layer" line.
+        const rawTarget =
+          parsedLayer !== null ? SOURCE_LINE_TARGETS.get(parsedLayer.line + index) : undefined;
+        const lineTarget =
+          rawTarget !== undefined &&
+          revealable.has(rawTarget.path.join("/") + "::" + (rawTarget.key ?? ""))
+            ? rawTarget
+            : undefined;
+        return (
+          <div
+            key={index}
+            className={
+              "flex " +
+              (lineTarget !== undefined
+                ? "cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 dark:bg-slate-800 rounded"
+                : "")
+            }
+            onClick={lineTarget !== undefined ? () => onLine(lineTarget) : undefined}
+            title={
+              lineTarget !== undefined
+                ? say({
+                    language,
+                    en:
+                      "reveal what this line writes in the flattened formalism — address " +
+                      lineTarget.layer +
+                      "/" +
+                      (lineTarget.path.length ? lineTarget.path.join("/") : "()") +
+                      (lineTarget.key !== null ? " :: " + lineTarget.key : ""),
+                  })
+                : undefined
+            }
+          >
+            <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500 dark:text-slate-400">
+              {index + 1}
+            </span>
+            <span className="whitespace-pre">
+              {highlightSourceLine(line).map((span, spanIndex) => (
+                <span key={spanIndex} className={SPAN_CLASSES[span.kind]}>
+                  {span.text}
+                </span>
+              ))}
+            </span>
+          </div>
+        );
+      })}
     </div>
   );
+}
+
+/** The revealable addresses of a flattened text: "path::key" of every
+ * section — a DSL line is clickable only when its target exists here
+ * (issue #224: no dead clicks). */
+function collectFlattenedTargetKeys({
+  sections,
+}: {
+  sections: FlattenedSection[];
+}): Set<string> {
+  const keys = new Set<string>();
+  const walk = (list: FlattenedSection[]) => {
+    for (const section of list) {
+      keys.add(section.target.path.join("/") + "::" + (section.target.key ?? ""));
+      walk(section.sections);
+    }
+  };
+  walk(sections);
+  return keys;
 }
 
 /** One key of a section in the fold state: the path of indices from
@@ -100,10 +178,70 @@ function collectSectionKeys({
  * away, the artifact never floods the page and is never truncated
  * either. The line numbers are those of the complete text: what
  * folds hides lines, it never renumbers them. */
-function FlattenedText({ text, language }: { text: FlattenedLayerText; language: Language }) {
+function FlattenedText({
+  text,
+  language,
+  reveal,
+}: {
+  text: FlattenedLayerText;
+  language: Language;
+  reveal: { target: FlattenedTarget; nonce: number } | null;
+}) {
   const [folded, setFolded] = useState<Set<string>>(
     () => new Set(collectSectionKeys({ sections: text.sections, prefix: "" })),
   );
+  const [flashKey, setFlashKey] = useState<string | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Issue #224: a click on a DSL line reveals the equivalent entry
+  // here — the ancestors unfold, the entry scrolls into view and
+  // flashes once.
+  useEffect(() => {
+    if (reveal === null) return;
+    const target = reveal.target;
+    const pathKey = target.path.join("/");
+    const walk = (
+      sections: FlattenedSection[],
+      prefix: string,
+      ancestors: string[],
+    ): { key: string; ancestors: string[] } | null => {
+      for (let index = 0; index < sections.length; index++) {
+        const section = sections[index];
+        if (section === undefined) continue;
+        const key = prefix + index;
+        if (section.target.path.join("/") === pathKey && section.target.key === target.key) {
+          return { key, ancestors };
+        }
+        if (section.sections.length > 0) {
+          const nested = walk(section.sections, key + ".", [...ancestors, key]);
+          if (nested !== null) return nested;
+        }
+      }
+      return null;
+    };
+    const found = walk(text.sections, "", []);
+    if (found === null) return;
+    const { key, ancestors } = found;
+    setFolded((previous) => {
+      const next = new Set(previous);
+      for (const ancestor of ancestors) next.delete(ancestor);
+      return next;
+    });
+    const frame = requestAnimationFrame(() => {
+      const element = containerRef.current?.querySelector(`[data-flat-key="${key}"]`);
+      element?.scrollIntoView({ block: "center" });
+      setFlashKey(key);
+      flashTimerRef.current = setTimeout(
+        () => setFlashKey((current) => (current === key ? null : current)),
+        1600,
+      );
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+      if (flashTimerRef.current !== null) clearTimeout(flashTimerRef.current);
+    };
+  }, [reveal, text]);
   const lineNumbers = useMemo(() => {
     const numbers = new Map<string, number>();
     let next = text.headerLines.length;
@@ -145,7 +283,13 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
     const hasSections = section.sections.length > 0;
     const isFolded = folded.has(key);
     const nodes: React.ReactNode[] = [
-      <div key={key} className="flex">
+      <div
+        key={key}
+        data-flat-key={key}
+        className={
+          "flex rounded " + (flashKey === key ? "bg-amber-100 dark:bg-amber-900/40" : "")
+        }
+      >
         <span className="mr-3 w-8 shrink-0 select-none text-right text-slate-500 dark:text-slate-400">
           {lineNumbers.get(key)}
         </span>
@@ -190,7 +334,10 @@ function FlattenedText({ text, language }: { text: FlattenedLayerText; language:
     return nodes;
   };
   return (
-    <div className="overflow-auto rounded-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4 max-h-[32rem]">
+    <div
+      ref={containerRef}
+      className="overflow-auto rounded-md border border-slate-100 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 p-2 font-mono text-[11px] leading-4 max-h-[32rem]"
+    >
       <div className="mb-1 flex flex-wrap gap-2">
         <button type="button"
           onClick={() => setFolded(new Set())}
@@ -230,23 +377,30 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
   return (
     <svg viewBox={look.frame ?? "0 0 270 220"} className="w-full rounded bg-white dark:bg-slate-800">
       {look.edges.map((edge) => {
-        const from =
+        const fromVertex =
           edge.from !== null
-            ? (look.vertices.find((vertex) => vertex.name === edge.from)?.position ?? null)
+            ? (look.vertices.find((vertex) => vertex.name === edge.from) ?? null)
             : null;
-        const to =
+        const toVertex =
           edge.to !== null
-            ? (look.vertices.find((vertex) => vertex.name === edge.to)?.position ?? null)
+            ? (look.vertices.find((vertex) => vertex.name === edge.to) ?? null)
             : null;
+        const from = fromVertex?.position ?? null;
+        const to = toVertex?.position ?? null;
         if (!from || !to) return null;
         return (
           <EdgeGlyph
             key={edge.name}
             name={edge.name}
             shape={edge.drawn ? edge.drawn.spec : null}
+            fnContext={edge.fnContext}
             weight={edge.weight}
             from={from}
             to={to}
+            fromShape={fromVertex?.drawn ? fromVertex.drawn.spec : null}
+            fromSize={fromVertex?.size}
+            toShape={toVertex?.drawn ? toVertex.drawn.spec : null}
+            toSize={toVertex?.size}
             selected={selectedGlyph === edge.name}
             onPick={() => setSelectedGlyph(selectedGlyph === edge.name ? null : edge.name)}
           />
@@ -259,7 +413,10 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
             key={vertex.name}
             name={vertex.name}
             shape={vertex.drawn ? vertex.drawn.spec : null}
+            draw={vertex.drawn ? vertex.drawn.draw : null}
+            fnContext={vertex.fnContext}
             position={vertex.position}
+            size={vertex.size}
             selected={selectedGlyph === vertex.name}
             onPick={() => setSelectedGlyph(selectedGlyph === vertex.name ? null : vertex.name)}
           />
@@ -275,7 +432,6 @@ function LensDrawing({ look, language }: { look: WorkshopLook; language: Languag
 }
 
 export function FormalismPage({ layer, language }: FormalismPageProps) {
-  const { navigate } = useRouter();
   // The session version moves at each accepted addition and at each
   // re-pin (issue #154): the materialization replays, the page stays
   // in step.
@@ -284,6 +440,9 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
   const livingLayerNames = session.layerNames;
   const [search, setSearch] = useState("");
   const [lensChoice, setLensChoice] = useState<string | null>(null);
+  // Issue #224: the last DSL line clicked — its address is revealed
+  // (unfolded, scrolled to, flashed) in the flattened view.
+  const [reveal, setReveal] = useState<{ target: FlattenedTarget; nonce: number } | null>(null);
   const dag = useMemo(
     () => new RefinementDag({ space: KERNEL.space, layerNames: livingLayerNames }),
     [livingLayerNames],
@@ -291,6 +450,8 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
   const selectedLayer = livingLayerNames.includes(asLayerName(layer))
     ? layer
     : DEFAULT_FORMALISM_LAYER;
+  // An unknown layer in the address is said, not silently defaulted (#304)
+  const unknownLayerRequested = layer !== "" && !livingLayerNames.includes(asLayerName(layer));
   const inCorpus = KERNEL.layerNames.includes(asLayerName(selectedLayer));
   const needle = search.trim().toLowerCase();
   const matchedLayerNames = livingLayerNames.filter(
@@ -306,6 +467,12 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
     () => writeFlattenedLayerSections({ space: KERNEL.space, layer: asLayerName(selectedLayer) }),
     [selectedLayer],
   );
+  const parsedLayer =
+    KERNEL.parsedLanguage.layers.find((entry) => entry.name === selectedLayer) ?? null;
+  const revealable = useMemo(
+    () => collectFlattenedTargetKeys({ sections: flattenedText.sections }),
+    [flattenedText],
+  );
 
   // The identity of the layer: its role sentence, its parents, its
   // closure towards the bases.
@@ -320,7 +487,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
   // something.
   const looks = useMemo(
     () =>
-      LENS_LAYERS.map((lens) => ({
+      lensLayers({ space: KERNEL.space }).map((lens) => ({
         lens,
         look: buildWorkshopLook({
           space: KERNEL.space,
@@ -338,13 +505,16 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-6xl p-4 sm:p-6">
+      <div className={"mx-auto " + WIDE_WIDTH + " p-4 sm:p-6"}>
         <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "The formalism — understand one layer" })}
         </h1>
+        <div className="grid items-start gap-4 lg:grid-cols-[260px_minmax(0,1fr)]">
         {/* The choice of the layer: the search fades, the click
-            navigates — the hash carries the address. */}
-        <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
+            navigates — the hash carries the address. The list lives
+            in the left column (issue #226), sticky while the
+            formalism scrolls on the right. */}
+        <section className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3 lg:sticky lg:top-20">
           <div className="mb-2 flex flex-wrap items-center gap-2">
             <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
               {say({ language, en: "One layer"})}
@@ -363,13 +533,13 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
               })}
             </span>
           </div>
-          <div className="flex max-h-24 flex-wrap gap-1.5 overflow-y-auto">
+          <div className="flex max-h-64 flex-col gap-1 overflow-y-auto lg:max-h-[calc(100vh-12rem)]">
             {matchedLayerNames.map((layerName) => (
-              <button type="button"
+              <a
                 key={layerName}
-                onClick={() => navigate("formalism", layerName)}
+                 href={hashOf("formalism", layerName)}
                 className={
-                  "flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] transition-colors " +
+                  "flex items-center gap-1.5 rounded border px-2 py-1 text-left font-mono text-[10px] transition-colors " +
                   (layerName === selectedLayer
                     ? "border-slate-900 dark:border-slate-100 bg-slate-50 dark:bg-slate-900 ring-1 ring-slate-900 dark:ring-slate-100"
                     : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-500 dark:hover:border-slate-400")
@@ -381,10 +551,22 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                   }
                 />
                 {layerName}
-              </button>
+              </a>
             ))}
           </div>
         </section>
+
+        <div className="min-w-0 space-y-4">
+
+        {unknownLayerRequested && (
+          <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:border-amber-700 dark:bg-amber-900/40 dark:text-amber-200">
+            {say({
+              language,
+              en:
+                'unknown layer "' + layer + '" — showing the default (' + DEFAULT_FORMALISM_LAYER + ") instead",
+            })}
+          </p>
+        )}
 
         {/* The identity: role, parents, closure. */}
         <section className="mb-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
@@ -408,9 +590,9 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 <span className="font-mono text-slate-600 dark:text-slate-400">∅</span>
               ) : (
                 parentNames.map((parentName) => (
-                  <button type="button"
+                  <a
                     key={parentName}
-                    onClick={() => navigate("formalism", parentName)}
+                     href={hashOf("formalism", parentName)}
                     className="underline decoration-slate-300 dark:decoration-slate-600 hover:text-slate-900 dark:hover:text-slate-100"
                   >
                     <span
@@ -420,7 +602,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                       }
                     />
                     {parentName}
-                  </button>
+                  </a>
                 ))
               )}
             </div>
@@ -432,9 +614,9 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 })}
               </span>
               {closureNames.map((closureName) => (
-                <button type="button"
+                <a
                   key={closureName}
-                  onClick={() => navigate("formalism", closureName)}
+                   href={hashOf("formalism", closureName)}
                   className="underline decoration-slate-300 dark:decoration-slate-600 hover:text-slate-900 dark:hover:text-slate-100"
                 >
                   <span
@@ -444,7 +626,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                     }
                   />
                   {closureName}
-                </button>
+                </a>
               ))}
             </div>
           </div>
@@ -473,7 +655,19 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 })}
               </p>
             ) : (
-              <SourceText source={sourceBlock} maxHeightClass="max-h-[32rem]" />
+              <SourceText
+                source={sourceBlock}
+                maxHeightClass="max-h-[32rem]"
+                parsedLayer={parsedLayer}
+                revealable={revealable}
+                language={language}
+                onLine={(target) =>
+                  setReveal({
+                    target: { layer: target.layer, path: target.path, key: target.key },
+                    nonce: Date.now(),
+                  })
+                }
+              />
             )}
           </div>
           <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
@@ -489,7 +683,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                 en: "The whole closure, resolved in place — first-wins decides: every key carries its effective value and, as a comment, the layer that provides it (or declares the slot nobody provides — abstract). refines is absent: the hierarchy is what the flattening removes. Each indented part folds: one click hides it, one click opens it.",
               })}
             </p>
-            <FlattenedText text={flattenedText} language={language} />
+            <FlattenedText text={flattenedText} language={language} reveal={reveal} />
           </div>
         </section>
 
@@ -541,8 +735,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
                   {localized({
                     language,
                     text:
-                      VIEW_NOTES[selectedLookEntry.lens] ??
-                      ({ en: selectedLookEntry.lens} as BilingualText),
+                      viewNote({ space: KERNEL.space, layer: selectedLookEntry.lens }),
                   })}
                 </p>
                 <p className="text-slate-500 dark:text-slate-400">
@@ -582,7 +775,7 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
           <p className="mb-2 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
             {say({
               language,
-              en: "The closure of the formalism as strata: one row per formalism with the major its reference pins (a bare name resolves to the latest frozen of the latest major), what it refines, and its status. A diamond pinned to divergent majors is a version-conflict, shown as its two paths; when the measured dump is unchanged under a re-pin, the re-pin is suggested one click.",
+              en: "The closure of the formalism as strata: one row per formalism: the major version its reference pins, what it refines, its status — a bare name resolves to the latest frozen version of the latest major. A diamond pinned to divergent majors is a version-conflict, shown as its two paths; when the measured dump is unchanged under a re-pin, the re-pin is suggested one click.",
             })}
           </p>
           <StratigraphyView
@@ -603,6 +796,8 @@ export function FormalismPage({ layer, language }: FormalismPageProps) {
             }}
           />
         </section>
+        </div>
+        </div>
       </div>
     </div>
   );

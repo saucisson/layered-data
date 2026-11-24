@@ -1,60 +1,108 @@
-// Navigation E2E (issue #197): the shared top menu is present on every
-// route, its six entries are real links to the right hashes, the current
-// page carries aria-current="page", and clicking an entry navigates and
-// re-highlights.
+// Navigation E2E (issue #197, reworked for LD-9): the shared top menu
+// presents the three zones of the common contract — Home (plain link),
+// Discover and Workshop (popovers listing their pages). The menu is
+// present on every route, the current zone carries aria-current="page",
+// and clicking a zone entry navigates and re-highlights.
 import { test, expect } from "@playwright/test";
 
 const MENU = 'header nav[aria-label="Main navigation"]';
 
-const ROUTES: ReadonlyArray<{ hash: string; label: string }> = [
-  { hash: "#landing", label: "Landing" },
-  { hash: "#tutorial", label: "Tutorial" },
-  { hash: "#filiation", label: "Filiation" },
-  { hash: "#hierarchy", label: "Hierarchy" },
-  { hash: "#creation", label: "Creation" },
-  { hash: "#workshop", label: "Workshop" },
-  { hash: "#editor", label: "Editor" },
+// zone label -> hash of a page inside the zone, and the zone's page links
+const ZONES: ReadonlyArray<{ zone: string; hash: string; links: ReadonlyArray<{ hash: string; label: string }> }> = [
+  {
+    zone: "Home",
+    hash: "#landing",
+    links: [{ hash: "#landing", label: "Home" }],
+  },
+  {
+    zone: "Discover",
+    hash: "#tutorial",
+    links: [
+      { hash: "#tutorial", label: "Tutorial" },
+      { hash: "#filiation", label: "Filiation" },
+      { hash: "#lenses", label: "Lenses" },
+      { hash: "#install", label: "Install" },
+    ],
+  },
+  {
+    zone: "Workshop",
+    hash: "#formalisms",
+    links: [
+      { hash: "#formalisms", label: "Formalisms" },
+      { hash: "#models", label: "Models" },
+      { hash: "#hierarchy", label: "Hierarchy" },
+      { hash: "#creation", label: "Creation" },
+    ],
+  },
 ];
 
-// Routes on which no menu entry is active (detail pages).
-const NO_ACTIVE: ReadonlyArray<string> = ["#formalism/petrinet", "#nimportequoi"];
+// route hash -> the zone that must be highlighted
+const ROUTE_ZONE: ReadonlyArray<{ hash: string; zone: string }> = [
+  { hash: "#landing", zone: "Home" },
+  { hash: "#tutorial", zone: "Discover" },
+  { hash: "#filiation", zone: "Discover" },
+  { hash: "#lenses", zone: "Discover" },
+  { hash: "#install", zone: "Discover" },
+  { hash: "#formalisms", zone: "Workshop" },
+  { hash: "#models", zone: "Workshop" },
+  { hash: "#hierarchy", zone: "Workshop" },
+  { hash: "#creation", zone: "Workshop" },
+  { hash: "#formalism/petrinet", zone: "Workshop" },
+];
 
-test.describe("global navigation menu", () => {
-  for (const { hash, label } of ROUTES) {
-    test(`menu visible on ${hash} with ${label} highlighted`, async ({ page }) => {
+test.describe("global navigation zones (LD-9)", () => {
+  for (const { hash, zone } of ROUTE_ZONE) {
+    test(`menu visible on ${hash} with ${zone} highlighted`, async ({ page }) => {
       await page.goto("/" + hash);
       const nav = page.locator(MENU);
-      await expect(nav).toBeVisible();
-      // seven plain-text entries, real hash links
-      const links = nav.locator("a");
-      await expect(links).toHaveCount(7);
-      for (const { hash: entryHash, label: entryLabel } of ROUTES) {
-        await expect(links.filter({ hasText: entryLabel })).toHaveAttribute("href", entryHash);
-      }
-      // exactly the current page is highlighted
-      await expect(nav.locator('a[aria-current="page"]')).toHaveText(label);
+      // the header sits inside the route Suspense: on a cold CI start the
+      // page chunk (the workshop is the heavy one) can take longer than
+      // the 5 s default — same assertion, cold-start budget
+      await expect(nav).toBeVisible({ timeout: 10_000 });
+      // three zones: one plain link (Home) + two popover buttons
+      await expect(nav.locator("a")).toHaveCount(1);
+      await expect(nav.locator("button")).toHaveCount(2);
+      // exactly the current zone is highlighted
+      const active = nav.locator('[aria-current="page"]');
+      await expect(active).toHaveCount(1);
+      await expect(active).toHaveText(zone);
     });
   }
 
-  test("#editor highlights its own Editor entry (two top-level pages, #216)", async ({ page }) => {
-    await page.goto("/#editor");
-    await expect(page.locator(`${MENU} a[aria-current="page"]`)).toHaveText("Editor");
+  test("no zone highlighted on an unknown route", async ({ page }) => {
+    await page.goto("/#nimportequoi");
+    await expect(page.locator(`${MENU} [aria-current="page"]`)).toHaveCount(0);
   });
 
-  for (const hash of NO_ACTIVE) {
-    test(`no entry highlighted on ${hash}`, async ({ page }) => {
-      await page.goto("/" + hash);
-      await expect(page.locator(`${MENU} a[aria-current="page"]`)).toHaveCount(0);
-    });
-  }
+  test("each zone popover lists its pages as real hash links", async ({ page }) => {
+    await page.goto("/#landing");
+    for (const { zone, links } of ZONES) {
+      if (links.length === 1) continue; // Home is a plain link
+      await page.locator(MENU).getByRole("button", { name: zone }).click();
+      for (const { hash, label } of links) {
+        await expect(page.locator(MENU).locator("a").filter({ hasText: label })).toHaveAttribute("href", hash);
+      }
+      await page.keyboard.press("Escape");
+    }
+  });
 
-  test("clicking each menu entry navigates to its page and re-highlights", async ({ page }) => {
+  test("clicking a zone entry navigates to its page and re-highlights", async ({ page }) => {
     await page.goto("/#landing");
     await expect(page.locator(MENU)).toBeVisible();
-    for (const { hash, label } of ROUTES) {
-      await page.locator(MENU).locator("a").filter({ hasText: label }).click();
-      await expect(page).toHaveURL(new RegExp(hash.replace("#", "#") + "$"));
-      await expect(page.locator(`${MENU} a[aria-current="page"]`)).toHaveText(label);
+    for (const { zone, hash, links } of ZONES) {
+      const target = links[0];
+      if (target === undefined) continue;
+      if (links.length === 1) {
+        await page.locator(MENU).getByRole("link", { name: zone }).click();
+      } else {
+        await page.locator(MENU).getByRole("button", { name: zone }).click();
+        await page.locator(MENU).getByRole("link", { name: target.label }).click();
+      }
+      await expect(page).toHaveURL(new RegExp(hash + "$"));
+      // while the target page's lazy chunk loads, React keeps the previous
+      // tree (header included) — on a cold CI start the workshop chunk can
+      // take longer than 5 s, so the re-highlight gets a cold-start budget
+      await expect(page.locator(`${MENU} [aria-current="page"]`)).toHaveText(zone, { timeout: 20_000 });
     }
   });
 });
