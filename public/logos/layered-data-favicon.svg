@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+<defs><clipPath id="cL"><path d="M10 0 H30 V86 Q30 92 36 92 H76 Q84 92 84 100 V110 Q84 120 74 120 H10 Q0 120 0 110 V10 Q0 0 10 0 Z"/></clipPath><clipPath id="cD"><path d="M10 0 H46 C76 0 92 24 92 60 C92 96 76 120 46 120 H10 Q0 120 0 110 V10 Q0 0 10 0 Z"/></clipPath></defs>
+<g transform="translate(11,2) scale(0.5)" clip-path="url(#cL)">
+<path d="M10 0 H30 V86 Q30 92 36 92 H76 Q84 92 84 100 V110 Q84 120 74 120 H10 Q0 120 0 110 V10 Q0 0 10 0 Z" fill="#1E293B" transform="translate(6,4)"/>
+<rect x="0" y="102.4" width="90" height="21.6" fill="#D6691F"/>
+<rect x="0" y="98.4" width="84" height="21.6" fill="#FF8A3D"/>
+<rect x="0" y="77.8" width="90" height="21.6" fill="#1F9153"/>
+<rect x="0" y="73.8" width="84" height="21.6" fill="#2FBF71"/>
+<rect x="0" y="53.2" width="90" height="21.6" fill="#178BA3"/>
+<rect x="0" y="49.2" width="84" height="21.6" fill="#21C7E3"/>
+<rect x="0" y="28.6" width="90" height="21.6" fill="#1E5FC4"/>
+<rect x="0" y="24.6" width="84" height="21.6" fill="#2D7DF6"/>
+<rect x="0" y="4" width="90" height="21.6" fill="#5B3FD6"/>
+<rect x="0" y="0" width="84" height="21.6" fill="#7C5CFF"/>
+</g>
+</svg>

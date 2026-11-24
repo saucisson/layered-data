@@ -1,6 +1,7 @@
 // Theme picker E2E (issue #233): the Preferences page offers several
 // themes; the choice is applied on <html> and persisted in
-// localStorage across reloads.
+// localStorage across reloads. The header brand is the single layered
+// vector logo (the #234 variant picker was removed).
 import { test, expect, type Page } from "@playwright/test";
 
 /** Open the Preferences page (LD-8: the settings live on their own
@@ -42,46 +43,18 @@ test("#233 the theme chosen in Preferences is applied and survives a reload", as
     .toBe(true);
 });
 
-test("#234 the logo variant chosen in the header is persisted across reloads", async ({ page }) => {
+test("the header brand is the layered vector logo and the reference exports are served", async ({ page }) => {
   await page.goto("/#landing");
-  await openPrefs(page);
-  const picker = page.getByRole("combobox", { name: "logo" });
-  await expect(picker).toBeVisible({ timeout: 10_000 });
-
-  await picker.selectOption("diamond");
-  await expect
-    .poll(() => page.evaluate("localStorage.getItem('ld-logo')"))
-    .toBe("diamond");
-  // the header brand now carries the diamond mark
-  await expect(page.locator("header svg path").first()).toBeVisible();
-
-  await page.reload();
-  await openPrefs(page);
-  await expect(picker).toHaveValue("diamond", { timeout: 10_000 });
-});
-
-test("the artwork logo variant renders the provided PNG wordmark and persists", async ({ page }) => {
-  await page.goto("/#landing");
-  await openPrefs(page);
-  const picker = page.getByRole("combobox", { name: "logo" });
-  await expect(picker).toBeVisible({ timeout: 10_000 });
-
-  await picker.selectOption("artwork");
-  await expect
-    .poll(() => page.evaluate("localStorage.getItem('ld-logo')"))
-    .toBe("artwork");
-  // the header brand is now the PNG wordmark (light card on the light theme)
-  const artwork = page.locator('header img[src="/logos/layered-data-logo-light.png"]');
-  await expect(artwork).toBeVisible();
-  // the PNGs are actually served
-  expect((await page.request.get("/logos/layered-data-logo-dark.png")).status()).toBe(200);
-  expect((await page.request.get("/logos/layered-data-logo-light.png")).status()).toBe(200);
-  expect((await page.request.get("/logos/layered-data-logo.png")).status()).toBe(200);
-
-  await page.reload();
-  await openPrefs(page);
-  await expect(picker).toHaveValue("artwork", { timeout: 10_000 });
-  await expect(artwork).toBeVisible();
+  // the brand is the inline wordmark SVG: the L and D capitals as
+  // clipped strata, the lowercase ink in currentColor (follows the theme)
+  const brand = page.locator("header svg[role='img']");
+  await expect(brand).toBeVisible({ timeout: 10_000 });
+  // the wordmark is exposed as an accessible "Layered Data" image
+  await expect(brand).toHaveAttribute("aria-label", "Layered Data");
+  // the reference light and dark exports are actually served
+  expect((await page.request.get("/logos/layered-data-logo-light.svg")).status()).toBe(200);
+  expect((await page.request.get("/logos/layered-data-logo-dark.svg")).status()).toBe(200);
+  expect((await page.request.get("/logos/layered-data-favicon.svg")).status()).toBe(200);
 });
 
 test("the Tokyo Night theme applies its indigo palette and survives a reload", async ({ page }) => {

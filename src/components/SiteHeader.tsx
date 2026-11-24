@@ -1,6 +1,5 @@
 // The shared site header — common web contract (LD-9, ADR-0120 §4).
-// From left to right: (1) logo + site name (the logo picker stays in
-// Preferences), (2) the three zones Accueil / Découvrir / Atelier,
+// From left to right: (1) the layered logo wordmark, (2) the three zones Accueil / Découvrir / Atelier,
 // (3) the FR/EN language picker, (4) the persistent light/dark theme
 // toggle (classes on <html>, default = system preference),
 // (5) the account menu (« Se connecter », or « Préférences » +
@@ -10,7 +9,6 @@
 import { useEffect, useRef, useState } from "react";
 import { SUPPORTED_LANGUAGES } from "../infrastructure/i18n.ts";
 import { themeDefinition, type ThemeId } from "../infrastructure/themes.ts";
-import type { LogoId } from "../infrastructure/logos.ts";
 import { apiFetch } from "../infrastructure/wardrobeClient.ts";
 import { Logo } from "./Logo.tsx";
 import type { Language } from "../domain/messages.ts";
@@ -68,7 +66,6 @@ interface SiteHeaderProps {
   onChooseLanguage: (language: Language) => void;
   theme: ThemeId;
   onChooseTheme: (theme: ThemeId) => void;
-  logo: LogoId;
 }
 
 /** Monochrome sun pictogram (shown in dark mode: click for light). */
@@ -104,7 +101,6 @@ export function SiteHeader({
   onChooseLanguage,
   theme,
   onChooseTheme,
-  logo,
 }: SiteHeaderProps) {
   // one popover at a time: a zone menu or the account menu — the
   // settings themselves live on the #preferences page (LD-8)
@@ -153,7 +149,7 @@ export function SiteHeader({
           href="#landing"
           className="text-lg font-extrabold tracking-tight text-slate-900 hover:text-emerald-700 dark:text-slate-50 dark:hover:text-emerald-400"
         >
-          <Logo variant={logo} />
+          <Logo />
         </a>
         <nav aria-label="Main navigation" className="flex flex-wrap items-center gap-1 text-sm">
           {ZONES.map((zone) => {

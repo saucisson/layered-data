@@ -15,7 +15,6 @@ import {
   readStoredTheme,
   type ThemeId,
 } from "./infrastructure/themes";
-import { LOGO_STORAGE_KEY, readStoredLogo, type LogoId } from "./infrastructure/logos";
 import { setI18nLanguage } from "./infrastructure/i18n";
 import type { Language } from "./domain/messages";
 
@@ -31,17 +30,6 @@ function useTheme() {
   }, [theme]);
 
   return { theme, chooseTheme: setTheme };
-}
-
-/** The logo variant (issue #234): persisted in localStorage. */
-function useLogo() {
-  const [logo, setLogo] = useState<LogoId>(() => readStoredLogo());
-
-  useEffect(() => {
-    localStorage.setItem(LOGO_STORAGE_KEY, logo);
-  }, [logo]);
-
-  return { logo, chooseLogo: setLogo };
 }
 
 // Every page is lazy: the initial bundle carries only the router and
@@ -107,7 +95,6 @@ function AppContent() {
   const { page, parameter } = useRouter();
   const [language, setLanguage] = useState<Language>(() => readWorkshopLanguage());
   const { theme, chooseTheme } = useTheme();
-  const { logo, chooseLogo } = useLogo();
 
   const handleChooseLanguage = (next: Language) => {
     setLanguage(next);
@@ -146,7 +133,6 @@ function AppContent() {
         onChooseLanguage={handleChooseLanguage}
         theme={theme}
         onChooseTheme={chooseTheme}
-        logo={logo}
       />
       <main id="main-content">
       {workshopLocked ? (
@@ -184,8 +170,6 @@ function AppContent() {
                 language={language}
                 theme={theme}
                 onChooseTheme={chooseTheme}
-                logo={logo}
-                onChooseLogo={chooseLogo}
                 onChooseLanguage={handleChooseLanguage}
               />
             );
