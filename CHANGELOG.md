@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased — two Zitadel clients per app (Web + API)
+
+- The app is registered in Zitadel as two clients: **Web** (browser
+  login, `AUTH_CLIENT_ID` / `AUTH_CLIENT_SECRET`) and **API** (PAT
+  introspection, `AUTH_API_CLIENT_ID` / `AUTH_API_CLIENT_SECRET`). Their
+  secrets live on the VPS (`/home/deploy/zitadel-clients.json`), never
+  committed. Accepted Bearer JWT audiences default to both client ids
+  (override with `AUTH_ALLOWED_AUDIENCES`); pinned by
+  `tests/auth-flow-checks.mts`.
+
 ## Unreleased — unified authentication (Zitadel OIDC, milestone Auth v1, issues #366–#371)
 
 - **OIDC / OAuth 2.1 sign-in** (LD-2): `GET /auth/login` (Authorization
