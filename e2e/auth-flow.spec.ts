@@ -7,7 +7,9 @@
 import { test, expect } from "@playwright/test";
 
 async function openAuthPopover(page: import("@playwright/test").Page) {
-  await page.getByRole("button", { name: /sign in|signed in/i }).click();
+  // the account button's accessible name is its aria-label ("account
+  // menu"), which masks its visible text ("sign in" / "account")
+  await page.getByRole("button", { name: /account menu/i }).click();
 }
 
 test("Auth v1 the auth panel opens from the key button of the site header", async ({ page }) => {

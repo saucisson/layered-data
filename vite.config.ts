@@ -28,6 +28,9 @@ export default defineConfig({
     },
     proxy: {
       "/api": "http://127.0.0.1:8791",
+      // the auth round trip (Auth v1) lives on the wardrobe server too —
+      // /auth/me, /auth/login, /auth/callback, /auth/logout
+      "/auth": "http://127.0.0.1:8791",
     },
   },
   assetsInclude: ["**/*.ld"],
