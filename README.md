@@ -266,3 +266,4 @@ qu'une fois.
   que derrière un reverse-proxy authentifié.
 - Aucune clé n'est embarquée : le géologue sort seulement si
   `MISTRAL_API_KEY` est posée dans l'environnement ou le `.env`.
+<!-- probe -->
