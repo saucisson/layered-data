@@ -650,7 +650,7 @@ check(
           transitionName2 +
           " refines " +
           typeReferenceText({ address: positionContainer2.memberType }).replace(
-            /[/@]/g,
+            /[/@\\]/g,
             "\\$&",
           ),
         "g",

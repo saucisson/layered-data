@@ -203,7 +203,9 @@ const idpServer: Server = createServer(async (request, response) => {
     return;
   }
   if (url.pathname === "/endsession" && request.method === "GET") {
-    const target = url.searchParams.get("post_logout_redirect_uri") ?? "/";
+    const requested = url.searchParams.get("post_logout_redirect_uri") ?? "/";
+    // Same guard as the quarry's safeReturnTo: same-site relative paths only.
+    const target = requested.startsWith("/") && !requested.startsWith("//") ? requested : "/";
     response.writeHead(302, { Location: target });
     return response.end();
   }
