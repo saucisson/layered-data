@@ -137,6 +137,22 @@ check(
   composerSource.includes("error.statusCode === 401") &&
     composerSource.includes("invalid Mistral API token (401)"),
 );
+check(
+  "(c) the LIVE SSE path maps a 401 error event to the invalid-token message too (not only the non-stream catch)",
+  /case "error":[\s\S]*?event\.statusCode === 401[\s\S]*?invalid Mistral API token \(401\)/.test(
+    composerSource,
+  ),
+);
+check(
+  "(c) a session_required 401 is never blamed on the Mistral token",
+  composerSource.includes('error.body.includes("session_required")') &&
+    composerSource.includes("session required — sign in again"),
+);
+check(
+  "(c) the invalid-token message is bilingual FR/EN (on both the SSE and the non-stream path)",
+  (composerSource.match(/invalid Mistral API token \(401\)[\s\S]{0,120}?fr: "token API Mistral invalide/g) ?? [])
+    .length === 2,
+);
 
 // =====================================================================
 // (d) the server: the header token wins, a refused token stays a 401,

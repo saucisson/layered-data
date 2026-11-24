@@ -4,8 +4,11 @@
 //
 // Authentication (milestone Auth v1): the browser holds only the
 // httpOnly `sid` session cookie, sent automatically with every
-// same-origin call — no token, no access code ever lives in the page,
-// in localStorage or in a header built by hand.
+// same-origin call — no auth token, no access code ever lives in the
+// page, in localStorage or in a header built by hand. (LD-8 excepted:
+// the personal Mistral token of Preferences travels as the
+// x-mistral-api-token header on the generation call only — see
+// mistralToken.ts.)
 
 /** Default bound on one API call: time-to-response. A hanging server
  * aborts after this delay, the caller's catch shows its error state —
