@@ -165,7 +165,7 @@ jobs:
       - name: Coverage gates (c8 lines >= 85% global + 100% on versionClassifier.ts)
         run: npm run test:coverage
       - name: Upload coverage report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage/
