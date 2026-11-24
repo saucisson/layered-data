@@ -92,7 +92,7 @@ jobs:
       - run: npm run test:pages
 
   harness-i18n:
-    name: "harness: i18n + lenses (i18n, lens-inventory, lens, node-sizes, connection-points, labels, display-functions, i18n:check)"
+    name: "harness: i18n + lenses + zones (i18n, lens-inventory, lens, node-sizes, connection-points, labels, display-functions, zones, i18n:check)"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -109,10 +109,11 @@ jobs:
       - run: npm run test:connection-points
       - run: npm run test:labels
       - run: npm run test:display-functions
+      - run: npm run test:zones
       - run: npm run i18n:check
 
   harness-server:
-    name: "harness: server (server, generate-sse, rate-limit, postgres, user-account, access-code-consent)"
+    name: "harness: server (server, generate-sse, rate-limit, postgres, auth-jwt, auth-flow, auth-ui)"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -126,8 +127,9 @@ jobs:
       - run: npm run test:generate-sse
       - run: npm run test:rate-limit
       - run: npm run test:postgres
-      - run: npm run test:user-account
-      - run: npm run test:access-code-consent
+      - run: npm run test:auth-jwt
+      - run: npm run test:auth-flow
+      - run: npm run test:auth-ui
 
   harness-versioning:
     name: "harness: versioning (vscode, stratigraphy, repin-harness)"
