@@ -25,10 +25,10 @@ import {
 } from "../src/presentation/i18n.ts";
 import { WORKSHOP_SCENARIOS } from "../src/presentation/scenarios.ts";
 import {
-  LENS_LAYERS,
+  lensLayers,
   shapeLabel,
-  VIEWPOINT_LAYERS,
-  VIEW_NOTES,
+  viewNote,
+  viewpointLayers,
 } from "../src/presentation/viewTree.ts";
 import {
   LAYER_ROLE,
@@ -40,7 +40,11 @@ import {
   t,
 } from "../src/infrastructure/i18n.ts";
 import { asLayerName } from "../src/domain/identifiers.ts";
-import { TUTORIAL_LAYER_NAMES } from "../src/application/corpus.ts";
+import {
+  assembleLayeredDataKernel,
+  KERNEL_LAYER_NAMES,
+  TUTORIAL_LAYER_NAMES,
+} from "../src/application/corpus.ts";
 import {
   listingLayersOf,
   parseTutorialMarkdown,
@@ -174,12 +178,34 @@ check(
     ),
 );
 
+// The lens/viewpoint inventory is derived from the space (issue #283):
+// the notes are the layers' head comments, read as data.
+const corpusDirectory = join(import.meta.dirname, "..", "formalisms", "kernel");
+const kernelSources: Record<string, string> = Object.fromEntries(
+  KERNEL_LAYER_NAMES.map((layerName) => [
+    layerName,
+    readFileSync(join(corpusDirectory, layerName + ".ld"), "utf8"),
+  ]),
+);
+const kernel = assembleLayeredDataKernel({ layerSources: kernelSources });
+const derivedLenses = lensLayers({ space: kernel.space });
+const derivedViewpoints = viewpointLayers({ space: kernel.space });
+
 check(
-  "the view tree notes cover every lens and viewpoint with a non-empty English note",
-  [...LENS_LAYERS, ...VIEWPOINT_LAYERS].every((viewLayer) => {
-    const notes = VIEW_NOTES[viewLayer];
-    return notes !== undefined && bilingualParityOf(notes);
-  }),
+  "the derived inventory finds the kernel lenses (graph-display included) and viewpoints",
+  ["graph-display", "petrinet-display", "kahn-display", "logic-circuit-display"].every((lens) =>
+    derivedLenses.includes(lens),
+  ) &&
+    ["petrinet-view", "pn-philosophers-5-course", "kahn-course", "wb-course"].every((viewpoint) =>
+      derivedViewpoints.includes(viewpoint),
+    ),
+);
+
+check(
+  "the view tree notes cover every derived lens and viewpoint with a non-empty English note",
+  [...derivedLenses, ...derivedViewpoints].every((viewLayer) =>
+    bilingualParityOf(viewNote({ space: kernel.space, layer: viewLayer })),
+  ),
 );
 
 check(
@@ -200,8 +226,30 @@ const glossarySource = readFileSync(
 const glossaryTermCount = (glossarySource.match(/term:\s*\{/g) ?? []).length;
 check(
   "the glossary keeps its entries, each with a non-empty English term",
-  glossaryTermCount === 35 &&
+  glossaryTermCount === 45 &&
     !glossarySource.includes("term: { en: \"\" }"),
+);
+
+// every ⟪notion⟫ marker of the tutorial resolves to a glossary entry (#323)
+const glossaryTerms = [
+  ...glossarySource.matchAll(/term:\s*\{\s*en:\s*"([^"]+)"/g),
+].map((match) => (match[1] ?? "").toLowerCase());
+const glossaryIdsLower = [
+  ...glossarySource.matchAll(/^ {2}"?([a-z0-9- ]+)"?:\s*\{/gm),
+].map((match) => (match[1] ?? "").toLowerCase());
+const tutorialMarkerSource = readFileSync(
+  join(import.meta.dirname, "..", "src", "presentation", "tutorial.en.md"),
+  "utf8",
+);
+const tutorialMarkers = [
+  ...new Set([...tutorialMarkerSource.matchAll(/⟪([^⟫]+)⟫/g)].map((m) => (m[1] ?? "").toLowerCase())),
+];
+check(
+  "every ⟪notion⟫ marker of the tutorial resolves to a glossary entry (#323)",
+  tutorialMarkers.length > 0 &&
+    tutorialMarkers.every(
+      (marker) => glossaryTerms.includes(marker) || glossaryIdsLower.includes(marker),
+    ),
 );
 
 // ---- the tutorial: one markdown file, English ------------------------

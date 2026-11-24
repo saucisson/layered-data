@@ -3,7 +3,7 @@
 // at build time and parsed by the measured dialect: headings,
 // paragraphs, lists, code fences — and the `ldflat:<layer>` fence,
 // which this page resolves at run time against the tutorial corpus
-// (formalisms/tutorial, ten layers, simpler than the kernel) into
+// (formalisms/tutorial, nine layers, simpler than the kernel) into
 // the interactive flattened listing: every line carries its
 // parentage and opens the workshop's cascade card. The old
 // eleven-step component tutorial is retired: the code is the
@@ -11,7 +11,8 @@
 // by hand.
 
 import React, { useMemo } from "react";
-import { useRouter } from "../components/Router";
+import { hashOf } from "../components/Router";
+import { PROSE_WIDTH } from "../components/PageShell";
 import { say } from "../presentation/i18n.ts";
 import { NotionText } from "../presentation/notions.tsx";
 import { parseTutorialMarkdown, type TutorialBlock } from "../presentation/tutorialMarkdown.ts";
@@ -80,7 +81,6 @@ interface TutorialPageProps {
 }
 
 export function TutorialPage({ language }: TutorialPageProps) {
-  const { navigate } = useRouter();
   const source = RAW_TUTORIAL_EN;
   const blocks = useMemo(() => parseTutorialMarkdown({ source }), [source]);
 
@@ -141,31 +141,28 @@ export function TutorialPage({ language }: TutorialPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-4xl space-y-4 p-4 sm:p-8">
+      <div className={"mx-auto " + PROSE_WIDTH + " space-y-4 p-4 sm:p-8"}>
         {blocks.map(renderBlock)}
 
         {/* No glossary section (#229): the definitions stay available
             as tooltips on the ⟪terms⟫ cited in the prose (#230). */}
 
         <div className="mt-12 flex justify-center gap-4">
-          <button type="button"
-            onClick={() => navigate("landing")}
+          <a href={hashOf("landing")}
             className="rounded-lg border-2 border-slate-300 dark:border-slate-600 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-colors"
           >
-            {say({ language, en: "← Landing"})}
-          </button>
-          <button type="button"
-            onClick={() => navigate("filiation")}
+            {say({ language, en: "← Home"})}
+          </a>
+          <a href={hashOf("filiation")}
             className="rounded-lg border-2 border-slate-400 px-6 py-3 text-slate-700 dark:text-slate-200 font-semibold hover:bg-slate-50 dark:hover:bg-slate-700 dark:bg-slate-900 transition-colors"
           >
             {say({ language, en: "Filiation & comparison →"})}
-          </button>
-          <button type="button"
-            onClick={() => navigate("workshop")}
+          </a>
+          <a href={hashOf("formalisms")}
             className="rounded-lg bg-sky-600 dark:bg-sky-700 px-6 py-3 text-white font-semibold hover:bg-sky-500 dark:hover:bg-sky-600 transition-colors"
           >
             {say({ language, en: "Workshop →"})}
-          </button>
+          </a>
         </div>
       </div>
     </div>

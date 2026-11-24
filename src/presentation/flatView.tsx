@@ -266,7 +266,7 @@ export function FlatView({
       <p className="mb-2 text-[11px] leading-4 text-slate-500 dark:text-slate-400">
         {say({
           language,
-          en: "The whole formalism, without hierarchy: every node shows the effective state of its address after first-wins — the key, the layer providing the value (badge), the resolved value. The special keys appear there; only refines is absent: the hierarchy is precisely what the view removes. An abstract slot shows ∅ with its declarer; a resolved reference stays a leaf — its content opens by « go there ». Pure observer: nothing is written.",
+          en: "The whole formalism, without hierarchy: every node shows the effective state of its address after first-wins — the key, the layer providing the value (badge), the resolved value. The special keys appear there; only refines is absent: the hierarchy is precisely what the view removes. An abstract slot shows ∅ with its declarer; a resolved reference stays a leaf — its content opens by “ go there ”. Pure observer: nothing is written.",
         })}
       </p>
       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">

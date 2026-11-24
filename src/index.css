@@ -108,3 +108,167 @@ button:not(:disabled),
     margin: 0 !important;
   }
 }
+
+/* ---- selectable themes (issue #233) ---------------------------------
+   Each theme is a class on <html>; these unlayered rules override the
+   neutral Tailwind surfaces (Tailwind v4 utilities live in a layer, so
+   plain rules win) while the accent colors (emerald, sky, amber) stay. */
+
+.dark,
+.theme-nord,
+.theme-dracula,
+.theme-tokyonight {
+  color-scheme: dark;
+}
+
+/* Nord — dark blue-grey */
+.theme-nord body {
+  background-color: #2e3440;
+}
+.theme-nord .bg-white,
+.theme-nord .bg-slate-800,
+.theme-nord .bg-slate-50 {
+  background-color: #3b4252;
+}
+.theme-nord .bg-slate-900 {
+  background-color: #2e3440;
+}
+.theme-nord .bg-slate-100 {
+  background-color: #2e3440;
+}
+.theme-nord .text-slate-800,
+.theme-nord .text-slate-900,
+.theme-nord .text-slate-100,
+.theme-nord .text-slate-200 {
+  color: #d8dee9;
+}
+.theme-nord .text-slate-300,
+.theme-nord .text-slate-400,
+.theme-nord .text-slate-500,
+.theme-nord .text-slate-600 {
+  color: #9aa7bd;
+}
+.theme-nord .border-slate-200,
+.theme-nord .border-slate-300,
+.theme-nord .border-slate-600,
+.theme-nord .border-slate-700 {
+  border-color: #4c566a;
+}
+
+/* Dracula — dark purple */
+.theme-dracula body {
+  background-color: #282a36;
+}
+.theme-dracula .bg-white,
+.theme-dracula .bg-slate-800,
+.theme-dracula .bg-slate-50 {
+  background-color: #44475a;
+}
+.theme-dracula .bg-slate-900 {
+  background-color: #21222c;
+}
+.theme-dracula .bg-slate-100 {
+  background-color: #282a36;
+}
+.theme-dracula .text-slate-800,
+.theme-dracula .text-slate-900,
+.theme-dracula .text-slate-100,
+.theme-dracula .text-slate-200 {
+  color: #f8f8f2;
+}
+.theme-dracula .text-slate-300,
+.theme-dracula .text-slate-400,
+.theme-dracula .text-slate-500,
+.theme-dracula .text-slate-600 {
+  color: #b0b3c7;
+}
+.theme-dracula .border-slate-200,
+.theme-dracula .border-slate-300,
+.theme-dracula .border-slate-600,
+.theme-dracula .border-slate-700 {
+  border-color: #6272a4;
+}
+
+/* Solarized — warm light */
+.theme-solarized body {
+  background-color: #fdf6e3;
+}
+.theme-solarized .bg-white,
+.theme-solarized .bg-slate-50 {
+  background-color: #eee8d5;
+}
+.theme-solarized .bg-slate-100 {
+  background-color: #fdf6e3;
+}
+.theme-solarized .text-slate-800,
+.theme-solarized .text-slate-900 {
+  color: #586e75;
+}
+.theme-solarized .text-slate-400,
+.theme-solarized .text-slate-500,
+.theme-solarized .text-slate-600 {
+  color: #93a1a1;
+}
+.theme-solarized .border-slate-200,
+.theme-solarized .border-slate-300 {
+  border-color: #d6cdb4;
+}
+
+/* Forest — soft green light */
+.theme-forest body {
+  background-color: #f2f7ef;
+}
+.theme-forest .bg-white,
+.theme-forest .bg-slate-50 {
+  background-color: #e9f2e4;
+}
+.theme-forest .bg-slate-100 {
+  background-color: #f2f7ef;
+}
+.theme-forest .text-slate-800,
+.theme-forest .text-slate-900 {
+  color: #2e4034;
+}
+.theme-forest .text-slate-400,
+.theme-forest .text-slate-500,
+.theme-forest .text-slate-600 {
+  color: #6b8271;
+}
+.theme-forest .border-slate-200,
+.theme-forest .border-slate-300 {
+  border-color: #c9dcc4;
+}
+
+/* Tokyo Night — deep indigo (storm palette) */
+.theme-tokyonight body {
+  background-color: #1a1b26;
+}
+.theme-tokyonight .bg-white,
+.theme-tokyonight .bg-slate-800,
+.theme-tokyonight .bg-slate-50 {
+  background-color: #24283b;
+}
+.theme-tokyonight .bg-slate-900 {
+  background-color: #16161e;
+}
+.theme-tokyonight .bg-slate-100 {
+  background-color: #1a1b26;
+}
+.theme-tokyonight .text-slate-800,
+.theme-tokyonight .text-slate-900,
+.theme-tokyonight .text-slate-100,
+.theme-tokyonight .text-slate-200 {
+  color: #c0caf5;
+}
+.theme-tokyonight .text-slate-300,
+.theme-tokyonight .text-slate-400,
+.theme-tokyonight .text-slate-500,
+.theme-tokyonight .text-slate-600 {
+  color: #9aa5ce;
+}
+.theme-tokyonight .border-slate-200,
+.theme-tokyonight .border-slate-300,
+.theme-tokyonight .border-slate-600,
+.theme-tokyonight .border-slate-700 {
+  border-color: #414868;
+}

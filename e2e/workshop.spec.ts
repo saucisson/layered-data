@@ -1,25 +1,29 @@
-// Smoke E2E: the app boots, the workshop renders its four panels, and
-// the editor page (its own top-level route since #216) renders the canvas.
+// Smoke E2E: the app boots, the workshop renders its three panels (the
+// point of view moved to its own #lenses page, #227), and the editor
+// page (its own top-level route since #216) renders the canvas.
 import { test, expect } from "@playwright/test";
 
-test("workshop boots with the four panels; the editor page renders the canvas", async ({ page }) => {
-  await page.goto("/#workshop");
+test("workshop boots with its three panels; the editor page renders the canvas", async ({ page }) => {
+  await page.goto("/#formalisms");
 
-  // ① the layers, ② the formalism, ③ the reading, ④ the point of view
-  await expect(page.getByText("① The layers")).toBeVisible();
-  await expect(page.getByText("② The formalism")).toBeVisible();
-  await expect(page.getByText("③ The flattened data")).toBeVisible();
-  await expect(page.getByText("④ The point of view")).toBeVisible();
+  // ① the layers, ② the formalism, ③ the reading — ④ the point of view
+  // lives on its own #lenses page since #227
+  // (cold-start budget: the workshop chunk is the heavy one, 10 s like
+  // the other smoke assertions)
+  await expect(page.getByText("① The layers")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("② The formalism")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("③ The flattened data")).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("④ The point of view")).toHaveCount(0);
 
   // the graphical model editor is its own top-level page (#216)
-  await page.goto("/#editor");
-  await expect(page.getByRole("application", { name: /model canvas/ })).toBeVisible();
-  await expect(page.getByRole("button", { name: "pointer" })).toBeVisible();
+  await page.goto("/#models");
+  await expect(page.getByRole("application", { name: /model canvas/ })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByRole("button", { name: "pointer" })).toBeVisible({ timeout: 10_000 });
 });
 
 test("#239 in the list view, ② the formalism and ③ the flattened data sit side by side", async ({ page }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
-  await page.goto("/#workshop");
+  await page.goto("/#formalisms");
   await expect(page.getByText("② The formalism")).toBeVisible({ timeout: 10_000 });
   // the workshop opens in the graph view: switch to the list view
   await page.getByRole("button", { name: "list", exact: true }).click();
@@ -29,5 +33,14 @@ test("#239 in the list view, ② the formalism and ③ the flattened data sit si
   expect(flattened).not.toBeNull();
   // same row, ② left of ③ — a regression to a single column fails this
   expect(Math.abs((formalism?.y ?? 0) - (flattened?.y ?? 0))).toBeLessThan(50);
-  expect((formalism?.x ?? 0)).toBeLessThan(flattened?.x ?? 0);
+  expect(formalism?.x ?? 0).toBeLessThan(flattened?.x ?? 0);
+});
+
+test("#227 the lenses page renders the tree of lenses and the drawing", async ({ page }) => {
+  await page.goto("/#lenses");
+  await expect(page.getByRole("heading", { name: /Lenses/ })).toBeVisible({ timeout: 10_000 });
+  await expect(page.getByText("The lenses & viewpoints")).toBeVisible();
+  // the drawing of the chosen model through the chosen look renders
+  // (scoped to the panel region — the header logo is an svg too)
+  await expect(page.locator("section[aria-labelledby='panel-viewpoint-heading'] svg").first()).toBeVisible();
 });

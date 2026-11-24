@@ -43,7 +43,7 @@ export function WorkshopHeader({
         <p className="mt-2 text-xs text-slate-500 dark:text-slate-400">
           {say({
             language,
-            en: "Formalism design workshop — Layered Data, refinement, first-winner reading",
+            en: "Formalism design workshop — Layered Data, refinement, first-wins reading",
           })}
         </p>
         <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -85,7 +85,7 @@ export function WorkshopHeader({
               <button type="button"
                 key={scenario.id}
                 onClick={() => onActivateScenario(index)}
-                title={localized({ language, text: scenario.text }).slice(0, 120) + "…"}
+                title={localized({ language, text: scenario.text })}
                 className={
                   "rounded-full border px-3 py-1 text-xs font-medium transition-colors " +
                   (scenarioIndex === index

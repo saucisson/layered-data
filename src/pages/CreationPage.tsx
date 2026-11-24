@@ -4,11 +4,13 @@
 // it answers, the deterministic simulated proposal otherwise —
 // honestly labeled, never a silent failure); the draft is
 // corrected freely; the staging judges corpus + supplement and
-// demands 0 verdict; the accepted layer enters the living session
+// demands zero failed checks; the accepted layer enters the living session
 // and stays visible from the hierarchy and formalism pages.
 
 import { useMemo, useState } from "react";
-import { useRouter } from "../components/Router";
+import { hashOf } from "../components/Router";
+import { NotionText } from "../presentation/notions.tsx";
+import { PROSE_WIDTH } from "../components/PageShell";
 import { assembleLayeredDataKernel } from "../application/corpus.ts";
 import {
   materializeSessionAdditions,
@@ -16,7 +18,6 @@ import {
   writeSessionAddition,
 } from "../application/session.ts";
 import { loadKernelLayerSources } from "../infrastructure/corpusLoader.ts";
-import { AccessCodeForm } from "../presentation/accessForm.tsx";
 import { AddFormalismComposer, type AcceptedAddition } from "../presentation/addFormalism.tsx";
 import { LAYER_COLOR } from "../presentation/workshopInventory.ts";
 import { say } from "../presentation/i18n.ts";
@@ -46,7 +47,6 @@ const EXAMPLE_INTENTIONS: { en: string; fr?: string | undefined }[] = [
 ];
 
 export function CreationPage({ language }: CreationPageProps) {
-  const { navigate } = useRouter();
   const [sessionVersion, setSessionVersion] = useState(readSessionVersion());
   const session = useMemo(() => materializeSessionAdditions({ kernel: KERNEL }), [sessionVersion]);
   const createdLayerNames = session.layerNames.slice(KERNEL.layerNames.length);
@@ -60,7 +60,7 @@ export function CreationPage({ language }: CreationPageProps) {
 
   return (
     <div className="min-h-screen bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-slate-100">
-      <div className="mx-auto max-w-4xl p-4 sm:p-6">
+      <div className={"mx-auto " + PROSE_WIDTH + " p-4 sm:p-6"}>
         <h1 className="mb-4 text-2xl font-bold text-slate-800 dark:text-slate-100">
           {say({ language, en: "Create a formalism — with the assistance of the geologist" })}
         </h1>
@@ -69,10 +69,13 @@ export function CreationPage({ language }: CreationPageProps) {
             {say({ language, en: "The protocol"})}
           </h2>
           <p>
-            {say({
-              language,
-              en: "You say the intention; the geologist (the workshop's AI, grounded in the real state of the corpus and verified by the staging loop) proposes a draft in the language; you correct it freely; the staging judges corpus + supplement and demands 0 verdict; the accepted layer enters the living session. Without a server or a key, the deterministic simulated AI of the canvas answers instead — degraded, honestly labeled, never a silent failure.",
-            })}
+            <NotionText
+              language={language}
+              text={say({
+                language,
+                en: "You say the intention; the ⟪geologist⟫ (the workshop's AI, grounded in the real state of the corpus and verified by the ⟪staging⟫ loop) proposes a draft in the language; you correct it freely; the ⟪staging⟫ judges corpus + supplement and demands zero failed checks; the accepted layer enters the living session. Without a server or a key, the deterministic simulated AI of the workshop answers instead — degraded, honestly labeled, never a silent failure.",
+              })}
+            />
           </p>
           <p className="mt-2 text-[11px] text-slate-600 dark:text-slate-400">
             {say({
@@ -81,7 +84,7 @@ export function CreationPage({ language }: CreationPageProps) {
             })}
             {EXAMPLE_INTENTIONS.map((example, index) => (
               <span key={index} className="font-mono text-slate-500 dark:text-slate-400">
-                {"« " + say({ language, en: example.en}) + " »"}
+                {"“ " + say({ language, en: example.en}) + " ”"}
                 {index < EXAMPLE_INTENTIONS.length - 1 ? " · " : ""}
               </span>
             ))}
@@ -90,12 +93,10 @@ export function CreationPage({ language }: CreationPageProps) {
 
         {/* The lock of the geologist: the proxy that answers the
             "ask the AI" call is protected — the access code is
-            entered here once, kept by the browser; without it the
-            call answers 401 and the simulated AI speaks instead,
+            entered once via the key button of the site header
+            (issue #222), kept by the browser; without it the call
+            answers 401 and the simulated AI speaks instead,
             honestly labeled. */}
-        <section className="mb-4">
-          <AccessCodeForm language={language} />
-        </section>
 
         <section className="mb-4">
           <AddFormalismComposer
@@ -131,21 +132,20 @@ export function CreationPage({ language }: CreationPageProps) {
                     }
                   />
                   <span className="font-mono font-semibold">{layerName}</span>
-                  <button type="button"
-                    onClick={() => navigate("formalism", layerName)}
+                  <a
+                     href={hashOf("formalism", layerName)}
                     className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
                   >
                     {say({ language, en: "understand it →"})}
-                  </button>
-                  <button type="button"
-                    onClick={() => navigate("hierarchy")}
+                  </a>
+                  <a href={hashOf("hierarchy")}
                     className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-1.5 py-0.5 text-[10px] text-slate-600 dark:text-slate-400 hover:border-slate-600 dark:hover:border-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
                   >
                     {say({
                       language,
                       en: "see it in the hierarchy →",
                     })}
-                  </button>
+                  </a>
                 </div>
               ))}
             </div>

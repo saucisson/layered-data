@@ -108,9 +108,9 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     },
   },
   facette: {
-    term: { en: "facet"},
+    term: { en: "viewpoint"},
     definition: {
-      en: "a thin layer that carries a single characteristic (annotation, arity, partition, weighting…), combined by multiple inheritance; petrinet-scheme is three crossed facets.",
+      en: "a thin layer that carries a single characteristic (annotation, arity, partition, weighting…), combined by multiple inheritance; petrinet-scheme is three crossed viewpoints.",
     },
   },
   fermeture: {
@@ -134,7 +134,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   implicits: {
     term: { en: "implicits"},
     definition: {
-      en: "the rules of the schema (ex. « each collection has a type ») copied onto the instances at desugaring time; a mute task still inherits its type.",
+      en: "the rules of the schema (ex. “ each collection has a type ”) copied onto the instances at desugaring time; a mute task still inherits its type.",
     },
   },
   lentille: {
@@ -206,7 +206,7 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
   slot: {
     term: { en: "slot"},
     definition: {
-      en: "the formal name a generic check reads (edges, arrows, arrow-vertex, end-source…): the layers bind it (bind), first-winner across the closure — a renaming rebinds the slot, the check follows the view.",
+      en: "the formal name a generic check reads (edges, arrows, arrow-vertex, end-source…): the layers bind it (bind), first-wins across the closure — a renaming rebinds the slot, the check follows the view.",
     },
   },
   socle: {
@@ -225,6 +225,66 @@ export const GLOSSARY: Record<string, GlossaryEntry> = {
     term: { en: "union"},
     definition: {
       en: "a collection that merges other collections (the then act); membership is the enumeration, deduplicated first-wins.",
+    },
+  },
+  "premier-gagne": {
+    term: { en: "first-wins"},
+    definition: {
+      en: "the reading rule of the closure: at one address, the newest layer that lays a value wins; the older values stay readable below it.",
+    },
+  },
+  notion: {
+    term: { en: "notion"},
+    definition: {
+      en: "a ⟪marked⟫ term of the prose: every notion cited on the tutorial and filiation pages carries its one-line definition from this glossary.",
+    },
+  },
+  "conflit-d-ordre": {
+    term: { en: "order conflict"},
+    definition: {
+      en: "two layers of one closure laying the same key in an order the acts do not decide; accepted permissively, refused in strict mode.",
+    },
+  },
+  poids: {
+    term: { en: "weight"},
+    definition: {
+      en: "the multiplicity of an arc (a Petri net) or of a transition (a weighted automaton): how many tokens one firing moves.",
+    },
+  },
+  epingle: {
+    term: { en: "pin"},
+    definition: {
+      en: "the version a reference locks onto: a bare name resolves to the latest frozen version of the latest major.",
+    },
+  },
+  gele: {
+    term: { en: "freeze"},
+    definition: {
+      en: "the act that seals a version of a formalism: frozen versions are the ones a pin can resolve to.",
+    },
+  },
+  majeur: {
+    term: { en: "major"},
+    definition: {
+      en: "the big version number of a formalism; a major bump is a breaking change, judged per dependent.",
+    },
+  },
+  etape: {
+    term: { en: "staging"},
+    definition: {
+      en: "the judging gate every proposed layer passes through: the whole corpus plus the candidate is revalidated, and any failed check refuses the layer — nothing enters the space silently.",
+    },
+  },
+  verdict: {
+    term: { en: "verdict"},
+    definition: {
+      en: "the refusal spoken by the staging when a check fails — named, never silent.",
+    },
+  },
+  "re-pin": {
+    term: { en: "re-pin"},
+    definition: {
+      en: "changing the version a reference points at; when the measured dump is unchanged, the re-pin is certified inert and suggested one click.",
     },
   },
 };

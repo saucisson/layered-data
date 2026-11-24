@@ -16,7 +16,7 @@
 import { AddressView, isDictionary } from "../domain/addresses.ts";
 import type { LayerName } from "../domain/identifiers.ts";
 import type { Space } from "../domain/space.ts";
-import { flattenLayer, type FlatNode } from "./flatten.ts";
+import { flattenLayer, type FlatEntry, type FlatNode } from "./flatten.ts";
 
 /** One flattened value, as the display language writes values:
  * numbers and booleans as themselves, strings quoted, references
@@ -113,19 +113,72 @@ export function writeFlattenedLayerSections({
   layer: LayerName;
 }): FlattenedLayerText {
   const flattened = flattenLayer({ space, layer });
-  const buildSections = (node: FlatNode): FlattenedSection[] =>
-    node.entries.map((entry) => {
+  // The notes (issue #247): a `__note:<key>` entry is the comment
+  // written above `<key>` in the source — Python-style, it documents
+  // the element BELOW. The flat view renders it as comment lines
+  // attached to that element's line (same indentation), never as a
+  // raw `__note:… = […]` datum.
+  const noteLinesOf = (value: unknown): string[] => {
+    const parts = Array.isArray(value) ? value : [value];
+    return parts
+      .filter((part): part is string => typeof part === "string")
+      .map((part) => part.replace(/\s+$/, "").trimStart())
+      .filter((part) => part.length > 0);
+  };
+  // Does this subtree hold the documented key (at any depth)?
+  const subtreeHasKey = (node: FlatNode, key: string): boolean =>
+    node.entries.some(
+      (entry) =>
+        entry.key === key ||
+        (entry.target !== null &&
+          node.children[entry.key] !== undefined &&
+          subtreeHasKey(node.children[entry.key] as FlatNode, key)),
+    );
+  // The note key names its element (`__note:<key>` documents
+  // `<key>`) — attach by lookup, never by flat-order adjacency: the
+  // closure merges keys across layers, so adjacency misattaches. A
+  // note whose key is not a direct entry of this node is offered to
+  // the children (the closure may have moved the element into a
+  // child, e.g. under a redefined `bindings` record).
+  const buildSections = (
+    node: FlatNode,
+    inheritedNotes: Map<string, string[]>,
+  ): FlattenedSection[] => {
+    const notesByKey = new Map<string, string[]>(inheritedNotes);
+    const entries: FlatEntry[] = [];
+    for (const entry of node.entries) {
+      if (entry.key.startsWith("__note:")) {
+        const documented = entry.key.slice("__note:".length);
+        const lines = noteLinesOf(entry.value);
+        notesByKey.set(documented, [...(notesByKey.get(documented) ?? []), ...lines]);
+      } else {
+        entries.push(entry);
+      }
+    }
+    const sections: FlattenedSection[] = entries.map((entry) => {
       const provenance = writeFlatProvenance({ status: entry.status, winner: entry.winner });
       const value = entry.status === "fournit" ? writeFlatValue({ value: entry.value }) : null;
+      const notes = notesByKey.get(entry.key) ?? [];
+      notesByKey.delete(entry.key);
       const line =
-        value === null
+        (notes.length > 0 ? notes.join("\n") + "\n" : "") +
+        (value === null
           ? "abstract " + entry.key + "  // " + provenance
-          : entry.key + " = " + value + "  // " + provenance;
+          : entry.key + " = " + value + "  // " + provenance);
       const child = entry.target !== null ? node.children[entry.key] : undefined;
       const target: FlattenedTarget =
         entry.target !== null
           ? { layer: node.addr[0], path: [...node.addr[1], entry.key], key: null }
           : { layer: node.addr[0], path: [...node.addr[1]], key: entry.key };
+      // notes not consumed here are offered to the child whose subtree
+      // holds their documented key
+      const childNotes = new Map<string, string[]>();
+      if (child) {
+        for (const [documented, lines] of notesByKey) {
+          if (subtreeHasKey(child, documented)) childNotes.set(documented, lines);
+        }
+        for (const documented of childNotes.keys()) notesByKey.delete(documented);
+      }
       return {
         key: entry.key,
         value,
@@ -134,9 +187,27 @@ export function writeFlattenedLayerSections({
         winner: entry.winner,
         target,
         line,
-        sections: child ? buildSections(child) : [],
+        sections: child ? buildSections(child, childNotes) : [],
       };
     });
+    // orphan notes (documented key absent from this whole subtree):
+    // kept as plain comment lines
+    for (const lines of notesByKey.values()) {
+      for (const note of lines) {
+        sections.push({
+          key: "__note:orphan-" + sections.length,
+          value: null,
+          node: false,
+          status: "fournit",
+          winner: null,
+          target: { layer: node.addr[0], path: [...node.addr[1]], key: null },
+          line: note,
+          sections: [],
+        });
+      }
+    }
+    return sections;
+  };
   return {
     headerLines: [
       "// " + layer + " — the complete flattened formalism (a view, never a layer of the corpus)",
@@ -152,7 +223,7 @@ export function writeFlattenedLayerSections({
       "// first-winner resolved in place — refines is absent: the hierarchy is what this view removes",
       "layer " + layer + "-flat",
     ],
-    sections: buildSections(flattened.root),
+    sections: buildSections(flattened.root, new Map()),
   };
 }
 
@@ -174,7 +245,9 @@ export function countFlattenedSectionLines({ section }: { section: FlattenedSect
 export function serializeFlattenedLayerText({ text }: { text: FlattenedLayerText }): string {
   const lines: string[] = [...text.headerLines];
   const walk = (section: FlattenedSection, depth: number) => {
-    lines.push("  ".repeat(depth) + section.line);
+    // every physical line carries the depth indent — attached comment
+    // lines respect the indentation of their element (issue #247)
+    for (const physical of section.line.split("\n")) lines.push("  ".repeat(depth) + physical);
     section.sections.forEach((child) => walk(child, depth + 1));
   };
   text.sections.forEach((section) => walk(section, 1));

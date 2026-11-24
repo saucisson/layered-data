@@ -19,6 +19,7 @@ import {
   isDictionary,
 } from "./addresses.ts";
 import { Space } from "./space.ts";
+import { asDisplayFn, type DisplayFn } from "./displayFunctions.ts";
 
 /** One walked address, observed ONCE: the address, its visible keys,
  * its closure, and the raw node of every closure source (aligned by
@@ -63,39 +64,217 @@ export function walkLayerObserved({
   return output;
 }
 
+/** Where the label sits relative to the glyph's bounds — `inside`
+ * is the vertices' default (the historical behaviour), the sides are
+ * the edges' idiom (outside, on the named side of the bounds). */
+export type LabelSide = "inside" | "north" | "south" | "east" | "west";
+
+/** The per-node size datum (issue #285): a `sizes` block of the model
+ * (or of the viewpoint) carries, per vertex name, a `scale` factor
+ * and/or an `angle` in degrees. The gabarit's defaults apply when no
+ * datum is posed — a node without data keeps the template's sizes. */
+export interface NodeSize {
+  scale: number;
+  angle: number;
+}
+
+export const DEFAULT_NODE_SIZE: NodeSize = { scale: 1, angle: 0 };
+
+export const LABEL_SIDES: readonly LabelSide[] = ["inside", "north", "south", "east", "west"];
+
+/** The fields every vertex glyph may carry (issue #284): dimensions
+ * (defaults = the historical sizes), a dashed stroke, an offset, a
+ * rotation around the node's centre, and a declared label placement. */
+export interface GlyphCommon {
+  fill?: string;
+  stroke?: string;
+  label?: string;
+  dash?: boolean;
+  dx?: number;
+  dy?: number;
+  angle?: number;
+  "label-side"?: LabelSide;
+  "label-dx"?: number;
+  "label-dy"?: number;
+}
+
 /** One glyph of the closed drawing vocabulary, discriminated by
  * `shape` — the corpus's display templates carry exactly these
  * fields (see formalisms/kernel/*-display.ld). Vertex glyphs are
- * circle/ellipse/rectangle/box; the edge glyph is line. */
+ * circle/ellipse/rectangle/box/path; the edge glyph is line. */
 export type Glyph =
-  | { shape: "circle"; fill?: string; stroke?: string; label?: string }
-  | { shape: "ellipse"; fill?: string; stroke?: string; label?: string }
-  | { shape: "rectangle"; fill?: string; stroke?: string; label?: string }
-  | { shape: "box"; fill?: string; stroke?: string; label?: string }
-  | { shape: "line"; arrow?: string; ports?: number; stroke?: string };
+  | (GlyphCommon & { shape: "circle"; r?: number })
+  | (GlyphCommon & { shape: "ellipse"; rx?: number; ry?: number })
+  | (GlyphCommon & { shape: "rectangle"; w?: number; h?: number })
+  | (GlyphCommon & { shape: "box"; w?: number; h?: number })
+  | (GlyphCommon & { shape: "path"; d: string })
+  | {
+      shape: "line";
+      arrow?: string;
+      ports?: number;
+      stroke?: string;
+      dash?: boolean;
+      curve?: "polyline" | "bezier";
+    };
+
+export const GLYPH_SHAPES: readonly string[] = [
+  "circle",
+  "ellipse",
+  "rectangle",
+  "box",
+  "path",
+  "line",
+];
+
+/** A glyph field before resolution: a plain value OR a display
+ * function (ADR-0119) — `r = fn (place) [[ 8 + 2 * place.marking ]]`.
+ * The renderers resolve the functions per drawn node; the geometry
+ * below only ever sees the resolved `Glyph`. */
+export type RawGlyphField<T> = T | DisplayFn;
+
+export interface RawGlyphCommon {
+  fill?: RawGlyphField<string>;
+  stroke?: RawGlyphField<string>;
+  label?: RawGlyphField<string>;
+  dash?: RawGlyphField<boolean>;
+  dx?: RawGlyphField<number>;
+  dy?: RawGlyphField<number>;
+  angle?: RawGlyphField<number>;
+  "label-side"?: RawGlyphField<LabelSide>;
+  "label-dx"?: RawGlyphField<number>;
+  "label-dy"?: RawGlyphField<number>;
+}
+
+/** One glyph of the closed drawing vocabulary BEFORE function
+ * resolution — same discrimination as `Glyph`, the fields widened to
+ * carry a `DisplayFn`. */
+export type RawGlyph =
+  | (RawGlyphCommon & { shape: "circle"; r?: RawGlyphField<number> })
+  | (RawGlyphCommon & { shape: "ellipse"; rx?: RawGlyphField<number>; ry?: RawGlyphField<number> })
+  | (RawGlyphCommon & { shape: "rectangle"; w?: RawGlyphField<number>; h?: RawGlyphField<number> })
+  | (RawGlyphCommon & { shape: "box"; w?: RawGlyphField<number>; h?: RawGlyphField<number> })
+  | (RawGlyphCommon & { shape: "path"; d: RawGlyphField<string> })
+  | {
+      shape: "line";
+      arrow?: RawGlyphField<string>;
+      ports?: RawGlyphField<number>;
+      stroke?: RawGlyphField<string>;
+      dash?: RawGlyphField<boolean>;
+      curve?: RawGlyphField<"polyline" | "bezier">;
+    };
+
+/** Strict grammar of a `path` glyph's `d` (issue #284): the commands
+ * M L H V C S Q T A Z (either case), numbers, and separators (space,
+ * comma) — nothing else, ever (no text, no references). */
+export function isValidPathData(value: unknown): boolean {
+  if (typeof value !== "string" || value.trim() === "") return false;
+  // commands become separators; every remaining chunk (split on
+  // spaces/commas) must be exactly one number — "1.2.3" is two numbers
+  // glued without a separator, hence refused
+  const withoutCommands = value.replace(/[MLHVCSQTAZmlhvcsqtaz]/g, " ");
+  const chunks = withoutCommands.split(/[\s,]+/).filter((chunk) => chunk !== "");
+  return chunks.every((chunk) => /^-?(?:\d+(?:\.\d+)?|\.\d+)(?:[eE][-+]?\d+)?$/.test(chunk));
+}
+
+/** The staging verdict a raw glyph carries, if any (issue #287): an
+ * unknown shape, or a `path` whose `d` is outside the grammar. */
+export function glyphShapeVerdict(value: unknown): "forme-inconnue" | "tracé-invalide" | null {
+  if (!isDictionary(value)) return "forme-inconnue";
+  const shape = value["shape"];
+  if (typeof shape !== "string" || !GLYPH_SHAPES.includes(shape)) return "forme-inconnue";
+  // a `d` carried by a display function (ADR-0119) is checked against
+  // the grammar at RENDER, on the resolved value — not here
+  if (shape === "path" && asDisplayFn(value["d"]) === null && !isValidPathData(value["d"]))
+    return "tracé-invalide";
+  return null;
+}
+
+const isNumber = (value: unknown): value is number =>
+  typeof value === "number" && Number.isFinite(value);
+
+// A field narrows to its plain value, or to a display function
+// (ADR-0119) — anything else is dropped (never a crash).
+const asField = <T>(value: unknown, isPlain: (candidate: unknown) => candidate is T): RawGlyphField<T> | undefined => {
+  const fn = asDisplayFn(value);
+  if (fn !== null) return fn;
+  if (isPlain(value)) return value;
+  return undefined;
+};
+
+const isString = (value: unknown): value is string => typeof value === "string";
+const isBoolean = (value: unknown): value is boolean => typeof value === "boolean";
+const isLabelSide = (value: unknown): value is LabelSide =>
+  typeof value === "string" && (LABEL_SIDES as readonly string[]).includes(value);
+const isCurve = (value: unknown): value is "polyline" | "bezier" =>
+  value === "polyline" || value === "bezier";
 
 /** Narrow a raw display template to a glyph — unknown shapes and
  * non-dictionary values are not glyphs (the entry is then skipped,
- * never a crash). */
-export function asGlyph(value: unknown): Glyph | null {
+ * never a crash; the staging verdict names the fault). Function
+ * fields (ADR-0119) are kept as `DisplayFn`, resolved at render. */
+export function asGlyph(value: unknown): RawGlyph | null {
   if (!isDictionary(value)) return null;
   const shape = value["shape"];
-  if (shape === "circle" || shape === "ellipse" || shape === "rectangle" || shape === "box") {
-    const glyph: { shape: typeof shape; fill?: string; stroke?: string; label?: string } = {
-      shape,
-    };
-    if (typeof value["fill"] === "string") glyph.fill = value["fill"];
-    if (typeof value["stroke"] === "string") glyph.stroke = value["stroke"];
-    if (typeof value["label"] === "string") glyph.label = value["label"];
+  const common: RawGlyphCommon = {};
+  const fill = asField(value["fill"], isString);
+  if (fill !== undefined) common.fill = fill;
+  const stroke = asField(value["stroke"], isString);
+  if (stroke !== undefined) common.stroke = stroke;
+  const label = asField(value["label"], isString);
+  if (label !== undefined) common.label = label;
+  const dash = asField(value["dash"], isBoolean);
+  if (dash !== undefined) common.dash = dash;
+  const dx = asField(value["dx"], isNumber);
+  if (dx !== undefined) common.dx = dx;
+  const dy = asField(value["dy"], isNumber);
+  if (dy !== undefined) common.dy = dy;
+  const angle = asField(value["angle"], isNumber);
+  if (angle !== undefined) common.angle = angle;
+  const labelSide = asField(value["label-side"], isLabelSide);
+  if (labelSide !== undefined) common["label-side"] = labelSide;
+  const labelDx = asField(value["label-dx"], isNumber);
+  if (labelDx !== undefined) common["label-dx"] = labelDx;
+  const labelDy = asField(value["label-dy"], isNumber);
+  if (labelDy !== undefined) common["label-dy"] = labelDy;
+  if (shape === "circle") {
+    const glyph: Extract<RawGlyph, { shape: "circle" }> = { ...common, shape };
+    const r = asField(value["r"], isNumber);
+    if (r !== undefined) glyph.r = r;
     return glyph;
   }
+  if (shape === "ellipse") {
+    const glyph: Extract<RawGlyph, { shape: "ellipse" }> = { ...common, shape };
+    const rx = asField(value["rx"], isNumber);
+    if (rx !== undefined) glyph.rx = rx;
+    const ry = asField(value["ry"], isNumber);
+    if (ry !== undefined) glyph.ry = ry;
+    return glyph;
+  }
+  if (shape === "rectangle" || shape === "box") {
+    const glyph: Extract<RawGlyph, { shape: "rectangle" | "box" }> = { ...common, shape };
+    const w = asField(value["w"], isNumber);
+    if (w !== undefined) glyph.w = w;
+    const h = asField(value["h"], isNumber);
+    if (h !== undefined) glyph.h = h;
+    return glyph;
+  }
+  if (shape === "path") {
+    const d = asField(value["d"], isString);
+    if (d === undefined) return null;
+    return { ...common, shape, d };
+  }
   if (shape === "line") {
-    const glyph: { shape: "line"; arrow?: string; ports?: number; stroke?: string } = {
-      shape: "line",
-    };
-    if (typeof value["arrow"] === "string") glyph.arrow = value["arrow"];
-    if (typeof value["ports"] === "number") glyph.ports = value["ports"];
-    if (typeof value["stroke"] === "string") glyph.stroke = value["stroke"];
+    const glyph: Extract<RawGlyph, { shape: "line" }> = { shape: "line" };
+    const arrow = asField(value["arrow"], isString);
+    if (arrow !== undefined) glyph.arrow = arrow;
+    const ports = asField(value["ports"], isNumber);
+    if (ports !== undefined) glyph.ports = ports;
+    const lineStroke = asField(value["stroke"], isString);
+    if (lineStroke !== undefined) glyph.stroke = lineStroke;
+    const lineDash = asField(value["dash"], isBoolean);
+    if (lineDash !== undefined) glyph.dash = lineDash;
+    const curve = asField(value["curve"], isCurve);
+    if (curve !== undefined) glyph.curve = curve;
     return glyph;
   }
   return null;
@@ -108,11 +287,11 @@ export function asGlyph(value: unknown): Glyph | null {
  * (insertion order — the compiler preserves it); a raw array (the
  * kernel-level form) is read item by item. Invalid glyphs are
  * dropped, never a crash. */
-export function asGlyphList(value: unknown): Glyph[] {
+export function asGlyphList(value: unknown): RawGlyph[] {
   if (isDictionary(value)) {
     const glyphsBlock = value["glyphs"];
     if (isDictionary(glyphsBlock)) {
-      const glyphs: Glyph[] = [];
+      const glyphs: RawGlyph[] = [];
       for (const key of Object.keys(glyphsBlock)) {
         const glyph = asGlyph(glyphsBlock[key]);
         if (glyph !== null) glyphs.push(glyph);
@@ -123,7 +302,7 @@ export function asGlyphList(value: unknown): Glyph[] {
     return glyph === null ? [] : [glyph];
   }
   if (Array.isArray(value)) {
-    const glyphs: Glyph[] = [];
+    const glyphs: RawGlyph[] = [];
     for (const item of value) {
       const glyph = asGlyph(item);
       if (glyph !== null) glyphs.push(glyph);
@@ -175,12 +354,15 @@ export function asDisplayGuard(value: unknown): DisplayGuard | null {
 
 /** One lens drawing entry: where the template lives, which types it
  * dresses (concrete closure sources — never the layer roots, never a
- * node carrying a display of its own), and its optional guard. */
+ * node carrying a display of its own), its optional guard, and its
+ * optional whole-template function (`draw = fn (place, net) [[ … ]]`,
+ * ADR-0119 — resolved at render, never at staging). */
 export interface LensDrawingEntry {
   path: LayerPath;
-  spec: Glyph[];
+  spec: RawGlyph[];
   types: Address[];
   guard: DisplayGuard | null;
+  draw: DisplayFn | null;
 }
 
 /** The shape drawn for one node: the winning entry and the types it
@@ -188,9 +370,10 @@ export interface LensDrawingEntry {
  * came from a guarded entry (a data condition) or the unguarded
  * fallback. */
 export interface DrawnShape {
-  spec: Glyph[];
+  spec: RawGlyph[];
   hit: Address[];
   guarded: boolean;
+  draw: DisplayFn | null;
 }
 
 // Addresses candidates for a display entry: first level + specification.
@@ -220,15 +403,31 @@ export function readDisplayTemplate({
   space: Space;
   lens: LayerName;
   path: LayerPath;
-}): Glyph[] | null {
+}): RawGlyph[] | null {
+  // A multi-glyph `glyphs` block is read whole at its NEAREST defining
+  // source (block-level override — the closure yields the own node
+  // first, so the first block found is the child's). A single-glyph
+  // template is merged FIELD BY FIELD along the closure, the child
+  // winning each field: a partial override (`override fill = …` alone)
+  // inherits the parent's shape instead of producing an empty glyph
+  // (issue #287).
+  let merged: Record<string, unknown> | null = null;
   for (const [sourceLayer, sourcePath] of space.closure({ layer: lens, path })) {
     const node = space.raw({ layer: sourceLayer, path: sourcePath });
-    if (isDictionary(node) && "display" in node) {
-      const display = node["display"];
-      if (display !== null) return asGlyphList(display);
+    if (!isDictionary(node) || !("display" in node)) continue;
+    const display = node["display"];
+    if (display === null) continue;
+    if (isDictionary(display) && isDictionary(display["glyphs"])) {
+      return asGlyphList(display);
+    }
+    if (Array.isArray(display)) {
+      return asGlyphList(display);
+    }
+    if (isDictionary(display)) {
+      merged = { ...display, ...(merged ?? {}) };
     }
   }
-  return null;
+  return merged === null ? null : asGlyphList(merged);
 }
 
 // Raw display guard at the first defining source (the `__when:display`
@@ -287,9 +486,15 @@ export function lensDrawingEntries({
       const display = node["display"];
       if (display === null) continue;
       const spec = asGlyphList(display);
-      if (spec.length === 0) continue;
+      // the whole-template function (ADR-0119): a `draw` field of the
+      // display block carrying a fn — resolved at render only
+      const draw =
+        isDictionary(display) && !isDictionary(display["glyphs"]) && !Array.isArray(display)
+          ? asDisplayFn(display["draw"])
+          : null;
+      if (spec.length === 0 && draw === null) continue;
       const guard = asDisplayGuard(node["__when:display"] ?? null);
-      entries.push({ path, spec, types, guard });
+      entries.push({ path, spec, types, guard, draw });
     }
   }
   return entries;
@@ -393,17 +598,19 @@ export function dressingEntries({
   lens: LayerName;
   layer: LayerName;
   path: LayerPath;
-}): { path: LayerPath; spec: Glyph[]; hit: Address[]; guard: DisplayGuard | null }[] {
+}): { path: LayerPath; spec: RawGlyph[]; hit: Address[]; guard: DisplayGuard | null; draw: DisplayFn | null }[] {
   const chain = space.closure({ layer, path });
   const matches: {
     path: LayerPath;
-    spec: Glyph[];
+    spec: RawGlyph[];
     hit: Address[];
     guard: DisplayGuard | null;
+    draw: DisplayFn | null;
   }[] = [];
   for (const entry of lensDrawingEntries({ space, lens })) {
     const hit = entry.types.filter((type) => chain.some((member) => addressesEqual(member, type)));
-    if (hit.length) matches.push({ path: entry.path, spec: entry.spec, hit, guard: entry.guard });
+    if (hit.length)
+      matches.push({ path: entry.path, spec: entry.spec, hit, guard: entry.guard, draw: entry.draw });
   }
   return matches;
 }
@@ -429,10 +636,10 @@ export function drawnShape({
   const matches = dressingEntries({ space, lens, layer, path });
   for (const match of matches) {
     if (match.guard !== null && guardHolds({ space, layer, path, guard: match.guard })) {
-      return { spec: match.spec, hit: match.hit, guarded: true };
+      return { spec: match.spec, hit: match.hit, guarded: true, draw: match.draw };
     }
   }
-  let best: { path: LayerPath; spec: Glyph[]; hit: Address[] } | null = null;
+  let best: { path: LayerPath; spec: RawGlyph[]; hit: Address[]; draw: DisplayFn | null } | null = null;
   for (const match of matches) {
     if (match.guard !== null) continue;
     if (best === null) {
@@ -448,7 +655,7 @@ export function drawnShape({
       best = match;
     }
   }
-  return best === null ? null : { spec: best.spec, hit: best.hit, guarded: false };
+  return best === null ? null : { spec: best.spec, hit: best.hit, guarded: false, draw: best.draw };
 }
 
 // Drawn read through a viewpoint — the (model, viewpoint) pair:
@@ -534,6 +741,48 @@ export function serializableValue(value: RawValue): SerializableValue {
 export function normalizedValue(value: RawValue | AddressView): SerializableValue {
   if (value instanceof AddressView) return { __addr: [value.layer, value.path] };
   return serializableValue(value);
+}
+
+/** The flattened, PURE-DATA view of one node — the input the display
+ * functions receive (ADR-0119): every key read through the space and
+ * serialized to plain JSON-compatible data (references become
+ * __ref/__lref/__addr markers), address views descended into their
+ * target node. A visited set guards the recursion: a space whose
+ * states contain the space itself flattens finitely, never cycles. */
+export function flattenAddress({
+  space,
+  layer,
+  path,
+}: {
+  space: Space;
+  layer: LayerName;
+  path: LayerPath;
+}): Record<string, SerializableValue> {
+  const visited = new Set<string>();
+  const flatten = (currentLayer: LayerName, currentPath: LayerPath): Record<string, SerializableValue> => {
+    const key = currentLayer + "::" + currentPath.join("/");
+    if (visited.has(key)) return { __cycle: key };
+    visited.add(key);
+    const output: Record<string, SerializableValue> = {
+      // the node's own address as DATA — display functions compare
+      // addresses by equality (e.g. arc source vs place.__path),
+      // never by dereferencing
+      __path: [currentLayer, ...currentPath],
+    };
+    for (const childKey of space.keys({ layer: currentLayer, path: currentPath })) {
+      const value = space.read({ layer: currentLayer, path: currentPath, key: childKey });
+      if (value instanceof AddressView) {
+        output[childKey] = { __addr: [value.layer, ...value.path] };
+        if (value.layer === currentLayer) {
+          output[childKey + ".__node"] = flatten(value.layer, value.path);
+        }
+        continue;
+      }
+      output[childKey] = normalizedValue(value);
+    }
+    return output;
+  };
+  return flatten(layer, path);
 }
 
 // Deep clone of a layers value (references recreated: two spaces

@@ -38,7 +38,7 @@ export const WORKSHOP_SCENARIOS = [
     path: ["places", "philo1.think1"],
     key: "bound",
     text: {
-      en: "bound is provided by the c1 layer's own node: first-wins, the read stops at the first source. Every later source of the chain is « not reached » — it is not even consulted.",
+      en: "bound is provided by the c1 layer's own node: first-wins, the read stops at the first source. Every later source of the chain is “ not reached ” — it is not even consulted.",
     },
   },
   {
@@ -50,7 +50,7 @@ export const WORKSHOP_SCENARIOS = [
     path: ["arcs", "pt1"],
     key: "weight",
     text: {
-      en: "The template's arc pt1 stores only source and target (it lives in pre_arcs; the arcs alias reaches it, like vertices in S4). weight comes from the type pn-philosophers :: specification/arc_type, which carries the default 1 — reached as « member of the parent » at the arc type's crossing. Further along, petrinet-scheme declares the weight field but as an abstract slot ∅ — transparent, it decides nothing.",
+      en: "The template's arc pt1 stores only source and target (it lives in pre_arcs; the arcs alias reaches it, like vertices in S4). weight comes from the type pn-philosophers :: specification/arc_type, which carries the default 1 — reached as “ member of the parent ” at the arc type's crossing. Further along, petrinet-scheme declares the weight field but as an abstract slot ∅ — transparent, it decides nothing.",
     },
   },
   {
@@ -74,7 +74,7 @@ export const WORKSHOP_SCENARIOS = [
     path: ["arcs", "pt1"],
     key: "source",
     text: {
-      en: "source reads → (pn-philosophers-1) places/think1. The anchor « pn-philosophers-1 » is looked up among the anchors of the holder pn-philosophers-1 :: arcs/pt1's prefixes (local anchors ✗, then the root ✓, where it is a layer name of the chain): re-rooting in the current view, then the read places › think1 — the designated address is pn-philosophers-1 :: places/think1.",
+      en: "source reads → (pn-philosophers-1) places/think1. The anchor “ pn-philosophers-1 ” is looked up among the anchors of the holder pn-philosophers-1 :: arcs/pt1's prefixes (local anchors ✗, then the root ✓, where it is a layer name of the chain): re-rooting in the current view, then the read places › think1 — the designated address is pn-philosophers-1 :: places/think1.",
     },
   },
   {
@@ -104,25 +104,25 @@ export const WORKSHOP_SCENARIOS = [
   {
     id: "S8",
     label: {
-      en: "Orienting, without a « directed graph »",
+      en: "Orienting, without a “ directed graph ”",
     },
     layer: "multidigraph",
     path: ["edge_type", "arrows"],
     key: "source",
     text: {
-      en: "Orientation lives inside this formalism, multidigraph — no separate « directed graph » layer. The base leaves parallel arcs and loops permitted there: this is therefore a multidigraph. An edge has exactly 2 arrows (cardinality inherited from pair-graph, the arity axis): source and target. The source arrow points the vertex attribute → (edge_type) source, the edge's attribute — the edge_type anchor resolves at the holder's prefix [edge_type]. Follow vertex: it designates the arc's source, wherever it is.",
+      en: "Orientation lives inside this formalism, multidigraph — no separate “ directed graph ” layer. The base leaves parallel arcs and loops permitted there: this is therefore a multidigraph. An edge has exactly 2 arrows (cardinality inherited from pair-graph, the arity axis): source and target. The source arrow points the vertex attribute → (edge_type) source, the edge's attribute — the edge_type anchor resolves at the holder's prefix [edge_type]. Follow vertex: it designates the arc's source, wherever it is.",
     },
   },
   {
     id: "S9",
     label: {
-      en: "Splitting in two, without a « bipartite graph »",
+      en: "Splitting in two, without a “ bipartite graph ”",
     },
     layer: "petrinet-scheme",
     path: ["specification", "pre_arc_type", "specification", "record"],
     key: "source",
     text: {
-      en: "No « bipartite graph » layer: the bipartition expresses itself in petrinet-scheme, through two arc types with crossed containers. The bipartite-digraph layer (left / right, arcsAB / arcsBA) generalizes this idiom — the k = 2 specialization of k-partite-hypergraph, which ps refines. Pre_arc_type keeps its containers: source in places, target in transitions. Read source: the container → (petrinet-scheme) places restricts every pre arc's source to a place. The template follows: pt1 and er1 refine pre_arc_type, te1 refines post_arc_type.",
+      en: "No “ bipartite graph ” layer: the bipartition expresses itself in petrinet-scheme, through two arc types with crossed containers. The bipartite-digraph layer (left / right, arcsAB / arcsBA) generalizes this idiom — the k = 2 specialization of k-partite-hypergraph, which ps refines. Pre_arc_type keeps its containers: source in places, target in transitions. Read source: the container → (petrinet-scheme) places restricts every pre arc's source to a place. The template follows: pt1 and er1 refine pre_arc_type, te1 refines post_arc_type.",
     },
   },
   {
@@ -134,7 +134,7 @@ export const WORKSHOP_SCENARIOS = [
     path: ["arcsAB", "e2"],
     key: "weight",
     text: {
-      en: "wb1 refines weighted-bipartite, which refines bipartite-digraph and weighted-hypergraph: multiple inheritance at the layer level. e2 carries no weight. Its chain (panel ③) walks bipartite-digraph :: specification/arcAB_type (the crossed record, no weight), then multidigraph :: edge_type (the oriented edge, nothing), and finally weighted-hypergraph :: edge_type, which carries weight = 1 — the first definer. e1, for its part, carries 3: first-wins, it does not even reach the default. Two axes, one model, no copy. Panel ④ draws it (card « The weighted diamond »).",
+      en: "wb1 refines weighted-bipartite, which refines bipartite-digraph and weighted-hypergraph: multiple inheritance at the layer level. e2 carries no weight. Its chain (panel ③) walks bipartite-digraph :: specification/arcAB_type (the crossed record, no weight), then multidigraph :: edge_type (the oriented edge, nothing), and finally weighted-hypergraph :: edge_type, which carries weight = 1 — the first definer. e1, for its part, carries 3: first-wins, it does not even reach the default. Two axes, one model, no copy. Panel ④ draws it (card “ The weighted diamond ”).",
     },
   },
   {
@@ -182,7 +182,7 @@ export const WORKSHOP_SCENARIOS = [
     path: ["states", "s1"],
     key: "marking",
     text: {
-      en: "s1 lays only places::philo1.think1 = 2 — nothing else. Yet philo1.eat1 = 0 and philo1.fork1 = 1 read. The closure of s1 walks its state type (petrinet-statespace::specification/state_type → petrinet-behavior — a state's type refines the petrinet parameter), which binds late to the dinner laid by ss-pn-philosophers-5. And the read descends the net's places. A state is « the net with a certain marking »: the delta is laid, the type is the net. Measured: closure of s1 containing the dinner, philo1.eat1 = 0 inherited, philo1.think1 = 2 overridden, b1 → the dinner's philo1.take1 (generated by the citation of the template).",
+      en: "s1 lays only places::philo1.think1 = 2 — nothing else. Yet philo1.eat1 = 0 and philo1.fork1 = 1 read. The closure of s1 walks its state type (petrinet-statespace::specification/state_type → petrinet-behavior — a state's type refines the petrinet parameter), which binds late to the dinner laid by ss-pn-philosophers-5. And the read descends the net's places. A state is “ the net with a certain marking ”: the delta is laid, the type is the net. Measured: closure of s1 containing the dinner, philo1.eat1 = 0 inherited, philo1.think1 = 2 overridden, b1 → the dinner's philo1.take1 (generated by the citation of the template).",
     },
   },
 ];

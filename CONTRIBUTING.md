@@ -14,7 +14,7 @@ Prerequisites: Node 22+ (native type stripping is required), npm, and VS Code re
 
 ```bash
 npm install
-cp .env.example .env   # then edit API_TOKEN
+cp .env.example .env   # then set AUTH_DISABLED=1 (local dev without IdP)
 npm run verify         # full gate: typecheck, structure, lint, tests, coverage, build
 npm run serve          # quarry API on 127.0.0.1:8791 + atelier with hot reload on localhost:5173
 npm run dev            # atelier only, with hot reload
@@ -23,8 +23,8 @@ npm run dev            # atelier only, with hot reload
 ### Troubleshooting
 
 - **Port 8791 already in use**: set `PORT=<other>` in `.env`, or free the port (`lsof -ti:8791 | xargs kill`).
-- **Default `API_TOKEN` (`changez-moi`)**: the API rejects requests until you replace it in `.env` — this is intentional, never commit a real token.
-- **Missing `MISTRAL_API_KEY`**: `POST /api/generate` answers 500 without ever calling the outside — expected behavior, not a bug; set the key in `.env` to enable the pen.
+- **Auth in local dev**: without an IdP, set `AUTH_DISABLED=1` in `.env` — the API answers a fictitious dev user. Never commit a real `AUTH_CLIENT_SECRET`; `AUTH_DISABLED=1` is refused in production.
+- **Missing Mistral token**: `POST /api/generate` answers 401 without ever calling the outside — expected behavior, not a bug; visitors set their personal token in the site's Preferences (LD-8). In local dev only, `MISTRAL_API_KEY` in `.env` remains a fallback (ignored when `NODE_ENV=production`).
 
 ### Architecture quick-start
 

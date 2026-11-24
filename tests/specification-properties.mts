@@ -1570,6 +1570,49 @@ check(
       next: { refines: [new LayerReference(asLayerName("a")), new LayerReference(asLayerName("b"))] },
     }) === "MINOR",
   );
+  check(
+    "an identical path reference is PATCH",
+    classifyVersionDiff({
+      previous: { ref: new PathReference(asLayerName("a"), asLayerPath(["x"]), 2) },
+      next: { ref: new PathReference(asLayerName("a"), asLayerPath(["x"]), 2) },
+    }) === "PATCH",
+  );
+  check(
+    "a re-pinned path reference is MAJOR",
+    classifyVersionDiff({
+      previous: { ref: new PathReference(asLayerName("a"), asLayerPath(["x"]), 2) },
+      next: { ref: new PathReference(asLayerName("a"), asLayerPath(["x"]), 3) },
+    }) === "MAJOR",
+  );
+  check(
+    "a re-anchored path reference is MAJOR",
+    classifyVersionDiff({
+      previous: { ref: new PathReference(asLayerName("a"), asLayerPath(["x"])) },
+      next: { ref: new PathReference(asLayerName("b"), asLayerPath(["x"])) },
+    }) === "MAJOR",
+  );
+  check(
+    "a growing array with an equal prefix is a pure addition → MINOR",
+    classifyVersionDiff({ previous: { list: [1, 2] }, next: { list: [1, 2, 3] } }) === "MINOR",
+  );
+  check(
+    "a shrinking array is not a pure addition → MAJOR",
+    classifyVersionDiff({ previous: { list: [1, 2, 3] }, next: { list: [1, 2] } }) === "MAJOR",
+  );
+  check(
+    "a nested dictionary that is a pure addition → MINOR",
+    classifyVersionDiff({
+      previous: { spec: { a: 1 } },
+      next: { spec: { a: 1, b: 2 } },
+    }) === "MINOR",
+  );
+  check(
+    "a nested dictionary with a changed value → MAJOR",
+    classifyVersionDiff({
+      previous: { spec: { a: 1 } },
+      next: { spec: { a: 2 } },
+    }) === "MAJOR",
+  );
 }
 
 // ---- drift policing (issue #152, ADR-0116 rule 4) --------------------

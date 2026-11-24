@@ -26,6 +26,7 @@ import {
   AddressView,
   LayerReference,
   PathReference,
+  type RawTree,
   type RawValue,
   isDictionary,
 } from "./addresses.ts";
@@ -39,7 +40,8 @@ import {
   vacantChecksOf,
 } from "./checks.ts";
 import { quantifiedVariablesOf, templateTermsOf, tryParseFormula } from "./formulas.ts";
-import { walkLayerObserved, type WalkedAddress } from "./views.ts";
+import { glyphShapeVerdict, walkLayerObserved, type WalkedAddress } from "./views.ts";
+import { asDisplayFn, isParsableDisplayExpression } from "./displayFunctions.ts";
 import { type CompiledLanguage, type Declaration } from "./language/compiler.ts";
 import { type ParsedLanguage } from "./language/parser.ts";
 import { fact, type MessageFact } from "./messages.ts";
@@ -474,6 +476,97 @@ export function* streamValidation({
     yield emit("ombres", layer, layerIndex + 1, layerNames.length);
   }
 
+  // ---- (d2) the display blocks: the glyph vocabulary is closed —
+  // an unknown shape or an out-of-grammar path d is a verdict, never
+  // a silent skip (issue #287). A viewpoint's display = @… slot is an
+  // address, not a template: it is not judged here.
+  for (const [layerIndex, layer] of layerNames.entries()) {
+    const root = space.raw({ layer, path: [] });
+    const stack: [RawTree, string[]][] = isDictionary(root) ? [[root, []]] : [];
+    while (stack.length > 0) {
+      const [node, nodePath] = stack.pop() as [RawTree, string[]];
+      const display = node["display"];
+      if (
+        display !== undefined &&
+        display !== null &&
+        !(display instanceof LayerReference) &&
+        !(display instanceof PathReference) &&
+        !(display instanceof AddressView)
+      ) {
+        // judge the MERGED template at this path (a partial override
+        // inherits the parent's fields — same merge as
+        // readDisplayTemplate), never the raw block in isolation
+        const where = layer + "::" + (nodePath.join("/") || ".");
+        let merged: Record<string, unknown> | null = null;
+        let blockGlyphs: unknown[] | null = null;
+        // nearest-first (the closure yields the own node first): the
+        // first `glyphs` block found is the child's — block-level
+        // override; single-glyph templates merge field by field, the
+        // child winning each field (same merge as readDisplayTemplate)
+        for (const [sourceLayer, sourcePath] of space.closure({ layer, path: nodePath as LayerPath })) {
+          const sourceNode = space.raw({ layer: sourceLayer, path: sourcePath });
+          if (!isDictionary(sourceNode) || !("display" in sourceNode)) continue;
+          const sourceDisplay = sourceNode["display"];
+          if (sourceDisplay === null) continue;
+          if (isDictionary(sourceDisplay) && isDictionary(sourceDisplay["glyphs"])) {
+            blockGlyphs = Object.values(sourceDisplay["glyphs"]);
+            break;
+          }
+          if (Array.isArray(sourceDisplay)) {
+            blockGlyphs = sourceDisplay;
+            break;
+          }
+          if (isDictionary(sourceDisplay)) merged = { ...sourceDisplay, ...(merged ?? {}) };
+        }
+        const rawGlyphs: unknown[] =
+          blockGlyphs ?? (merged !== null ? [merged] : []);
+        let anyValid = false;
+        for (const rawGlyph of rawGlyphs) {
+          const shapeVerdict = glyphShapeVerdict(rawGlyph);
+          if (shapeVerdict === null) {
+            anyValid = true;
+          } else {
+            verdicts.push({
+              kind: shapeVerdict,
+              fact: fact(shapeVerdict === "forme-inconnue" ? "unknown-shape" : "invalid-path", {
+                where,
+                shape:
+                  isDictionary(rawGlyph) && typeof rawGlyph["shape"] === "string"
+                    ? rawGlyph["shape"]
+                    : "",
+              }),
+            });
+          }
+          // The display functions (ADR-0119): the server PARSES the
+          // code but never executes it — an unparsable body is the
+          // verdict expression-illisible, at staging.
+          const fnFields: unknown[] = isDictionary(rawGlyph) ? Object.values(rawGlyph) : [];
+          if (merged !== null && blockGlyphs === null) fnFields.push(merged["draw"]);
+          for (const fieldValue of fnFields) {
+            const fn = asDisplayFn(fieldValue);
+            if (fn === null) continue;
+            if (!isParsableDisplayExpression(fn.code)) {
+              verdicts.push({
+                kind: "expression-illisible",
+                fact: fact("unreadable-expression", { where, field: "__fn" }),
+              });
+            }
+          }
+        }
+        if (!anyValid && rawGlyphs.length > 0) {
+          verdicts.push({
+            kind: "forme-inconnue",
+            fact: fact("unknown-shape", { where, shape: "" }),
+          });
+        }
+      }
+      for (const [key, value] of Object.entries(node)) {
+        if (isDictionary(value)) stack.push([value, [...nodePath, key]]);
+      }
+    }
+    yield emit("affichage", layer, layerIndex + 1, layerNames.length);
+  }
+
   // ---- (e) the expected-reads contract replays — every layer of
   // the assembly carries its tests; the betrayed read is a verdict;
   // a candidate that breaks a scene (its own, or a redefined
@@ -609,7 +702,7 @@ export function* streamValidation({
                 kind: "formule-illisible",
                 fact: fact("unreadable-formula", {
                   tag: name,
-                  detail: "gabarit : « " + judgment.message + " »",
+                  detail: "gabarit : “ " + judgment.message + " ”",
                 }),
               });
               continue;

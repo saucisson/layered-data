@@ -175,6 +175,24 @@ export function positionContainerOf({
   );
 }
 
+/** The size container (issue #285): the vertex container whose
+ * record poses `scale` and `angle` — node-sizes passes, the test is
+ * the data, never a layer name. */
+export function sizeContainerOf({
+  containers,
+}: {
+  containers: readonly MemberContainer[];
+}): MemberContainer | null {
+  return (
+    containers.find(
+      (container) =>
+        container.kind === "sommet" &&
+        container.annotationKeys.includes("scale") &&
+        container.annotationKeys.includes("angle"),
+    ) ?? null
+  );
+}
+
 /** A suggested `refines` clause for a new model, read from the
  * corpus itself — never a hardcoded formalism name: the first layer
  * that declares member containers, plus the first layer that declares
@@ -561,6 +579,45 @@ export function draftMemberPosition({
   });
 }
 
+/** Draft the size datum of a named member (issue #285): the `scale`
+ * and/or `angle` fields of its entry in the size container — an
+ * existing entry is edited in place, a missing one is inserted with
+ * the container's declared member type. */
+export function draftMemberSize({
+  block,
+  sizeContainer,
+  name,
+  scale,
+  angle,
+  typeReference,
+}: {
+  block: string;
+  sizeContainer: string;
+  name: string;
+  scale: number;
+  angle: number;
+  typeReference: string;
+}): string {
+  const blockLines = block.replace(/\n+$/, "").split("\n");
+  const section = sectionRangeOf({ blockLines, container: sizeContainer });
+  const existingMember = section !== null ? memberRangeOf({ blockLines, section, name }) : null;
+  if (existingMember !== null && section !== null) {
+    return draftMemberFieldEdition({
+      block,
+      container: sizeContainer,
+      name,
+      fields: { scale, angle },
+    });
+  }
+  return draftMemberInsertion({
+    block,
+    container: sizeContainer,
+    name,
+    typeReference,
+    fields: { scale, angle },
+  });
+}
+
 /** The arc container the formalism poses for one direction: the
  * container whose source and target rules match the two vertex
  * containers — pre for places -> transitions, post the other way.
@@ -666,6 +723,120 @@ export function readMemberCitations({
  * poses it: `@<layer>/<path…>` with a leading type path preserved. */
 export function typeReferenceText({ address }: { address: Address }): string {
   return referenceTextOf({ address });
+}
+
+// ---- the arcs' waypoints (issue #220) -------------------------------
+// An arc's inflection points live in the model as one `waypoints`
+// field on the arc member: a quoted string of `x,y` pairs joined by
+// `;` — plain data, judged by the staging like any field.
+
+/** One inflection point of an arc, in world coordinates. */
+export interface ArcWaypoint {
+  x: number;
+  y: number;
+}
+
+/** The written form of an arc's waypoints: `x,y;x,y;…`, rounded to
+ * whole world units like the positions. */
+export function formatArcWaypoints({
+  waypoints,
+}: {
+  waypoints: readonly ArcWaypoint[];
+}): string {
+  return waypoints.map((point) => Math.round(point.x) + "," + Math.round(point.y)).join(";");
+}
+
+/** Read an arc's waypoints back from the `waypoints` field: the
+ * written string form, or a structured list of `x,y` pairs / records
+ * when the model carries it that way. Anything unreadable reads as
+ * no waypoints — the arc draws straight. */
+export function parseArcWaypoints({ value }: { value: unknown }): ArcWaypoint[] {
+  const pointOf = (entry: unknown): ArcWaypoint | null => {
+    if (Array.isArray(entry) && entry.length === 2) {
+      const [x, y] = entry;
+      if (typeof x === "number" && typeof y === "number") return { x, y };
+      return null;
+    }
+    if (isDictionary(entry)) {
+      const x = entry.x;
+      const y = entry.y;
+      if (typeof x === "number" && typeof y === "number") return { x, y };
+    }
+    return null;
+  };
+  if (typeof value === "string") {
+    const points: ArcWaypoint[] = [];
+    for (const part of value.split(";")) {
+      const match = /^\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*$/.exec(part);
+      if (match !== null) points.push({ x: Number(match[1]), y: Number(match[2]) });
+    }
+    return points;
+  }
+  if (Array.isArray(value)) {
+    const points: ArcWaypoint[] = [];
+    for (const entry of value) {
+      const point = pointOf(entry);
+      if (point !== null) points.push(point);
+    }
+    return points;
+  }
+  return [];
+}
+
+/** Draft the waypoints of one arc member: the `waypoints` field is
+ * edited in place (or inserted) like any annotation field. */
+export function draftArcWaypoints({
+  block,
+  container,
+  name,
+  waypoints,
+}: {
+  block: string;
+  container: string;
+  name: string;
+  waypoints: readonly ArcWaypoint[];
+}): string {
+  return draftMemberFieldEdition({
+    block,
+    container,
+    name,
+    fields: { waypoints: formatArcWaypoints({ waypoints }) },
+  });
+}
+
+/** Where a double-click on the arc lands: the projection of the point
+ * on the nearest segment of the polyline from → waypoints → to, as
+ * the index in the waypoints array where the new point inserts. */
+export function waypointInsertionAt({
+  from,
+  to,
+  waypoints,
+  point,
+}: {
+  from: ArcWaypoint;
+  to: ArcWaypoint;
+  waypoints: readonly ArcWaypoint[];
+  point: ArcWaypoint;
+}): { index: number; point: ArcWaypoint } {
+  const polyline = [from, ...waypoints, to];
+  let best = { index: 0, distance: Infinity, projected: point };
+  for (let segment = 0; segment < polyline.length - 1; segment += 1) {
+    const a = polyline[segment] as ArcWaypoint;
+    const b = polyline[segment + 1] as ArcWaypoint;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const lengthSquared = dx * dx + dy * dy;
+    const t = lengthSquared === 0 ? 0 : Math.max(0, Math.min(1, ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSquared));
+    const projected = { x: a.x + dx * t, y: a.y + dy * t };
+    const distance = Math.hypot(point.x - projected.x, point.y - projected.y);
+    if (distance < best.distance) {
+      // segment 0 is from → waypoints[0]: the new point inserts at
+      // index 0; segment k (k ≥ 1) ends at waypoints[k-1], so the
+      // new point inserts after it, at index k
+      best = { index: segment, distance, projected };
+    }
+  }
+  return { index: best.index, point: best.projected };
 }
 
 export type { LayerName, LayerPath };

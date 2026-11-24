@@ -13,7 +13,12 @@ export type LanguageValue =
   | { kind: "literal"; value: string | number | boolean | null }
   /** `@anchor/first/second` — cls "R" when a path follows, "LR" for a bare layer. */
   | { kind: "reference"; referenceClass: "R" | "LR"; segments: string[]; major: number | null }
-  | { kind: "list"; items: LanguageValue[] };
+  | { kind: "list"; items: LanguageValue[] }
+  /** `fn (params) [[ code ]]` — the ONE code slot of the language
+   * (ADR-0119): legal only inside a `display` block of a lens, never
+   * between quotes. The parser refuses it anywhere else — there is
+   * no other slot. */
+  | { kind: "fn"; params: string[]; code: string };
 
 // The declaration modes of the members: three gestures since
 // ADR-0106 — the ones the ontology measured, nothing else.
@@ -144,6 +149,11 @@ export function parseLanguage(
   };
 
   // ---- values
+  // The display context (ADR-0119): a `fn` value is legal only inside
+  // a `display` block — the parser tracks the depth of `display`
+  // blocks it is currently inside; outside, the fn slot does not
+  // exist and the value is refused as a syntax error.
+  let displayDepth = 0;
   const parseReference = (): LanguageValue => {
     eat("@");
     const segments = [eat("id").text];
@@ -228,6 +238,39 @@ export function parseLanguage(
       }
       eat("]");
       return { kind: "list", items };
+    }
+    // The display function (ADR-0119): `fn (a, b) [[ code ]]` — the
+    // code slot exists ONLY inside a display block of a lens; anywhere
+    // else the parser refuses it (there is no other code slot).
+    if (token.kind === "id" && token.text === "fn" && peekAt(1)?.kind === "(") {
+      if (displayDepth === 0) {
+        throw new Error(
+          parseText({
+            language,
+            en:
+              "l." +
+              token.line +
+              " : fn is legal only inside a display block of a lens — no code slot here",
+          }),
+        );
+      }
+      position++;
+      eat("(");
+      const params: string[] = [];
+      if (peek()?.kind !== ")") {
+        while (true) {
+          const param = eat("id");
+          params.push(param.text);
+          if (peek()?.kind === ",") {
+            position++;
+            continue;
+          }
+          break;
+        }
+      }
+      eat(")");
+      const code = eat("code");
+      return { kind: "fn", params, code: code.text };
     }
     throw new Error(
       parseText({
@@ -504,13 +547,20 @@ export function parseLanguage(
       }
       if (peek()?.kind === "{") {
         position++;
+        // Entering a `display` block opens the ONE code slot of the
+        // language (ADR-0119): fn values are legal inside it, and
+        // only inside it.
+        const opensDisplay = keyToken.text === "display";
+        if (opensDisplay) displayDepth++;
+        const block = parseActs();
+        if (opensDisplay) displayDepth--;
         acts.push({
           kind: "member",
           key: keyToken.text,
           mode,
           refines,
           value: null,
-          block: parseActs(),
+          block,
           guard,
           line: token.line,
         });

@@ -19,8 +19,9 @@
 // mistralClient, editorSessionServer, httpUtils, routes.
 //
 // By default it binds to the loopback only (127.0.0.1:8791):
-// HOST and PORT exist for real deployments, and the access code
-// (API_TOKEN) protects the quarry and the geologist.
+// HOST and PORT exist for real deployments, and the unified
+// authentication (milestone Auth v1: Zitadel OIDC sessions, Bearer
+// JWT, PAT introspection) protects the quarry and the geologist.
 //
 // What the server SENDS stays in French by design: the JSON keys
 // of the compatibility API (`noyau`, `utilisateurs`, `erreur`…)
@@ -33,7 +34,6 @@ import {
   VERSION,
   PORT,
   HOST,
-  API_TOKEN,
   MISTRAL_API_KEY,
   MAX_PEN_ATTEMPTS,
   DATABASE_URL,
@@ -43,6 +43,7 @@ import { KERNEL_LAYER_NAMES } from "./server/layerStore.ts";
 import { createQuarryStoresFromEnv, initQuarryStores } from "./server/stores.ts";
 import { initializeEditorSession } from "./server/editorSessionServer.ts";
 import { createQuarryServer } from "./server/routes.ts";
+import { assertAuthConfigSafe, authConfigFromEnv } from "./server/auth/service.ts";
 
 // The persistent stores are verified BEFORE the server listens:
 // with DATABASE_URL set, an unreachable PostgreSQL is a fail-fast
@@ -50,6 +51,10 @@ import { createQuarryServer } from "./server/routes.ts";
 // split the instances between disk and base.
 const stores = createQuarryStoresFromEnv();
 try {
+  // The auth guard (milestone Auth v1): AUTH_DISABLED=1 is fatal in
+  // production — the auth can never be switched off there.
+  const authConfig = authConfigFromEnv();
+  assertAuthConfigSafe({ config: authConfig });
   await initQuarryStores({ stores });
   const server = createQuarryServer({ stores });
   await initializeEditorSession();
@@ -61,12 +66,18 @@ try {
         " couches ; géologue vérifié : jusqu'à " +
         MAX_PEN_ATTEMPTS +
         " propositions jugées par le staging" +
-        (MISTRAL_API_KEY ? "" : " (MISTRAL_API_KEY absente — le géologue reste local)"),
+        (MISTRAL_API_KEY
+          ? ""
+          : " (aucune clé serveur — chaque visiteur apporte son token dans les préférences)"),
     );
-    if (API_TOKEN === "changez-moi") {
+    if (authConfig.disabled) {
+      console.log("ATTENTION : AUTH_DISABLED=1 — authentification court-circuitée (développement local uniquement)");
+    } else if (authConfig.issuer === "") {
       console.log(
-        "ATTENTION : code d'accès par défaut « changez-moi » encore en place — posez API_TOKEN dans .env",
+        "ATTENTION : AUTH_ISSUER absent — /auth/login répond 503 ; posez AUTH_ISSUER/AUTH_CLIENT_ID (ou AUTH_DISABLED=1 en local)",
       );
+    } else {
+      console.log("authentification OIDC active — émetteur " + authConfig.issuer);
     }
     if (!DATABASE_URL) {
       console.log(

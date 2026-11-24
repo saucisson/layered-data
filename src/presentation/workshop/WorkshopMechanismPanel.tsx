@@ -58,7 +58,7 @@ export function WorkshopMechanismPanel({
     <section className="space-y-3" role="region" aria-labelledby="panel-mechanism-heading">
       <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
         <h2 id="panel-mechanism-heading" className="mb-1 text-sm font-bold text-slate-800 dark:text-slate-100">
-          {say({ language, en: "③ The mechanism" })}
+          {say({ language, en: "④ The mechanism" })}
           <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
             {say({
               language,
@@ -162,7 +162,7 @@ export function WorkshopMechanismPanel({
           highlighted, the story scrolls, older steps fading */}
       <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-3">
         <h2 className="mb-2 text-sm font-bold text-slate-800 dark:text-slate-100">
-          {say({ language, en: "③ The resolution cascade" })}
+          {say({ language, en: "⑤ The resolution cascade" })}
           <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
             {cascade.length +
               " " +
@@ -186,7 +186,7 @@ export function WorkshopMechanismPanel({
               " " +
               say({
                 language,
-                en: "before, in the stack — the ③ back button undoes them",
+                en: "before, in the stack — the ④ back button undoes them",
               })}
           </p>
         )}

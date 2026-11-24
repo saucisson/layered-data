@@ -45,7 +45,7 @@
       "patterns": [
         {
           "name": "keyword.other.act.layered-data",
-          "match": "(?<![A-Za-z0-9_.\\-])(?:layer|refines|then|extend|override|abstract|bind|check|expect|absent)(?![A-Za-z0-9_.\\-])"
+          "match": "(?<![A-Za-z0-9_.\\-])(?:layer|refines|then|extend|override|abstract|bind|check|expect|absent|when)(?![A-Za-z0-9_.\\-])"
         },
         {
           "name": "storage.type.special-key.layered-data",
@@ -57,7 +57,7 @@
       "patterns": [
         {
           "name": "variable.other.key.layered-data",
-          "match": "[A-Za-z_][A-Za-z0-9_.\\-]*(?=\\s*(?:=|\\-\\>)|\\s+refines(?![A-Za-z0-9_.\\-])|\\s*$)"
+          "match": "[A-Za-z_][A-Za-z0-9_.\\-]*(?=\\s*(?:=|\\-\\>)|\\s+refines(?![A-Za-z0-9_.\\-])|\\s+when(?![A-Za-z0-9_.\\-])|\\s*$)"
         }
       ]
     },

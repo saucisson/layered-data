@@ -1,28 +1,30 @@
-// Panel ④ of the workshop: the point of view — the tree of lenses and
-// viewpoints on the left, the drawing of the current model through the
+// The lenses page panel (issue #227): the tree of lenses and
+// viewpoints on the left, the drawing of the chosen model through the
 // chosen look on the right, and the dressing detail of the selected
-// glyph. Pure presentation — the state lives in the composition root.
+// glyph. Pure presentation — the state lives in the page.
 
-import type { Language } from "../../domain/messages.ts";
-import { asLayerName, asLayerPath } from "../../domain/identifiers.ts";
-import { coversAddresses, dressingEntries, type Glyph } from "../../domain/views.ts";
-import type { LayeredDataKernel } from "../../application/corpus.ts";
-import { AddressView } from "../../domain/addresses.ts";
-import { localized, say } from "../i18n.ts";
-import { LayerBadge } from "../layerBadge.tsx";
-import { NodeGlyph, EdgeGlyph } from "../glyphs.tsx";
+import { useMemo } from "react";
+import type { Language } from "../domain/messages.ts";
+import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
+import { coversAddresses, dressingEntries, type RawGlyph } from "../domain/views.ts";
+import type { LayeredDataKernel } from "../application/corpus.ts";
+import { AddressView } from "../domain/addresses.ts";
+import { localized, say } from "./i18n.ts";
+import { LayerBadge } from "./layerBadge.tsx";
+import { NodeGlyph, EdgeGlyph } from "./glyphs.tsx";
 import {
-  LENS_LAYERS,
-  VIEWPOINT_LAYERS,
-  VIEW_NOTES,
   bindingOf,
+  displaySchemeLayers,
   groupTree,
+  lensLayers,
   shapeLabel,
-} from "../viewTree.ts";
-import type { buildWorkshopLook } from "../lensDrawing.ts";
-import type { SelectedGlyph } from "./workshopKernel.ts";
+  viewNote,
+  viewpointLayers,
+} from "./viewTree.ts";
+import { buildWorkshopLook } from "./lensDrawing.ts";
+import type { SelectedGlyph } from "./workshop/workshopKernel.ts";
 
-export function WorkshopViewpointPanel({
+export function ViewpointPanel({
   language,
   kernel,
   look,
@@ -39,10 +41,25 @@ export function WorkshopViewpointPanel({
   selectedGlyph: SelectedGlyph | null;
   onSelectGlyph: (glyph: SelectedGlyph | null) => void;
 }) {
+  // The legal degradation of the selected viewpoint: the generic lens
+  // (the display root, derived from the space) applied to the model the
+  // viewpoint designates — circle and line for everything, zero error.
+  // The pedagogical counterpoint of the Petri/Kahn trio.
+  const genericDegradation = useMemo(() => {
+    if (look.isLens || look.lens === null) return null;
+    const genericLens = displaySchemeLayers({ space: kernel.space })[0];
+    if (genericLens === undefined) return null;
+    const generic = buildWorkshopLook({
+      space: kernel.space,
+      selectedView: genericLens,
+      currentLayer: look.model,
+    });
+    return { lens: genericLens, applicability: generic.applicability };
+  }, [kernel, look]);
   return (
-    <section className="mx-2 mt-3 sm:mx-4 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
+    <section className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4" role="region" aria-labelledby="panel-viewpoint-heading">
       <h2 id="panel-viewpoint-heading" className="text-sm font-bold text-slate-800 dark:text-slate-100">
-        {say({ language, en: "④ The point of view" })}
+        {say({ language, en: "The lenses & viewpoints" })}
         <span className="ml-1 font-normal text-slate-600 dark:text-slate-400">
           {say({
             language,
@@ -54,7 +71,7 @@ export function WorkshopViewpointPanel({
         {say({
           language,
           en:
-            "The look is chosen in the tree: lenses dress the types with a " +
+            "The viewpoint is chosen in the tree: lenses dress the types with a " +
             "display templates scheme; viewpoints designate a model and " +
             "a lens through LRef fields. A viewpoint imposes its model — " +
             "a lone lens applies to the current model of ①. The " +
@@ -77,7 +94,7 @@ export function WorkshopViewpointPanel({
               {say({ language, en: "Lenses" })}
             </div>
             <div className="space-y-1">
-              {groupTree({ space: kernel.space, members: LENS_LAYERS }).map(
+              {groupTree({ space: kernel.space, members: lensLayers({ space: kernel.space }) }).map(
                 ({ layer: viewLayer, depth }) => (
                   <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
                     <button type="button"
@@ -96,7 +113,7 @@ export function WorkshopViewpointPanel({
                       <span className="truncate text-slate-600 dark:text-slate-400">
                         {say({
                           language,
-                          en: "lens — model: the current one of ①",
+                          en: "lens — model: the chosen one",
                         })}
                       </span>
                     </button>
@@ -110,7 +127,7 @@ export function WorkshopViewpointPanel({
               {say({ language, en: "Viewpoints" })}
             </div>
             <div className="space-y-1">
-              {groupTree({ space: kernel.space, members: VIEWPOINT_LAYERS }).map(
+              {groupTree({ space: kernel.space, members: viewpointLayers({ space: kernel.space }) }).map(
                 ({ layer: viewLayer, depth }) => (
                   <div key={viewLayer} style={{ marginLeft: depth * 14 }}>
                     <button type="button"
@@ -127,13 +144,19 @@ export function WorkshopViewpointPanel({
                     >
                       <LayerBadge layer={viewLayer} small />
                       <span className="truncate text-slate-600 dark:text-slate-400">
-                        {bindingOf({ space: kernel.space, view: viewLayer, key: "model" })
-                          .value instanceof AddressView
-                          ? say({ language, en: "→ designated model" })
-                          : say({
-                              language,
-                              en: "→ model: the current one of ①",
-                            })}
+                        {(() => {
+                          const modelBinding = bindingOf({
+                            space: kernel.space,
+                            view: viewLayer,
+                            key: "model",
+                          }).value;
+                          return modelBinding instanceof AddressView
+                            ? "→ " + modelBinding.layer
+                            : say({
+                                language,
+                                en: "→ model: the chosen one",
+                              });
+                        })()}
                       </span>
                     </button>
                   </div>
@@ -162,10 +185,10 @@ export function WorkshopViewpointPanel({
               {look.isLens
                 ? say({
                     language,
-                    en: "lone lens — current model of ①",
+                    en: "lone lens — the chosen model",
                   })
                 : look.viewpointDecidesPositions
-                  ? say({ language, en: "course positions" })
+                  ? say({ language, en: "dinner-course positions" })
                   : look.modelCarriesPositions
                     ? say({
                         language,
@@ -180,24 +203,30 @@ export function WorkshopViewpointPanel({
           <svg viewBox={look.frame ?? "0 0 270 220"} className="w-full rounded bg-white dark:bg-slate-800">
             {look.lens !== null &&
               look.edges.map((edge) => {
-                const from =
+                const fromVertex =
                   edge.from !== null
-                    ? (look.vertices.find((vertex) => vertex.name === edge.from)?.position ??
-                      null)
+                    ? (look.vertices.find((vertex) => vertex.name === edge.from) ?? null)
                     : null;
-                const to =
+                const toVertex =
                   edge.to !== null
-                    ? (look.vertices.find((vertex) => vertex.name === edge.to)?.position ?? null)
+                    ? (look.vertices.find((vertex) => vertex.name === edge.to) ?? null)
                     : null;
+                const from = fromVertex?.position ?? null;
+                const to = toVertex?.position ?? null;
                 if (!from || !to) return null;
                 return (
                   <EdgeGlyph
                     key={edge.name}
                     name={edge.name}
                     shape={edge.drawn ? edge.drawn.spec : null}
+                    fnContext={edge.fnContext}
                     weight={edge.weight}
                     from={from}
                     to={to}
+                    fromShape={fromVertex?.drawn ? fromVertex.drawn.spec : null}
+                    fromSize={fromVertex?.size}
+                    toShape={toVertex?.drawn ? toVertex.drawn.spec : null}
+                    toSize={toVertex?.size}
                     selected={
                       selectedGlyph !== null &&
                       selectedGlyph.kind === "edge" &&
@@ -223,7 +252,10 @@ export function WorkshopViewpointPanel({
                     key={vertex.name}
                     name={vertex.name}
                     shape={vertex.drawn ? vertex.drawn.spec : null}
+                    draw={vertex.drawn ? vertex.drawn.draw : null}
+                    fnContext={vertex.fnContext}
                     position={vertex.position}
+                    size={vertex.size}
                     selected={
                       selectedGlyph !== null &&
                       selectedGlyph.kind === "vertex" &&
@@ -300,7 +332,7 @@ export function WorkshopViewpointPanel({
                   (look.applicability.dressed === 0
                     ? say({
                         language,
-                        en: " — blind lens: domain error (check_view_lens)",
+                        en: " — blind lens: dresses no vertex (domain error)",
                       })
                     : "") +
                   (look.applicability.dressed > 0 &&
@@ -311,8 +343,24 @@ export function WorkshopViewpointPanel({
                       })
                     : "")}
           </div>
+          {!look.isLens && genericDegradation !== null && (
+            <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+              {say({ language, en: "legal degradation — the generic lens " })}
+              <span className="font-mono">{genericDegradation.lens}</span>
+              {say({ language, en: " on " })}
+              <span className="font-mono">{look.model}</span>
+              {": " +
+                genericDegradation.applicability.dressed +
+                "/" +
+                genericDegradation.applicability.total +
+                say({
+                  language,
+                  en: " dressed — circle and line for everything, zero error",
+                })}
+            </div>
+          )}
           <p className="mt-1 text-[10px] leading-4 text-slate-600 dark:text-slate-400">
-            {localized({ language, text: VIEW_NOTES[selectedView] ?? { en: ""} })}
+            {localized({ language, text: viewNote({ space: kernel.space, layer: selectedView }) })}
           </p>
         </div>
       </div>
@@ -332,7 +380,7 @@ export function WorkshopViewpointPanel({
           });
           let best: {
             path: string[];
-            spec: Glyph[];
+            spec: RawGlyph[];
             hit: ReturnType<typeof dressingEntries>[number]["hit"];
           } | null = null;
           for (const match of matches) {
@@ -366,7 +414,7 @@ export function WorkshopViewpointPanel({
                     language,
                     en:
                       "No entry of the lens dresses this node — it would be " +
-                      "drawn « naked » (dotted).",
+                      "drawn “naked” (dotted).",
                   })}
                 </p>
               )}

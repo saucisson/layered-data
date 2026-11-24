@@ -9,16 +9,27 @@
 import { asLayerName, asLayerPath } from "../domain/identifiers.ts";
 import { AddressView } from "../domain/addresses.ts";
 import type { Space } from "../domain/space.ts";
-import { drawnShape, dressingApplicability } from "../domain/views.ts";
-import { bindingOf, circlePosition, LENS_LAYERS, positionOf } from "./viewTree.ts";
+import {
+  DEFAULT_NODE_SIZE,
+  drawnShape,
+  dressingApplicability,
+  flattenAddress,
+  type NodeSize,
+} from "../domain/views.ts";
+import { bindingOf, circlePosition, isLensLayer, positionOf, sizeOf } from "./viewTree.ts";
+import type { DisplayFnContext } from "../domain/displayFunctions.ts";
 
-/** One drawn vertex: its resolved position and the shape the lens
- * decides for its type (null: the lens knows nothing of it, the
- * glyph stays dashed). */
+/** One drawn vertex: its resolved position, its size datum (the
+ * cascade: the viewpoint decides, else the model carries, else the
+ * gabarit's defaults — issue #285), and the shape the lens decides
+ * for its type (null: the lens knows nothing of it, the glyph stays
+ * dashed). */
 export interface LookVertex {
   name: string;
   position: { x: number; y: number } | null;
+  size: NodeSize;
   drawn: ReturnType<typeof drawnShape>;
+  fnContext: DisplayFnContext;
 }
 
 /** One drawn edge: the shape, the weight read through the view
@@ -29,6 +40,7 @@ export interface LookEdge {
   weight: number | null;
   from: string | null;
   to: string | null;
+  fnContext: DisplayFnContext;
 }
 
 /** What the drawing needs: the model, the lens (or ∅), where the
@@ -60,7 +72,7 @@ export function buildWorkshopLook({
   selectedView: string;
   currentLayer: string;
 }): WorkshopLook {
-  const isLens = LENS_LAYERS.includes(selectedView);
+  const isLens = isLensLayer({ space, layer: selectedView });
   // The model: the viewpoint's (model slot resolved as an
   // address), otherwise the current model of ①.
   let model = currentLayer;
@@ -95,6 +107,30 @@ export function buildWorkshopLook({
     (viewpointDecidesPositions ? positionOf({ space, source: selectedView, name }) : null) ??
     (modelCarriesPositions ? positionOf({ space, source: model, name }) : null) ??
     circlePosition({ index, total: all.length });
+  // The size cascade mirrors the position one (issue #285): the
+  // viewpoint decides, else the model carries, else the default.
+  const viewpointDecidesSizes =
+    !isLens &&
+    space.read({
+      layer: asLayerName(selectedView),
+      path: asLayerPath([]),
+      key: "sizes",
+    }) instanceof AddressView;
+  const modelCarriesSizes =
+    lens !== null &&
+    space.read({ layer: asLayerName(model), path: asLayerPath([]), key: "sizes" }) instanceof
+      AddressView;
+  const sizeOfName = (name: string): NodeSize =>
+    (viewpointDecidesSizes ? sizeOf({ space, source: selectedView, container: "sizes", name }) : null) ??
+    (modelCarriesSizes ? sizeOf({ space, source: model, container: "sizes", name }) : null) ??
+    DEFAULT_NODE_SIZE;
+  // The pure-data context of the display functions (ADR-0119): the
+  // model flattened once, each element flattened at its own address.
+  const modelFlat = flattenAddress({ space, layer: asLayerName(model), path: asLayerPath([]) });
+  const fnContextOf = (path: string[]): DisplayFnContext => ({
+    element: flattenAddress({ space, layer: asLayerName(model), path: asLayerPath(path) }),
+    model: modelFlat,
+  });
   const vertices: LookVertex[] =
     lens !== null
       ? space
@@ -102,12 +138,14 @@ export function buildWorkshopLook({
           .map((name, index, all) => ({
             name,
             position: positionOfName(name, index, all),
+            size: sizeOfName(name),
             drawn: drawnShape({
               space,
               lens: asLayerName(lens),
               layer: asLayerName(model),
               path: asLayerPath(["vertices", name]),
             }),
+            fnContext: fnContextOf(["vertices", name]),
           }))
       : [];
   // The frame follows the positions: a layout wider than the box
@@ -164,6 +202,7 @@ export function buildWorkshopLook({
               source instanceof AddressView ? (source.path[source.path.length - 1] ?? null) : null,
             to:
               target instanceof AddressView ? (target.path[target.path.length - 1] ?? null) : null,
+            fnContext: fnContextOf(["edges", name]),
           };
         })
       : [];
