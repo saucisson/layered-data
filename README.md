@@ -12,7 +12,7 @@ Formalisms_ (PNSE'16).
 ## Contents
 
 The code follows an onion architecture, documented in
-`docs/architecture.md` (the coding rules, binding for all of `src/` and
+`docs/rules.md` (the coding rules, binding for all of `src/` and
 `server.ts`, live in `docs/coding-guidelines.md`):
 
 - `src/domain/` — the layered-data kernel, pure: the space (closures,
@@ -47,7 +47,7 @@ The code follows an onion architecture, documented in
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) — humans and agents follow the protocol in `AGENTS.md` and `docs/branching.md`.
+See [CONTRIBUTING.md](CONTRIBUTING.md) — humans and agents follow the protocol in `AGENTS.md` and `docs/protocol.md`.
 
 ## Quick start
 

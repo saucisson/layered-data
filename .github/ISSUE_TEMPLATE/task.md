@@ -22,7 +22,7 @@ Each criterion must be:
 | 2 | | |
 | 3 | | |
 
-**No acceptance criteria = blocked issue** (triage gate in `docs/branching.md`).
+**No acceptance criteria = blocked issue** (triage gate in `docs/protocol.md`).
 
 ## Dependencies
 

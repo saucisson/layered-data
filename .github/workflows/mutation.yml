@@ -2,7 +2,7 @@ name: mutation-testing
 
 # Mutation testing on the kernel language pipeline (src/domain/language)
 # plus the version classifier (src/domain/versionClassifier.ts),
-# per the owner decision recorded in docs/branching.md §6 (issue #24,
+# per the owner decision recorded in docs/protocol.md §6 (issue #24,
 # thresholds raised in issue #162): Stryker runs on a daily cron and
 # FAILS on a low mutation score (stryker.config.json: high = 90,
 # break = 80).

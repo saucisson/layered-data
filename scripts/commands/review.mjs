@@ -3,7 +3,7 @@
  * Agent Review Script for saucisson/layered-data
  * 
  * This script implements the mechanical checks of the reviewer agent
- * (see docs/agents/reviewer.md). The reviewer itself is launched by
+ * (see docs/rules.md). The reviewer itself is launched by
  * the developer agent as an isolated subagent in parallel with CI
  * (ADR-0016 as amended by ADR-0117, proposed); this script can be run
  * locally on a diff to reproduce the mechanical findings.
@@ -36,11 +36,11 @@ function getPRNumber() {
 // Constitutional files that require human approval
 const CONSTITUTIONAL_FILES = [
   'AGENTS.md',
-  'docs/agents/',
+  'docs/protocol.md',
   'docs/decisions/',
-  'docs/architecture.md',
-  'docs/branching.md',
-  'docs/review-checklist.md',
+  'docs/rules.md',
+  'docs/protocol.md',
+  'docs/rules.md',
   'docs/coding-guidelines.md',
   '.github/CODEOWNERS',
   '.github/workflows/',
@@ -673,7 +673,7 @@ function runReview() {
   
   comment += `---\n`;
   comment += `*Review performed at ${new Date().toISOString()}*\n`;
-  comment += `*Agent protocol: [ADR-0011](docs/decisions/adr-0011-agent-protocol.md) | Review checklist: [docs/review-checklist.md](docs/review-checklist.md)*\n`;
+  comment += `*Agent protocol: [ADR-0011](docs/decisions/adr-0011-agent-protocol.md) | Review checklist: [docs/rules.md](docs/rules.md)*\n`;
   
   // Write comment
   fs.writeFileSync(

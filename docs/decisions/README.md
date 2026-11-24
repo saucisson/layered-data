@@ -1,54 +1,60 @@
-# Architecture Decision Records (ADRs)
+# Architecture Decision Records
 
-This directory contains the Architecture Decision Records for saucisson/layered-data.
+An ADR records **why** a choice was made, so it can be revisited later
+with the original reasoning in hand - not to freeze it.
 
-## What is an ADR?
+## Process (MADR-lite)
 
-An ADR is a short document that captures an important architectural decision
-made in the project. The purpose is to provide context and reasoning for
-decisions that affect the codebase structure, technology choices, or development
-process.
+Each ADR is one file, `adr-NNNN-short-name.md`, containing:
 
-## ADR Process
+- **Status**: `accepted` (or `superseded by adr-NNNN`).
+- **Date**: the decision date.
+- **Context**: the forces at play.
+- **Options considered**: with explicit trade-offs, including the
+  rejected ones and why.
+- **Decision**: the chosen option.
+- **Consequences**: including the negatives - every decision has some.
 
-1. **Identify the need**: A decision is worth an ADR if a future developer
-   might ask "why did we do it this way?"
-2. **Draft the ADR**: Create a new file `adr-XXXX-description.md` where XXXX
-   is the next available number
-3. **Get approval**: Label the PR with `needs-human` for human review
-4. **Accept**: Once accepted, the ADR becomes part of the project's constitutional
-   documentation
+## Rules
 
-## ADR Format
+- Accepted ADRs are **never edited**. A reversal is a new ADR that
+  references and supersedes the old one. Owner-set exceptions are
+  recorded here: stale references follow the code, so projects
+  instantiated from the template never inherit dead paths.
+- Superseded ADRs are removed from the repository; ADR numbers are
+  never reused.
+- **Numbering**: ADR numbers `0001`-`0099` are reserved for the
+  template's own decisions (currently 0001-0007). A project
+  instantiated from this template numbers its own, project-specific
+  ADRs from `0100` upward, so a template update can add new template
+  ADRs without ever colliding with the project's.
+- ADRs are constitutional files: agents may **draft** a new ADR inside
+  a pull request, but only the human owner accepts it. Draft status is
+  explicit at the top of the file.
+- "ADR-worthy" changes are on the strict escalation list
+  (`docs/protocol.md`).
+- The ADRs are **language- and tool-agnostic**: they record the ideas.
+  The concrete tools of an instance (its language, linter, type
+  checker, test runner) apply the ideas; the template's own Python
+  tools are the worked example.
 
-Each ADR follows this template:
+## Index
 
-```markdown
-# ADR-XXXX: Title
+The template's decisions were condensed on 2026-11-13 (by the owner)
+from twenty-two single-topic ADRs into seven thematic ones; each file
+lists the former numbers it merges, and no decision was dropped.
 
-- Status: accepted/proposed/superseded/deprecated
-- Date: YYYY-MM-DD
+| ADR      | Decision                                                      |
+| -------- | ------------------------------------------------------------- |
+| [0001](adr-0001-toolchain-and-tooling.md) | Toolchain and repository tooling: stable standards, committed lockfile, delegated maintenance, one CLI driver package |
+| [0002](adr-0002-architecture-and-style.md) | Onion data-first architecture; data and functions over OOP; readability-first style |
+| [0003](adr-0003-typing-logging-and-apis.md) | Precise typing with one reference checker; structured logging as executable comments; REST with best practices |
+| [0004](adr-0004-quality-and-security-gates.md) | Quality gates, security gates, anti-complacency tests |
+| [0005](adr-0005-branch-model-and-worklog.md) | Branch model main/daily/work; criteria-checked merge, body-update and sync drivers; per-record worklog |
+| [0006](adr-0006-agent-protocol.md) | Two-agent protocol with isolated local review, budgets, contact channel, runtime permissions, active CI wait |
+| [0007](adr-0007-unattended-loop.md) | Unattended loop: one fresh headless session per item, claims first, recovery, anti-spin |
 
-## Context
-
-The problem being addressed.
-
-## Options considered
-
-- **Option 1** (chosen): description
-- **Option 2**: description
-- **Option 3**: description
-
-## Decision
-
-What was chosen and why.
-
-## Consequences
-
-What this decision implies - good and bad.
-```
-
-## Existing ADRs
+## Project ADRs (this instance)
 
 | Number | Title | Status | Date |
 | ------ | ----- | ------ | ---- |
@@ -72,32 +78,3 @@ What this decision implies - good and bad.
 | [ADR-0111](adr-0111-postgres-persistence.md) | PostgreSQL persistence for user layers and the editor session | accepted | 2026-11-11 |
 | [ADR-0112](adr-0112-retire-audit-treaty.md) | Retiring the audit treaty - the executable specification is the contract | accepted | 2026-11-12 |
 | [ADR-0113](adr-0113-one-tongue.md) | One tongue for now - English-only content, the translation system is kept | accepted | 2026-11-12 |
-
-Numbers ADR-0000 to ADR-0099 are reserved for the project template (agent
-protocol, branching, CI mechanics). ADRs specific to layered-data start at
-ADR-0100.
-
-## Adding a new ADR
-
-1. Check the existing ADRs to ensure the decision hasn't already been recorded
-2. Use the next available number (template ADRs: 00XX; layered-data ADRs: 01XX and up)
-3. Follow the format above
-4. Place the file in this directory
-5. Update this README's table
-6. Submit a PR with `needs-human` label
-
-## Modifying an ADR
-
-ADRs are constitutional files - they can only be modified by humans.
-Owner-set exception recorded 2026-11-10: the pull request size budget
-referenced by the review gate was raised from ~500 to ~1000 changed lines
-by owner instruction (template sync), so the documented threshold follows
-the gate that actually applies. Apart from owner-set exceptions like
-this, the decisions themselves never change. Any other change to an ADR
-requires:
-
-1. A new ADR explaining why the change is needed
-2. Human approval via `needs-human` label
-3. Explicit acceptance by the project owner
-
-See `docs/agents/escalation.md` for the escalation protocol.
