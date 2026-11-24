@@ -135,12 +135,22 @@ export function AddFormalismComposer({
                 say({ language, en: " proposals; simulated AI of the canvas"});
               break;
             case "error":
-              origin =
-                say({ language, en: "the proxy answered " }) +
-                event.statusCode +
-                " : " +
-                event.body.slice(0, 180) +
-                say({ language, en: " ; simulated AI of the canvas"});
+              // LD-8: a 401 on the live SSE path means the personal
+              // token was refused — say it in FR/EN, then degrade.
+              if (event.statusCode === 401) {
+                origin = say({
+                  language,
+                  en: "invalid Mistral API token (401) — fix it in Preferences; simulated AI of the canvas",
+                  fr: "token API Mistral invalide (401) — corrigez-le dans les Préférences ; IA simulée du canevas",
+                });
+              } else {
+                origin =
+                  say({ language, en: "the proxy answered " }) +
+                  event.statusCode +
+                  " : " +
+                  event.body.slice(0, 180) +
+                  say({ language, en: " ; simulated AI of the canvas"});
+              }
               break;
           }
         },
@@ -148,12 +158,20 @@ export function AddFormalismComposer({
     } catch (error) {
       if (error instanceof GenerateHttpError) {
         if (error.statusCode === 401) {
-          // LD-8: a 401 from the proxy means the personal token was
-          // refused — say it plainly, then degrade to the simulation.
-          origin = say({
-            language,
-            en: "invalid Mistral API token (401) — fix it in Preferences; simulated AI of the canvas",
-          });
+          // LD-8: a 401 on the non-stream path. A session_required 401
+          // (LD-7) is not a token problem — never blame the token for
+          // it; any other 401 means the personal token was refused.
+          origin = error.body.includes("session_required")
+            ? say({
+                language,
+                en: "session required — sign in again; simulated AI of the canvas",
+                fr: "session requise — reconnectez-vous ; IA simulée du canevas",
+              })
+            : say({
+                language,
+                en: "invalid Mistral API token (401) — fix it in Preferences; simulated AI of the canvas",
+                fr: "token API Mistral invalide (401) — corrigez-le dans les Préférences ; IA simulée du canevas",
+              });
         } else {
           origin =
             say({ language, en: "the proxy answered " }) +

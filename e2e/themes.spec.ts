@@ -9,7 +9,7 @@ async function openPrefs(page: Page) {
   await page.goto("/#preferences");
 }
 
-test("#233 the theme chosen in the header is applied and survives a reload", async ({ page }) => {
+test("#233 the theme chosen in Preferences is applied and survives a reload", async ({ page }) => {
   await page.goto("/#landing");
   await openPrefs(page);
   const picker = page.getByRole("combobox", { name: "theme" });
