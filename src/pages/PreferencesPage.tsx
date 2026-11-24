@@ -1,6 +1,6 @@
 // The Preferences page (LD-8, ADR-0120 §3): the account menu's single
 // place for user settings — the personal Mistral API token, the theme,
-// the language, the logo. The token field is password-type, pasteable,
+// the language. The token field is password-type, pasteable,
 // clearable; the value lives in browser localStorage only — never in a
 // URL, never logged, never returned in a response.
 
@@ -11,7 +11,6 @@ import { say } from "../presentation/i18n.ts";
 import type { Language } from "../domain/messages.ts";
 import { SUPPORTED_LANGUAGES } from "../infrastructure/i18n.ts";
 import { THEMES, type ThemeId } from "../infrastructure/themes.ts";
-import { LOGOS, type LogoId } from "../infrastructure/logos.ts";
 import {
   clearMistralToken,
   readMistralToken,
@@ -22,8 +21,6 @@ interface PreferencesPageProps {
   language: Language;
   theme: ThemeId;
   onChooseTheme: (theme: ThemeId) => void;
-  logo: LogoId;
-  onChooseLogo: (logo: LogoId) => void;
   onChooseLanguage: (language: Language) => void;
 }
 
@@ -31,8 +28,6 @@ export function PreferencesPage({
   language,
   theme,
   onChooseTheme,
-  logo,
-  onChooseLogo,
   onChooseLanguage,
 }: PreferencesPageProps) {
   const [tokenDraft, setTokenDraft] = useState(() => readMistralToken() ?? "");
@@ -116,21 +111,6 @@ export function PreferencesPage({
                 className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-1.5 py-1 text-xs"
               >
                 {THEMES.map((choice) => (
-                  <option key={choice.id} value={choice.id}>
-                    {choice.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-200">
-              {say({ language, en: "Logo", fr: "Logo" })}
-              <select
-                value={logo}
-                onChange={(event) => onChooseLogo(event.target.value as LogoId)}
-                aria-label={say({ language, en: "logo", fr: "logo" })}
-                className="rounded border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900 px-1.5 py-1 text-xs"
-              >
-                {LOGOS.map((choice) => (
                   <option key={choice.id} value={choice.id}>
                     {choice.label}
                   </option>
