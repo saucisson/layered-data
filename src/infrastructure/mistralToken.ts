@@ -16,6 +16,9 @@ export function writeMistralToken({ token }: { token: string }): void {
   if (token === "") {
     localStorage.removeItem(MISTRAL_TOKEN_STORAGE_KEY);
   } else {
+    // Browser-side storage is the accepted design (ADR-0120 §3): the token
+    // never leaves the client except as the x-mistral-api-token header.
+    // codeql[js/clear-text-storage-of-sensitive-information]
     localStorage.setItem(MISTRAL_TOKEN_STORAGE_KEY, token);
   }
 }
