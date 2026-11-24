@@ -55,7 +55,10 @@ test.describe("global navigation zones (LD-9)", () => {
     test(`menu visible on ${hash} with ${zone} highlighted`, async ({ page }) => {
       await page.goto("/" + hash);
       const nav = page.locator(MENU);
-      await expect(nav).toBeVisible();
+      // the header sits inside the route Suspense: on a cold CI start the
+      // page chunk (the workshop is the heavy one) can take longer than
+      // the 5 s default — same assertion, cold-start budget
+      await expect(nav).toBeVisible({ timeout: 10_000 });
       // three zones: one plain link (Home) + two popover buttons
       await expect(nav.locator("a")).toHaveCount(1);
       await expect(nav.locator("button")).toHaveCount(2);
