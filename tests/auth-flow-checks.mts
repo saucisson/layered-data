@@ -363,6 +363,11 @@ try {
   response = await fetch(base + "/api/whoami", { headers: { Authorization: "Bearer " + wrongAudJwt } });
   check("a JWT for another audience is 401", response.status === 401);
 
+  // two Zitadel clients per app: the API client id is a default audience
+  const apiAudJwt = makeAccessToken({ audience: API_CLIENT_ID });
+  response = await fetch(base + "/api/whoami", { headers: { Authorization: "Bearer " + apiAudJwt } });
+  check("a JWT for the API client audience is accepted by default", response.status === 200);
+
   const garbageJwt = "aaa.bbb.ccc";
   response = await fetch(base + "/api/whoami", { headers: { Authorization: "Bearer " + garbageJwt } });
   check("a garbage Bearer token falls through to introspection and is 401", response.status === 401);

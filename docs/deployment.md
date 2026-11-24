@@ -9,8 +9,12 @@ authenticated reverse proxy to expose it.
 - Node 22+, npm.
 - A `.env` with the Zitadel auth variables (`AUTH_ISSUER`,
   `AUTH_CLIENT_ID`, `AUTH_CLIENT_SECRET`, `AUTH_API_CLIENT_ID`,
-  `AUTH_API_CLIENT_SECRET` — secrets through a secure channel, never
-  committed). No Mistral key on the server (LD-8, ADR-0120 §3): each
+  `AUTH_API_CLIENT_SECRET`). Zitadel exposes two clients per app: **Web**
+  (`AUTH_CLIENT_ID` / `AUTH_CLIENT_SECRET`, browser login) and **API**
+  (`AUTH_API_CLIENT_ID` / `AUTH_API_CLIENT_SECRET`, PAT introspection).
+  Their secrets live on the VPS in `/home/deploy/zitadel-clients.json`
+  and reach the `.env` through a secure channel only — never committed.
+  No Mistral key on the server (LD-8, ADR-0120 §3): each
   visitor brings their own token in the site's Preferences — the pen
   (`POST /api/generate`) reads it from the `x-mistral-api-token` header.
 - `HOST=0.0.0.0` in `.env` **only** behind an authenticated reverse proxy.
@@ -132,7 +136,7 @@ HTTPS is automatic.
 
 ## Checklist de production
 
-- [ ] Variables `AUTH_*` renseignées dans `.env` (émetteur Zitadel `https://auth.linard.fr`, client OIDC, redirect URI `https://<app>.linard.fr/auth/callback` enregistrée côté IdP).
+- [ ] Variables `AUTH_*` renseignées dans `.env` (émetteur Zitadel `https://auth.linard.fr`, clients **Web** et **API** de l'app — redirect URI `https://<app>.linard.fr/auth/callback` enregistrée côté IdP ; secrets copiés depuis `/home/deploy/zitadel-clients.json` sur le VPS, jamais commités).
 - [ ] `NODE_ENV=production` (posé par défaut dans `docker-compose.yml`) : `AUTH_DISABLED=1` y est alors fatal et le cookie `sid` porte `Secure`.
 - [ ] `HOST=0.0.0.0` **uniquement** derrière un reverse proxy authentifié.
 - [ ] HTTPS actif (Let's Encrypt / Caddy automatique).

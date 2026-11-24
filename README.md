@@ -150,8 +150,14 @@ code still travels in `x-access-code` (hashed lookup, issue #140).
 Configuration (all in `.env`, see `.env.example`): `AUTH_ISSUER`,
 `AUTH_CLIENT_ID`, `AUTH_CLIENT_SECRET`, `AUTH_ALLOWED_AUDIENCES`,
 `AUTH_API_CLIENT_ID` / `AUTH_API_CLIENT_SECRET`, `AUTH_PUBLIC_BASE_URL`,
-`AUTH_COOKIE_SECURE`, `AUTH_SESSION_TTL_SECONDS`. No secret is ever
-committed; the real values arrive through a secure channel.
+`AUTH_COOKIE_SECURE`, `AUTH_SESSION_TTL_SECONDS`. Zitadel exposes two
+clients per app: **Web** (`AUTH_CLIENT_ID` / `AUTH_CLIENT_SECRET`, the
+browser login) and **API** (`AUTH_API_CLIENT_ID` /
+`AUTH_API_CLIENT_SECRET`, PAT introspection and default Bearer audience —
+accepted audiences default to both client ids). No secret is ever
+committed; the real values live on the VPS
+(`/home/deploy/zitadel-clients.json`) and reach the app through a secure
+channel only.
 
 Local development without an IdP: `AUTH_DISABLED=1` — `/auth/me` answers
 a fictitious dev user and the API does not 401. The server refuses to

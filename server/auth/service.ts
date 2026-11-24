@@ -34,6 +34,10 @@ import { hashAccessCode } from "../httpUtils.ts";
 export interface AuthConfig {
   disabled: boolean;
   issuer: string;
+  // Zitadel exposes two clients per app: the Web client (browser login,
+  // Authorization Code + PKCE) and the API client (PAT introspection and
+  // default audience). Their secrets live on the VPS
+  // (/home/deploy/zitadel-clients.json), never in the repo.
   clientId: string;
   clientSecret: string;
   allowedAudiences: string[];
@@ -153,7 +157,13 @@ export function createAuthService(
         if (isJwtShape({ token })) {
           try {
             const document = await discovery.get({ issuer: config.issuer });
-            const audiences = config.allowedAudiences.length > 0 ? config.allowedAudiences : [config.clientId];
+            // Default accepted audiences: both the Web and the API client
+            // ids — a Bearer JWT minted for either client of this app is
+            // accepted unless AUTH_ALLOWED_AUDIENCES narrows the list.
+            const audiences =
+              config.allowedAudiences.length > 0
+                ? config.allowedAudiences
+                : [config.clientId, config.apiClientId].filter((id) => id !== "");
             const claims = await verifyAccessToken({
               token,
               issuer: config.issuer,
