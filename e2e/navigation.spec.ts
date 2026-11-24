@@ -99,7 +99,10 @@ test.describe("global navigation zones (LD-9)", () => {
         await page.locator(MENU).getByRole("link", { name: target.label }).click();
       }
       await expect(page).toHaveURL(new RegExp(hash + "$"));
-      await expect(page.locator(`${MENU} [aria-current="page"]`)).toHaveText(zone);
+      // while the target page's lazy chunk loads, React keeps the previous
+      // tree (header included) — on a cold CI start the workshop chunk can
+      // take longer than 5 s, so the re-highlight gets a cold-start budget
+      await expect(page.locator(`${MENU} [aria-current="page"]`)).toHaveText(zone, { timeout: 20_000 });
     }
   });
 });
