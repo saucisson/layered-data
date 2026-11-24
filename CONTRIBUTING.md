@@ -24,7 +24,7 @@ npm run dev            # atelier only, with hot reload
 
 - **Port 8791 already in use**: set `PORT=<other>` in `.env`, or free the port (`lsof -ti:8791 | xargs kill`).
 - **Auth in local dev**: without an IdP, set `AUTH_DISABLED=1` in `.env` — the API answers a fictitious dev user. Never commit a real `AUTH_CLIENT_SECRET`; `AUTH_DISABLED=1` is refused in production.
-- **Missing `MISTRAL_API_KEY`**: `POST /api/generate` answers 500 without ever calling the outside — expected behavior, not a bug; set the key in `.env` to enable the pen.
+- **Missing Mistral token**: `POST /api/generate` answers 401 without ever calling the outside — expected behavior, not a bug; visitors set their personal token in the site's Preferences (LD-8). In local dev only, `MISTRAL_API_KEY` in `.env` remains a fallback (ignored when `NODE_ENV=production`).
 
 ### Architecture quick-start
 

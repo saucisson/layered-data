@@ -1,12 +1,12 @@
-// Theme picker E2E (issue #233): the header offers several themes; the
-// choice is applied on <html> and persisted in localStorage across
-// reloads.
+// Theme picker E2E (issue #233): the Preferences page offers several
+// themes; the choice is applied on <html> and persisted in
+// localStorage across reloads.
 import { test, expect, type Page } from "@playwright/test";
 
-/** Open the preferences panel: account menu (header) -> Preferences. */
+/** Open the Preferences page (LD-8: the settings live on their own
+ *  route, linked from the account menu in the header). */
 async function openPrefs(page: Page) {
-  await page.getByRole("button", { name: "account menu" }).click();
-  await page.getByRole("button", { name: "Preferences" }).click();
+  await page.goto("/#preferences");
 }
 
 test("#233 the theme chosen in the header is applied and survives a reload", async ({ page }) => {

@@ -15,6 +15,7 @@ import {
   type StagingOutcome,
 } from "../application/staging.ts";
 import { streamGenerate, GenerateHttpError } from "../infrastructure/wardrobeClient.ts";
+import { readMistralToken } from "../infrastructure/mistralToken.ts";
 import { labelOf, say } from "./i18n.ts";
 
 /** What the composer shows of the last staging: the staging
@@ -68,8 +69,13 @@ export function AddFormalismComposer({
   const [surveyQuestions, setSurveyQuestions] = useState<string[] | null>(null);
   const [answerText, setAnswerText] = useState("");
   const [roundLine, setRoundLine] = useState<string | null>(null);
+  // LD-8 (ADR-0120 §3): the real geologist needs the personal Mistral
+  // token from Preferences — without it the button stays disabled and
+  // the plume says so, instead of failing opaquely on a 401.
+  const mistralToken = readMistralToken();
 
   async function requestProposal({ answers = [] }: { answers?: string[] } = {}) {
+    if (mistralToken === null) return;
     setBusy(true);
     setSurveyLine(null);
     setSurveyQuestions(null);
@@ -142,9 +148,11 @@ export function AddFormalismComposer({
     } catch (error) {
       if (error instanceof GenerateHttpError) {
         if (error.statusCode === 401) {
+          // LD-8: a 401 from the proxy means the personal token was
+          // refused — say it plainly, then degrade to the simulation.
           origin = say({
             language,
-            en: "protected proxy — access code required; simulated AI of the canvas",
+            en: "invalid Mistral API token (401) — fix it in Preferences; simulated AI of the canvas",
           });
         } else {
           origin =
@@ -235,11 +243,29 @@ export function AddFormalismComposer({
           onClick={() => {
             void requestProposal();
           }}
-          disabled={busy}
+          disabled={busy || mistralToken === null}
+          title={
+            mistralToken === null
+              ? say({
+                  language,
+                  en: "Add your Mistral API token in Preferences to enable the AI",
+                  fr: "Ajoutez votre token API Mistral dans Préférences pour activer l’IA",
+                })
+              : undefined
+          }
           className="rounded bg-slate-800 dark:bg-slate-600 px-2 py-1 text-xs font-semibold text-white hover:bg-slate-700 dark:hover:bg-slate-500 disabled:opacity-50"
         >
           {busy ? "…" : say({ language, en: "ask the AI"})}
         </button>
+        {mistralToken === null && (
+          <span className="text-[10px] leading-4 text-amber-700 dark:text-amber-400">
+            {say({
+              language,
+              en: "no Mistral API token — add yours in Preferences to ask the AI",
+              fr: "aucun token API Mistral — ajoutez le vôtre dans Préférences pour interroger l’IA",
+            })}
+          </span>
+        )}
       </div>
       {proposalOrigin !== null && (
         <p className="mb-1 text-[10px] text-slate-500 dark:text-slate-400">

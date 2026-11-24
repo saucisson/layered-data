@@ -10,8 +10,9 @@ authenticated reverse proxy to expose it.
 - A `.env` with the Zitadel auth variables (`AUTH_ISSUER`,
   `AUTH_CLIENT_ID`, `AUTH_CLIENT_SECRET`, `AUTH_API_CLIENT_ID`,
   `AUTH_API_CLIENT_SECRET` — secrets through a secure channel, never
-  committed), and `MISTRAL_API_KEY` if the pen (`POST /api/generate`)
-  must work.
+  committed). No Mistral key on the server (LD-8, ADR-0120 §3): each
+  visitor brings their own token in the site's Preferences — the pen
+  (`POST /api/generate`) reads it from the `x-mistral-api-token` header.
 - `HOST=0.0.0.0` in `.env` **only** behind an authenticated reverse proxy.
 
 ## Build et lancement

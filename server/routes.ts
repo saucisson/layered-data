@@ -589,6 +589,14 @@ export function createQuarryServer({
               body: { erreur: 'corps JSON attendu : { "prompt": "…" }' },
             });
           }
+          // LD-8 (ADR-0120 §3): the visitor's personal Mistral token
+          // arrives as its own header — read once, passed to every
+          // upstream call of this request, never logged, never echoed.
+          const mistralTokenHeader = request.headers["x-mistral-api-token"];
+          const apiToken =
+            typeof mistralTokenHeader === "string" && mistralTokenHeader.trim() !== ""
+              ? mistralTokenHeader
+              : undefined;
           // The living context of the loop: the kernel once, the
           // visitors' layers read at the call through the store —
           // a layer written seconds ago stays refinable for the
@@ -628,7 +636,12 @@ export function createQuarryServer({
               // back to the monolith prompt, never worse than before.
               let selectedLayerNames: string[] | undefined;
               try {
-                const survey = await selectLayers({ intention: instruction, answers, visitorLayers });
+                const survey = await selectLayers({
+                  intention: instruction,
+                  answers,
+                  visitorLayers,
+                  apiToken,
+                });
                 if (survey.kind === "questions") {
                   sendEvent({ response, event: "questions", data: { questions: survey.questions } });
                   closeStream();
@@ -679,6 +692,7 @@ export function createQuarryServer({
                     ...(selectedLayerNames === undefined
                       ? {}
                       : { selectedLayerNames }),
+                    apiToken,
                   });
                   if (generated.statusCode !== 200) {
                     throw new PenInfraFailure({
@@ -733,7 +747,12 @@ export function createQuarryServer({
               strictConflicts: STRICT_CONFLICTS,
               strictChecks: STRICT_CHECKS,
               propose: async ({ instruction, feedback }) => {
-                const generated = await generateLayer({ instruction, feedback, visitorLayers });
+                const generated = await generateLayer({
+                  instruction,
+                  feedback,
+                  visitorLayers,
+                  apiToken,
+                });
                 if (generated.statusCode !== 200) {
                   throw new PenInfraFailure({
                     statusCode: generated.statusCode,

@@ -9,12 +9,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { SUPPORTED_LANGUAGES } from "../infrastructure/i18n.ts";
-import { THEMES, themeDefinition, type ThemeId } from "../infrastructure/themes.ts";
-import { LOGOS, type LogoId } from "../infrastructure/logos.ts";
+import { themeDefinition, type ThemeId } from "../infrastructure/themes.ts";
+import type { LogoId } from "../infrastructure/logos.ts";
 import { apiFetch } from "../infrastructure/wardrobeClient.ts";
 import { Logo } from "./Logo.tsx";
 import type { Language } from "../domain/messages.ts";
-import type { Page } from "./Router.tsx";
+import { hashOf, type Page } from "./Router.tsx";
 import { AuthPanel } from "../presentation/authPanel.tsx";
 import { say } from "../presentation/i18n.ts";
 
@@ -69,7 +69,6 @@ interface SiteHeaderProps {
   theme: ThemeId;
   onChooseTheme: (theme: ThemeId) => void;
   logo: LogoId;
-  onChooseLogo: (logo: LogoId) => void;
 }
 
 /** Monochrome sun pictogram (shown in dark mode: click for light). */
@@ -106,11 +105,10 @@ export function SiteHeader({
   theme,
   onChooseTheme,
   logo,
-  onChooseLogo,
 }: SiteHeaderProps) {
-  // one popover at a time: a zone menu, the account menu, or the
-  // preferences panel (logo + full theme picker, #307)
-  const [openPopover, setOpenPopover] = useState<ZoneId | "account" | "prefs" | null>(null);
+  // one popover at a time: a zone menu or the account menu — the
+  // settings themselves live on the #preferences page (LD-8)
+  const [openPopover, setOpenPopover] = useState<ZoneId | "account" | null>(null);
   const [signedIn, setSignedIn] = useState(false);
   // The session is probed on mount, so the account menu shows its
   // signed-in state right after a reload.
@@ -287,47 +285,17 @@ export function SiteHeader({
                       window.dispatchEvent(new CustomEvent("ld:access-verified"));
                     }}
                   />
-                  <button
-                    type="button"
-                    onClick={() => setOpenPopover("prefs")}
+                  <a
+                    href={hashOf("preferences")}
+                    onClick={() => setOpenPopover(null)}
                     className="rounded border border-slate-300 bg-white px-2 py-1 text-left text-sm font-semibold text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
                   >
                     {say({ language, en: "Preferences", fr: "Préférences" })}
-                  </button>
+                  </a>
                 </span>
               </span>
             )}
           </span>
-          {openPopover === "prefs" && (
-            <span className="absolute right-0 top-full z-50 mt-2 flex w-44 flex-col gap-2 rounded-md border border-slate-200 bg-white p-2 shadow-lg dark:border-slate-700 dark:bg-slate-800">
-              <select
-                value={logo}
-                onChange={(event) => onChooseLogo(event.target.value as LogoId)}
-                aria-label={say({ language, en: "logo", fr: "logo" })}
-                title={say({ language, en: "logo", fr: "logo" })}
-                className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-              >
-                {LOGOS.map((choice) => (
-                  <option key={choice.id} value={choice.id}>
-                    {choice.label}
-                  </option>
-                ))}
-              </select>
-              <select
-                value={theme}
-                onChange={(event) => onChooseTheme(event.target.value as ThemeId)}
-                aria-label={say({ language, en: "theme", fr: "thème" })}
-                title={say({ language, en: "theme", fr: "thème" })}
-                className="rounded border border-slate-300 bg-white px-1.5 py-1 text-xs text-slate-600 hover:bg-slate-50 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-              >
-                {THEMES.map((choice) => (
-                  <option key={choice.id} value={choice.id}>
-                    {choice.label}
-                  </option>
-                ))}
-              </select>
-            </span>
-          )}
         </span>
       </div>
     </header>

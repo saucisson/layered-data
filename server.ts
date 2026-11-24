@@ -66,7 +66,9 @@ try {
         " couches ; géologue vérifié : jusqu'à " +
         MAX_PEN_ATTEMPTS +
         " propositions jugées par le staging" +
-        (MISTRAL_API_KEY ? "" : " (MISTRAL_API_KEY absente — le géologue reste local)"),
+        (MISTRAL_API_KEY
+          ? ""
+          : " (aucune clé serveur — chaque visiteur apporte son token dans les préférences)"),
     );
     if (authConfig.disabled) {
       console.log("ATTENTION : AUTH_DISABLED=1 — authentification court-circuitée (développement local uniquement)");

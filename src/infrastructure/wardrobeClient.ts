@@ -14,6 +14,8 @@
  * SSE session) stays open once connected. */
 export const API_TIMEOUT_MS = 10_000;
 
+import { readMistralToken } from "./mistralToken.ts";
+
 /** One call to the proxy API. The session cookie travels with the
  * request (same-origin credentials are the fetch default); the wait is
  * bounded by `timeoutMs` (default API_TIMEOUT_MS, 0 disables): on
@@ -117,6 +119,10 @@ export async function streamGenerate({
     "content-type": "application/json",
     accept: "text/event-stream",
   };
+  // LD-8 (ADR-0120 §3): the personal Mistral token travels ONLY on the
+  // generation call, as its own header — never in a URL, never logged.
+  const mistralToken = readMistralToken();
+  if (mistralToken !== null) headers["x-mistral-api-token"] = mistralToken;
   const controller = new AbortController();
   let inactivityTimer: ReturnType<typeof setTimeout> | null = null;
   const armInactivity = () => {

@@ -92,7 +92,7 @@ jobs:
       - run: npm run test:pages
 
   harness-i18n:
-    name: "harness: i18n + lenses + zones (i18n, lens-inventory, lens, node-sizes, connection-points, labels, display-functions, zones, i18n:check)"
+    name: "harness: i18n + lenses + zones + preferences (i18n, lens-inventory, lens, node-sizes, connection-points, labels, display-functions, zones, preferences, i18n:check)"
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -110,6 +110,7 @@ jobs:
       - run: npm run test:labels
       - run: npm run test:display-functions
       - run: npm run test:zones
+      - run: npm run test:preferences
       - run: npm run i18n:check
 
   harness-server:

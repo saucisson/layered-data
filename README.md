@@ -253,5 +253,8 @@ exists only once.
 
 - The server listens on `127.0.0.1` by default; only change `HOST` behind
   an authenticated reverse proxy.
-- No key is embedded: the geologist only goes out if `MISTRAL_API_KEY` is
-  set in the environment or `.env`.
+- No key is embedded: the server never holds a Mistral key in production
+  (LD-8) — each visitor sets their personal token in the site's
+  Preferences, sent only as the `x-mistral-api-token` header on
+  `POST /api/generate`. In local dev only, `MISTRAL_API_KEY` in `.env`
+  remains a fallback.

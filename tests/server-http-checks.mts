@@ -265,15 +265,15 @@ try {
     response.status === 422 && ((await response.json()) as { reason: string }).reason === "refused",
   );
 
-  // ---- the geologist without a key refuses locally ----
+  // ---- the geologist without a token refuses locally (LD-8) ----
   response = await fetch(base + "/api/generate", {
     method: "POST",
     headers: { ...auth, "Content-Type": "application/json" },
     body: JSON.stringify({ prompt: "une couche de test" }),
   });
   check(
-    "generate without MISTRAL_API_KEY is 500 and speaks",
-    response.status === 500 && (await response.text()).includes("MISTRAL_API_KEY"),
+    "generate without any Mistral token is a clear 401 and speaks (never 500/502)",
+    response.status === 401 && (await response.text()).includes("aucun token Mistral"),
   );
 
   // ---- unknown route ----

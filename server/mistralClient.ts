@@ -54,34 +54,43 @@ export function extractProposalContent({ content }: { content: unknown }): strin
     .join("");
 }
 
-/** One call to the upstream model, with the shared guards: the key
- * must exist, the upstream must answer, the answer must carry a
- * proposal. The status of an upstream failure is preserved — never
- * masked as a generic bad gateway. */
+/** One call to the upstream model, with the shared guards: a token
+ * must exist (LD-8: the visitor's personal token from the
+ * x-mistral-api-token header takes precedence over the dev-only
+ * MISTRAL_API_KEY), the upstream must answer, the answer must carry
+ * a proposal. The status of an upstream failure is preserved — never
+ * masked as a generic bad gateway — and a refused token stays a 401.
+ * The token itself is never logged nor echoed in a body. */
 async function callUpstream({
   model,
   maxTokens,
   cacheKey,
   system,
   user,
+  apiToken,
 }: {
   model: string;
   maxTokens: number;
   cacheKey: string;
   system: string;
   user: string;
+  /** the visitor's personal Mistral token (LD-8), header-sourced */
+  apiToken?: string | undefined;
 }): Promise<string> {
-  if (!MISTRAL_API_KEY) {
+  // LD-8 (ADR-0120 §3): the header token wins; the env key is the
+  // dev-only fallback (ignored in production, see config.ts).
+  const bearerToken = apiToken ?? MISTRAL_API_KEY;
+  if (!bearerToken) {
     throw new PenInfraFailure({
-      statusCode: 500,
-      body: "pas de clé Mistral configurée (MISTRAL_API_KEY) — le géologue reste local",
+      statusCode: 401,
+      body: "aucun token Mistral — ajoutez votre token personnel dans les préférences du site",
     });
   }
   let upstreamResponse: Response;
   try {
     upstreamResponse = await fetch(MISTRAL_URL, {
       method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: "Bearer " + MISTRAL_API_KEY },
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + bearerToken },
       body: JSON.stringify({
         model,
         max_tokens: maxTokens,
@@ -103,9 +112,18 @@ async function callUpstream({
     });
   }
   if (!upstreamResponse.ok) {
-    // The upstream error is passed through verbatim — a refused
-    // key, an unknown model or an exhausted quota must not
-    // disguise itself as a mute "bad gateway".
+    // LD-8: a 401 from the upstream means the personal token was
+    // refused — it stays a 401 (never a 502) and its body is fixed,
+    // so no echo of the request can leak the token.
+    if (upstreamResponse.status === 401) {
+      throw new PenInfraFailure({
+        statusCode: 401,
+        body: "token Mistral refusé par l’amont (401) — vérifiez votre token personnel",
+      });
+    }
+    // The upstream error is passed through verbatim — an unknown
+    // model or an exhausted quota must not disguise itself as a
+    // mute "bad gateway".
     const detail = (await upstreamResponse.text()).replace(/\s+/g, " ").slice(0, 300);
     throw new PenInfraFailure({
       statusCode: 502,
@@ -128,10 +146,13 @@ export async function selectLayers({
   intention,
   answers = [],
   visitorLayers,
+  apiToken,
 }: {
   intention: string;
   answers?: readonly string[];
   visitorLayers: VisitorLayer[];
+  /** the visitor's personal Mistral token (LD-8, header-sourced) */
+  apiToken?: string | undefined;
 }): Promise<
   | { kind: "questions"; questions: string[] }
   | { kind: "selection"; layers: string[]; selected: string[]; closure: string[] }
@@ -146,6 +167,7 @@ export async function selectLayers({
     cacheKey: "layered-data-survey",
     system: buildSurveyPrompt({ visitorLayers }),
     user,
+    apiToken,
   });
   if (!raw.trim()) {
     throw new PenInfraFailure({ statusCode: 502, body: "le releveur n'a rien répondu" });
@@ -165,6 +187,7 @@ export async function generateLayer({
   feedback,
   visitorLayers,
   selectedLayerNames,
+  apiToken,
 }: {
   instruction: string;
   feedback: string | null;
@@ -172,6 +195,8 @@ export async function generateLayer({
   /** the survey's ground: the system prompt is cut to these layers
    * (issue #279); absent — the monolith prompt */
   selectedLayerNames?: readonly string[];
+  /** the visitor's personal Mistral token (LD-8, header-sourced) */
+  apiToken?: string | undefined;
 }): Promise<{ statusCode: number; body: string }> {
   const proposal = await callUpstream({
     model: MISTRAL_MODEL,
@@ -183,6 +208,7 @@ export async function generateLayer({
         : { visitorLayers, selectedLayerNames },
     ),
     user: feedback === null ? instruction : instruction + "\n\n" + feedback,
+    apiToken,
   });
   if (!proposal.trim()) {
     throw new PenInfraFailure({ statusCode: 502, body: "le géologue n'a rien écrit" });
