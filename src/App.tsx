@@ -82,6 +82,9 @@ const NotFoundPage = lazy(() =>
 const WorkshopLockedPage = lazy(() =>
   import("./pages/WorkshopLockedPage").then((module) => ({ default: module.WorkshopLockedPage })),
 );
+const PreferencesPage = lazy(() =>
+  import("./pages/PreferencesPage").then((module) => ({ default: module.PreferencesPage })),
+);
 
 /** The Atelier-zone pages (ADR-0120 §2): they require a session. */
 const WORKSHOP_PAGES: readonly Page[] = ["formalisms", "models", "hierarchy", "creation", "formalism"];
@@ -144,7 +147,6 @@ function AppContent() {
         theme={theme}
         onChooseTheme={chooseTheme}
         logo={logo}
-        onChooseLogo={chooseLogo}
       />
       <main id="main-content">
       {workshopLocked ? (
@@ -176,6 +178,17 @@ function AppContent() {
             );
           case "landing":
             return <LandingPage language={language} />;
+          case "preferences":
+            return (
+              <PreferencesPage
+                language={language}
+                theme={theme}
+                onChooseTheme={chooseTheme}
+                logo={logo}
+                onChooseLogo={chooseLogo}
+                onChooseLanguage={handleChooseLanguage}
+              />
+            );
           case "notfound":
             return <NotFoundPage language={language} />;
           default:

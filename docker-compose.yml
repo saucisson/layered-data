@@ -40,7 +40,8 @@ services:
       - AUTH_API_CLIENT_ID=${AUTH_API_CLIENT_ID:-}
       - AUTH_API_CLIENT_SECRET=${AUTH_API_CLIENT_SECRET:-}
       - AUTH_PUBLIC_BASE_URL=${AUTH_PUBLIC_BASE_URL:-}
-      - MISTRAL_API_KEY=${MISTRAL_API_KEY:-}
+      # LD-8 : aucune clé Mistral côté serveur en production — chaque
+      # visiteur apporte son token personnel (en-tête x-mistral-api-token).
       - MISTRAL_MODEL=${MISTRAL_MODEL:-mistral-large-4}
       - SURVEY_MODEL=${SURVEY_MODEL:-mistral-small-latest}
       - SURVEY_MAX_TOKENS=${SURVEY_MAX_TOKENS:-256}
