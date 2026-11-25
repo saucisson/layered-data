@@ -1,7 +1,7 @@
 # Makefile for saucisson/layered-data
 # Provides convenience targets for common development operations
 
-.PHONY: help verify check typecheck test build lint format format:check sync-daily vscode-install
+.PHONY: help verify check typecheck test build lint format format:check sync-daily english-only license-gate probe-merge install-hooks vscode-install
 
 # The VS Code extension version, read from its manifest — the .vsix
 # is named after it.
@@ -20,6 +20,10 @@ help:
 	@echo "  verify-ci   - CI-specific verify (used in workflows)"
 	@echo "  day-start   - Tag daily branch for new day"
 	@echo "  sync-daily  - Rebase daily onto origin/main, push with lease (ADR-0024)"
+	@echo "  english-only - Scan the dev artifact layer for French (ADR-0008 N4)"
+	@echo "  license-gate - Gate the installed graph's licenses (ADR-0008 N2)"
+	@echo "  probe-merge - Dry run: every commit green on the fast fronts (ADR-0008 N5)"
+	@echo "  install-hooks - Install .githooks (commit-msg english gate)"
 	@echo "  day-report  - Generate end-of-day report"
 	@echo "  smoke-test  - Run smoke tests"
 	@echo "  vscode-install - Package the VS Code extension (.vsix via vsce/npx) and install it locally"
@@ -84,6 +88,25 @@ day-start:
 # (template sync, hotfix, release), early in the day (ADR-0024).
 sync-daily:
 	node scripts/cli.mjs sync-daily
+
+# Mechanic fronts of ADR-0008 instantiated in this instance: the
+# english-only frontend scan and commit-subject hook (N4), the license
+# gate of the installed graph (N2), probe-merge (N5 - local only, a
+# dry run, never a pull request, nothing written outside a throwaway
+# worktree) and the hook installation.
+english-only:
+	npm run english-only
+
+license-gate:
+	npm run license-gate
+
+probe-merge:
+	npm run probe-merge
+
+install-hooks:
+	git config core.hooksPath .githooks
+	chmod +x .githooks/commit-msg
+	@echo "Git hooks installed (.githooks/commit-msg: the english-only commit-subject gate)."
 
 day-report:
 	@echo "=== End of Day Report ==="

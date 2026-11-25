@@ -13,7 +13,7 @@
 import { DATABASE_URL } from "../server/config.ts";
 
 if (!DATABASE_URL) {
-  console.error("DATABASE_URL est requis — aucune migration sans base PostgreSQL");
+  console.error("DATABASE_URL is required — no migration without a PostgreSQL database");
   process.exit(1);
 }
 
@@ -39,9 +39,9 @@ try {
     "SELECT column_name FROM information_schema.columns WHERE table_name = 'user_layers' AND column_name IN ('owner', 'status')",
   );
   if (rows.length < 2) {
-    throw new Error("les colonnes owner et status n'ont pas été créées sur user_layers");
+    throw new Error("the owner and status columns were not created on user_layers");
   }
-  console.log("OK — table users et colonnes user_layers.owner / user_layers.status en place");
+  console.log("OK — users table and user_layers.owner / user_layers.status columns in place");
 } finally {
   await pool.end();
 }

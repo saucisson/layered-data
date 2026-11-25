@@ -44,9 +44,9 @@ export function run() {
     process.exit(exitCode);
   }
 
-  process.on("SIGINT", () => stopAll({ reason: "SIGINT reçu — arrêt de l'armoire et de vite", exitCode: 0 }));
-  process.on("SIGTERM", () => stopAll({ reason: "SIGTERM reçu — arrêt de l'armoire et de vite", exitCode: 0 }));
+  process.on("SIGINT", () => stopAll({ reason: "SIGINT received — stopping the wardrobe and vite", exitCode: 0 }));
+  process.on("SIGTERM", () => stopAll({ reason: "SIGTERM received — stopping the wardrobe and vite", exitCode: 0 }));
 
-  armoire.on("exit", (code, signal) => stopAll({ reason: "l'armoire s'est arrêtée (code " + code + (signal ? ", " + signal : "") + ") — arrêt de vite", exitCode: code ?? 1 }));
-  vite.on("exit", (code, signal) => stopAll({ reason: "vite s'est arrêté (code " + code + (signal ? ", " + signal : "") + ") — arrêt de l'armoire", exitCode: code ?? 1 }));
+  armoire.on("exit", (code, signal) => stopAll({ reason: "the wardrobe exited (code " + code + (signal ? ", " + signal : "") + ") — stopping vite", exitCode: code ?? 1 }));
+  vite.on("exit", (code, signal) => stopAll({ reason: "vite exited (code " + code + (signal ? ", " + signal : "") + ") — stopping the wardrobe", exitCode: code ?? 1 }));
 }
