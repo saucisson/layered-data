@@ -37,6 +37,7 @@ function getPRNumber() {
 const CONSTITUTIONAL_FILES = [
   'AGENTS.md',
   'docs/protocol.md',
+  'docs/engineering-rules.md',
   'docs/decisions/',
   'docs/rules.md',
   'docs/protocol.md',
