@@ -17,6 +17,7 @@ import { run as syncDaily } from './commands/sync-daily.mjs';
 import { run as freeze } from './commands/freeze.mjs';
 import { run as publish } from './commands/publish.mjs';
 import { run as englishOnly } from './commands/english.mjs';
+import { run as licenseGate } from './commands/license-gate.mjs';
 
 const COMMANDS = {
   review,
@@ -26,6 +27,7 @@ const COMMANDS = {
   freeze,
   publish,
   'english-only': englishOnly,
+  'license-gate': licenseGate,
 };
 
 const [command, ...args] = process.argv.slice(2);
@@ -38,6 +40,6 @@ if (!command || !COMMANDS[command]) {
 
 const exitCode = COMMANDS[command]({ args });
 // Subcommands either exit themselves (review) or return their exit
-// code (sync-daily, english-only):
+// code (sync-daily, english-only, license-gate):
 // propagate it either way.
 if (typeof exitCode === 'number') process.exit(exitCode);

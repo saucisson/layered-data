@@ -1,7 +1,7 @@
 # Makefile for saucisson/layered-data
 # Provides convenience targets for common development operations
 
-.PHONY: help verify check typecheck test build lint format format:check sync-daily english-only install-hooks vscode-install
+.PHONY: help verify check typecheck test build lint format format:check sync-daily english-only license-gate install-hooks vscode-install
 
 # The VS Code extension version, read from its manifest — the .vsix
 # is named after it.
@@ -21,6 +21,7 @@ help:
 	@echo "  day-start   - Tag daily branch for new day"
 	@echo "  sync-daily  - Rebase daily onto origin/main, push with lease (ADR-0024)"
 	@echo "  english-only - Scan the dev artifact layer for French (ADR-0008 N4)"
+	@echo "  license-gate - Gate the installed graph's licenses (ADR-0008 N2)"
 	@echo "  install-hooks - Install .githooks (commit-msg english gate)"
 	@echo "  day-report  - Generate end-of-day report"
 	@echo "  smoke-test  - Run smoke tests"
@@ -88,10 +89,13 @@ sync-daily:
 	node scripts/cli.mjs sync-daily
 
 # Mechanic fronts of ADR-0008 instantiated in this instance: the
-# english-only artifact scan and commit-subject hook (N4) and the
-# hook installation.
+# english-only artifact scan and commit-subject hook (N4), the
+# license gate of the installed graph (N2), and the hook installation.
 english-only:
 	npm run english-only
+
+license-gate:
+	npm run license-gate
 
 install-hooks:
 	git config core.hooksPath .githooks
