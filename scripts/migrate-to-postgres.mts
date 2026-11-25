@@ -26,7 +26,7 @@ import { createEditorSessionStore } from "../server/editorSessionStore.ts";
 import { parseEditorSession } from "../src/application/editorSession.ts";
 
 if (!DATABASE_URL) {
-  console.error("DATABASE_URL est requis — aucune migration sans base PostgreSQL");
+  console.error("DATABASE_URL is required — no migration without a PostgreSQL database");
   process.exit(1);
 }
 
@@ -42,7 +42,7 @@ const editorSessionStore = createEditorSessionStore({
 
 await userLayerStore.init();
 await editorSessionStore.init();
-console.log("stores PostgreSQL prêts (schéma vérifié)");
+console.log("PostgreSQL stores ready (schema verified)");
 
 // ---- the visitors' layers ------------------------------------------
 
@@ -52,36 +52,36 @@ let skippedLayers = 0;
 for (const fileName of layerFiles) {
   const nameCheck = asLayerName({ candidate: fileName.slice(0, -3) });
   if ("reason" in nameCheck) {
-    console.warn("ignoré (nom invalide) : " + fileName + " — " + nameCheck.reason);
+    console.warn("skipped (invalid name): " + fileName + " — " + nameCheck.reason);
     skippedLayers++;
     continue;
   }
   const source = readFileSync(join(USERS_DIRECTORY, fileName), "utf8");
   const { created } = await userLayerStore.write({ name: nameCheck.name, source });
-  console.log((created ? "créée" : "mise à jour") + " : " + nameCheck.name);
+  console.log((created ? "created" : "updated") + ": " + nameCheck.name);
   migratedLayers++;
 }
-console.log(migratedLayers + " couche(s) migrée(s), " + skippedLayers + " ignorée(s)");
+console.log(migratedLayers + " layer(s) migrated, " + skippedLayers + " skipped");
 
 // ---- the editor session ---------------------------------------------
 
 if (existsSync(EDITOR_SESSION_FILE)) {
   const diskState = parseEditorSession({ text: readFileSync(EDITOR_SESSION_FILE, "utf8") });
   if (diskState === null) {
-    console.warn("data/editor-session.json illisible — session non migrée");
+    console.warn("data/editor-session.json unreadable — session not migrated");
   } else {
     const current = await editorSessionStore.load();
     if (current !== undefined && current.version >= diskState.version) {
       console.log(
-        "session déjà à version " + current.version + " en base (disque : " + diskState.version + ") — rien à faire",
+        "session already at version " + current.version + " in the database (disk: " + diskState.version + ") — nothing to do",
       );
     } else {
       await editorSessionStore.save({ state: diskState });
-      console.log("session migrée : version " + diskState.version + ", " + diskState.additions.length + " addition(s)");
+      console.log("session migrated: version " + diskState.version + ", " + diskState.additions.length + " addition(s)");
     }
   }
 } else {
-  console.log("aucun data/editor-session.json — session non migrée");
+  console.log("no data/editor-session.json — session not migrated");
 }
 
-console.log("fichiers disque CONSERVÉS (backup) — aucun fichier supprimé");
+console.log("disk files KEPT (backup) — no file deleted");

@@ -20,7 +20,7 @@ const apiBase = (process.env.API_BASE ?? "http://127.0.0.1:8791").replace(/\/+$/
 const pat = process.env.PAT ?? "";
 
 if (pat === "") {
-  console.error("PAT absent — exportez PAT=<personal access token du service user>");
+  console.error("PAT missing — export PAT=<the service user's personal access token>");
   process.exit(1);
 }
 
@@ -29,11 +29,11 @@ const response = await fetch(apiBase + "/api/whoami", {
 });
 
 if (response.status === 401) {
-  console.error("401 — le PAT est refusé (révoqué ou inconnu de l'IdP)");
+  console.error("401 — the PAT is refused (revoked or unknown to the IdP)");
   process.exit(1);
 }
 if (!response.ok) {
   console.error("HTTP " + response.status + " — " + (await response.text()));
   process.exit(1);
 }
-console.log("connecté en machine : " + JSON.stringify(await response.json()));
+console.log("connected as machine: " + JSON.stringify(await response.json()));
