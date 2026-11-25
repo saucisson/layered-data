@@ -167,6 +167,7 @@ jobs:
       - run: npm run test:error-boundary
       - run: npm run test:english
       - run: npm run test:license-gate
+      - run: npm run test:probe-merge
       - name: Coverage gates (c8 lines >= 85% global + 100% on versionClassifier.ts)
         run: npm run test:coverage
       - name: Upload coverage report
