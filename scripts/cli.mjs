@@ -16,6 +16,7 @@ import { run as checkStructure } from './commands/check-structure.mjs';
 import { run as syncDaily } from './commands/sync-daily.mjs';
 import { run as freeze } from './commands/freeze.mjs';
 import { run as publish } from './commands/publish.mjs';
+import { run as englishOnly } from './commands/english.mjs';
 
 const COMMANDS = {
   review,
@@ -24,6 +25,7 @@ const COMMANDS = {
   'sync-daily': syncDaily,
   freeze,
   publish,
+  'english-only': englishOnly,
 };
 
 const [command, ...args] = process.argv.slice(2);
@@ -34,7 +36,8 @@ if (!command || !COMMANDS[command]) {
   process.exit(2);
 }
 
-const exitCode = command === 'check-structure' ? checkStructure({ args }) : COMMANDS[command]();
-// Subcommands either exit themselves (review, check-structure) or
-// return their exit code (sync-daily): propagate it either way.
+const exitCode = COMMANDS[command]({ args });
+// Subcommands either exit themselves (review) or return their exit
+// code (sync-daily, english-only):
+// propagate it either way.
 if (typeof exitCode === 'number') process.exit(exitCode);

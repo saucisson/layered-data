@@ -1,0 +1,8 @@
+#!/bin/sh
+# The commit-msg hook of the english-only front (ADR-0008 N4): the
+# commit subject is a contract, and contracts of this repository are
+# written English. The scan itself lives in
+# scripts/commands/english.mjs; this shim only forwards the message
+# file. Install once per clone with `make install-hooks`
+# (git config core.hooksPath .githooks).
+exec node scripts/cli.mjs english-only --subject-file "$1"

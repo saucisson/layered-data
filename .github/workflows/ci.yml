@@ -44,6 +44,9 @@ jobs:
       - name: Install locked dependencies
         run: npm ci
 
+      - name: "English-only front (dev artifact layer, ADR-0008 N4)"
+        run: npm run english-only
+
       - name: Types (strict, no emit - both configs)
         run: npm run typecheck
 
@@ -162,6 +165,7 @@ jobs:
       - run: npm ci
       - run: npm run test:reviewer
       - run: npm run test:error-boundary
+      - run: npm run test:english
       - name: Coverage gates (c8 lines >= 85% global + 100% on versionClassifier.ts)
         run: npm run test:coverage
       - name: Upload coverage report
