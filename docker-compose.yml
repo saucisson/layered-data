@@ -57,6 +57,19 @@ services:
         condition: service_healthy
     volumes:
       - atelier-data:/app/data
+    # Règle uniforme du 27/11/2026 (ADR-0121) : un service déployé ne
+    # tourne jamais en root. L'image exécute déjà l'utilisateur `node`
+    # (uid 1000, Dockerfile) ; en production toutes les écritures
+    # vivent dans PostgreSQL (ADR-0111), le conteneur n'écrit ni dans son
+    # système de fichiers (read_only, seul /tmp est un tmpfs) ni dans le
+    # volume atelier-data, qui ne sert qu'au fallback sans base.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
     restart: unless-stopped
 
 volumes:

@@ -21,3 +21,12 @@ services:
       - .:/app
       - /app/node_modules
       - atelier-data:/app/data
+    # Le durcissement du service de production (docker-compose.yml) est
+    # hérité par cet override. Il reste valable ici sauf les
+    # capabilities : le conteneur dev tourne en root sur le dépôt
+    # bind-mounté, et cap_drop: ALL priverait le root du droit d'écrire
+    # les fichiers de l'hôte (pas de CAP_DAC_OVERRIDE). La balise !reset
+    # exige docker compose v2.24+ ; read_only, le tmpfs /tmp et
+    # no-new-privileges restent actifs en dev (toutes les écritures
+    # passent déjà par des montages).
+    cap_drop: !reset []
