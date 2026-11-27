@@ -44,6 +44,12 @@ docker compose up --build
   (`depends_on: condition: service_healthy`) et reçoit
   `DATABASE_URL=postgres://…@postgres:5432/…` : **le rate limiting est
   actif**, partagé entre instances (compteurs en base).
+- Le service `atelier` est durci (règle uniforme du 27/11/2026, ADR-0121) :
+  il tourne sous l'utilisateur `node` (uid 1000, posé par le Dockerfile),
+  système de fichiers racine en lecture seule (`/tmp` en tmpfs),
+  `cap_drop: ALL`, `no-new-privileges`. En production toutes les écritures
+  vivent dans PostgreSQL ; le volume `atelier-data` (`/app/data`) n'est plus
+  écrit tant que `DATABASE_URL` est posée.
 - Vérification : `curl -H "Authorization: Bearer $PAT" http://127.0.0.1:8791/api/whoami`
   répond 200 (PAT d'un service user, validé par introspection), et
   `POST /api/generate` répond **429** après la limite
